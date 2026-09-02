@@ -1,0 +1,793 @@
+{%- comment -%}{{ 'hdt-card-products.css' | asset_url | stylesheet_tag }}{%- endcomment -%}
+{%- liquid
+  echo 'hdt-main-pages.css' | asset_url | stylesheet_tag
+  echo 'hdt-pagination.css' | asset_url | stylesheet_tag
+  assign color_list = 'products.theme_settings.color' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign size_list = 'products.theme_settings.size' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign products_id = 'products-' | append: section.id
+  if section.settings.enable_num_cols_selector
+    assign arr_col_from_attr = cart.attributes.products_items_per_row | split: '.'
+  endif
+  assign col_mb = section.settings.col_mb | plus: 0
+  assign col_tb = section.settings.col_tb | plus: 0
+  assign col_dk = section.settings.col_dk | plus: 0
+  assign col_mobile = arr_col_from_attr[0] | default: col_mb | plus: 0
+  assign col_tablet = arr_col_from_attr[1] | default: col_tb | plus: 0
+  assign col_tablet = col_tablet | at_most: col_dk | plus: 0
+  assign col_desktop = arr_col_from_attr[2] | default: col_dk | plus: 0
+  assign placeholder_img = settings.placeholder_img
+-%}
+{%- liquid
+  assign current_width = settings.page_width | append: 'px'
+  assign current_width_tb = '100vw'
+  assign current_width_mb = '100vw'
+  if section.settings.full_width
+      assign current_width = '100vw - 100px'
+      assign current_width_tb = '100vw - 20px'
+      assign current_width_mb = '100vw - 10px'
+  endif
+  if section.settings.space_items == "x"
+    assign space_item = settings.spacing_grid_horizontal
+    assign space_item_tb = settings.spacing_grid_horizontal | divided_by: 2
+    assign space_item_mb = settings.spacing_grid_horizontal | divided_by: 2
+  else
+    assign space_item = section.settings.space_items
+    assign space_item_tb = space_item | times: 0.666 | round
+    assign space_item_mb = space_item | times: 0.333 | round
+  endif
+-%}
+
+{%- style -%}
+  {% render 'spacing-vars', box: section %}
+  #{{ section.id }} .hdt-row-grid:not(.hdt-suggest-products) {
+    --spacing-x: {{ space_item_mb }}px;
+  } 
+  @media(min-width: 768px){
+    #{{ section.id }} .hdt-row-grid:not(.hdt-suggest-products) {
+      --spacing-x: {{ space_item_tb }}px;
+    } 
+  }
+  @media(min-width: 1150px){
+    #{{ section.id }} .hdt-row-grid:not(.hdt-suggest-products) {
+      --spacing-x: {{ space_item }}px;
+    } 
+  }
+{%- endstyle -%}
+{%- capture sizes -%}
+  (min-width: 1150px) calc(({{ current_width }} -  {{ space_item }} * {{ section.settings.col_dk | minus: 1 }}) * {{ 1.00 | divided_by: section.settings.col_dk | round: 2 }}) {{- -}}
+  , (min-width: 768px) calc( ({{ current_width_tb }} - {{ space_item_tb }} * {{ section.settings.col_tb | minus: 1 }} ) * {{ 1.00 | divided_by: section.settings.col_tb | round: 2 }})  {{- -}}
+  , calc( ({{ current_width_mb }} - {{ space_item_mb }} * {{ section.settings.col_mb | minus: 1 }} ) * {{ 1.00 | divided_by: section.settings.col_mb | round: 2 }})
+{%- endcapture -%}
+{%- assign products_suggests = page.metafields.theme.brand.value.search.value | default: settings.products_suggest -%}
+<div id="{{ section.id }}" main-content class="hdt-main-search hdt-section-spacing hdt-section-spacing-{{ section.id }} hdt-s-gradient" color-scheme="{{ section.settings.color_scheme }}">
+  <div class="hdt-container{%- if section.settings.full_width -%}-full{% endif %}">
+    <div class="hdt-shop-content">
+      {%- if search.performed == false -%}
+        <div id="hdt-search-form" class="hdt-main-search-content">
+          <div class="hdt-search-head hdt-text-center">
+            <div class="hdt-main-search-inner">
+              <form data-frm-search action="{{ routes.search_url }}" method="get" class="hdt-search__form hdt-pr" role="search">
+                <input type="hidden" name="resources[limit_scope]" value="each">
+								<input type="hidden" name="resources[options][fields]" value="title,body,tag,product_type,variants.title,vendor,variants.sku">
+                <div class="hdt-search-inner hdt-relative hdt-oh hdt-flex">
+                  <input type="hidden" name="resources[options][fields]" value="title,body,tag,product_type,variants.title,vendor,variants.sku">
+                  <input data-input-search class="hdt-input hdt-search-input hdt-text-base hdt-font-normal" autocomplete="off" type="text" name="q" placeholder="{{ 'general.search.search' | t }}">
+                  <button data-submit-search class="hdt-mini-search__submit hdt-button-block hdt-btn hdt-relative hdt-oh hdt-btn-hover-accent" type="submit">
+                    <svg id="icon-h-search" viewBox="0 0 18 19" width="22" height="23" fill="none">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M11.03 11.68A5.784 5.784 0 112.85 3.5a5.784 5.784 0 018.18 8.18zm.26 1.12a6.78 6.78 0 11.72-.7l5.4 5.4a.5.5 0 11-.71.7l-5.41-5.4z" fill="currentColor"></path></svg>
+                    <div class="hdt-loading__spinner hdt-hidden">
+                      <svg width="16" height="16" aria-hidden="true" focusable="false" role="presentation" class="hdt-svg__spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="hdt-path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle></svg>
+                    </div>
+                  </button>
+                </div>
+                {%- assign list_hotkey = settings.list_hotkey -%}
+                {%- if settings.show_search_hotkey and list_hotkey != blank -%}
+                  {%- capture link_suggest -%}
+                  {{ routes.predictive_search_url }}?type=product&options%5Bunavailable_products%5D={{ settings.unavailable_prs }}&options%5Bprefix%5D=last&q=
+                  {%- endcapture -%}
+                  {%- assign arr_keys = list_hotkey | replace: ' ,', ',' | replace: ', ', ',' | split: ',' -%}
+                  {%- assign arr_keys2 = arr_keys | join: ',|nt' | split: '|nt' -%}
+
+                  <div data-listKey class="hdt-mini-search__keys">
+                    <span class="hdt-mini-search__label">{{ 'general.search.quick_search' | t }}</span>
+                    <ul class="hdt-mini-search__listKey hdt-d-inline-block">
+                      {%- for key in arr_keys %}{% assign key_strip = key | strip -%}
+                      <li class="hdt-d-inline-block"><a data-key='{{ key_strip | escape }}' href="{{ link_suggest }}{{ key | strip | url_encode }}">{{ arr_keys2[forloop.index0] }} </a></li>
+                      {% endfor -%}
+                    </ul>
+                  </div>
+                {%- endif -%}
+                <div data-listsuggest-search data-listKey class="hdt-mini-search__keys">
+                    {%- if predictive_search.resources.queries.size > 0 -%}
+                    <span class="hdt-mini-search__label">{{ 'general.search.suggestions' | t }}</span>
+                    <ul class="hdt-mini-search__listSuggest hdt-d-inline-block" style="--li-pl: 0px">
+                      {%- for query in predictive_search.resources.queries -%}
+                        <li id="query-{{ forloop.index }}" class="hdt-d-inline-block" role="option" aria-selected="false">
+                          <a href="{{ routes.predictive_search_url }}?type=product&options%5Bunavailable_products%5D={{ settings.unavailable_prs }}&options%5Bprefix%5D=last&q={{ query.text }}" data-key='{{ query.text | escape }}' class="hdt-mini-search-suggest" tabindex="-1" aria-label="{{ query.text }}">
+                            {{ query.styled_text }}{% unless forloop.last %},{% endunless %}
+                          </a>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endif -%}
+                </div>
+              </form>
+              {%- if settings.search_quick_search != blank -%}
+								{% assign quick_searchs = settings.search_quick_search | split: ',' %}
+								{%- capture link_suggest -%}
+									{{ routes.search_url }}?type=product&options[unavailable_products]=last&options[prefix]=last&q=
+								{%- endcapture -%}
+								<div class="hdt-search-full__quicklink hdt-s-text2">
+									<h5 class="hdt-s-text hdt-text-base hdt-inline-block hdt-quicksearch-title">{{ 'general.search.quicklink_title' | t }}:</h5>
+									{%- for title in quick_searchs %} <a href="{{ link_suggest }}{{ title | strip | url_encode }}" class="hdt-s-text2">{{ title }}{%- if forloop.last == false -%},{%- endif -%}</a> {%- endfor -%}
+								</div>
+							{%- endif -%}
+            </div>
+          </div>
+          {%- if settings.products_suggest != blank -%}
+            <div class="hdt-search-suggest">
+              <h6 class="hdt-search-content-title hdt-font-medium">{{ 'general.search.search_content_site' | t }}</h6>
+              <div class="hdt-search-hidden-inner">
+                <div data-skeleton-search class="hdt-skeleton_wrap hdt-hidden">
+                  <div class="hdt-row hdt-row-products">
+                    {%- for i in (1..6) -%}
+                      <div class="hdt-col-item">
+                        <div class="hdt-skeleton_img"></div>
+                        <div class="hdt-skeleton_txt1"></div>
+                        <div class="hdt-skeleton_txt2"></div>
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                </div>
+                 <div class="hdt-search-suggest-content">
+                  <div data-collection-url="{{ collection.url }}" data-contentlm-replace class="hdt_box_pr_grid hdt-suggest-products hdt-products hdt-justify-content-center hdt-ratio--{{ section.settings.image_ratio }}{% unless section.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-row-grid md:hdt-grid-cols-2 hdt-grid-cols-1 hdt-gx-md-0 hdt-gy-md-0 hdt-gx-0 hdt-gy-0">
+                    {%- liquid
+                      if products_suggests != blank
+                        for product in products_suggests limit: 6
+                          render 'pr_loop_item', section_id: section.id, product: product, show_vendor: settings.predictive_search_show_vendor, sizes: "80px", widths: "80, 160, 240, 320"
+                        endfor
+                      endif -%}
+                  </div>
+                  <div class="hdt-search-suggest-bottom hdt-text-center">
+                    <a class="hdt-viewall-btn hdt-flex hdt-align-center hdt-justify-center" href="{{ collection.url | default: routes.all_products_collection_url }}">{{ 'general.pagination.view_all' | t }} <svg id="t4s-icon-btn" width="14" height="10" viewBox="0 0 14 10" fill="none">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M8.537.808a.5.5 0 01.817-.162l4 4a.5.5 0 010 .708l-4 4a.5.5 0 11-.708-.708L11.793 5.5H1a.5.5 0 010-1h10.793L8.646 1.354a.5.5 0 01-.109-.546z" fill="currentColor"></path>
+                    </svg></a>
+                  </div> 
+                </div>
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
+      {%- else -%}
+        {%- paginate search.results by section.settings.products_count -%}
+          {%- if search.results_count == 0 -%}
+            <div class="hdt-search-empty hdt-text-center hdt-flex hdt-align-center hdt-justify-center hdt-flex-col">
+              <svg id="icon-h-search" viewBox="0 0 18 19" width="22" height="23" fill="none">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M11.03 11.68A5.784 5.784 0 112.85 3.5a5.784 5.784 0 018.18 8.18zm.26 1.12a6.78 6.78 0 11.72-.7l5.4 5.4a.5.5 0 11-.71.7l-5.41-5.4z" fill="currentColor"></path></svg>
+              <div class="hdt-no-result-product hdt-font-normal"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18"><path d="M506.3 417l-213.3-364c-16.33-28-57.54-28-73.98 0l-213.2 364C-10.59 444.9 9.849 480 42.74 480h426.6C502.1 480 522.6 445 506.3 417zM232 168c0-13.25 10.75-24 24-24S280 154.8 280 168v128c0 13.25-10.75 24-23.1 24S232 309.3 232 296V168zM256 416c-17.36 0-31.44-14.08-31.44-31.44c0-17.36 14.07-31.44 31.44-31.44s31.44 14.08 31.44 31.44C287.4 401.9 273.4 416 256 416z"></path></svg> {{ 'general.search.no_product_results' | t }}</div>
+            </div>
+          {%- else -%}
+            {%- liquid
+              assign search_articles_list = search.results | where: "object_type", "article"
+              assign search_collections_list = search.results | where: "object_type", "collection"
+              assign search_products_list = search.results | where: "object_type", "product"
+              assign search_pages_list = search.results | where: "object_type", "page"
+            -%}
+            <div class="hdt-shop-control hdt-justify-between hdt-align-center hdt-row-flex hdt-flex-cols-3">
+              {%- comment -%} Filter {%- endcomment -%}
+              <div class="hdt-col hdt-control-filter">
+                {%- if section.settings.enable_filtering -%}
+                  {{ 'facets.css' | asset_url | stylesheet_tag }}
+                  <button class="hdt-filter_btn hdt-inline-flex hdt-align-center" aria-controls="hdt-filter_form">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16"><path d="M324.4 64C339.6 64 352 76.37 352 91.63C352 98.32 349.6 104.8 345.2 109.8L240 230V423.6C240 437.1 229.1 448 215.6 448C210.3 448 205.2 446.3 200.9 443.1L124.7 385.6C116.7 379.5 112 370.1 112 360V230L6.836 109.8C2.429 104.8 0 98.32 0 91.63C0 76.37 12.37 64 27.63 64H324.4zM144 224V360L208 408.3V223.1C208 220.1 209.4 216.4 211.1 213.5L314.7 95.1H37.26L140 213.5C142.6 216.4 143.1 220.1 143.1 223.1L144 224zM496 400C504.8 400 512 407.2 512 416C512 424.8 504.8 432 496 432H336C327.2 432 320 424.8 320 416C320 407.2 327.2 400 336 400H496zM320 256C320 247.2 327.2 240 336 240H496C504.8 240 512 247.2 512 256C512 264.8 504.8 272 496 272H336C327.2 272 320 264.8 320 256zM496 80C504.8 80 512 87.16 512 96C512 104.8 504.8 112 496 112H400C391.2 112 384 104.8 384 96C384 87.16 391.2 80 400 80H496z"></path></svg>
+                    <span>{{ 'products.facets.filter_button' | t -}}</span>
+                  </button>
+                  {%- render 'facets', results: search, section_id: section.id, enable_render_on_change: true -%}
+                {%- endif -%}
+              </div>
+              {%- comment -%} endFilter {%- endcomment -%}
+              <div class="hdt-col hdt-control-layout">
+                {%- if section.settings.enable_num_cols_selector -%}
+                  {%- render 'layout-switch', results: search, section_id: section.id, controls_id: products_id, col_mobile: col_mobile, col_tablet: col_tablet, col_desktop: col_desktop -%}
+                {%- endif -%}
+              </div>
+              <div class="hdt-col hdt-control-sorting">
+                {%- if section.settings.enable_sorting -%}
+                  {%- render 'sort-by-popover', results: search, section_id: section.id -%}
+                {%- endif -%}
+              </div>
+            </div>
+              {%- render 'active-filters', results: search, results_count: search.results_count -%}
+              <hdt-reval-items reveal-on-scroll="true" id="{{ products_id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ section.settings.product_des }} hdt-pr-border_{{ section.settings.pr_border }} hdt-row-grid hdt-grid-cols-{{ col_mobile }} md:hdt-grid-cols-{{ col_tablet }} lg:hdt-grid-cols-{{ col_desktop }} hdt-ratio--{{ section.settings.image_ratio }}{% unless section.settings.image_size %} hdt-ratio--contain{% endunless %}{% if col_mobile == 0 or col_tablet == 0 or col_desktop == 0 %} hdt-list-view{% endif %} ">
+                {%- if search_products_list != blank -%}
+                  {%- liquid
+                  capture btn_wishlist_code
+                    if settings.wishlist_mode != '0'
+                      render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                    endif
+                  endcapture
+                  if col_mobile == 0 or col_tablet == 0 or col_desktop == 0
+                    for product in search_products_list
+                      unless settings.remove_collection_url
+                        assign product_url = product.url | within: collection
+                      endunless
+                      render 'card-product-list', card_product: product, class: "hdt-pr-list", section_id: section.id, sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                    endfor
+                  else
+                    case section.settings.product_des
+                      when '1'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product1', card_product: product, class: "hdt-pr-style1", section_id: section.id, sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '2'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'top'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product2', card_product: product, section_id: section.id, class: "hdt-pr-style2", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '3'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product3', card_product: product, section_id: section.id, class: "hdt-pr-style3", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '4'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'top'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product4', card_product: product, section_id: section.id, class: "hdt-pr-style4", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '5'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product5', card_product: product, section_id: section.id, class: "hdt-pr-style5", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '6'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product6', card_product: product, section_id: section.id, class: "hdt-pr-style6", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '7'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product7', card_product: product, section_id: section.id, class: "hdt-pr-style7", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '8'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product8', card_product: product, section_id: section.id, class: "hdt-pr-style8", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '9'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product9', card_product: product, section_id: section.id, class: "hdt-pr-style9", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                      when '10'
+                        capture btn_wishlist_code
+                          if settings.wishlist_mode != '0'
+                            render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                          endif
+                        endcapture
+                        for product in search_products_list
+                          unless settings.remove_collection_url
+                            assign product_url = product.url | within: collection
+                          endunless
+                          render 'card-product10', card_product: product, section_id: section.id, class: "hdt-pr-style10", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                        endfor
+                    endcase
+                  endif
+                  -%}
+                {%- endif -%}
+                {%- if search_collections_list != blank -%}
+                  {%- liquid
+                    for collection in search_collections_list
+                      capture current
+                        cycle 1, 2, 3, 4
+                      endcapture
+                      render 'collection-item', collection: collection, sizes: sizes, current: current, collection_des: "4"
+                    endfor
+                  -%}
+                {%- endif -%}
+                {%- if search_articles_list != blank -%}
+                  {% for article in search_articles_list %}
+                    <div class="hdt-article-item hdt-search-article-item" >
+                      <div class="hdt-article hdt-article-style-1" timeline hdt-reveal="slide-in">
+                        <div class="hdt-article-inner">
+                          <div class="hdt-article-thumb hdt-relative hdt-oh">
+                              <a href="{{ article.url }}" class="hdt-block hdt-eff-img-zoom">
+                                <div calc-nav class="hdt-article-img hdt-oh hdt-ratio" style="--aspect-ratioapt:{{ article.image.aspect_ratio | default: 1 }}">
+                                  {% if article.image %}{{ article.image | image_url: width: article.image.width | image_tag: loading: 'lazy', width: article.image.width, height: article.image.height, class: 'hdt-full-image hdt-object-cover hdt-obj-eff md:hdt-block ', sizes: sizes , widths: '375,550,750,1100,1500,1780,1920,2000,3000,3840' }}{% endif %}
+                                </div>
+                              </a>                            
+                            <div class="hdt-article-label hdt-absolute">
+                              <div class="hdt-article-category hdt-row-flex">
+                                {%- if  section.settings.show_blog_title == 'blog_current' -%}
+                                  <a class="hdt-text-xs hdt-btn hdt-oh hdt-relative hdt-btn-solid hdt-font-bold" href="{{ blog.url }}"><span>{{ blog.title }}</span></a>
+                                {%- else -%}
+                                  {%- assign article_tags = article.tags | join: ';' | split: ';' -%}
+                                  {%- assign blog_tags = article_tags | where: 'blog_' -%}
+                                  {%- for tag in blog_tags -%}
+                                    <a class="hdt-text-xs hdt-btn hdt-oh hdt-relative hdt-btn-solid hdt-font-bold" href="{{ blog.url }}/tagged/{{ tag | handle }}"><span>{{ tag | remove : 'blog_' | strip }}</span></a>
+                                  {%- endfor -%}
+                                {%- endif -%}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="hdt-article-content_wapper">
+                            <div class="hdt-article-info hdt-flex hdt-flex-col hdt-align-{{ section.settings.content_align }}">
+                              <h6 class="hdt-article-title hdt-line-clamp hdt-font-medium hdt-s-text"><a href="{{ article.url }}">{{ article.title }}</a></h6>
+                              <div class="hdt-article-btn">
+                                  <a href="{{ article.url }}" class="hdt-btn hdt-oh hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn-link hdt-text-base hdt-font-semibold hdt-article-btn__readmore"><span>{{ 'blogs.article.read_more' | t }}</span>
+                                  </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                {%- endif -%}
+                {%- if search_pages_list != blank -%}
+                  {% for page in search_pages_list %}
+                    <div class="hdt-page-item">
+                      <div class="hdt-page-item-inner" timeline hdt-reveal="slide-in">
+                        <a href="{{ page.url }}" class="hdt-page-img hdt-ratio" {% if section.settings.image_ratio == 'adapt_image' %} style="--aspect-ratioapt: 1"{% endif %}>
+                          {%- if placeholder_img -%}
+                            {{ placeholder_img | image_url: width: placeholder_img.width | image_tag: loading: 'lazy', width: placeholder_img.width, class: 'hdt-page-img', sizes: sizes , widths: '375,550,750,1100,1500,1780,1920,2000,3000,3840' }}
+                          {%- else -%}
+                            <span class="hdt-page-label hdt-absolute hdt-top-0 hdt-right-0">{{ page.title }} - {{ shop.name }}</span>
+                          {%- endif -%}
+                        </a>
+                        <a href="{{ page.url }}" class="hdt-page-title  hdt-font-medium hdt-inline-flex hdt-s-text">{{ page.title }}</a>
+                      </div>
+                    </div>
+                  {% endfor %}
+                {%- endif -%}
+              </hdt-reval-items>
+
+              {%- if paginate.pages > 1 -%}
+                {%- render 'pagination', paginate: paginate, anchor: '', section_id: section.id , pagination_type: section.settings.pagination_type, append_id: products_id, paginate_pos: section.settings.paginate_pos, dis_pagination: section.settings.dis_pagination -%}
+              {%- endif -%}
+          {%- endif -%}
+        {%- endpaginate -%}
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+{%- style -%}{% if section.settings.full_width %}#{{section.id}} .hdt-container-full{padding-inline-start:5px;padding-inline-end:5px}@media(min-width:768px){#{{section.id}} .hdt-container-full{padding-inline-start:15px;padding-inline-end:15px}}@media(min-width:1150px){#{{section.id}} .hdt-container-full{padding-inline-start:50px;padding-inline-end:50px}}{% endif %}{%- endstyle -%}
+{% schema %}
+{
+  "name": "t:sections.main-search.name",
+  "class": "hdt-main-section hdt-main-search",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "product_des",
+      "label": "t:sections.collection_products.settings.product_des",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        },
+        {
+          "value": "5",
+          "label": "5"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        },
+        {
+          "value": "7",
+          "label": "7"
+        },
+        {
+          "value": "8",
+          "label": "8"
+        },
+        {
+          "value": "9",
+          "label": "9"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        {
+          "value": "adapt_image",
+          "label": "t:sections.all.images.ratio.adapt_image.label"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.all.images.ratio.square.label"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.all.images.ratio.portrait.label"
+        },
+        {
+          "value": "asos",
+          "label": "t:sections.all.images.ratio.asos.label"
+        },
+        {
+          "value": "landscape",
+          "label": "t:sections.all.images.ratio.landscape.label"
+        },
+        {
+          "value": "custom-pr",
+          "label": "t:sections.all.images.ratio.custom.label"
+        }
+      ],
+      "label": "t:sections.all.images.ratio.label",
+      "default": "adapt_image"
+    },
+    {
+      "type": "checkbox",
+      "id": "image_size",
+      "label": "t:sections.all.images.size.cover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.collection_products.settings.show_vendor",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "pr_border",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.collection_products.settings.pr_border.none"
+        },
+        {
+          "value": "in_image",
+          "label": "t:sections.collection_products.settings.pr_border.in_image"
+        },
+        {
+          "value": "on_item",
+          "label": "t:sections.collection_products.settings.pr_border.on_item"
+        },
+        {
+          "value": "on_grid",
+          "label": "t:sections.collection_products.settings.pr_border.on_grid"
+        }
+      ],
+      "label": "t:sections.collection_products.settings.pr_border.label",
+      "info": "t:sections.collection_products.settings.pr_border.info",
+      "default": "none"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.collection_products.settings.options_layout"
+    },
+    {
+      "type": "range",
+      "id": "products_count",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "label": "t:sections.all.limit",
+      "default": 8
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "t:sections.all.items_row.desktop",
+      "default": "4",
+      "options": [
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "6",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "t:sections.all.items_row.tablet",
+      "default": "3",
+      "options": [
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "t:sections.all.items_row.mobile",
+      "default": "2",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "space_items",
+      "label": "t:sections.all.space_items.desktop",
+      "default": "x",
+      "options": [
+        {
+          "label": "t:sections.all.space_items.default",
+          "value": "x"
+        },
+        {
+          "label": "0",
+          "value": "0"
+        },
+        {
+          "label": "5px",
+          "value": "5"
+        },
+        {
+          "label": "10px",
+          "value": "10"
+        },
+        {
+          "label": "15px",
+          "value": "15"
+        },
+        {
+          "label": "20px",
+          "value": "20"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "pagination_type",
+      "label": "t:sections.all.load_more.type.label",
+      "info": "t:sections.all.load_more.type.info",
+      "options": [
+        {
+          "value": "links",
+          "label": "t:sections.all.pagination.pagination_value.links.label"
+        },
+        {
+          "value": "load_more",
+          "label": "t:sections.all.pagination.pagination_value.load_more.label"
+        },
+        {
+          "value": "infinite",
+          "label": "t:sections.all.pagination.pagination_value.infinite.label"
+        }
+      ],
+      "default": "links"
+    },
+    {
+      "type": "select",
+      "id": "paginate_pos",
+      "label": "t:sections.all.pagination.paginate_pos.label",
+      "default": "center",
+      "options": [
+        {
+          "value": "start",
+          "label": "t:sections.all.pagination.paginate_pos.option_1.label"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.all.pagination.paginate_pos.option_2.label"
+        },
+        {
+          "value": "end",
+          "label": "t:sections.all.pagination.paginate_pos.option_3.label"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "dis_pagination",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "label": "t:sections.all.pagination.dis_pagination.label",
+      "default": 60
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main-collection.settings.header__2.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sorting",
+      "default": true,
+      "label": "t:sections.main-collection.settings.enable_sorting.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_filtering",
+      "default": true,
+      "label": "t:sections.main-collection.settings.enable_filtering.label",
+      "info": "t:sections.main-collection.settings.enable_filtering.info"
+    },
+    {
+      "type": "select",
+      "id": "price_behavior",
+      "label": "t:sections.main-collection.settings.price_behavior.label",
+      "options": [
+        {
+          "value": "auto",
+          "label": "t:sections.main-collection.settings.price_behavior.options__1.label"
+        },
+        {
+          "value": "click",
+          "label": "t:sections.main-collection.settings.price_behavior.options__2.label"
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_num_cols_selector",
+      "label": "t:sections.main-collection.settings.enable_num_cols_selector.label",
+      "info": "t:sections.main-collection.settings.enable_num_cols_selector.info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "background-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ]
+}
+{% endschema %}

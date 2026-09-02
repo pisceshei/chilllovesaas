@@ -1,0 +1,138 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "d8236fc7-5c51-4cfc-83ec-323e039da755": {
+          "type": "custom_text",
+          "settings": {
+            "title": "OUR STORE",
+            "image_max": "92px",
+            "description": "<p>Super class, cute, comfortable. You can wear<br\/> them with just about anything.<\/p>",
+            "width": "50%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "d4a8b403-287a-4d46-959f-869031e55936": {
+          "type": "our_store",
+          "settings": {
+            "title": "COMPANY",
+            "description": "",
+            "show_email": true,
+            "show_phone": true,
+            "show_socials_link": true,
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "49e72833-c68f-4a7b-ab64-3ef0cae99bcb": {
+          "type": "menu",
+          "settings": {
+            "title": "INFORMATION",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "c85629c7-7aae-4666-b5f0-150990439c91": {
+          "type": "menu",
+          "settings": {
+            "title": "CONTACT",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "b04590a8-1630-49ae-890c-873ef3aa3a94": {
+          "type": "menu",
+          "settings": {
+            "title": "FOLLOW",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "d8236fc7-5c51-4cfc-83ec-323e039da755",
+        "d4a8b403-287a-4d46-959f-869031e55936",
+        "49e72833-c68f-4a7b-ab64-3ef0cae99bcb",
+        "c85629c7-7aae-4666-b5f0-150990439c91",
+        "b04590a8-1630-49ae-890c-873ef3aa3a94"
+      ],
+      "settings": {
+        "color_scheme": "scheme-a5a4f851-c8c2-4b59-9fb4-ba67389acf0d",
+        "design": "footer-1",
+        "container": "container-fluid",
+        "bordered": false,
+        "copyright": "© MINIMOG 2024",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "scheme-a5a4f851-c8c2-4b59-9fb4-ba67389acf0d"
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

@@ -1,0 +1,344 @@
+<!-- sections/top-list-collections.liquid -->
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+{% liquid
+  #Section layout
+  assign sizes  = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+
+  case section.settings.section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+
+  assign show_type = section.settings.show_type
+  assign sort_by = section.settings.sort
+%}
+{%- capture hdt_content -%}
+  {%- case show_type -%}
+    {%- when 'all' -%}
+      {%- unless collections.size > 0 -%}
+        {%- continue -%}
+      {%- endunless -%}
+      {% liquid
+        case sort_by
+          when 'products_high' or 'products_low'
+            assign collections = collections | sort: 'all_products_count'
+          when 'date' or 'date_reversed'
+            assign collections = collections | sort: 'published_at'
+        endcase
+      %}
+      {%- if sort_by == 'products_low' or sort_by == 'date' or sort_by == 'alphabetical' -%}
+        {%- for category in collections -%}
+          {%- if category.products.size == 0 -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- assign show_section = true -%}
+          <div class="hdt-slider__slide{% if category.handle == collection.handle %} hdt-current-active{% endif %}">
+            <a href="{{ category.url }}">
+              {{- category.title -}}
+            </a>
+          </div>
+        {%- endfor -%}
+      {%- else -%}
+          {%- for category in collections reversed -%}
+            {%- if category.products.size == 0 -%}
+              {%- continue -%}
+            {%- endif -%}
+            {%- assign show_section = true -%}
+            <div class="hdt-slider__slide{% if category.handle == collection.handle %} hdt-current-active{% endif %}">
+              <a href="{{ category.url }}">
+                {{- category.title -}}
+              </a>
+            </div>
+          {%- endfor -%}
+      {%- endif -%}
+    {%- when 'collection_added' -%}
+      {%- for block in section.blocks -%}
+        {%- assign category = block.settings.collection -%}
+        {%- if category.products.size == 0 -%}
+          {%- continue -%}
+        {%- endif -%}
+        {%- assign show_section = true -%}
+        <div class="hdt-slider__slide{% if category.handle == collection.handle %} hdt-current-active{% endif %}">
+          <a href="{{ category.url }}">
+            {%- if block.settings.icon != blank -%}
+              <span class="hdt-slide__icon">
+                {{- block.settings.icon -}}
+              </span>
+            {%- endif -%}
+            {{- category.title -}}
+          </a>
+        </div>
+      {%- endfor -%}
+    {%- when 'menu' -%}
+      {%- if section.settings.menu != blank -%}
+        {%- for link in section.settings.menu.links -%}
+          {%- assign show_section = true -%}
+          <div class="hdt-slider__slide{% if link.handle == collection.handle %} hdt-current-active{% endif %}">
+            <a href="{{ link.url }}">
+              {{- link.title -}}
+            </a>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+    {%- when 'metafields' -%}
+      {%- assign list_collections = collection.metafields.theme.list_collections.value -%}
+      {%- if list_collections != blank -%}
+        {%- for category in list_collections -%}
+          {%- if category.products.size == 0 -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- assign show_section = true -%}
+          <div class="hdt-slider__slide{% if category.handle == collection.handle %} hdt-current-active{% endif %}">
+            <a href="{{ category.url }}">
+              {{- category.title -}}
+            </a>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+  {%- endcase -%}
+{%- endcapture -%}
+{%- if show_section -%}
+  <div class="{% if section.settings.hide_mobile %}hdt-hidden md:hdt-block{% endif %}">
+    <div class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};" {%- endif %}>
+      <div class="{{ child }}">
+        {%- if section.settings.section_background != blank -%}
+          {% liquid
+            assign image = section.settings.section_background
+          %}
+            {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center' }}
+        {%- endif -%}
+        <div class="hdt-content" style="{% if section.settings.section_layout == 'full_width' %}--container-max-width: 100vw;{% endif %}">
+          <hdt-slider id="Slider-{{ section.id }}" class="hdt-slider hdt-relative hdt-slide-spacing-x hdt-slides-auto" config='{ "id": "Slider-{{ section.id }}", "navUI": {{ section.settings.navUI }}, "align": "center", "classNames": true, "dragFree": true, "slidesToScroll": 1 }'>
+            <div class="hdt-slider__viewport hdt-relative">
+              <div class="hdt-slider__container">
+                {{ hdt_content }}
+              </div>
+            </div>
+            {%- if section.settings.navUI -%}
+              <div class="hdt-navigation hdt-position-default hdt-visible-always hdt-style-simple hdt-size-small hdt-hide-mobile-false">
+                <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+                </button>
+                <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+                </button>
+              </div>
+            {%- endif -%}
+          </hdt-slider>
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+{% schema %}
+  {
+    "name": "t:sections.collections-list.name_top_list",
+    "class": "hdt-top-list-collections",
+    "enabled_on": {
+      "templates": [
+        "collection",
+        "search"
+      ]
+    },
+    "settings": [
+      {
+        "type": "radio",
+        "id": "show_type",
+        "label": "t:sections.collections-list.settings.souce_collection.label",
+        "options": [
+          {
+            "value": "all",
+            "label": "t:sections.collections-list.settings.souce_collection.all"
+          },
+          {
+            "value": "collection_added",
+            "label": "t:sections.collections-list.settings.souce_collection.from_blocks"
+          },
+          {
+            "value": "menu",
+            "label": "t:sections.collections-list.settings.souce_collection.from_menu"
+          },
+          {
+            "value": "metafields",
+            "label": "t:sections.collections-list.settings.souce_collection.from_metafields"
+          }
+        ],
+        "default": "all"
+      },
+      {
+        "type": "link_list",
+        "id": "menu",
+        "label": "t:sections.collections-list.settings.souce_collection.from_menu"
+      },
+      {
+        "type": "select",
+        "id": "sort",
+        "label": "t:sections.collections-list.settings.sort_collections.label",
+        "options": [
+          {
+            "value": "products_high",
+            "label": "t:sections.collections-list.settings.sort_collections.options.products_high"
+          },
+          {
+            "value": "products_low",
+            "label": "t:sections.collections-list.settings.sort_collections.options.products_low"
+          },
+          {
+            "value": "alphabetical",
+            "label": "t:sections.collections-list.settings.sort_collections.options.alphabetical"
+          },
+          {
+            "value": "alphabetical_reversed",
+            "label": "t:sections.collections-list.settings.sort_collections.options.alphabetical_reversed"
+          },
+          {
+            "value": "date",
+            "label": "t:sections.collections-list.settings.sort_collections.options.date"
+          },
+          {
+            "value": "date_reversed",
+            "label": "t:sections.collections-list.settings.sort_collections.options.date_reversed"
+          }
+        ],
+        "default": "alphabetical",
+        "info": "t:sections.collections-list.settings.sort_collections.info"
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_mobile",
+        "label": "t:blocks.carousel.settings.pagination.pag_hide_mobile",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "navUI",
+        "label": "t:blocks.carousel.settings.navigation.use_navigation",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_layout.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "range",
+        "id": "background_opacity",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "label": "t:sections.all.background.overlay",
+        "default": 0,
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "select",
+        "id": "section_layout",
+        "label": "t:sections.all.section_layout.width.label",
+        "options": [
+          {
+            "value": "container",
+            "label": "t:sections.all.section_layout.width.container"
+          },
+          {
+            "value": "wrapper_container",
+            "label": "t:sections.all.section_layout.width.wrapper_container"
+          },
+          {
+            "value": "full_width",
+            "label": "t:sections.all.section_layout.width.full_width"
+          }
+        ],
+        "default": "container"
+      },
+    {
+      "type": "image_picker",
+      "id": "section_background",
+      "label": "t:sections.all.background.image"
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+    ],
+    "blocks": [
+      {
+        "type": "cat",
+        "name": "t:sections.collections-list.blocks.collection",
+        "settings": [
+          {
+            "type": "collection",
+            "id": "collection",
+            "label": "t:sections.collections-list.blocks.collection"
+          },
+          {
+            "type": "html",
+            "id": "icon",
+            "label": "t:blocks.icon.custom_svg_icon.label",
+            "info": "t:blocks.icon.custom_svg_icon.content"
+          },
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.collections-list.name_top_list"
+      }
+    ]
+  }
+{% endschema %}

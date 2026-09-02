@@ -1,0 +1,53 @@
+{%- liquid
+  assign collection_des = collection_des | default: section.settings.collection_des
+  assign image = block.settings.image | default: collection.metafields.theme.featured_image_collection.value | default: collection.image | default: collection.products.first.featured_image
+  assign title = block.settings.title | default: collection.title
+  assign count_label = section.settings.count_label
+  assign collection_link = block.settings.collection_link | default: collection.url
+-%}
+<div class="hdt-collection-item hdt-collection-style{{ collection_des }} {{ class }}{% if section.settings.layout_mode == 'packery' %} lg:hdt-custom-col-{{ block.settings.col_dk }} md:hdt-custom-col-{{ block.settings.col_tb }} hdt-custom-col-{{ block.settings.col_mb }}{% endif %}" {{ block.shopify_attributes }} item-selector>
+  <div class="hdt-collection-inner hdt-relative hdt-oh hdt-grid" timeline hdt-reveal="slide-in">
+    <div class="hdt-collection-img hdt-relative hdt-eff-{{ section.settings.b_effect }} hdt-eff-img-{{ section.settings.img_effect }}" style="--aspect-ratioapt: {{ image.aspect_ratio | default: 1.2 }};">
+      {% if collection_des == "9" %}
+        <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> 
+      {% endif %}
+      <span class="hdt-ratio" calc-nav>
+        {%- if hdt_svg_image != blank -%}
+         <span class="hdt-svg-img-collection-list" style="--w-image-svg:{{ svg_width }}px;--w-image-svg-mb:{{ svg_width_mb }}px;">{{ hdt_svg_image }}</span> 
+        {%- else -%}
+          {%- if image != blank -%}
+            {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: 'hdt-obj-eff' , sizes: sizes, widths: "360,400,600,800,1000,1200,1400,1440,1920,2000,2400,2800,3600" }}
+          {%- else -%}
+            {{ 'collection-apparel-' | append: current | placeholder_svg_tag: 'hdt-placeholder-svg hdt-obj-eff' }}  
+          {%- endif -%}
+        {%- endif -%}
+      </span>
+      <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ collection_link }}"></a>
+    </div>
+    {%- if title != blank and collection_des != "15" -%}
+      <div class="hdt-collection-content hdt-absolute hdt-place-self-{{ section.settings.content_position }}">
+        <div class="hdt-collection-wrapper hdt-flex hdt-flex-col hdt-justify-center hdt-align-center">
+          <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ collection_link }}"></a>
+          <a class="hdt-collection-title hdt-truncate hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-{{ section.settings.content_size }} hdt-font-{{ section.settings.content_weight }}" href="{{ collection_link }}">
+            <span class="hdt-collection-title-text hdt-truncate">{{ title }}</span>
+            {% if collection_des == "10" %} <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> {% endif %}
+            {% if collection_des == "11" %} <span class="hdt-count"> ({{ collection.all_products_count | default: 0 }}) </span> {% endif %}
+          </a>
+          {%- if section.settings.show_count  -%}
+            <a class="hdt-collection-count {% if section.settings.content_size == "sm" %}hdt-text-sm{% else %}hdt-text-base{% endif %} hdt-inline-flex hdt-align-center hdt-justify-center" href="{{ collection_link }}">
+              <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> <span class="hdt-text">{{ count_label }}</span>
+            </a>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endif -%}
+    {% if title != blank and collection_des == "15" %}
+      <div class="hdt-collection-content hdt-absolute hdt-place-self-{{ section.settings.content_position }}">
+        <div class="hdt-collection-wrapper hdt-flex hdt-flex-col hdt-justify-center hdt-align-center">
+          <span class="hdt-collection-title-text hdt-truncate">{{ title }}</span>
+          <a class="hdt-collection-title hdt-truncate hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-{{ section.settings.content_size }} hdt-font-{{ section.settings.content_weight }}" href="{{ collection_link }}">Shop now</a>
+        </div>
+      </div>
+    {% endif %}
+  </div> 
+</div>

@@ -1,0 +1,192 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "heading": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_kCwqhp": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page_title }}",
+            "line_height": "hdt-lh-1",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "heading_brc_aVn9AW": {
+          "type": "_heading_brc",
+          "name": "Breadcrumb",
+          "settings": {},
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_kCwqhp",
+        "heading_brc_aVn9AW"
+      ],
+      "settings": {
+        "use_dynamic_source": false,
+        "image": "shopify://shop_images/bg-heading.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 54,
+        "space_item": 12,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "50px,,50px,",
+        "pd_mb": "50px,,50px,"
+      }
+    },
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "full_width": false,
+        "color_scheme": "",
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,30px,",
+        "pd_mb": ",,22px,"
+      }
+    },
+    "accordion_Tg8fN8": {
+      "type": "accordion",
+      "blocks": {
+        "accordion_item_A96ika": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": true,
+            "icon": "none",
+            "title": "Do I need to open an account in order to shop with you?",
+            "content": "<p>No, you don’t need to. You can make purchases and check out as a guest everytime.</p><p>However, by setting up an account with us, it will allow you to order without having to enter your details every time you shop with us. You can sign up right now, or you can first start shopping and create your account before you check out at the shopping cart page.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_dGWCqH": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "How do I /create an account?",
+            "content": "<p>Please click on “Login/Register” followed by ‘Create An Account’ and fill in your personal particulars.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_rdKgg9": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "How do I order?",
+            "content": "<p>Shop for the items you want and add it to your shopping cart. When you have finished, you can proceed to your shopping cart and check out. Check and ensure that all information is correct before confirming your purchases and payment.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_8bVaFV": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "How do I pay for my orders?",
+            "content": "<p>We accept payments via Paypal and all major credit and debit cards such as Mastercard, VISA and American Express.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_RLCHiY": {
+          "type": "_accordion-item",
+          "name": "t:sections.accordion.blocks.accordion_item.label",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "Can I amend and cancel my order?",
+            "content": "<p>Unfortunately we are unable to cancel an order once it has been placed. This will allow us to pack your orders efficiently and to minimize errors. It is advisable to check your order before placing it.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_TdnMCL": {
+          "type": "_accordion-item",
+          "name": "t:sections.accordion.blocks.accordion_item.label",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "I have a discount code, how can I use it?",
+            "content": "<p>Unfortunately we are unable to cancel an order once it has been placed. This will allow us to pack your orders efficiently and to minimize errors. It is advisable to check your order before placing it.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_hXQN78": {
+          "type": "_accordion-item",
+          "name": "t:sections.accordion.blocks.accordion_item.label",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "How will I know if my order is confirmed?",
+            "content": "<p>After you have placed your order, you will receive an acknowledgement e-mail from us to confirm that your orders have been received. However, do note that orders will only be shipped when your credit card payment has been approved and billing and delivery address is verified. Alternatively, you may check the status of your order in “My Account” if you are a registered user.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_jKdRQp": {
+          "type": "_accordion-item",
+          "name": "t:sections.accordion.blocks.accordion_item.label",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "I have problems adding items to my shopping cart?",
+            "content": "<p>You will be able to add the items as long as it is available. There could be an instance where the item is in someone else’s shopping cart hence the status of the items is reflected as “Temporarily Unavailable”.</p>"
+          },
+          "blocks": {}
+        },
+        "accordion-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "accordion_item_A96ika",
+        "accordion_item_dGWCqH",
+        "accordion_item_rdKgg9",
+        "accordion_item_8bVaFV",
+        "accordion_item_RLCHiY",
+        "accordion_item_TdnMCL",
+        "accordion_item_hXQN78",
+        "accordion_item_jKdRQp"
+      ],
+      "name": "t:sections.accordion.name",
+      "settings": {
+        "accordion_des": "1",
+        "color_scheme": "scheme-1",
+        "mg": "",
+        "mg_mb": "",
+        "pd": "70px,,80px,",
+        "pd_mb": "35px,,40px,"
+      }
+    }
+  },
+  "order": [
+    "heading",
+    "main",
+    "accordion_Tg8fN8"
+  ]
+}

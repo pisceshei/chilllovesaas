@@ -1,0 +1,23 @@
+<div class="hdt-follow-shop">
+  {% comment %} TODO: enable theme-check once `login_button` is accepted as valid filter {% endcomment %}
+  {% # theme-check-disable %}
+  {{ shop | login_button: action: 'follow' }}
+  {% # theme-check-enable %}
+</div>
+{% schema %}
+  {
+    "name": "Follow on Shop",
+    "tag": null,
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "To allow customers to follow your store on the Shop app from your storefront, Shop Pay must be enabled. [Learn more](https://help.shopify.com/manual/online-store/themes/customizing-themes/follow-on-shop)"
+      }
+    ],
+    "presets":[
+      {
+        "name":"Follow on Shop"
+      }
+    ]
+  }
+{% endschema %}

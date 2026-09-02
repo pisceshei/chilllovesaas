@@ -1,0 +1,233 @@
+{
+  "sections": {
+    "1660288224ab3d5bbc": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-button.m-button--link,\n.m-tab-header {\n\tfont-weight: 600;\n}"
+      }
+    },
+    "1622448086a90b8c2f": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "right",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "<span class=\"sf__custom-heading-hero\">Why plants<br>\nmake you happy<\/span>",
+        "sub_title": "<span class=\"sf__custom-subheading\"><span class=\"tag-label\" style=\"margin-right: 10px;\">Hot<\/span>25% off everything (yes, everything!) 🔥<\/span>",
+        "text": "",
+        "text_size": "large",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "button_size": "sf__btn-large",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf__custom-hero-first",
+        "animations": "inherit"
+      }
+    },
+    "1622709925b4ab6f0c": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "<span class=\"sf_custom-heading-content\">Deck Out Your \nPatio This Summer<\/span>",
+        "sub_title": "<span class=\"sf__custom-subheading text-color-primary font-semibold\">Fresh Finds<\/span>",
+        "text": "<p>With eye-catching annual flowers and foliage you won’t find<br\/>anywhere else, you can mix and match our vibrant container<br\/>gardens to create beautiful gardens of any size.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Indoor",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1622710586e17c9ecc": {
+      "type": "product-tabs",
+      "blocks": {
+        "1622710586e17c9ecc-0": {
+          "type": "tab",
+          "settings": {
+            "title": "Indoor Plants"
+          }
+        },
+        "1622710586e17c9ecc-1": {
+          "type": "tab",
+          "settings": {
+            "title": "Outdoor Plants"
+          }
+        },
+        "62abc623-1aa9-4668-b2b9-483f79a5b2aa": {
+          "type": "tab",
+          "settings": {
+            "title": "Herbs + Veggies"
+          }
+        }
+      },
+      "block_order": [
+        "1622710586e17c9ecc-0",
+        "1622710586e17c9ecc-1",
+        "62abc623-1aa9-4668-b2b9-483f79a5b2aa"
+      ],
+      "custom_css": [
+        ".m-tab-header.active, .m-tab-header:hover {color: #CD783E;}"
+      ],
+      "settings": {
+        "heading": "Perfect Plants",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "default",
+        "tab_header": "horizontal",
+        "limit": 8,
+        "show_button": false,
+        "button_type": "link",
+        "button_label": "Shop Now",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": true,
+        "show_navigation": true,
+        "show_pagination": true,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1622711555416bfb63": {
+      "type": "custom-content",
+      "blocks": {
+        "8e62aec0-c2bb-4e9b-8950-255185a9abd6": {
+          "type": "product_bundles",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "title": "<span class=\"sf_custom-heading-content\">Build Your Own<br> Basket From $100<\/span>",
+            "subheading": "<span class=\"text-color-primary sf__custom-subheading\">Bundle & Save<\/span>",
+            "text_size": "h2",
+            "show_reviews": false,
+            "product_3": "",
+            "product_4": "",
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "bb719b44-bf63-4698-86bf-1dcf8f77c148": {
+          "type": "lookbook",
+          "settings": {
+            "color_scheme": "",
+            "width": "50%",
+            "top_1": 25,
+            "left_1": 80,
+            "top_2": 77,
+            "left_2": 68,
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "8e62aec0-c2bb-4e9b-8950-255185a9abd6",
+        "bb719b44-bf63-4698-86bf-1dcf8f77c148"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1622712658d5b3e674": {
+      "type": "custom-content",
+      "blocks": {
+        "1622712658d5b3e674-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "100%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1622712658d5b3e674-1"
+      ],
+      "settings": {
+        "heading": "The Pruning Scissors",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "<a class=\"m-button m-button--link \" style=\"text-decoration: none;\"><span class=\"m:display-flex\">Shop Collection <\/span><\/a>",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 90,
+        "custom_class": ""
+      }
+    }
+  },
+  "order": [
+    "1660288224ab3d5bbc",
+    "1622448086a90b8c2f",
+    "1622709925b4ab6f0c",
+    "1622710586e17c9ecc",
+    "1622711555416bfb63",
+    "1622712658d5b3e674"
+  ]
+}

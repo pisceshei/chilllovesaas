@@ -1,0 +1,116 @@
+{%- if request.visual_preview_mode or block.settings.product_list == blank and block.settings.collection == blank and block.settings.source != 'from_block' %}
+  <hdt-reval-items reveal-on-scroll="true" id="products-{{ section.id }}-{{ block.settings.collection.id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-spacing-{{ block.settings.space_items }} lg:hdt-grid-cols-{{ block.settings.col_dk }} md:hdt-grid-cols-{{ block.settings.col_tb }} hdt-grid-cols-{{ block.settings.col_mb }}">
+    {%- liquid
+      for i in (1..block.settings.products_count)
+        capture current
+          cycle 1, 2, 3, 4, 4, 3, 2, 1
+        endcapture
+        assign placeholder_image = 'product-apparel-' | append: current
+        render 'card-product-list-placeholder', image_ratio: block.settings.image_ratio, placeholder_image: placeholder_image, section_id: block.id, class: 'hdt-slider__slide'
+      endfor
+    -%}
+  </hdt-reval-items>
+{% elsif block.settings.source == 'from_block' and content_blocks != blank %}
+  <hdt-reval-items reveal-on-scroll="true" selector=".hdt-product_list_item" id="products-{{ section.id }}-{{ block.settings.collection.id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-spacing-{{ block.settings.space_items }} lg:hdt-grid-cols-{{ block.settings.col_dk }} md:hdt-grid-cols-{{ block.settings.col_tb }} hdt-grid-cols-{{ block.settings.col_mb }}">
+    {%- liquid
+      echo content_blocks
+    -%}
+  </hdt-reval-items>
+{%- else -%}
+  {%- if block.settings.product_list != blank %}
+    {%- paginate block.settings.product_list by block.settings.products_count -%}
+      <hdt-reval-items reveal-on-scroll="true" selector=".hdt-product_list_item" id="products-{{ section.id }}-{{ block.settings.collection.id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-spacing-{{ block.settings.space_items }} lg:hdt-grid-cols-{{ block.settings.col_dk }} md:hdt-grid-cols-{{ block.settings.col_tb }} hdt-grid-cols-{{ block.settings.col_mb }}">
+        {%- liquid
+          for product in block.settings.product_list
+            render '_product-list-item', product: product
+          endfor
+        -%}
+      </hdt-reval-items>
+      {%- if block.settings.pagination %}
+        {%- if paginate.next -%}
+          {{ 'hdt-pagination.css' | asset_url | stylesheet_tag }}
+          {%- if block.settings.pagination_type == "view_all" -%}
+            <div class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" timeline hdt-reveal="slide-in" style="--pagination-distance:{{ block.settings.dis_pagination }}px;">
+              <a class="hdt-view-all-btn hdt-btn hdt-oh hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn-{{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" href="{{ collection.url | default: routes.all_products_collection_url }}" hdt-reveal="slide-in" timeline>
+                {% assign view_all_df = 'general.pagination.view_all' | t %}
+                <span>{{ block.settings.btn_label | default: view_all_df | escape }}</span>
+                {%- if block.settings.endable_btn_icon -%}
+                  <svg id="t4s-icon-btn" viewBox="0 0 14 10" fill="none">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.537.808a.5.5 0 01.817-.162l4 4a.5.5 0 010 .708l-4 4a.5.5 0 11-.708-.708L11.793 5.5H1a.5.5 0 010-1h10.793L8.646 1.354a.5.5 0 01-.109-.546z" fill="currentColor"></path>
+                  </svg>
+                {%- endif -%}
+              </a>
+            </div>
+          {%- elsif block.settings.pagination_type == "load_more" -%} 
+            {%-liquid
+              if template.name == 'collection'
+                assign collection_url = ''
+              else 
+                assign collection_url = collection.url
+              endif
+            -%}
+            <div loadmore-btn-wrapp class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" style="--pagination-distance:{{ block.settings.dis_pagination }}px;">
+              <wrapp-hdt-lm-url class="hdt-contents" {% if section.id contains 'tabs_collection' %} tab-id="tab-{{ section.id }}-{{ block.settings.collection.id }}"{% endif %}>
+                <a section-id="{{ section.id }}" append="products-{{ section.id }}-{{ block.settings.collection.id }}" href="{{ paginate.next.url }}" class="hdt-loamore-btn hdt-btn hdt-oh hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" hdt-reveal="slide-in" timeline>
+                  {% assign loadmore_df = 'general.pagination.load_more_products' | t %}
+                  <span>{{ block.settings.btn_label | default: loadmore_df | escape }}</span>
+                  {%- if block.settings.endable_btn_icon -%}
+                    <svg class="t4s-btn-icon" viewBox="0 0 32 32" width="32"><path d="M 15 4 L 15 24.0625 L 8.21875 17.28125 L 6.78125 18.71875 L 15.28125 27.21875 L 16 27.90625 L 16.71875 27.21875 L 25.21875 18.71875 L 23.78125 17.28125 L 17 24.0625 L 17 4 Z"/></svg>
+                  {%- endif -%}
+                </a>
+              </wrapp-hdt-lm-url>
+            </div>
+          {%- endif -%} 
+        {%- endif -%}
+      {%- endif -%}
+    {%- endpaginate -%}
+  {%- else -%}
+    {%- assign collection = collections[block.settings.collection] -%}
+    {%- paginate collection.products by block.settings.products_count -%}
+      <hdt-reval-items reveal-on-scroll="true" selector=".hdt-product_list_item" id="products-{{ section.id }}-{{ block.settings.collection.id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-spacing-{{ block.settings.space_items }} lg:hdt-grid-cols-{{ block.settings.col_dk }} md:hdt-grid-cols-{{ block.settings.col_tb }} hdt-grid-cols-{{ block.settings.col_mb }}">
+        {%- liquid
+          for product in collection.products
+            render '_product-list-item', product: product
+          endfor
+        -%}
+      </hdt-reval-items>
+      {%- if block.settings.pagination %}
+        {%- if paginate.next -%}
+          {{ 'hdt-pagination.css' | asset_url | stylesheet_tag }}
+          {%- if block.settings.pagination_type == "view_all" -%}
+            <div class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" timeline hdt-reveal="slide-in" style="--pagination-distance:{{ block.settings.dis_pagination }}px;">
+              <a class="hdt-view-all-btn hdt-btn hdt-oh hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn-{{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" href="{{ collection.url | default: routes.all_products_collection_url }}" hdt-reveal="slide-in" timeline>
+                {% assign view_all_df = 'general.pagination.view_all' | t %}
+                <span>{{ block.settings.btn_label | default: view_all_df | escape }}</span>
+                {%- if block.settings.endable_btn_icon -%}
+                  <svg id="t4s-icon-btn" viewBox="0 0 14 10" fill="none">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.537.808a.5.5 0 01.817-.162l4 4a.5.5 0 010 .708l-4 4a.5.5 0 11-.708-.708L11.793 5.5H1a.5.5 0 010-1h10.793L8.646 1.354a.5.5 0 01-.109-.546z" fill="currentColor"></path>
+                  </svg>
+                {%- endif -%}
+              </a>
+            </div>
+          {%- elsif block.settings.pagination_type == "load_more" -%} 
+            {%-liquid
+              if template.name == 'collection'
+                assign collection_url = ''
+              else 
+                assign collection_url = collection.url
+              endif
+            -%}
+            <div loadmore-btn-wrapp class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" style="--pagination-distance:{{ block.settings.dis_pagination }}px;">
+              <wrapp-hdt-lm-url class="hdt-contents" {% if section.id contains 'tabs_collection' %} tab-id="tab-{{ section.id }}-{{ block.settings.collection.id }}"{% endif %}>
+                <a section-id="{{ section.id }}" append="products-{{ section.id }}-{{ block.settings.collection.id }}" href="{{ paginate.next.url | prepend: collection_url }}" class="hdt-loamore-btn hdt-btn hdt-oh hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" hdt-reveal="slide-in" timeline>
+                  {% assign loadmore_df = 'general.pagination.load_more_products' | t %}
+                  <span>{{ block.settings.btn_label | default: loadmore_df | escape }}</span>
+                  {%- if block.settings.endable_btn_icon -%}
+                    <svg class="t4s-btn-icon" viewBox="0 0 32 32" width="32"><path d="M 15 4 L 15 24.0625 L 8.21875 17.28125 L 6.78125 18.71875 L 15.28125 27.21875 L 16 27.90625 L 16.71875 27.21875 L 25.21875 18.71875 L 23.78125 17.28125 L 17 24.0625 L 17 4 Z"/></svg>
+                  {%- endif -%}
+                </a>
+              </wrapp-hdt-lm-url>
+            </div>
+          {%- endif -%} 
+        {%- endif -%}
+      {%- endif -%}
+    {%- endpaginate -%}
+  {%- endif -%}
+{%- endif -%}

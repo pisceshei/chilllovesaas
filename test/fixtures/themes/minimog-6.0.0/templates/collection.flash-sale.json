@@ -1,0 +1,53 @@
+{
+  "sections": {
+    "collection-header": {
+      "type": "collection-page-header",
+      "settings": {
+        "layout": "inside",
+        "header_height": "small",
+        "text_alignment": "center",
+        "vertical_alignment": "center",
+        "bg_color": "#ffffff",
+        "enable_parallax": false,
+        "upper_title": false,
+        "show_desc": false,
+        "collection_all_desc": ""
+      }
+    },
+    "flash-sale": {
+      "type": "flash-sale"
+    },
+    "main": {
+      "type": "main-collection-product-grid",
+      "settings": {
+        "container": "container",
+        "grid_layout": "grid",
+        "grid_columns": "4",
+        "pagination_limit": 12,
+        "show_sorting": true,
+        "show_filter": false,
+        "filters_type": "tags_filter",
+        "sidebar": "leftColumn",
+        "sidebar_title": "Filters",
+        "limit_height_widget": false,
+        "paginate_type": "paginate"
+      }
+    },
+    "recent-viewed": {
+      "type": "recent-viewed-products",
+      "settings": {
+        "heading": "Recently Viewed Products",
+        "container": "container",
+        "columns": 4,
+        "column_gap": 30,
+        "enable_slider": true
+      }
+    }
+  },
+  "order": [
+    "collection-header",
+    "flash-sale",
+    "main",
+    "recent-viewed"
+  ]
+}

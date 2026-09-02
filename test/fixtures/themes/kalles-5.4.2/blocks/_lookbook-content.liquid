@@ -1,0 +1,119 @@
+{%- style -%}
+  .hdt-content-lookbook:empty {
+    display: none;
+  }
+  .hdt-content-lookbook {
+    top: {{block.settings.content_top}}%; 
+    left: {{block.settings.content_left}}%; 
+    width: max-content;
+    max-width: 100%;
+    height: auto; 
+    padding: {{block.settings.content_padding_block}}px {{block.settings.content_padding_inline}}px;
+    background-color: {{block.settings.color_background}};
+    z-index: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transform: translate(-{{block.settings.content_left}}%, -{{block.settings.content_top}}%);
+    {% if block.settings.lookbook_content_center %}transform: translate(-50%, -50%); top: 50%; left: 50%;{% endif %};
+  }
+{%- endstyle -%}
+
+
+<div class="hdt-content-lookbook hdt-absolute" style="position: absolute; ">{% content_for "blocks"%}</div>
+{% schema %}
+  {
+    "name": "Lookbook Content",
+    "class": "hdt-lookbook-content",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "lookbook_content_center",
+        "label": "Center Content",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "content_padding_block",
+        "label": "Content Padding Top/Bottom",
+        "default": 50,
+        "min": 10,
+        "max": 200,
+        "step": 2,
+        "unit": "px"
+      },
+      {
+        "type": "range",
+        "id": "content_padding_inline",
+        "label": "Content Padding Left/Right",
+        "default": 50,
+        "min": 10,
+        "max": 200,
+        "step": 2,
+        "unit": "px"
+      },
+      {
+        "type": "range",
+        "id": "content_top",
+        "label": "Vertical Position",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "visible_if": "{{ block.settings.lookbook_content_center == false }}"
+      },
+      {
+        "type": "range",
+        "id": "content_left",
+        "label": "Horizontal Position",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "visible_if": "{{ block.settings.lookbook_content_center == false }}"
+      },
+      {
+        "type": "color",
+        "id": "color_background",
+        "label": "Background Color",
+        "default": "#000000",
+        "alpha": true
+      }
+    ],
+    "blocks": [
+      {"type": "heading"},
+      {"type": "text"},
+      {"type": "spacer"}
+    ],
+    "presets": [
+      {
+        "name": "Lookbook Content",
+        "settings": {
+          "content_padding_block": 50,
+          "content_padding_inline": 50, 
+          "content_top": 50,
+          "content_left": 50,
+          "lookbook_content_center": true,
+          "color_background": "#fff"
+        },
+        "blocks": [
+          {
+            "type": "heading",
+            "settings": {
+              "heading": "<h2>Heading</h2>"
+            }
+          },
+          {
+            "type": "text",
+            "settings": {
+              "text": "<p>Text</p>"
+            }
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

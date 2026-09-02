@@ -1,0 +1,92 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "container": "container",
+        "color_scheme": "scheme-27860eea-5282-496b-bf1c-f1238c42a8bf",
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "show_divider": false,
+        "show_nav": false,
+        "autorotate": false,
+        "autorotate_speed": 3
+      }
+    },
+    "scrolling_promotion_nrprPb": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "announcement_JTKVEt": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "<svg width=\"62\" height=\"13\" viewbox=\"0 0 62 13\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M3.91406 0.625L6.0625 8.85156L8.20312 0.625H11.2031V12H8.89844V8.92188L9.10938 4.17969L6.83594 12H5.27344L3 4.17969L3.21094 8.92188V12H0.914062V0.625H3.91406ZM15.4531 12H13.1562V0.625H15.4531V12ZM25.3359 12H23.0391L19.6797 4.53906V12H17.3828V0.625H19.6797L23.0469 8.09375V0.625H25.3359V12ZM29.5781 12H27.2812V0.625H29.5781V12ZM34.5078 0.625L36.6562 8.85156L38.7969 0.625H41.7969V12H39.4922V8.92188L39.7031 4.17969L37.4297 12H35.8672L33.5938 4.17969L33.8047 8.92188V12H31.5078V0.625H34.5078ZM51.6562 7.33594C51.6562 8.86198 51.2943 10.0469 50.5703 10.8906C49.8516 11.7344 48.8516 12.1562 47.5703 12.1562C46.2943 12.1562 45.2917 11.7396 44.5625 10.9062C43.8333 10.0677 43.4635 8.89583 43.4531 7.39062V5.44531C43.4531 3.88281 43.8151 2.66406 44.5391 1.78906C45.263 0.908854 46.2682 0.46875 47.5547 0.46875C48.8203 0.46875 49.8177 0.901042 50.5469 1.76562C51.276 2.625 51.6458 3.83333 51.6562 5.39062V7.33594ZM49.3516 5.42969C49.3516 4.40365 49.2057 3.64062 48.9141 3.14062C48.6224 2.64062 48.1693 2.39062 47.5547 2.39062C46.9453 2.39062 46.4948 2.63281 46.2031 3.11719C45.9115 3.59635 45.7604 4.32812 45.75 5.3125V7.33594C45.75 8.33073 45.8984 9.0651 46.1953 9.53906C46.4922 10.0078 46.9505 10.2422 47.5703 10.2422C48.1693 10.2422 48.6146 10.013 48.9062 9.55469C49.1979 9.09115 49.3464 8.375 49.3516 7.40625V5.42969ZM61.0391 10.7109C60.5964 11.1901 60.0521 11.5521 59.4062 11.7969C58.7656 12.0365 58.0625 12.1562 57.2969 12.1562C55.9896 12.1562 54.974 11.7526 54.25 10.9453C53.526 10.1328 53.1536 8.95312 53.1328 7.40625V5.35938C53.1328 3.79167 53.474 2.58594 54.1562 1.74219C54.8438 0.893229 55.8438 0.46875 57.1562 0.46875C58.3906 0.46875 59.3203 0.773438 59.9453 1.38281C60.5755 1.99219 60.9401 2.94792 61.0391 4.25H58.8047C58.7422 3.52604 58.5911 3.03385 58.3516 2.77344C58.112 2.50781 57.737 2.375 57.2266 2.375C56.6068 2.375 56.1562 2.60156 55.875 3.05469C55.5938 3.50781 55.4479 4.22917 55.4375 5.21875V7.28125C55.4375 8.31771 55.5911 9.07292 55.8984 9.54688C56.2109 10.0156 56.7214 10.25 57.4297 10.25C57.8828 10.25 58.25 10.1589 58.5312 9.97656L58.7344 9.83594V7.75H57.125V6.01562H61.0391V10.7109Z\" fill=\"black\"><\/path>\n<\/svg>",
+            "icon_size": "large",
+            "text": "New Collection in Town",
+            "text_size": 20,
+            "text_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "announcement_JTKVEt"
+      ],
+      "custom_css": [
+
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 12,
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "color_scheme": "scheme-27860eea-5282-496b-bf1c-f1238c42a8bf",
+        "padding_top": 10,
+        "padding_bottom": 10,
+        "custom_class": "m-promotion--header"
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "color_scheme": "",
+        "color_scheme_menu": "",
+        "header_design": "logo-center-menu-left",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": true,
+        "transparent_text_color": "#ffffff",
+        "logo_text": "STORE LOGO",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 90,
+        "sticky_logo_max_width": 90,
+        "mobile_logo_max_width": 90,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "mobile_menu": "",
+        "uppercase_parent_level": true,
+        "show_menu_column_divider": true,
+        "search": "show_icon",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": true,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "scrolling_promotion_nrprPb",
+    "header"
+  ]
+}

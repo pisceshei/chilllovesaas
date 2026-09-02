@@ -1,0 +1,129 @@
+{%- comment -%}
+  Renders a product card
+
+  Accepts:
+  - card_product: {Object} Product Liquid object (required)
+  - section_id: {String} The ID of the section that contains this card. (required)
+  - sizes: {String} a list sizes of image.
+  - class: {String} a list class.
+  - image_ratio: {String} Size of the product image card. Values are "square" and "portrait". Default is "square" (optional)
+  - show_vendor: {Boolean} Show the product vendor. Default: false
+  - show_rating: {Boolean} Show the product rating. Default: false
+  - color_list: {Array}
+  - size_list: {Array}
+
+  Usage:
+  {%- render 'card-product', card_product: product, show_vendor: section.settings.show_vendor -%}
+{%- endcomment -%}
+
+{%- liquid
+  unless product_url
+    assign product_url = card_product.url
+  endunless
+  assign featured_media = card_product.featured_media | default: settings.placeholder_img
+  assign color_count = 0
+  assign size_count = 0
+  
+  assign color_list = 'products.theme_settings.color' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign size_list = 'products.theme_settings.size' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  
+  if card_product.has_only_default_variant == false and settings.color_mode != 'hide' or settings.size_mode != 'hide'
+     assign available_variants = card_product.variants | where: "available"
+     for option in card_product.options_with_values
+        assign name_downcase = option.name | downcase
+        if settings.color_mode != 'hide' and color_list contains name_downcase and color_count == 0
+          assign color_option_index = 'option' | append: forloop.index
+          assign color_variants = option.values
+          assign color_variants_avai = available_variants | map: color_option_index | uniq
+          if settings.color_type == 'all'
+            assign color_count = color_variants.size
+          else
+            assign color_count = color_variants_avai.size
+          endif
+        elsif settings.size_mode != 'hide' and size_list contains name_downcase and size_count == 0
+          assign size_option_index = 'option' | append: forloop.index
+          assign size_variants_avai = available_variants | map: size_option_index | uniq
+          assign size_variants = option.values
+          if settings.size_type == 'all'
+            assign size_count = size_variants.size
+          else
+            if card_product.options_with_values.size == 1
+              assign size_variants = size_variants_avai
+            endif
+            assign size_count = size_variants_avai.size
+          endif
+        endif
+     endfor
+  endif
+  -%}
+  
+  <hdt-card-product class="hdt-card-product hdt-pr-style1 {{ class }}{% if card_product.available == false %} hdt-pr-sold_out{% endif %}">
+    <div class="hdt-card-product__wrapper hdt-relative hdt-oh">
+      <div class="hdt-card-product__media hdt-relative hdt-oh{% if card_product.metafields.theme.countdown.value != blank %} hdt-has-countdown{% endif %}">
+        {%- render 'card-product-media', card_product: card_product, product_url: product_url, sizes: sizes, image_ratio: image_ratio -%}
+        <div class="hdt-card-product__widget">
+          {%- render 'badges', product: card_product, use_variant: false -%}
+          {%- if card_product.metafields.theme.countdown.value != blank %}
+            {%- assign countdown = card_product.metafields.theme.countdown.value -%}
+            <hdt-countdown class="{% if settings.hdt_show_countdown_timer != true %} hdt-hidden {% else %} hdt-flex hdt-inline-flex {% endif %} hdt-flex-wrap hdt-flex-col hdt-items-center hdt-pr-countdown hdt-text-base hdt-font-semibold" config='{"month":"{{ countdown | date: '%m' | plus: 0 }}", "date":"{{ countdown | date: '%d, %Y %H:%M:%S' }}", "hideTimerOnComplete": true, "hasZero": true }'>
+              <div class="hdt-countdown__inner hdt-flex hdt-align-center hdt-justify-center" aria-hidden="true">
+                <div class="hdt-product__countdown-item hdt-text-center">
+                  <hdt-countdown-amount effect="move_top" data-days>00</hdt-countdown-amount>
+                  <div class="hdt-cd-mini-text">{{ 'sections.countdown_timmer.day_m' | t }}<span>:</span></div>
+                  <hdt-countdown-text singular="{{ 'sections.countdown_timmer.day' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.day_plural_mini' | t }}</hdt-countdown-text>
+                </div>
+                <div class="hdt-product__countdown-item hdt-text-center">
+                  <hdt-countdown-amount effect="move_top" data-hours>00</hdt-countdown-amount>
+                  <div class="hdt-cd-mini-text">{{ 'sections.countdown_timmer.hr_m' | t }}<span>:</span></div>
+                  <hdt-countdown-text singular="{{ 'sections.countdown_timmer.hr' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.hr_plural_mini' | t }}</hdt-countdown-text>
+                </div>
+                <div class="hdt-product__countdown-item hdt-text-center">
+                  <hdt-countdown-amount effect="move_top" data-minutes>00</hdt-countdown-amount>
+                  <div class="hdt-cd-mini-text">{{ 'sections.countdown_timmer.min_m' | t }}<span>:</span></div>
+                  <hdt-countdown-text singular="{{ 'sections.countdown_timmer.min' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.min_plural_mini' | t }}</hdt-countdown-text>
+                </div>
+                <div class="hdt-product__countdown-item hdt-text-center">
+                  <hdt-countdown-amount effect="move_top" data-seconds>00</hdt-countdown-amount>
+                  <div class="hdt-cd-mini-text">{{ 'sections.countdown_timmer.sec_m' | t }}<span>:</span></div>
+                  <hdt-countdown-text singular="{{ 'sections.countdown_timmer.sec' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.sec_plural_mini' | t }}</hdt-countdown-text>
+                </div>
+              </div>
+            </hdt-countdown>
+
+          {%- endif -%}
+          <div class="hdt-product-btns hdt-pr-btns-group2 hdt-absolute hdt-flex hdt-flex-col">
+            {%- liquid
+              echo btn_wishlist_code | replace_first: '19041994', card_product.id | replace_first: 'handle_nt_94', card_product.handle
+              if settings.compare_mode != "0"
+                render 'btn-compare', product_id: card_product.id, product_handle: card_product.handle, class: 'hdt-pr_btn hdt-card-product__btn-compare', placement: 'right'
+              endif -%}
+          </div>
+          <div class="hdt-product-btns hdt-pr-btns-group1 hdt-absolute hdt-flex hdt-flex-col hdt-justify-center hdt-align-center">
+            {%- if settings.show_quick_view %}{% render 'btn-quick-view', class: 'hdt-pr_btn', product: card_product, section_id: section_id, disable_sr_only: true, attr: attr %}{% endif -%}
+            {%- if settings.show_ultra_btn %}{% render 'btn-ultra', class: 'hdt-pr_btn', product: card_product, product_url: product_url, section_id: section_id, disable_sr_only: true, show_qty: settings.show_qty, attr: attr %}{% endif -%}
+          </div>
+        </div>
+        {% render 'scrolling_badge', product: card_product %}
+      </div>
+      <div class="hdt-card-product__info hdt-bottom-0 hdt-left-0 hdt-right-0 hdt-card-align-{{ settings.pr_card_alignment }} hdt-pe-none">
+        {%- if settings.show_rating %}{% render 'hdt-pr-card-rating', product: card_product %}{% endif -%}
+        {%- liquid
+        if card_product.vendor.size > 0 and show_vendor
+          render 'vendor' with card_product.vendor, class: 'hdt-inline-block hdt-text-base hdt-font-normal'
+        endif -%}
+        <h3><a data-pr-url href="{{ product_url }}" class="hdt-card-product__title hdt-text-{{ settings.pr_title_size }} hdt-font-{{ settings.pr_title_weight }} hdt-line-clamp" data-instant>{{ card_product.title | default: "Product title" | escape }}</a></h3>
+        {%- liquid
+          render 'card-price', section_id: section_id, product: card_product, show_volume_note: true
+          if settings.size_position == '1'
+            if settings.pr_card_alignment == 'start'
+              assign class = 'hdt-justify-start hdt-size-list hdt-pe-none'
+            elsif settings.pr_card_alignment == 'end'
+              assign class = 'hdt-justify-end hdt-size-list hdt-pe-none'
+            endif
+            render 'size-list', size_variants: size_variants, size_variants_avai: size_variants_avai, size_count: size_count, product_url: product_url, class: class
+          endif
+          render 'color-list', section_id: section_id, product: card_product, product_url: product_url, placement: 'top'
+        -%}
+      </div>
+    </div>
+  </hdt-card-product>

@@ -1,0 +1,346 @@
+{
+  "sections": {
+    "main": {
+      "type": "page-about-us",
+      "settings": {}
+    },
+    "custom-content": {
+      "type": "custom-content",
+      "blocks": {
+        "be5d2488-3c71-471f-bb75-dbccb6970cb0": {
+          "type": "image",
+          "settings": {
+            "width": "100%",
+            "alignment": "center",
+            "link": "",
+            "block_custom_class": "",
+            "animations": "inherit",
+            "enable_preload_image": false
+          }
+        }
+      },
+      "block_order": [
+        "be5d2488-3c71-471f-bb75-dbccb6970cb0"
+      ],
+      "custom_css": [],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "row_gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "row_gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "enable_preload_image": false,
+        "custom_class": ""
+      }
+    },
+    "custom_content_TzEwWB": {
+      "type": "custom-content",
+      "blocks": {
+        "text_hTUrJW": {
+          "type": "text",
+          "settings": {
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "title": "It pains me physically to see woman victimized, rendered pathetic by fashion.",
+            "text_size": "h3",
+            "subheading": "",
+            "text": "",
+            "desc_size": "text-base",
+            "text_color": "inherit",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "text_rLpbzX": {
+          "type": "text",
+          "settings": {
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "left",
+            "title": "<span class=\"m:font-medium m:text-xl\">Awkwardness gives me great comfort. I’ve never been cool, but I’ve felt cool. I’ve been in the cool place, but I wasn’t really cool – I was trying to pass for hip or cool.</span>",
+            "text_size": "h5",
+            "subheading": "",
+            "text": "<p>A girl should be two things: classy and fabulous. I am convinced that there can be luxury in simplicity. I wanted to dress the woman who lives and works, not the woman in a painting. It’s hard to balance everything. It’s always challenging. My relationships with producers or photographers – these are relationships that took years. I can’t get sucked into that celebrity thing, because I think it’s just crass. My aim is to make the poor look rich and the rich look poor. Vanity is the healthiest thing in life. I believe that my clothes can give people a better image of themselves – that it can increase their feelings of confidence and happiness. You can hide so much behind theatrics, and I don’t need to do that any more. I don’t really know how to do casual clothes.</p>",
+            "desc_size": "text-base",
+            "text_color": "inherit",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_hTUrJW",
+        "text_rLpbzX"
+      ],
+      "custom_css": [
+        ".m-custom-content__block-inner {max-width: 830px; width: 100%; margin: 0 auto;}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "row_gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "row_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "enable_preload_image": false,
+        "custom_class": ""
+      }
+    },
+    "store_locator_eT9fhi": {
+      "type": "store-locator",
+      "blocks": {
+        "icon_box_zzPpgH": {
+          "type": "icon_box",
+          "settings": {
+            "card_style": "horizontal",
+            "image_by_url": "",
+            "image_max_width": "70px",
+            "link": "",
+            "hover_effect": "scaling-up",
+            "title": "Soft Fabric",
+            "heading_size": "h5",
+            "description": "<p>Get complimentary ground shipping on every order.Don’t love it? Send it back, on us.</p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "icon_box_NMN9RU": {
+          "type": "icon_box",
+          "settings": {
+            "card_style": "horizontal",
+            "image_by_url": "",
+            "image_max_width": "70px",
+            "link": "",
+            "hover_effect": "scaling-up",
+            "title": "Lightweight",
+            "heading_size": "h5",
+            "description": "<p>Join Minimog Rewards to earn gift cards<br/>and enjoy exclusive member benefits.</p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "icon_box_TxxDaU": {
+          "type": "icon_box",
+          "settings": {
+            "card_style": "horizontal",
+            "image_by_url": "",
+            "image_max_width": "70px",
+            "link": "",
+            "hover_effect": "scaling-up",
+            "title": "All Day Comfort",
+            "heading_size": "h5",
+            "description": "<p>We believe getting dressed should be the<br/>easiest part of your day.</p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "icon_box_zzPpgH",
+        "icon_box_NMN9RU",
+        "icon_box_TxxDaU"
+      ],
+      "custom_css": [
+        ".m-section__header {max-width: 375px; --m-section-header-spacing-bottom-mobile: 24px;}",
+        ".m-icon-box__heading {font-weight: 500;}",
+        ".m-icon-box__heading.h5 {font-size: 20px;}"
+      ],
+      "name": "Store locator",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "container_color_scheme": "",
+        "heading": "We are proudly Australian.",
+        "heading_size": "h2",
+        "description": "",
+        "image_width": "medium",
+        "image_position": "left",
+        "item_columns": "1",
+        "item_column_gap": 30,
+        "item_row_gap": 30,
+        "item_columns_mobile": "1",
+        "item_column_gap_mobile": 20,
+        "item_row_gap_mobile": 30,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "rich_text_x7EqcG": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_LkgWA9": {
+          "type": "heading",
+          "settings": {
+            "heading": "The world needs to move fast to make a meaningful difference in the fight against climate change.",
+            "heading_size": "h3"
+          }
+        },
+        "text_imb8FG": {
+          "type": "text",
+          "settings": {
+            "text": "<p>A girl should be two things: classy and fabulous. I am convinced that there can be luxury in simplicity. I wanted to dress the woman who lives and works, not the woman in a painting. It’s hard to balance everything. It’s always challenging. My relationships with producers or photographers – these are relationships that took years. I can’t get sucked into that celebrity thing, because I think it’s just crass. My aim is to make the poor look rich and the rich look poor. Vanity is the healthiest thing in life. I believe that my clothes can give people a better image of themselves – that it can increase their feelings of confidence and happiness. You can hide so much behind theatrics, and I don’t need to do that any more. I don’t really know how to do casual clothes.</p>",
+            "text_size": "text-base"
+          }
+        }
+      },
+      "block_order": [
+        "heading_LkgWA9",
+        "text_imb8FG"
+      ],
+      "custom_css": [
+        ".m-richtext {max-width: 830px; width: 100%; margin: 0 auto;}"
+      ],
+      "name": "Rich text",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "content_alignment": "center",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "icon_box_pnPaNe": {
+      "type": "icon-box",
+      "blocks": {
+        "iconbox_LYmCC9": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image_by_url": "",
+            "link": "",
+            "title": "Edward Lindgren",
+            "heading_size": "h5",
+            "description": "<p>CHIEF OPERATING OFFICER</p>",
+            "text_size": "text-sm",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "iconbox_t76Kej": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image_by_url": "",
+            "link": "",
+            "title": "Chineze Afamefuna",
+            "heading_size": "h5",
+            "description": "<p>MARKETING</p>",
+            "text_size": "text-sm",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "iconbox_76Q7Wt": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image_by_url": "",
+            "link": "",
+            "title": "Nado Husa",
+            "heading_size": "h5",
+            "description": "<p>CO-FOUNDER</p>",
+            "text_size": "text-sm",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_LYmCC9",
+        "iconbox_t76Kej",
+        "iconbox_76Q7Wt"
+      ],
+      "custom_css": [
+        ".m-icon-box__heading,.m-icon-box__description {font-weight: 500;}",
+        ".m-icon-box__description.m\\:text-sm {font-size: 12px;}",
+        "@media (min-width: 1024px) {.m-icon-box__content {margin-top: 30px; }}"
+      ],
+      "name": "Featured promotion",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "use_color_scheme_in_container": false,
+        "heading": "Our Team",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_style": "vertical",
+        "image_max_width": "100%",
+        "content_alignment": "start",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "custom-content",
+    "custom_content_TzEwWB",
+    "store_locator_eT9fhi",
+    "rich_text_x7EqcG",
+    "icon_box_pnPaNe"
+  ]
+}

@@ -1,0 +1,31 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "heading": {
+      "type": "main-heading",
+      "settings": {
+        "image": "shopify://shop_images/bg-heading.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 0
+      }
+    },
+    "main": {
+      "type": "main-activate-account",
+      "settings": {
+        "color_scheme": ""
+      }
+    }
+  },
+  "order": [
+    "heading",
+    "main"
+  ]
+}

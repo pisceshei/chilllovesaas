@@ -1,0 +1,359 @@
+{% style %}
+  #shopify-section-{{ section.id }}{
+    --spacing-dk: {{ section.settings.item_spacing }}px;
+    --spacing-tb: {{ section.settings.item_spacing_tb }}px;
+    --spacing-mb: {{ section.settings.item_spacing_mb }}px;
+  }
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+{% liquid
+  #Section layout
+  assign sizes  = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+
+  case section.settings.section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+  assign effect = 'hdt-reveal="slide-in"'
+  if section.id contains 'footer' or section.location contains 'footer'
+    assign effect = ''
+  endif
+%}
+<div id="{{ section.id }}" class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %} {{ effect }}>
+  <div class="{{ child }}">
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+      {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center' }}
+    {%- endif -%}
+    <div class="hdt-grid-system hdt-grid-system-{{ section.settings.layout }}">
+      {% content_for 'blocks' %}
+    </div>
+  </div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.custom_section.name",
+  "class": "hdt-section hdt-section--custom",
+  "enabled_on": {
+    "groups": ["header"]
+  },
+  "blocks": [
+    {
+      "type": "@theme",
+    },
+    {
+      "type": "@app",
+    },
+    {
+      "type": "text",
+    },
+    {
+      "type": "group",
+    },
+    {
+      "type": "_multi_column",
+    },
+  ],
+  "settings": [
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.custom_section.settings.layout",
+      "options": [
+        {
+          "value": "10",
+          "label": "t:sections.custom_section.settings.10_column"
+        },
+        {
+          "value": "12",
+          "label": "t:sections.custom_section.settings.12_column"
+        }
+      ],
+      "default": "10"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.space_items.label"
+    },
+    {
+      "type": "range",
+      "id": "item_spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.space_items.desktop",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "item_spacing_tb",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.space_items.tablet",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "item_spacing_mb",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.space_items.mobile",
+      "default": 15
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0,
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "select",
+      "id": "section_layout",
+      "label": "t:sections.all.section_layout.width.label",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:sections.all.section_layout.width.container"
+        },
+        {
+          "value": "wrapper_container",
+          "label": "t:sections.all.section_layout.width.wrapper_container"
+        },
+        {
+          "value": "full_width",
+          "label": "t:sections.all.section_layout.width.full_width"
+        }
+      ],
+      "default": "container"
+    },
+    {
+      "type": "image_picker",
+      "id": "section_background",
+      "label": "t:sections.all.background.image"
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "presets": [
+    {
+      "name": "t:sections.custom_section.name",
+      "category": "t:sections_categories.05_section.name",
+      "blocks": [
+        {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "center",
+            "content_position_mb": "center",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "#d2a2a2",
+            "rounded": "none"
+          },
+          "blocks": [
+            {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Heading</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "heading_size": "h2",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                
+                "font_size_heading": 24,
+                
+                "letter_spacing_heading": 0
+              }
+            },
+            {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              }
+            },
+            {
+              "type": "text",
+              "settings": {
+                "text": "<p>Share information about your brand with your customers. Describe a product, make announcements, or welcome customers to your store.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "base",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              }
+            },
+            {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              }
+            },
+            {
+              "type": "button",
+              "settings": {
+                "label": "Button label",
+                "link": "",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "font_weight": "normal",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "center",
+            "content_position_mb": "center",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "#d2a2a2",
+            "rounded": "none"
+          },
+          "blocks": [
+            {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Newsletter</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "heading_size": "h4",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                
+                "font_size_heading": 24,
+                
+                "letter_spacing_heading": 0
+              }
+            },
+            {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              }
+            },
+            {
+              "type": "_newsletter",
+              "settings": {
+                "des_newsletter": "1",
+                "button_lb": "Subscribe"
+              }
+            }
+          ]
+        }
+      ]
+    },
+  ]
+}
+{% endschema %}

@@ -1,0 +1,272 @@
+<!-- _collection_item.liquid -->
+{%- liquid
+  assign current_width = settings.page_width | append: 'px'
+  assign current_width_tb = '100vw'
+  assign current_width_mb = '100vw'
+  assign hdt_svg_image = block.settings.hdt_collection_list_svg
+  assign svg_width = block.settings.svg_width
+  assign svg_width_mb = block.settings.svg_width_mb
+  if section.settings.space_items == "x"
+    assign space_item = settings.spacing_grid_horizontal
+    assign space_item_tb = settings.spacing_grid_horizontal | divided_by: 2
+    assign space_item_mb = settings.spacing_grid_horizontal | divided_by: 2
+  else
+    assign space_item = section.settings.space_items
+    assign space_item_tb = space_item | times: 0.666 | round
+    assign space_item_mb = space_item | times: 0.333 | round
+  endif
+  if section.settings.section_layout == 'full_width'
+    assign current_width = '100vw'
+  endif
+-%}
+{%- capture sizes -%}
+  {%- if section.settings.layout_mode == 'packery' -%}
+    (min-width: 1150px) calc( {{ current_width }} * {{ block.settings.col_dk }} / 12 - {{ section.settings.gap_item_dk }}px / 2 ),(min-width: 768px) calc( {{ current_width_tb }} * {{ block.settings.col_tb }} / 12 - {{ section.settings.gap_item_tb }}px / 2 ), calc( {{ current_width_mb }} * {{ block.settings.col_mb }} / 12 - {{ section.settings.gap_item_mb }}px / 2 )
+  {%- else -%}
+  (min-width: 1150px) calc(({{ current_width }} -  ({{ space_item }} * ( {{ section.settings.col_dk }} - 1 ))) * 1 / {{ section.settings.col_dk }}),(min-width: 768px) calc( ({{ current_width_tb }} - ({{ space_item_tb }} * ( {{ section.settings.col_tb }} - 1 ))) * 1 / {{ section.settings.col_tb }}), calc( ({{ current_width_mb }} - ({{ space_item_mb }} * ( {{ section.settings.col_mb }} - 1 ) )) * 1 / {{ section.settings.col_mb }})
+  {%- endif -%}
+{%- endcapture -%}
+{%- liquid
+  assign class = "hdt-slider__slide"
+  if section.settings.layout_mode == 'grid'
+    assign class = "hdt-col"
+  endif
+  render 'collection-item', block: block, hdt_svg_image: hdt_svg_image, svg_width: svg_width, svg_width_mb: svg_width_mb, collection: collections[block.settings.collection], class: class, sizes: sizes, current: 1
+-%}
+{% schema %}
+{
+  "name": "t:sections.collections-list.blocks.collection_item",
+  "tag": null,
+  "settings": [    
+    {
+      "id": "collection",
+      "type": "collection",
+      "label": "t:sections.collections-list.blocks.collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.collections-list.blocks.image",
+      "info": "t:sections.collections-list.blocks.image_info"
+    },
+    {
+      "type": "textarea",
+      "id": "hdt_collection_list_svg",
+      "label": "SVG image",
+      "info": "SVG image for collection list",
+      "visible_if": "{{ block.settings.image == blank }}"
+    },
+    {
+      "type": "range",
+      "id": "svg_width",
+      "min": 20,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Svg width",
+      "default": 60,
+      "visible_if": "{{ block.settings.hdt_collection_list_svg != blank }}"
+    },
+    {
+      "type": "range",
+      "id": "svg_width_mb",
+      "min": 20,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Svg width (Mobile)",
+      "default": 40,
+      "visible_if": "{{ block.settings.hdt_collection_list_svg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.collections-list.blocks.title",
+      "info": "t:sections.collections-list.blocks.title_info",
+      "default": "Collection name"
+    },
+    {
+      "type": "url",
+      "id": "collection_link",
+      "label": "t:sections.collections-list.blocks.link",
+      "info": "t:sections.collections-list.blocks.link_info"
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "t:sections.collections-list.blocks.column_width",
+      "visible_if": "{{ section.settings.layout_mode == 'packery' }}",
+      "options": [
+        {
+          "value": "1",
+          "label": "8.33%"
+        },
+        {
+          "value": "2",
+          "label": "16.67%"
+        },
+        {
+          "value": "3",
+          "label": "25%"
+        },
+        {
+          "value": "4",
+          "label": "33.33%"
+        },
+        {
+          "value": "5",
+          "label": "41.67%"
+        },
+        {
+          "value": "6",
+          "label": "50%"
+        },
+        {
+          "value": "7",
+          "label": "58.33%"
+        },
+        {
+          "value": "8",
+          "label": "66.67%"
+        },
+        {
+          "value": "9",
+          "label": "75%"
+        },
+        {
+          "value": "10",
+          "label": "83.33%"
+        },
+        {
+          "value": "11",
+          "label": "91.67%"
+        },
+        {
+          "value": "12",
+          "label": "100%"
+        }
+      ],
+      "default": "6",
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "t:sections.collections-list.blocks.column_width_tb",
+      "visible_if": "{{ section.settings.layout_mode == 'packery' }}",
+      "options": [
+        {
+          "value": "1",
+          "label": "8.33%"
+        },
+        {
+          "value": "2",
+          "label": "16.67%"
+        },
+        {
+          "value": "3",
+          "label": "25%"
+        },
+        {
+          "value": "4",
+          "label": "33.33%"
+        },
+        {
+          "value": "5",
+          "label": "41.67%"
+        },
+        {
+          "value": "6",
+          "label": "50%"
+        },
+        {
+          "value": "7",
+          "label": "58.33%"
+        },
+        {
+          "value": "8",
+          "label": "66.67%"
+        },
+        {
+          "value": "9",
+          "label": "75%"
+        },
+        {
+          "value": "10",
+          "label": "83.33%"
+        },
+        {
+          "value": "11",
+          "label": "91.67%"
+        },
+        {
+          "value": "12",
+          "label": "100%"
+        }
+      ],
+      "default": "6",
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "t:sections.collections-list.blocks.column_width_mb",
+      "visible_if": "{{ section.settings.layout_mode == 'packery' }}",
+      "options": [
+        {
+          "value": "1",
+          "label": "8.33%"
+        },
+        {
+          "value": "2",
+          "label": "16.67%"
+        },
+        {
+          "value": "3",
+          "label": "25%"
+        },
+        {
+          "value": "4",
+          "label": "33.33%"
+        },
+        {
+          "value": "5",
+          "label": "41.67%"
+        },
+        {
+          "value": "6",
+          "label": "50%"
+        },
+        {
+          "value": "7",
+          "label": "58.33%"
+        },
+        {
+          "value": "8",
+          "label": "66.67%"
+        },
+        {
+          "value": "9",
+          "label": "75%"
+        },
+        {
+          "value": "10",
+          "label": "83.33%"
+        },
+        {
+          "value": "11",
+          "label": "91.67%"
+        },
+        {
+          "value": "12",
+          "label": "100%"
+        }
+      ],
+      "default": "6",
+    },
+  ],
+  "presets": [
+    {
+      "name": "t:sections.collections-list.blocks.collection_item"
+    }
+  ]
+}
+{% endschema %}

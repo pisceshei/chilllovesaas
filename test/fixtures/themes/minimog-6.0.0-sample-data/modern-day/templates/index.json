@@ -1,0 +1,294 @@
+{
+  "sections": {
+    "278b5072-fc9d-48e9-bfe6-2cb614f7a2e9": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-product-tabs .m-section__tabs {\nmargin-top: 0 !important;\n}\n@media (min-width: 1280px) {\n.m-product-tabs .m-tab-header {\nfont-size: 36px;\n}\n}\n@media (max-width: 767px) {\n.m-custom-image-card-section .m-section-py {\npadding-bottom: 0;\n}\n.m-custom-image-card-section .m-image-card__content .m-button--white {\nbackground-color: var(--color-btn-bg, var(--color-primary));\n    border-color: var(--color-btn-bg, var(--color-primary));\n    color: var(--color-btn-text, #fff);\n}\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">New Arrivals<\/span>",
+            "title": "<span class=\"sf__font-normal\">Be Stylish,<br> \nbe our customer.<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">Everyday Fashion\n<\/span>",
+            "title": "<span class=\"sf__font-normal\">Fashionable clothes<br> \n for trendsetters.<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">New Arrivals<\/span>",
+            "title": "<span class=\"sf__font-normal\">Buy less,<br> \nchoose well.<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162634662720396e75": {
+      "type": "image-with-text-1",
+      "blocks": {
+        "162634662720396e75-0": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Coats & Jackets",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162634662720396e75-1": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Glasses",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162634662720396e75-2": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sneakers",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162634662720396e75-3": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Handbags",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162634662720396e75-4": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sandals",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        }
+      },
+      "block_order": [
+        "162634662720396e75-0",
+        "162634662720396e75-1",
+        "162634662720396e75-2",
+        "162634662720396e75-3",
+        "162634662720396e75-4"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "layout": "layout_1",
+        "gap": 30,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "padding_top": 30,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-image-card-section",
+        "animations": "inherit"
+      }
+    },
+    "162251092958fcda7c": {
+      "type": "product-tabs",
+      "blocks": {
+        "162251092958fcda7c-1": {
+          "type": "tab",
+          "settings": {
+            "title": "New Arrivals"
+          }
+        },
+        "162251092958fcda7c-0": {
+          "type": "tab",
+          "settings": {
+            "title": "Best Sellers"
+          }
+        },
+        "ca2d4551-2c7d-4127-8e24-a66b44e4ece8": {
+          "type": "tab",
+          "settings": {
+            "title": "On Sale"
+          }
+        }
+      },
+      "block_order": [
+        "162251092958fcda7c-1",
+        "162251092958fcda7c-0",
+        "ca2d4551-2c7d-4127-8e24-a66b44e4ece8"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "tab_header": "horizontal",
+        "limit": 10,
+        "show_button": true,
+        "button_type": "load",
+        "button_label": "Load More",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "pcard_layout": "1",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": false,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16263511280e566f2c": {
+      "type": "countdown-timer",
+      "settings": {
+        "container": "container",
+        "section_height": "small",
+        "align": "end",
+        "color_scheme": "",
+        "heading": "Old School Sneaker",
+        "time": "2024-10-05 23:00:00",
+        "button_label": "Get Only $20",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 0,
+        "padding_bottom": 40,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "278b5072-fc9d-48e9-bfe6-2cb614f7a2e9",
+    "1621243260e1af0c20",
+    "162634662720396e75",
+    "162251092958fcda7c",
+    "16263511280e566f2c"
+  ]
+}

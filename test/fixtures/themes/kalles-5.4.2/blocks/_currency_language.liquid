@@ -1,0 +1,63 @@
+{%- style -%}
+  #{{ block.id }} {
+    gap: {{ block.settings.spacing }}px;
+  }
+  #{{ block.id }} div:empty {
+    display: none;
+  }
+
+{%- endstyle -%}
+<div id="{{ block.id }}" class="hdt-flex hdt-justify-{{ block.settings.alignment_mb | replace: 'left', 'start' | replace: 'right', 'end' }} md:hdt-justify-{{ block.settings.alignment | replace: 'left', 'start' | replace: 'right', 'end' }}">
+  {% content_for 'blocks' %}
+</div>
+{% schema %}
+  {
+    "name": "t:blocks.currency_language.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "range",
+        "id": "spacing",
+        "min": 0,
+        "max": 30,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.spacing",
+        "default": 15
+      },
+      {
+        "type": "text_alignment",
+        "id": "alignment",
+        "label": "t:blocks.column.settings.alignment.label",
+        "default": "left"
+      },
+      {
+        "type": "text_alignment",
+        "id": "alignment_mb",
+        "label": "t:blocks.column.settings.alignment.label_mb",
+        "default": "left"
+      },
+    ],
+    "blocks": [
+      {
+        "type": "_currency"
+      },
+      {
+        "type": "_language"
+      }
+    ],
+    "presets": [
+      { 
+        "name": "t:blocks.currency_language.name",
+        "blocks": [
+          {
+            "type": "_currency"
+          },
+          {
+            "type": "_language"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

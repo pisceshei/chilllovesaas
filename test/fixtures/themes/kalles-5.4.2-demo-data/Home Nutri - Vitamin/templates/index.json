@@ -1,0 +1,1620 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slide-1.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "auto",
+            "position_x": 15,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 15,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_nwCDWp": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "TAKE CARE OF <br> YOUR HEALTH",
+                "remove_br_mobile": false,
+                "html_tag": "h3",
+                "font_family": "hdt-font-1",
+                "color_text": "#27496d",
+                "font_size": 60,
+                "line_height": 65,
+                "font_weight": 800,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 12,
+                "hide_on_mobile": false,
+                "font_size_mobile": 26,
+                "line_height_mobile": 32,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 15
+              },
+              "blocks": {}
+            },
+            "text_custom_hPnAni": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Quis ipsum suspendisse ultrices gravida. Risus commodo <br>viverra maecenas accumsan lacus vel facilisis.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-2",
+                "color_text": "#243446",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 28,
+                "hide_on_mobile": true,
+                "font_size_mobile": 14,
+                "line_height_mobile": 20,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "button_custom_3Njwcg": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "SHOP NOW",
+                "link": "shopify:\/\/collections\/nutri-vitamin",
+                "target": "_self",
+                "font_family": "hdt-font-2",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "sweep-to-top",
+                "primary_color": "#27496d",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#ff4800",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "min_height": 60,
+                "border_radius": 0,
+                "padding_left_right": 70,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 22,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_nwCDWp",
+            "text_custom_hPnAni",
+            "button_custom_3Njwcg"
+          ]
+        },
+        "slide_item_qKk9hf": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slide-2.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "auto",
+            "position_x": 76,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 80,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_MmnEGP": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "PROTECT <br>YOUR HEALTH",
+                "remove_br_mobile": false,
+                "html_tag": "h3",
+                "font_family": "hdt-font-1",
+                "color_text": "#927d08",
+                "font_size": 60,
+                "line_height": 65,
+                "font_weight": 800,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 12,
+                "hide_on_mobile": false,
+                "font_size_mobile": 26,
+                "line_height_mobile": 32,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 15
+              },
+              "blocks": {}
+            },
+            "text_custom_NiKQd6": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Quis ipsum suspendisse ultrices gravida. Risus commodo <br>viverra maecenas accumsan lacus vel facilisis.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-2",
+                "color_text": "#243446",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 28,
+                "hide_on_mobile": true,
+                "font_size_mobile": 14,
+                "line_height_mobile": 20,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "button_custom_CWtNCT": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "SHOP NOW",
+                "link": "shopify:\/\/collections\/nutri-vitamin",
+                "target": "_self",
+                "font_family": "hdt-font-2",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "sweep-to-top",
+                "primary_color": "#937e08",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#27496d",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "min_height": 60,
+                "border_radius": 0,
+                "padding_left_right": 70,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 22,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_MmnEGP",
+            "text_custom_NiKQd6",
+            "button_custom_CWtNCT"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM",
+        "slide_item_qKk9hf"
+      ],
+      "custom_css": [
+        ".hdt-block-text__custom {white-space: nowrap;}",
+        ".hdt-navigation button:not(:hover) {color: rgb(var(--color-foreground));}"
+      ],
+      "settings": {
+        "image_height": "adapt_image_first",
+        "fixed_height": 700,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": true,
+        "nav_visible": "hover",
+        "nav_style": "simple",
+        "nav_shape": "default",
+        "nav_size": "large",
+        "nav_hide_mobile": true,
+        "dotUI": true,
+        "pag_style": "elessi",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-3aa927c6-c072-48bf-ade6-402b492a6cee",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": ",,78px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ",,22px,"
+      }
+    },
+    "banners_t63yTD": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_PR8KX6": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "plus-zoom-overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 5,
+            "position_y": 50,
+            "gap_r": 10,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "left",
+            "position_x_mb": 10,
+            "position_y_mb": 50,
+            "gap_r_mb": 10,
+            "gap_c_mb": 10,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_hQaCzV": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "NUTRITION",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-2",
+                "color_text": "#27496d",
+                "font_size": 15,
+                "line_height": 20,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 8,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 20,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 8
+              },
+              "blocks": {}
+            },
+            "text_custom_NmwxPd": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "FOR LIFE",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-3",
+                "color_text": "#27496d",
+                "font_size": 30,
+                "line_height": 36,
+                "font_weight": 800,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 13,
+                "hide_on_mobile": false,
+                "font_size_mobile": 24,
+                "line_height_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 12
+              },
+              "blocks": {}
+            },
+            "button_custom_xALtq9": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "SHOP NOW",
+                "link": "shopify:\/\/collections\/nutri-vitamin",
+                "target": "_self",
+                "font_family": "hdt-font-2",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "sweep-to-right",
+                "primary_color": "#27496d",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#ff4800",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "min_height": 50,
+                "border_radius": 0,
+                "padding_left_right": 32,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 22,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Banner-1_fe4d131e-1046-4239-b91f-f22605fb00a2.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_hQaCzV",
+            "text_custom_NmwxPd",
+            "button_custom_xALtq9"
+          ]
+        },
+        "banner_item_z8LKYN": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "shopify:\/\/collections\/nutri-vitamin",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "plus-zoom-overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 50,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 10,
+            "position_y_mb": 50,
+            "gap_r_mb": 10,
+            "gap_c_mb": 10,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_Fp3HtR": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "NUTRITION FOR SPORT",
+                "remove_br_mobile": false,
+                "html_tag": "h4",
+                "font_family": "hdt-font-2",
+                "color_text": "#f96d06",
+                "font_size": 16,
+                "line_height": 20,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 6,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 18,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 5
+              },
+              "blocks": {}
+            },
+            "text_custom_KbcWEd": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "UP TO 50% OFF",
+                "remove_br_mobile": false,
+                "html_tag": "h3",
+                "font_family": "hdt-font-3",
+                "color_text": "#ffffff",
+                "font_size": 40,
+                "line_height": 50,
+                "font_weight": 800,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "font_size_mobile": 20,
+                "line_height_mobile": 26,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/banner-2_use.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_Fp3HtR",
+            "text_custom_KbcWEd"
+          ]
+        },
+        "banner_item_thq78Q": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "plus-zoom-overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 5,
+            "position_y": 50,
+            "gap_r": 10,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "left",
+            "position_x_mb": 10,
+            "position_y_mb": 50,
+            "gap_r_mb": 10,
+            "gap_c_mb": 10,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_9BbUKX": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "VITAMIN",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-2",
+                "color_text": "#ffffff",
+                "font_size": 15,
+                "line_height": 20,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 8,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 20,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 8
+              },
+              "blocks": {}
+            },
+            "text_custom_9CG3FM": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "FOR CHILDREN",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-3",
+                "color_text": "#ffffff",
+                "font_size": 30,
+                "line_height": 36,
+                "font_weight": 800,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 13,
+                "hide_on_mobile": false,
+                "font_size_mobile": 24,
+                "line_height_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 12
+              },
+              "blocks": {}
+            },
+            "button_custom_pf6zEc": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "SHOP NOW",
+                "link": "shopify:\/\/collections\/nutri-vitamin",
+                "target": "_self",
+                "font_family": "hdt-font-2",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "sweep-to-left",
+                "primary_color": "#da510f",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#27496d",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "min_height": 50,
+                "border_radius": 0,
+                "padding_left_right": 32,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 22,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/banner-3.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_9BbUKX",
+            "text_custom_9CG3FM",
+            "button_custom_pf6zEc"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_PR8KX6",
+        "banner_item_z8LKYN",
+        "banner_item_thq78Q"
+      ],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 400,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 200,
+        "space_items": "20px",
+        "space_items_tb": "15px",
+        "space_items_mb": "15px",
+        "col_dk": "3",
+        "col_tb": "2",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": ",,140px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ",,26px,"
+      }
+    },
+    "featured_collection_VxagqT": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_carousel_TyrgbW": {
+          "type": "_product-carousel",
+          "name": "t:blocks.product_carousel.name",
+          "settings": {
+            "collection": "nutri-vitamin",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "in_image",
+            "product_des": "2",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "show_vendor": false,
+            "hdt_slide_center": false,
+            "hdt_opacity_out_container": false,
+            "col_dk": "5",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "icon": "none",
+            "size": "m",
+            "btn_fw": "medium",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "default",
+            "nav_shape": "rounded",
+            "nav_size": "large",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "only_show_mobile": false,
+            "pag_hide_mobile": false
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 37
+          },
+          "blocks": {
+            "heading_section_E8izzG": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "New Arrival Products",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 30,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "liquid_Vf3P4N": {
+              "type": "_liquid",
+              "name": "t:blocks.liquid.name",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<svg class=\"hdt-inline-block\"  xmlns=\"http:\/\/www.w3.org\/2000\/svg\" width=\"180\" height=\"10\" viewBox=\"0 0 180 10\" fill=\"none\"><path d=\"M1.5 7.75903L5.47566 3.35661C6.73073 1.96681 8.91213 1.96681 10.1672 3.3566L11.7971 5.16146C13.0522 6.55125 15.2336 6.55125 16.4886 5.16146L18.1185 3.35661C19.3736 1.96681 21.555 1.96681 22.8101 3.3566L24.4399 5.16146C25.695 6.55125 27.8764 6.55125 29.1315 5.16146L30.7614 3.35661C32.0164 1.96681 34.1978 1.96681 35.4529 3.3566L37.0828 5.16146C38.3379 6.55125 40.5193 6.55125 41.7743 5.16146L43.4042 3.35661C44.6593 1.96681 46.8407 1.96681 48.0958 3.3566L49.7257 5.16146C50.9807 6.55125 53.1621 6.55125 54.4172 5.16146L56.0471 3.35661C57.3022 1.96681 59.4836 1.96681 60.7386 3.3566L62.3685 5.16146C63.6236 6.55125 65.805 6.55125 67.0601 5.16146L68.6899 3.35661C69.945 1.96681 72.1264 1.96681 73.3815 3.3566L75.0114 5.16146C76.2664 6.55125 78.4478 6.55125 79.7029 5.16146L81.3328 3.35661C82.5879 1.96681 84.7693 1.96681 86.0243 3.3566L87.6542 5.16146C88.9093 6.55125 91.0907 6.55125 92.3458 5.16146L93.9757 3.35661C95.2307 1.96681 97.4121 1.96681 98.6672 3.3566L100.297 5.16146C101.552 6.55125 103.734 6.55125 104.989 5.16146L106.619 3.35661C107.874 1.96681 110.055 1.96681 111.31 3.3566L112.94 5.16146C114.195 6.55125 116.376 6.55125 117.631 5.16146L119.261 3.35661C120.516 1.96681 122.698 1.96681 123.953 3.3566L125.583 5.16146C126.838 6.55125 129.019 6.55125 130.274 5.16146L131.904 3.35661C133.159 1.96681 135.341 1.96681 136.596 3.3566L138.226 5.16146C139.481 6.55125 141.662 6.55125 142.917 5.16146L144.547 3.35661C145.802 1.96681 147.984 1.96681 149.239 3.3566L150.869 5.16146C152.124 6.55125 154.305 6.55125 155.56 5.16146L157.19 3.35661C158.445 1.96681 160.626 1.96681 161.881 3.3566L163.511 5.16146C164.766 6.55125 166.948 6.55125 168.203 5.16146L169.833 3.35661C171.088 1.96681 173.269 1.96681 174.524 3.3566L178.5 7.75903\" stroke=\"rgb(var(--color-accent))\" stroke-width=\"4\"><\/path><\/svg>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_E8izzG",
+            "liquid_Vf3P4N"
+          ]
+        }
+      },
+      "block_order": [
+        "product_carousel_TyrgbW"
+      ],
+      "custom_css": [
+        ".hdt-heading-block {font-weight: 500;}"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-3aa927c6-c072-48bf-ade6-402b492a6cee",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,78px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "hero_image_RJNEMV": {
+      "type": "hero-image",
+      "blocks": {
+        "text_custom_8dzAMg": {
+          "type": "text_custom",
+          "name": "t:blocks.text_custom.name",
+          "settings": {
+            "text": "LOST THE FAT!<br> EAT RIGHT, BE BRIGHT!",
+            "remove_br_mobile": false,
+            "html_tag": "h3",
+            "font_family": "hdt-font-3",
+            "color_text": "#27496d",
+            "font_size": 60,
+            "line_height": 65,
+            "font_weight": 700,
+            "letter_spacing": 0,
+            "enable_italic": false,
+            "enable_text_shadow": false,
+            "margin_bottom": 26,
+            "hide_on_mobile": false,
+            "font_size_mobile": 24,
+            "line_height_mobile": 32,
+            "letter_spacing_mobile": 0,
+            "margin_bottom_mobile": 10
+          },
+          "blocks": {}
+        },
+        "text_custom_qYwPfi": {
+          "type": "text_custom",
+          "name": "t:blocks.text_custom.name",
+          "settings": {
+            "text": "Nutrition Services is dedicated to bringing you and your family healthy,<br>delicious food options whenever you're at one of our locations.",
+            "remove_br_mobile": false,
+            "html_tag": "p",
+            "font_family": "hdt-font-2",
+            "color_text": "#27496d",
+            "font_size": 18,
+            "line_height": 30,
+            "font_weight": 400,
+            "letter_spacing": 0,
+            "enable_italic": false,
+            "enable_text_shadow": false,
+            "margin_bottom": 32,
+            "hide_on_mobile": true,
+            "font_size_mobile": 16,
+            "line_height_mobile": 20,
+            "letter_spacing_mobile": 0,
+            "margin_bottom_mobile": 10
+          },
+          "blocks": {}
+        },
+        "button_custom_fgJA3A": {
+          "type": "button_custom",
+          "name": "t:blocks.button_custom.name",
+          "settings": {
+            "text": "SHOP NOW",
+            "link": "shopify:\/\/collections\/nutri-vitamin",
+            "target": "_self",
+            "font_family": "hdt-font-2",
+            "icon_width": 0,
+            "button_style": "default",
+            "button_effect": "sweep-to-top",
+            "primary_color": "#27496d",
+            "secondary_color": "#ffffff",
+            "primary_color_hover": "#ff4800",
+            "secondary_color_hover": "#ffffff",
+            "font_size": 16,
+            "font_weight": 400,
+            "letter_spacing": 0,
+            "min_height": 60,
+            "border_radius": 0,
+            "padding_left_right": 70,
+            "margin_bottom": 0,
+            "hide_on_mobile": false,
+            "icon_width_mobile": 0,
+            "font_size_mobile": 12,
+            "min_height_mobile": 36,
+            "padding_left_right_mobile": 22,
+            "letter_spacing_mobile": 0,
+            "margin_bottom_mobile": 0
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "text_custom_8dzAMg",
+        "text_custom_qYwPfi",
+        "button_custom_fgJA3A"
+      ],
+      "name": "t:sections.hero-image.name",
+      "settings": {
+        "image": "shopify:\/\/shop_images\/H_o-banner.jpg",
+        "link_img": "",
+        "target": false,
+        "image_height": "adapt_image",
+        "fixed_height": 860,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 250,
+        "image_behavior": "none",
+        "content_position_type": "auto",
+        "position_x": 28,
+        "position_y": 50,
+        "content_position": "center",
+        "alignment": "left",
+        "position_x_mb": 20,
+        "position_y_mb": 50,
+        "content_position_mb": "center",
+        "alignment_mb": "left",
+        "overlay_content": false,
+        "overlay_color": "#000000",
+        "overlay_opacity": 0,
+        "background_content": false,
+        "background_content_color": "#ffffff",
+        "bg_opacity": 0,
+        "box_square": false,
+        "content_rounded": false,
+        "use_border_content": false,
+        "border_color": "#ffffff",
+        "background_border": "#ffffff",
+        "border_opacity": 0,
+        "border_style": "none",
+        "border_pd_dk": 0,
+        "padding_vertical": 30,
+        "padding_horizontal": 30,
+        "min_width_content": 350,
+        "border_pd": 0,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,130px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "tabs_collection_L6hAXg": {
+      "type": "tabs-collection",
+      "blocks": {
+        "tab_collection_7XjeNi": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Best Seller",
+            "collection": "",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_tK6rNB": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "",
+                "products_count": 10,
+                "product_list": [
+                  "naomi-vitamin",
+                  "nature-bounty-c",
+                  "centrum-for-mens",
+                  "ceylon-cinnamon",
+                  "culturelle-probiotic",
+                  "nature-vitamin-c",
+                  "women-s-multi",
+                  "organic-kids-gummies",
+                  "super-fruits",
+                  "airborne-supplement"
+                ],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_tK6rNB"
+          ]
+        },
+        "tab_collection_CKjqHG": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Top Rated",
+            "collection": "",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_JzkkkT": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "",
+                "products_count": 10,
+                "product_list": [
+                  "airborne-supplement",
+                  "nature-vitamin-c",
+                  "nature-bounty-c",
+                  "organic-kids-gummies",
+                  "naomi-vitamin",
+                  "super-fruits",
+                  "centrum-for-mens",
+                  "culturelle-probiotic",
+                  "ceylon-cinnamon",
+                  "women-s-multi"
+                ],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_JzkkkT"
+          ]
+        },
+        "tab_collection_nxbzkA": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Sale",
+            "collection": "",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_69eNmF": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "",
+                "products_count": 10,
+                "product_list": [
+                  "nature-bounty-c",
+                  "organic-kids-gummies",
+                  "culturelle-probiotic",
+                  "women-s-multi",
+                  "super-fruits",
+                  "nature-vitamin-c",
+                  "naomi-vitamin",
+                  "ceylon-cinnamon",
+                  "centrum-for-mens",
+                  "airborne-supplement"
+                ],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_69eNmF"
+          ]
+        },
+        "tabs-collection-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 10,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_NXWgYE": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Trending Products",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 30,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "liquid_r8xtHm": {
+              "type": "_liquid",
+              "name": "t:blocks.liquid.name",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<svg class=\"hdt-inline-block\"  xmlns=\"http:\/\/www.w3.org\/2000\/svg\" width=\"180\" height=\"10\" viewBox=\"0 0 180 10\" fill=\"none\"><path d=\"M1.5 7.75903L5.47566 3.35661C6.73073 1.96681 8.91213 1.96681 10.1672 3.3566L11.7971 5.16146C13.0522 6.55125 15.2336 6.55125 16.4886 5.16146L18.1185 3.35661C19.3736 1.96681 21.555 1.96681 22.8101 3.3566L24.4399 5.16146C25.695 6.55125 27.8764 6.55125 29.1315 5.16146L30.7614 3.35661C32.0164 1.96681 34.1978 1.96681 35.4529 3.3566L37.0828 5.16146C38.3379 6.55125 40.5193 6.55125 41.7743 5.16146L43.4042 3.35661C44.6593 1.96681 46.8407 1.96681 48.0958 3.3566L49.7257 5.16146C50.9807 6.55125 53.1621 6.55125 54.4172 5.16146L56.0471 3.35661C57.3022 1.96681 59.4836 1.96681 60.7386 3.3566L62.3685 5.16146C63.6236 6.55125 65.805 6.55125 67.0601 5.16146L68.6899 3.35661C69.945 1.96681 72.1264 1.96681 73.3815 3.3566L75.0114 5.16146C76.2664 6.55125 78.4478 6.55125 79.7029 5.16146L81.3328 3.35661C82.5879 1.96681 84.7693 1.96681 86.0243 3.3566L87.6542 5.16146C88.9093 6.55125 91.0907 6.55125 92.3458 5.16146L93.9757 3.35661C95.2307 1.96681 97.4121 1.96681 98.6672 3.3566L100.297 5.16146C101.552 6.55125 103.734 6.55125 104.989 5.16146L106.619 3.35661C107.874 1.96681 110.055 1.96681 111.31 3.3566L112.94 5.16146C114.195 6.55125 116.376 6.55125 117.631 5.16146L119.261 3.35661C120.516 1.96681 122.698 1.96681 123.953 3.3566L125.583 5.16146C126.838 6.55125 129.019 6.55125 130.274 5.16146L131.904 3.35661C133.159 1.96681 135.341 1.96681 136.596 3.3566L138.226 5.16146C139.481 6.55125 141.662 6.55125 142.917 5.16146L144.547 3.35661C145.802 1.96681 147.984 1.96681 149.239 3.3566L150.869 5.16146C152.124 6.55125 154.305 6.55125 155.56 5.16146L157.19 3.35661C158.445 1.96681 160.626 1.96681 161.881 3.3566L163.511 5.16146C164.766 6.55125 166.948 6.55125 168.203 5.16146L169.833 3.35661C171.088 1.96681 173.269 1.96681 174.524 3.3566L178.5 7.75903\" stroke=\"rgb(var(--color-accent))\" stroke-width=\"4\"><\/path><\/svg>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_NXWgYE",
+            "liquid_r8xtHm"
+          ]
+        }
+      },
+      "block_order": [
+        "tab_collection_7XjeNi",
+        "tab_collection_CKjqHG",
+        "tab_collection_nxbzkA"
+      ],
+      "custom_css": [
+        ".hdt-heading-block {font-weight: 500;}",
+        ".hdt-collection-title-text {color: #000; font-weight: 400;}"
+      ],
+      "name": "t:sections.tabs_collections.grid_name",
+      "settings": {
+        "enable_tabs_on_heading": false,
+        "tabs_des": "has_border",
+        "tabs_list_pos": "center",
+        "tab_item_size": "base",
+        "tab_item_border": "dashed",
+        "border_width": 1,
+        "spacing_tabs_items": 20,
+        "tabs_head_spacing": 30,
+        "colors_by_section": true,
+        "color_scheme": "scheme-3aa927c6-c072-48bf-ade6-402b492a6cee",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,110px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "custom_section_jLGiQ4": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_kaDYxn": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "center",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "text_custom_ax4Knw": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Keep up to Date with Our New Collection <br> and  Exclusive Offers",
+                "remove_br_mobile": false,
+                "html_tag": "h3",
+                "font_family": "hdt-font-2",
+                "color_text": "#27496d",
+                "font_size": 35,
+                "line_height": 42,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 70,
+                "hide_on_mobile": false,
+                "font_size_mobile": 24,
+                "line_height_mobile": 32,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "group_k8Y9t4": {
+              "type": "group",
+              "name": "Group",
+              "settings": {
+                "content_direction": "row",
+                "vertical_on_mobile": false,
+                "horizontal_alignment": "flex-start",
+                "vertical_alignment": "center",
+                "horizontal_alignment_flex_direction_column": "center",
+                "vertical_alignment_flex_direction_column": "center",
+                "gap": 0,
+                "width": "custom",
+                "custom_width": 100,
+                "width_mobile": "fit-content",
+                "custom_width_mobile": 100,
+                "colors_by_block": false,
+                "color_scheme": "",
+                "group_rounded": "",
+                "padding_top": 0,
+                "padding_bottom": 0,
+                "padding_left": 0,
+                "padding_right": 0,
+                "padding_rate_mobile": 0
+              },
+              "blocks": {
+                "newsletter_kxAjtM": {
+                  "type": "_newsletter",
+                  "name": "t:blocks.newsletter.name",
+                  "settings": {
+                    "color_scheme": "",
+                    "des_newsletter": "9",
+                    "alignment": "center",
+                    "button_lb": "Subscribe",
+                    "size": "xl",
+                    "btn_fw": "semibold",
+                    "agree_form": false,
+                    "content": "I agree with the terms and conditions",
+                    "icon": "arrow_right",
+                    "icon_position": "after",
+                    "icon_height": 20,
+                    "icon_spacing": 8
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "newsletter_kxAjtM"
+              ]
+            }
+          },
+          "block_order": [
+            "text_custom_ax4Knw",
+            "group_k8Y9t4"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_kaDYxn"
+      ],
+      "custom_css": [
+        ".hdt-newsletter__email {text-align: start; --height-input: 50px; color: #27496d;}",
+        "input::placeholder {color: #293341; font-size: 16px;}",
+        ".hdt-newsletter__submit {background-color: #27496d; padding-inline: 25px; font-size: 16px;}",
+        ".hdt-newsletter__submit:hover {background-color: #f54803;}",
+        "@media (width < 768px) {.hdt-newsletter__inner {display: flex; flex-direction: column; align-items: center; } .hdt-newsletter__email {text-align: center; } .hdt-newsletter__submit {width: 50%; }}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "125px,,125px,",
+        "pd_mb": "50px,,50px,"
+      }
+    },
+    "shipping_q48n7T": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_PjpUdy": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "truck",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_7y3UVq": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Shipping Worldwide<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_myzeWg": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_QztceN": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Free shipping on all US orders or orders <br\/>above $100<\/p>",
+                "hidden_br_mobile": true,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_7y3UVq",
+            "spacer_myzeWg",
+            "text_QztceN"
+          ]
+        },
+        "shipping_BpwgRF": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "back2",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_JRr9hY": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>14 Days Return<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_BQFzwy": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_JWB479": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Simply return it within 30 days for<br\/>an exchange.<\/p>",
+                "hidden_br_mobile": true,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_JRr9hY",
+            "spacer_BQFzwy",
+            "text_JWB479"
+          ]
+        },
+        "shipping_UrdaDw": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "shield2",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_ezbzwV": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Security Payment<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_8VJnbD": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_pLXkDz": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We ensure secure payment<br\/>with PEV<\/p>",
+                "hidden_br_mobile": true,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_ezbzwV",
+            "spacer_8VJnbD",
+            "text_pLXkDz"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_PjpUdy",
+        "shipping_BpwgRF",
+        "shipping_UrdaDw"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {color: #293341;}",
+        ".hdt-text-secondary {color: #7b7b7b;}"
+      ],
+      "name": "t:sections.shipping.name",
+      "settings": {
+        "content_align": "center",
+        "align_center": true,
+        "icon_design": "default",
+        "use_border": false,
+        "space_padding": false,
+        "icon_size": "large",
+        "icon_color": "",
+        "col_dk": "3",
+        "col_tb": "2",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "60px,,60px,",
+        "pd_mb": "20px,,20px,"
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "banners_t63yTD",
+    "featured_collection_VxagqT",
+    "hero_image_RJNEMV",
+    "tabs_collection_L6hAXg",
+    "custom_section_jLGiQ4",
+    "shipping_q48n7T"
+  ]
+}

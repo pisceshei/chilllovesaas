@@ -1,0 +1,1470 @@
+<!-- sections/sidebar-product.liquid -->
+{{ 'hdt-widget.css' | asset_url | stylesheet_tag }}
+<div class="hdt-sidebar hdt-sidebar-product" color-scheme="{{ section.settings.color_scheme }}">
+  <button aria-controls="drawer-sidebar-product" class="hdt-btn-sidebar hdt-fixed hdt-left-0 hdt-flex hdt-align-center hdt-oh hdt-s-gradient hdt-s-text">
+    <span class="hdt-btn-sidebar-icon hdt-inline-flex hdt-align-center hdt-justify-center"><svg class="hdt-inline-block" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></span>
+    <span class="hdt-btn-sidebar-text">{{ 'onboarding.open_sidebar' | t }}</span>
+  </button>
+  <hdt-drawer class="hdt-drawer hdt-drawer-sidebar hdt-contents" color-scheme="{{ section.settings.color_scheme }}">
+    <dialog id="drawer-sidebar-product" class="hdt-dialog hdt-dialog-drawer" scroll-lock pos="left">
+      <div class="hdt-dialog-drawer__header">
+        <h3 slot="header" class="hdt-drawer-sidebar-title hdt-text-lg hdt-uppercase hdt-font-semibold">{{ 'products.sidebar.label' | t }}</h3>
+        <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="drawer-sidebar-product" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+      </div>
+      <div class="hdt-dialog-drawer__inner hdt-current-scrollbar">
+        <div class="hdt-sidebar-inner" style="--spacing-item:{{ section.settings.space }}px">
+          {% for block in section.blocks %}
+            {%- case block.type -%}
+              {%- when 'categories' -%}
+                <hdt-accordion class="hdt-contents">
+                  <details class="hdt-widget hdt-widget-categories" aria-expanded="false" open {{ block.shopify_attributes }}>
+                    {%- if block.settings.widget_heading != blank -%}
+                      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+                        <span>{{ block.settings.widget_heading }}</span>
+                        <span accordion-icon>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+                        </span>
+                      </summary>
+                    {%- endif -%}
+                    <div class="hdt-widget-content hdt-current-scrollbar">
+                      <div class="hdt-categories-list hdt-text-base">
+                        {%- case block.settings.cat_source -%}
+                          {%- when '1' -%}
+                            {%- if collections.size > 0 -%}
+                               {%- for category in collections -%}
+                                  {%- if category.products.size > 0 -%}
+                                    <div class="hdt-cate-item hdt-relative{%- if collection.handle == category.handle %} hdt-current-cate{%- endif -%}"><a href="{{ category.url }}">{{ category.title }}
+                                    {% if block.settings.count %}
+                                      <span class="hdt-count">({{ category.all_products_count }})</span>
+                                    {%- endif -%}</a>
+                                    </div>
+                                  {%- endif -%}
+                               {%- endfor -%}
+                            {%- endif -%}
+                          {%- else -%}
+                            {%- for link in linklists[block.settings.cat_link_list].links -%}
+                              {%- if link.type == 'collection_link' or link.type == 'catalog_link' -%}
+                                {%- if link.links != blank -%}
+                                  <details aria-expanded="false" is="hdt-accordion-url" only-click-icon class="hdt-pr hdt-menu_nested hdt-cate-item hdt-relative hdt-relative">
+                                    <summary id="hdt-menu-{{ link.handle }}" data-url="{{ link.url }}" class="has_cats_toggle hdt-flex hdt-align-center hdt-justify-between hdt-relative">
+                                      <span class="hdt-link_sm hdt-relative{%- if link.active %} hdt-current-cate{%- endif -%}">
+                                        {{ link.title }} {%- if block.settings.count == true -%} <span class="hdt-count">({{ link.object.all_products_count | default: shop.products_count }})</span>{%- endif -%}
+                                      </span>
+                                      {% if link.links != blank %}
+                                        <span class="hdt-btn-open-sub hdt-relative" accordion-icon></span>
+                                      {% endif %}
+                                    </summary>
+                                    <div class="hdt-sub-menu hdt-children">
+                                      {%- for child_link in link.links -%}
+                                        {%- if child_link.type == 'collection_link' or child_link.type == 'catalog_link' -%}
+                                          {%- if child_link.links != blank -%}
+                                            <details aria-expanded="false" is="hdt-accordion-url" only-click-icon class="hdt-pr hdt-menu_nested2 hdt-cate-item hdt-relative">
+                                              <summary id="hdt-menu-{{ child_link.handle }}" data-url="{{ child_link.url }}" class="hdt-cat-count hdt-flex hdt-align-center hdt-justify-between hdt-relative">
+                                                <span class="hdt-link_sm hdt-relative{%- if child_link.active %} hdt-current-cate{%- endif -%}">
+                                                  {{ child_link.title }}
+                                                {%- if block.settings.count == true -%}
+                                                  <span class="hdt-count">({{ child_link.object.all_products_count | default: shop.products_count }})</span>
+                                                {%- endif -%}
+                                                </span>
+                                                {% if link.links != blank %}
+                                                  <span class="hdt-btn-open-sub hdt-relative" accordion-icon></span>
+                                                {% endif %}
+                                              </summary>
+                                              <div class="hdt-sub-menu hdt-children">
+                                                {%- for third_link in child_link.links -%}
+                                                  {%- if third_link.type == 'collection_link' or third_link.type == 'catalog_link' -%}
+                                                    <a href="{{ third_link.url }}" class="hdt-link_sm hdt-relative{%- if third_link.active %} hdt-current-cate{%- endif -%}">{{ third_link.title }}
+                                                      {%- if block.settings.count == true -%}
+                                                        <span class="hdt-count">({{ third_link.object.all_products_count | default: shop.products_count }})</span>
+                                                      {%- endif -%}
+                                                    </a>
+                                                  {%- endif -%}
+                                                {%- endfor -%}
+                                              </div>
+                                            </details>
+                                          {%- else -%}
+                                            <div class="hdt-cate-item hdt-relative{%- if child_link.active %} hdt-current-cate{%- endif -%}">
+                                              <a href="{{ child_link.url }}">{{ child_link.title }} {%- if block.settings.count == true -%} <span class="hdt-count">({{ child_link.object.all_products_count | default: shop.products_count }})</span> {%- endif -%}</a>
+                                            </div>
+                                          {%- endif -%}
+                                        {%- endif -%}
+                                      {%- endfor -%}
+                                    </div>
+                                  </details>
+                                {%- else -%}
+                                  <div class="hdt-cate-item hdt-relative{%- if link.active %} hdt-current-cate{%- endif -%}"><a href="{{ link.url }}">{{ link.title }} {%- if block.settings.count == true -%} <span class="hdt-count">({{ link.object.all_products_count | default: shop.products_count }})</span>{%- endif -%}</a></div>
+                                {%- endif -%}
+                              {%- endif -%}
+                            {%- endfor -%}
+                        {%- endcase -%}
+                      </div>
+                    </div>
+                  </details>
+                </hdt-accordion>
+              {%- when 'gallery' -%}
+                {%- liquid
+                  assign open_link = block.settings.open_link
+                  assign ARRhtml1 = 'a,,' | split: ','
+                  assign ARRhtml2 = 'div,data-' | split: ','
+                -%}
+                <hdt-accordion class="hdt-contents">
+                  <details class="hdt-widget hdt-widget-gallery" aria-expanded="false" open {{ block.shopify_attributes }}>
+                    {%- if block.settings.widget_heading != blank -%}
+                      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+                        <span>{{ block.settings.widget_heading }}</span>
+                        <span accordion-icon>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+                        </span>
+                      </summary>
+                    {%- endif -%}
+                    <div class="hdt-widget-content">
+                      <div class="hdt-gallery-list hdt-row-grid hdt-justify-center hdt-ratio--square hdt-object-cover hdt-grid-cols-3">
+                        {%- capture sizes -%}
+                          (100% - 8px) * 1 / 3)
+                        {%- endcapture -%}
+                        {%- for i in (1..9) -%}
+                          {%- liquid
+                            assign image_list = 'img' | append: i
+                            assign image_url_list = 'link' | append: i
+                            assign url = block.settings[image_url_list]
+                            assign image = block.settings[image_list]
+                            if url == blank
+                                assign ARRhtml = ARRhtml2
+                            else
+                                assign ARRhtml = ARRhtml1
+                            endif
+                          -%}
+                          {%- if image != blank -%}
+                            <div class="hdt-col-item hdt-gallery-item">
+                              <{{ ARRhtml[0] }} {{ ARRhtml[1] }}href="{{ url }}" {{ ARRhtml[2] }}target="{{ open_link }}" class="hdt-effect hdt-relative hdt-oh hdt-d-block">
+                                <div class="hdt-ratio" style="background: url({{ image | image_url: width: 1 }});">
+                                  {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: '' , sizes: sizes, widths: "110,150,200,300,400,500,600" }}
+                                </div>
+                              </{{ ARRhtml[0] }}>
+                            </div>
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </div>
+                    </div>
+                  </details>
+                </hdt-accordion>
+              {%- when 'featured_products' -%}
+                <hdt-accordion class="hdt-contents">
+                  <details class="hdt-widget hdt-widget-featured-products" aria-expanded="false" open {{ block.shopify_attributes }}>
+                    {%- if block.settings.widget_heading != blank -%}
+                      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+                        <span>{{ block.settings.widget_heading }}</span>
+                        <span accordion-icon>
+                          <svg class="hdt-facet-title_icon" xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+                        </span>
+                      </summary>
+                    {%- endif -%}
+                    <div class="hdt-widget-content">
+                      <div class="hdt-products-list hdt-row-grid hdt-row-grid--modify hdt-ratio--{{ block.settings.image_ratio }} {% if block.settings.image_size %} hdt-object-cover{% else %} hdt-object-contain{% endif %} lg:hdt-grid-cols-1">
+                        {%- assign product_collection = block.settings.product_list | default: block.settings.collection.products -%}
+                          {%- if product_collection != blank -%}
+                            {%- liquid
+                            for product in product_collection limit: block.settings.products_count
+                              render 'pr_loop_item', section_id: block.id, product: product, sizes: "92px", widths: "92, 100, 180, 200"
+                            endfor -%}
+                          {%- else -%}
+                            {%- capture current -%}
+                              {%- cycle 1, 2 , 3, 4 -%}
+                            {%- endcapture -%}
+                            {%- for i in (1..block.settings.products_count) -%}
+                              <div class="hdt-card-product hdt-pr-loop hdt-loop-item">
+                                <div class="hdt-card-product__wrapper hdt-flex hdt-loop-inner">
+                                  <div class="hdt-card-product__media hdt-loop-img hdt-relative hdt-oh">
+                                      <div class="hdt-product-img hdt-ratio" style="--aspect-ratioapt: 1">
+                                        {{ 'product-apparel-' | append: current | placeholder_svg_tag: 'hdt-placeholder-svg' }}
+                                      </div>
+                                    <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ product.url }}"></a>
+                                  </div>
+                                  <div class="hdt-card-product__info">
+                                    <a href="{{ product_url }}" class="hdt-card-product__title hdt-h6" data-no-instant>{{ 'onboarding.product_title' | t }}</a>
+                                    {%- render 'card-price', product: product, price_class: '', show_compare_at_price: true -%}
+                                  </div>
+                                </div>
+                              </div>
+                            {%- endfor -%}
+                          {%- endif -%}
+                      </div>
+                    </div>
+                  </details>
+                </hdt-accordion>
+              {%- when 'iconbox' -%}
+                <hdt-accordion class="hdt-contents">
+                  <details class="hdt-widget hdt-widget-iconbox" aria-expanded="false" open {{ block.shopify_attributes }}>
+                    {%- if block.settings.widget_heading != blank -%}
+                      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+                        <span>{{ block.settings.widget_heading }}</span>
+                        <span accordion-icon>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+                        </span>
+                      </summary>
+                    {%- endif -%}
+                    <div class="hdt-widget-content">
+                      <div class="hdt-iconbox-list hdt-row-grid hdt-ratio--square hdt-object-cover lg:hdt-grid-cols-1">
+                        {%- for i in (1..4) -%}
+                          {%- liquid
+                            assign icon_svg = 'icon_svg' | append: i
+                            assign custom_svg = 'custom_svg' | append: i
+                            assign iconbox_icon_img = 'iconbox_icon_img' | append: i
+                            assign iconbox_content = 'iconbox_content' | append: i
+                            assign link_item = 'link_item' | append: i
+                            assign icon_svg = block.settings[icon_svg]
+                            assign custom_svg = block.settings[custom_svg]
+                            assign iconbox_icon_img = block.settings[iconbox_icon_img]
+                            assign iconbox_content = block.settings[iconbox_content]
+                            assign link_item = block.settings[link_item] -%}
+                          {%- if iconbox_content != blank -%}
+                            {%- assign iconbox_content = iconbox_content | replace: ' _', '_' | replace: '_ ', '_' | split: '_' -%}
+                            <div class="hdt-iconbox-item hdt-flex hdt-align-center hdt-relative">
+                              {% if link_item != blank %}<a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ link_item }}"></a>{% endif %}
+                              <span class="hdt-iconbox-icon hdt-flex hdt-align-center hdt-justify-center">
+                                {%- if iconbox_icon_img != blank -%}
+                                  {{ iconbox_icon_img | image_url: width: iconbox_icon_img.width | image_tag: loading: 'lazy', width: iconbox_icon_img.width, height: iconbox_icon_img.height, class: '' , sizes: sizes, widths: "24, 52, 48, 104, 120, 240" }}
+                                {%- elsif custom_svg != blank  -%}
+                                  {{ custom_svg }}
+                                {%- else -%}
+                                  {%- render 'icons', icon: icon_svg -%}
+                                {%- endif -%}
+                              </span>
+                              <div class="hdt-iconbox-content">
+                                <h4 class="hdt-sidebar-iconbox-title hdt-text-lg hdt-font-semibold">{{ iconbox_content[0] }}</h4>
+                                <p class="hdt-sidebar-iconbox-desc hdt-text-base hdt-font-normal hdt-s-text2">{{ iconbox_content[1] }}</p>
+                              </div>
+                            </div>
+                          {%- endif -%}
+                      {%- endfor -%}
+                      </div>
+                    </div>
+                  </details>
+                </hdt-accordion>
+              {%- when 'html' -%}
+                <hdt-accordion class="hdt-contents">
+                  <details class="hdt-widget hdt-widget-html" aria-expanded="false" open {{ block.shopify_attributes }}>
+                    {%- if block.settings.widget_heading != blank -%}
+                      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+                        <span>{{ block.settings.widget_heading }}</span>
+                        <span accordion-icon>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+                        </span>
+                      </summary>
+                    {%- endif -%}
+                    <div class="hdt-widget-content">
+                      <div class="hdt-raw-html hdt-rte--list" id="b_{{ block.id }}">{{ block.settings.html_content }}</div>
+                    </div>
+                  </details>
+                </hdt-accordion>
+              {%- when 'social' -%}
+                {{ 'hdt-icon-social.css' | asset_url | stylesheet_tag }}
+                <hdt-accordion class="hdt-contents">
+                  <details class="hdt-widget hdt-widget-social" aria-expanded="false" open {{ block.shopify_attributes }}>
+                    {%- if block.settings.widget_heading != blank -%}
+                      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+                        <span>{{ block.settings.widget_heading }}</span>
+                        <span accordion-icon>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+                        </span>
+                      </summary>
+                    {%- endif -%}
+                    <div class="hdt-widget-content">
+                      {%- render 'social_sharing', socials_style: block.settings.socials_style, socials_size: block.settings.socials_size -%}
+                    </div>
+                  </details>
+                </hdt-accordion>
+            {%- endcase -%}
+          {% endfor %}
+        </div>
+      </div>
+  </dialog>
+    
+
+  </hdt-drawer>
+</div>
+{% schema %}
+  {
+    "name": "t:sections.sidebar-product.name",
+    "class": "hdt-section hdt-section-sidebar hdt-section-sidebar-product",
+    "settings": [
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label"
+      },
+      {
+        "type": "range",
+        "id": "space",
+        "label": "t:sections.sidebar-product.settings.space.label",
+        "info": "t:sections.sidebar-product.settings.space.info",
+        "default": 50,
+        "min": 20,
+        "max": 100,
+        "step": 1,
+        "unit": "px"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "categories",
+        "name": "t:sections.main-collection.blocks.categories.name",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "text",
+            "id": "widget_heading",
+            "label": "t:sections.main-collection.blocks.heading",
+            "default": "Product categories"
+          },
+          {
+            "type": "select",
+            "id": "cat_source",
+            "label": "t:sections.main-collection.blocks.categories.cat_source.label",
+            "options": [
+              {
+                "value": "1",
+                "label": "t:sections.main-collection.blocks.categories.cat_source.all"
+              },
+              {
+                "value": "2",
+                "label": "t:sections.main-collection.blocks.categories.cat_source.show_list"
+              }
+            ]
+          },
+          {
+            "type": "link_list",
+            "id": "cat_link_list",
+            "label": "t:sections.main-collection.blocks.categories.cat_link_list"
+          },
+          {
+            "type": "checkbox",
+            "id": "count",
+            "label": "t:sections.main-collection.blocks.categories.count",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "name": "t:sections.main-collection.blocks.gallery.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "widget_heading",
+            "label": "t:sections.main-collection.blocks.heading",
+            "default": "Gallery"
+          },
+          {
+            "type": "image_picker",
+            "id": "img1",
+            "label": "t:sections.main-collection.blocks.gallery.img1"
+          },
+          {
+            "type": "url",
+            "id": "link1",
+            "label": "t:sections.main-collection.blocks.gallery.link1"
+          },
+          {
+            "type": "image_picker",
+            "id": "img2",
+            "label": "t:sections.main-collection.blocks.gallery.img2"
+          },
+          {
+            "type": "url",
+            "id": "link2",
+            "label": "t:sections.main-collection.blocks.gallery.link2"
+          },
+          {
+            "type": "image_picker",
+            "id": "img3",
+            "label": "t:sections.main-collection.blocks.gallery.img3"
+          },
+          {
+            "type": "url",
+            "id": "link3",
+            "label": "t:sections.main-collection.blocks.gallery.link3"
+          },
+          {
+            "type": "image_picker",
+            "id": "img4",
+            "label": "t:sections.main-collection.blocks.gallery.img4"
+          },
+          {
+            "type": "url",
+            "id": "link4",
+            "label": "t:sections.main-collection.blocks.gallery.link4"
+          },
+          {
+            "type": "image_picker",
+            "id": "img5",
+            "label": "t:sections.main-collection.blocks.gallery.img5"
+          },
+          {
+            "type": "url",
+            "id": "link5",
+            "label": "t:sections.main-collection.blocks.gallery.link5"
+          },
+          {
+            "type": "image_picker",
+            "id": "img6",
+            "label": "t:sections.main-collection.blocks.gallery.img6"
+          },
+          {
+            "type": "url",
+            "id": "link6",
+            "label": "t:sections.main-collection.blocks.gallery.link6"
+          },
+          {
+            "type": "image_picker",
+            "id": "img7",
+            "label": "t:sections.main-collection.blocks.gallery.img7"
+          },
+          {
+            "type": "url",
+            "id": "link7",
+            "label": "t:sections.main-collection.blocks.gallery.link7"
+          },
+          {
+            "type": "image_picker",
+            "id": "img8",
+            "label": "t:sections.main-collection.blocks.gallery.img8"
+          },
+          {
+            "type": "url",
+            "id": "link8",
+            "label": "t:sections.main-collection.blocks.gallery.link8"
+          },
+          {
+            "type": "image_picker",
+            "id": "img9",
+            "label": "t:sections.main-collection.blocks.gallery.img9"
+          },
+          {
+            "type": "url",
+            "id": "link9",
+            "label": "t:sections.main-collection.blocks.gallery.link9"
+          },
+          {
+            "type": "select",
+            "id": "open_link",
+            "options": [
+              {
+                "value": "_self",
+                "label": "t:sections.main-collection.blocks.gallery.open_link.current"
+              },
+              {
+                "value": "_blank",
+                "label": "t:sections.main-collection.blocks.gallery.open_link.blank"
+              }
+            ],
+            "label": "t:sections.main-collection.blocks.gallery.open_link.label",
+            "default": "_blank"
+          }
+        ]
+      },
+      {
+        "type": "featured_products",
+        "name": "t:sections.collection_products.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "widget_heading",
+            "label": "t:sections.main-collection.blocks.heading",
+            "default": "Sale products"
+          },
+          {
+            "id": "collection",
+            "type": "collection",
+            "label": "t:sections.collection_products.settings.collection"
+          },
+          {
+            "type": "product_list",
+            "id": "product_list",
+            "label": "t:sections.collection_products.settings.product_list.label",
+            "info": "t:sections.collection_products.settings.product_list.info",
+            "limit": 20
+          },
+          {
+            "type": "range",
+            "id": "products_count",
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "label": "t:sections.all.limit",
+            "default": 3
+          },
+          {
+            "type": "select",
+            "id": "image_ratio",
+            "options": [
+              {
+                "value": "adapt_image",
+                "label": "t:sections.all.images.ratio.adapt_image.label"
+              },
+              {
+                "value": "square",
+                "label": "t:sections.all.images.ratio.square.label"
+              },
+              {
+                "value": "portrait",
+                "label": "t:sections.all.images.ratio.portrait.label"
+              },
+              {
+                "value": "asos",
+                "label": "t:sections.all.images.ratio.asos.label"
+              },
+              {
+                "value": "landscape",
+                "label": "t:sections.all.images.ratio.landscape.label"
+              },
+              {
+                "value": "custom-pr",
+                "label": "t:sections.all.images.ratio.custom.label"
+              }
+            ],
+            "label": "t:sections.all.images.ratio.label",
+            "default": "adapt_image"
+          },
+          {
+            "type": "checkbox",
+            "id": "image_size",
+            "label": "t:sections.all.images.size.cover",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "iconbox",
+        "name": "t:sections.main-collection.blocks.iconbox.name",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "text",
+            "id": "widget_heading",
+            "label": "t:sections.main-collection.blocks.heading",
+            "default": "Shipping & Delivery"
+          },
+          {
+            "type": "paragraph",
+            "content": "t:sections.main-collection.blocks.iconbox.iconbox_item1.label"
+          },
+          {
+            "type": "select",
+            "id": "icon_svg1",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.icon_svg1",
+            "default": "truck",
+            "options": [
+              {
+                "value": "none",
+                "label": "t:blocks.icon.options.none"
+              },
+              {
+                "value": "arrow_right",
+                "label": "t:blocks.icon.options.arrow_right"
+              },
+              {
+                "value": "arrow_simple",
+                "label": "t:blocks.icon.options.arrow_simple"
+              },
+              {
+                "value": "arrow_bottom",
+                "label": "t:blocks.icon.options.arrow_bottom"
+              },
+              {
+                "value": "arrow_stretch",
+                "label": "t:blocks.icon.options.arrow_stretch"
+              },
+              {
+                "value": "car",
+                "label": "t:blocks.icon.options.car"
+              },
+              {
+                "value": "truck",
+                "label": "t:blocks.icon.options.truck"
+              },
+              {
+                "value": "diamond",
+                "label": "t:blocks.icon.options.diamond"
+              },
+              {
+                "value": "door-lock",
+                "label": "t:blocks.icon.options.door_lock"
+              },
+              {
+                "value": "gym",
+                "label": "t:blocks.icon.options.gym"
+              },
+              {
+                "value": "hammer",
+                "label": "t:blocks.icon.options.hammer"
+              },
+              {
+                "value": "headphones",
+                "label": "t:blocks.icon.options.headphones"
+              },
+              {
+                "value": "helm",
+                "label": "t:blocks.icon.options.helm"
+              },
+              {
+                "value": "hourglass",
+                "label": "t:blocks.icon.options.hourglass"
+              },
+              {
+                "value": "map",
+                "label": "t:blocks.icon.options.map"
+              },
+              {
+                "value": "piggy",
+                "label": "t:blocks.icon.options.piggy"
+              },
+              {
+                "value": "refesh",
+                "label": "t:blocks.icon.options.refesh"
+              },
+              {
+                "value": "rocket",
+                "label": "t:blocks.icon.options.rocket"
+              },
+              {
+                "value": "shield",
+                "label": "t:blocks.icon.options.shield"
+              },
+              {
+                "value": "shield2",
+                "label": "t:blocks.icon.options.shield_2"
+              },
+              {
+                "value": "smile",
+                "label": "t:blocks.icon.options.smile"
+              },
+              {
+                "value": "scissors",
+                "label": "t:blocks.icon.options.scissors"
+              },
+              {
+                "value": "shuffle",
+                "label": "t:blocks.icon.options.shuffle"
+              },
+              {
+                "value": "cloud_upload",
+                "label": "t:blocks.icon.options.cloud_upload"
+              },
+              {
+                "value": "cash",
+                "label": "t:blocks.icon.options.cash"
+              },
+              {
+                "value": "way",
+                "label": "t:blocks.icon.options.way"
+              },
+              {
+                "value": "wristwatch",
+                "label": "t:blocks.icon.options.wristwatch"
+              },
+              {
+                "value": "world",
+                "label": "t:blocks.icon.options.world"
+              },
+              {
+                "value": "wallet",
+                "label": "t:blocks.icon.options.wallet"
+              },
+              {
+                "value": "unlock",
+                "label": "t:blocks.icon.options.unlock"
+              },
+              {
+                "value": "umbrella",
+                "label": "t:blocks.icon.options.umbrella"
+              },
+              {
+                "value": "repeat",
+                "label": "t:blocks.icon.options.repeat"
+              },
+              {
+                "value": "refesh-2",
+                "label": "t:blocks.icon.options.refesh_2"
+              },
+              {
+                "value": "medal",
+                "label": "t:blocks.icon.options.medal"
+              },
+              {
+                "value": "portfolio",
+                "label": "t:blocks.icon.options.portfolio"
+              },
+              {
+                "value": "like",
+                "label": "t:blocks.icon.options.like"
+              },
+              {
+                "value": "plance",
+                "label": "t:blocks.icon.options.plance"
+              },
+              {
+                "value": "map-maker",
+                "label": "t:blocks.icon.options.map_maker"
+              },
+              {
+                "value": "help",
+                "label": "t:blocks.icon.options.help"
+              },
+              {
+                "value": "gift",
+                "label": "t:blocks.icon.options.gift"
+              },
+              {
+                "value": "cart",
+                "label": "t:blocks.icon.options.cart"
+              },
+              {
+                "value": "box",
+                "label": "t:blocks.icon.options.box"
+              },
+              {
+                "value": "back",
+                "label": "t:blocks.icon.options.back"
+              },
+              {
+                "value": "back2",
+                "label": "t:blocks.icon.options.back2"
+              }
+            ],
+          },
+          {
+            "type": "textarea",
+            "id": "custom_svg1",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.custom_svg1",
+            "info": "[Remixicon](https://remixicon.com/)"
+          },
+          {
+            "type": "image_picker",
+            "id": "iconbox_icon_img1",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_icon_img1.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_icon_img1.info"
+          },
+          {
+            "type": "textarea",
+            "id": "iconbox_content1",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_content1.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_content1.info",
+            "default": "FREE SHIPPING_ Free shipping for all US orders"
+          },
+          {
+            "type": "url",
+            "id": "link_item1",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.link_item1"
+          },
+          {
+            "type": "paragraph",
+            "content": "t:sections.main-collection.blocks.iconbox.iconbox_item2.label"
+          },
+          {
+            "type": "select",
+            "id": "icon_svg2",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.icon_svg2",
+            "default": "headphones",
+            "options": [
+              {
+                "value": "none",
+                "label": "t:blocks.icon.options.none"
+              },
+              {
+                "value": "arrow_right",
+                "label": "t:blocks.icon.options.arrow_right"
+              },
+              {
+                "value": "arrow_simple",
+                "label": "t:blocks.icon.options.arrow_simple"
+              },
+              {
+                "value": "arrow_bottom",
+                "label": "t:blocks.icon.options.arrow_bottom"
+              },
+              {
+                "value": "arrow_stretch",
+                "label": "t:blocks.icon.options.arrow_stretch"
+              },
+              {
+                "value": "car",
+                "label": "t:blocks.icon.options.car"
+              },
+              {
+                "value": "truck",
+                "label": "t:blocks.icon.options.truck"
+              },
+              {
+                "value": "diamond",
+                "label": "t:blocks.icon.options.diamond"
+              },
+              {
+                "value": "door-lock",
+                "label": "t:blocks.icon.options.door_lock"
+              },
+              {
+                "value": "gym",
+                "label": "t:blocks.icon.options.gym"
+              },
+              {
+                "value": "hammer",
+                "label": "t:blocks.icon.options.hammer"
+              },
+              {
+                "value": "headphones",
+                "label": "t:blocks.icon.options.headphones"
+              },
+              {
+                "value": "helm",
+                "label": "t:blocks.icon.options.helm"
+              },
+              {
+                "value": "hourglass",
+                "label": "t:blocks.icon.options.hourglass"
+              },
+              {
+                "value": "map",
+                "label": "t:blocks.icon.options.map"
+              },
+              {
+                "value": "piggy",
+                "label": "t:blocks.icon.options.piggy"
+              },
+              {
+                "value": "refesh",
+                "label": "t:blocks.icon.options.refesh"
+              },
+              {
+                "value": "rocket",
+                "label": "t:blocks.icon.options.rocket"
+              },
+              {
+                "value": "shield",
+                "label": "t:blocks.icon.options.shield"
+              },
+              {
+                "value": "shield2",
+                "label": "t:blocks.icon.options.shield_2"
+              },
+              {
+                "value": "smile",
+                "label": "t:blocks.icon.options.smile"
+              },
+              {
+                "value": "scissors",
+                "label": "t:blocks.icon.options.scissors"
+              },
+              {
+                "value": "shuffle",
+                "label": "t:blocks.icon.options.shuffle"
+              },
+              {
+                "value": "cloud_upload",
+                "label": "t:blocks.icon.options.cloud_upload"
+              },
+              {
+                "value": "cash",
+                "label": "t:blocks.icon.options.cash"
+              },
+              {
+                "value": "way",
+                "label": "t:blocks.icon.options.way"
+              },
+              {
+                "value": "wristwatch",
+                "label": "t:blocks.icon.options.wristwatch"
+              },
+              {
+                "value": "world",
+                "label": "t:blocks.icon.options.world"
+              },
+              {
+                "value": "wallet",
+                "label": "t:blocks.icon.options.wallet"
+              },
+              {
+                "value": "unlock",
+                "label": "t:blocks.icon.options.unlock"
+              },
+              {
+                "value": "umbrella",
+                "label": "t:blocks.icon.options.umbrella"
+              },
+              {
+                "value": "repeat",
+                "label": "t:blocks.icon.options.repeat"
+              },
+              {
+                "value": "refesh-2",
+                "label": "t:blocks.icon.options.refesh_2"
+              },
+              {
+                "value": "medal",
+                "label": "t:blocks.icon.options.medal"
+              },
+              {
+                "value": "portfolio",
+                "label": "t:blocks.icon.options.portfolio"
+              },
+              {
+                "value": "like",
+                "label": "t:blocks.icon.options.like"
+              },
+              {
+                "value": "plance",
+                "label": "t:blocks.icon.options.plance"
+              },
+              {
+                "value": "map-maker",
+                "label": "t:blocks.icon.options.map_maker"
+              },
+              {
+                "value": "help",
+                "label": "t:blocks.icon.options.help"
+              },
+              {
+                "value": "gift",
+                "label": "t:blocks.icon.options.gift"
+              },
+              {
+                "value": "cart",
+                "label": "t:blocks.icon.options.cart"
+              },
+              {
+                "value": "box",
+                "label": "t:blocks.icon.options.box"
+              },
+              {
+                "value": "back",
+                "label": "t:blocks.icon.options.back"
+              },
+              {
+                "value": "back2",
+                "label": "t:blocks.icon.options.back2"
+              }
+            ],
+          },
+          {
+            "type": "textarea",
+            "id": "custom_svg2",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.custom_svg2",
+            "info": "[Remixicon](https://remixicon.com/)"
+          },
+          {
+            "type": "image_picker",
+            "id": "iconbox_icon_img2",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_icon_img2.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_icon_img2.info"
+          },
+          {
+            "type": "textarea",
+            "id": "iconbox_content2",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_content2.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_content2.info",
+            "default": "SUPPORT 24/7_ We support 24 hours a day"
+          },
+          {
+            "type": "url",
+            "id": "link_item2",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.link_item2"
+          },
+          {
+            "type": "paragraph",
+            "content": "t:sections.main-collection.blocks.iconbox.iconbox_item3.label"
+          },
+          {
+            "type": "select",
+            "id": "icon_svg3",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.icon_svg3",
+            "default": "refesh-2",
+            "options": [
+              {
+                "value": "none",
+                "label": "t:blocks.icon.options.none"
+              },
+              {
+                "value": "arrow_right",
+                "label": "t:blocks.icon.options.arrow_right"
+              },
+              {
+                "value": "arrow_simple",
+                "label": "t:blocks.icon.options.arrow_simple"
+              },
+              {
+                "value": "arrow_bottom",
+                "label": "t:blocks.icon.options.arrow_bottom"
+              },
+              {
+                "value": "arrow_stretch",
+                "label": "t:blocks.icon.options.arrow_stretch"
+              },
+              {
+                "value": "car",
+                "label": "t:blocks.icon.options.car"
+              },
+              {
+                "value": "truck",
+                "label": "t:blocks.icon.options.truck"
+              },
+              {
+                "value": "diamond",
+                "label": "t:blocks.icon.options.diamond"
+              },
+              {
+                "value": "door-lock",
+                "label": "t:blocks.icon.options.door_lock"
+              },
+              {
+                "value": "gym",
+                "label": "t:blocks.icon.options.gym"
+              },
+              {
+                "value": "hammer",
+                "label": "t:blocks.icon.options.hammer"
+              },
+              {
+                "value": "headphones",
+                "label": "t:blocks.icon.options.headphones"
+              },
+              {
+                "value": "helm",
+                "label": "t:blocks.icon.options.helm"
+              },
+              {
+                "value": "hourglass",
+                "label": "t:blocks.icon.options.hourglass"
+              },
+              {
+                "value": "map",
+                "label": "t:blocks.icon.options.map"
+              },
+              {
+                "value": "piggy",
+                "label": "t:blocks.icon.options.piggy"
+              },
+              {
+                "value": "refesh",
+                "label": "t:blocks.icon.options.refesh"
+              },
+              {
+                "value": "rocket",
+                "label": "t:blocks.icon.options.rocket"
+              },
+              {
+                "value": "shield",
+                "label": "t:blocks.icon.options.shield"
+              },
+              {
+                "value": "shield2",
+                "label": "t:blocks.icon.options.shield_2"
+              },
+              {
+                "value": "smile",
+                "label": "t:blocks.icon.options.smile"
+              },
+              {
+                "value": "scissors",
+                "label": "t:blocks.icon.options.scissors"
+              },
+              {
+                "value": "shuffle",
+                "label": "t:blocks.icon.options.shuffle"
+              },
+              {
+                "value": "cloud_upload",
+                "label": "t:blocks.icon.options.cloud_upload"
+              },
+              {
+                "value": "cash",
+                "label": "t:blocks.icon.options.cash"
+              },
+              {
+                "value": "way",
+                "label": "t:blocks.icon.options.way"
+              },
+              {
+                "value": "wristwatch",
+                "label": "t:blocks.icon.options.wristwatch"
+              },
+              {
+                "value": "world",
+                "label": "t:blocks.icon.options.world"
+              },
+              {
+                "value": "wallet",
+                "label": "t:blocks.icon.options.wallet"
+              },
+              {
+                "value": "unlock",
+                "label": "t:blocks.icon.options.unlock"
+              },
+              {
+                "value": "umbrella",
+                "label": "t:blocks.icon.options.umbrella"
+              },
+              {
+                "value": "repeat",
+                "label": "t:blocks.icon.options.repeat"
+              },
+              {
+                "value": "refesh-2",
+                "label": "t:blocks.icon.options.refesh_2"
+              },
+              {
+                "value": "medal",
+                "label": "t:blocks.icon.options.medal"
+              },
+              {
+                "value": "portfolio",
+                "label": "t:blocks.icon.options.portfolio"
+              },
+              {
+                "value": "like",
+                "label": "t:blocks.icon.options.like"
+              },
+              {
+                "value": "plance",
+                "label": "t:blocks.icon.options.plance"
+              },
+              {
+                "value": "map-maker",
+                "label": "t:blocks.icon.options.map_maker"
+              },
+              {
+                "value": "help",
+                "label": "t:blocks.icon.options.help"
+              },
+              {
+                "value": "gift",
+                "label": "t:blocks.icon.options.gift"
+              },
+              {
+                "value": "cart",
+                "label": "t:blocks.icon.options.cart"
+              },
+              {
+                "value": "box",
+                "label": "t:blocks.icon.options.box"
+              },
+              {
+                "value": "back",
+                "label": "t:blocks.icon.options.back"
+              },
+              {
+                "value": "back2",
+                "label": "t:blocks.icon.options.back2"
+              }
+            ],
+          },
+          {
+            "type": "textarea",
+            "id": "custom_svg3",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.custom_svg3",
+            "info": "[Remixicon](https://remixicon.com/)"
+          },
+          {
+            "type": "image_picker",
+            "id": "iconbox_icon_img3",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_icon_img3.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_icon_img3.info"
+          },
+          {
+            "type": "textarea",
+            "id": "iconbox_content3",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_content3.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_content3.info",
+            "default": "30 DAYS RETURN_ You have 30 days to return"
+          },
+          {
+            "type": "url",
+            "id": "link_item3",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.link_item3"
+          },
+          {
+            "type": "paragraph",
+            "content": "t:sections.main-collection.blocks.iconbox.iconbox_item4.label"
+          },
+          {
+            "type": "select",
+            "id": "icon_svg4",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.icon_svg4",
+            "default": "car",
+            "options": [
+              {
+                "value": "none",
+                "label": "t:blocks.icon.options.none"
+              },
+              {
+                "value": "arrow_right",
+                "label": "t:blocks.icon.options.arrow_right"
+              },
+              {
+                "value": "arrow_simple",
+                "label": "t:blocks.icon.options.arrow_simple"
+              },
+              {
+                "value": "arrow_bottom",
+                "label": "t:blocks.icon.options.arrow_bottom"
+              },
+              {
+                "value": "arrow_stretch",
+                "label": "t:blocks.icon.options.arrow_stretch"
+              },
+              {
+                "value": "car",
+                "label": "t:blocks.icon.options.car"
+              },
+              {
+                "value": "truck",
+                "label": "t:blocks.icon.options.truck"
+              },
+              {
+                "value": "diamond",
+                "label": "t:blocks.icon.options.diamond"
+              },
+              {
+                "value": "door-lock",
+                "label": "t:blocks.icon.options.door_lock"
+              },
+              {
+                "value": "gym",
+                "label": "t:blocks.icon.options.gym"
+              },
+              {
+                "value": "hammer",
+                "label": "t:blocks.icon.options.hammer"
+              },
+              {
+                "value": "headphones",
+                "label": "t:blocks.icon.options.headphones"
+              },
+              {
+                "value": "helm",
+                "label": "t:blocks.icon.options.helm"
+              },
+              {
+                "value": "hourglass",
+                "label": "t:blocks.icon.options.hourglass"
+              },
+              {
+                "value": "map",
+                "label": "t:blocks.icon.options.map"
+              },
+              {
+                "value": "piggy",
+                "label": "t:blocks.icon.options.piggy"
+              },
+              {
+                "value": "refesh",
+                "label": "t:blocks.icon.options.refesh"
+              },
+              {
+                "value": "rocket",
+                "label": "t:blocks.icon.options.rocket"
+              },
+              {
+                "value": "shield",
+                "label": "t:blocks.icon.options.shield"
+              },
+              {
+                "value": "shield2",
+                "label": "t:blocks.icon.options.shield_2"
+              },
+              {
+                "value": "smile",
+                "label": "t:blocks.icon.options.smile"
+              },
+              {
+                "value": "scissors",
+                "label": "t:blocks.icon.options.scissors"
+              },
+              {
+                "value": "shuffle",
+                "label": "t:blocks.icon.options.shuffle"
+              },
+              {
+                "value": "cloud_upload",
+                "label": "t:blocks.icon.options.cloud_upload"
+              },
+              {
+                "value": "cash",
+                "label": "t:blocks.icon.options.cash"
+              },
+              {
+                "value": "way",
+                "label": "t:blocks.icon.options.way"
+              },
+              {
+                "value": "wristwatch",
+                "label": "t:blocks.icon.options.wristwatch"
+              },
+              {
+                "value": "world",
+                "label": "t:blocks.icon.options.world"
+              },
+              {
+                "value": "wallet",
+                "label": "t:blocks.icon.options.wallet"
+              },
+              {
+                "value": "unlock",
+                "label": "t:blocks.icon.options.unlock"
+              },
+              {
+                "value": "umbrella",
+                "label": "t:blocks.icon.options.umbrella"
+              },
+              {
+                "value": "repeat",
+                "label": "t:blocks.icon.options.repeat"
+              },
+              {
+                "value": "refesh-2",
+                "label": "t:blocks.icon.options.refesh_2"
+              },
+              {
+                "value": "medal",
+                "label": "t:blocks.icon.options.medal"
+              },
+              {
+                "value": "portfolio",
+                "label": "t:blocks.icon.options.portfolio"
+              },
+              {
+                "value": "like",
+                "label": "t:blocks.icon.options.like"
+              },
+              {
+                "value": "plance",
+                "label": "t:blocks.icon.options.plance"
+              },
+              {
+                "value": "map-maker",
+                "label": "t:blocks.icon.options.map_maker"
+              },
+              {
+                "value": "help",
+                "label": "t:blocks.icon.options.help"
+              },
+              {
+                "value": "gift",
+                "label": "t:blocks.icon.options.gift"
+              },
+              {
+                "value": "cart",
+                "label": "t:blocks.icon.options.cart"
+              },
+              {
+                "value": "box",
+                "label": "t:blocks.icon.options.box"
+              },
+              {
+                "value": "back",
+                "label": "t:blocks.icon.options.back"
+              },
+              {
+                "value": "back2",
+                "label": "t:blocks.icon.options.back2"
+              }
+            ],
+          },
+          {
+            "type": "textarea",
+            "id": "custom_svg4",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.custom_svg4",
+            "info": "[Remixicon](https://remixicon.com/)"
+          },
+          {
+            "type": "image_picker",
+            "id": "iconbox_icon_img4",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_icon_img4.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_icon_img4.info"
+          },
+          {
+            "type": "textarea",
+            "id": "iconbox_content4",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_content4.label",
+            "info": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_content4.info"
+          },
+          {
+            "type": "url",
+            "id": "link_item4",
+            "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.link_item4"
+          }
+        ]
+      },
+      {
+        "type": "html",
+        "name": "t:sections.main-collection.blocks.html.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "widget_heading",
+            "label": "t:sections.main-collection.blocks.heading",
+            "default": "Talk about your brand"
+          },
+          {
+            "type": "html",
+            "id": "html_content",
+            "label": "t:sections.main-collection.blocks.html.html_content",
+            "default": "<p>Use this text to share information about your brand with your customers. Describe a product, share announcements, or welcome customers to your store.</p>"
+          }
+        ]
+      },
+      {
+        "type": "social",
+        "name": "t:blocks.social-media.name",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "text",
+            "id": "widget_heading",
+            "label": "t:blocks.social-media.settings.heading",
+            "default": "Follow us"
+          },
+          {
+            "type": "select",
+            "id": "socials_style",
+            "label": "t:blocks.social-media.settings.socials_style.label",
+            "default": "default",
+            "options": [
+              {
+                "value": "default",
+                "label": "t:blocks.social-media.settings.socials_style.options__1.label"
+              },
+              {
+                "value": "outline",
+                "label": "t:blocks.social-media.settings.socials_style.options__2.label"
+              },
+              {
+                "value": "simple",
+                "label": "t:blocks.social-media.settings.socials_style.options__3.label"
+              }
+            ]
+          },
+          {
+            "type": "select",
+            "id": "socials_size",
+            "label": "t:blocks.social-media.settings.socials_size.label",
+            "default": "medium",
+            "options": [
+              {
+                "value": "small",
+                "label": "t:blocks.social-media.settings.socials_size.options__1.label"
+              },
+              {
+                "value": "medium",
+                "label": "t:blocks.social-media.settings.socials_size.options__2.label"
+              },
+              {
+                "value": "large",
+                "label": "t:blocks.social-media.settings.socials_size.options__3.label"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

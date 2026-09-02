@@ -1,0 +1,190 @@
+<!-- blocks/video.liquid -->
+{%- style -%}
+#Video-{{ block.id }} {
+  {% if block.settings.image_height == 'fixed' %}--aspect-ratioapt-md:{{ block.settings.fixed_height }}px;{% elsif block.settings.image_height == 'adapt_image_first' and block.settings.video %}--aspect-ratioapt-md: {{ block.settings.video.aspect_ratio }};{% endif %}
+  {% if block.settings.image_height_mb == 'fixed' %}--aspect-ratioapt:{{ block.settings.fixed_height_mb }}px;{% elsif block.settings.image_height == 'adapt_image_first' and block.settings.video  %}--aspect-ratioapt: {{ block.settings.video.aspect_ratio }};{% endif %}
+}
+{%- endstyle -%}
+
+<div id="Video-{{ block.id }}" class="md:hdt-height--{{ block.settings.image_height }} hdt-height--{{ block.settings.image_height_mb }} is-video hdt-w-full">
+    <div class="hdt-media-overlap-content hdt-pe-none">
+      {%- if block.settings.video -%}
+          <hdt-video-player autoplay>
+            {%- if block.settings.show_video_controls -%}
+              {%- assign loop_video = false -%}
+            {%- else -%}
+              {%- assign loop_video = true -%}
+            {%- endif -%}
+            {{- block.settings.video | video_tag: image_size: '1500x', playsinline: true, muted: true, loop: loop_video, controls: block.settings.show_video_controls, preload: 'metadata' -}}
+          </hdt-video-player>
+      {%- else -%}
+          <hdt-video-player host="{{ block.settings.external_video_url.type }}" type="background" autoplay>
+            <template>
+              {%- if block.settings.external_video_url.type == 'youtube' -%}
+                <iframe id="iframe-{{ block.id }}" src="https://www.youtube.com/embed/{{ block.settings.external_video_url.id }}?playsinline=1&autoplay=1&controls=0&mute=1&loop=1&playlist={{ block.settings.external_video_url.id }}&enablejsapi=1&rel=0&modestbranding=1&origin={{ 'https://' | append: request.host | url_encode }}" allow="autoplay; encrypted-media" allowfullscreen="allowfullscreen"></iframe>
+              {%- elsif block.settings.external_video_url.type == 'vimeo' -%}
+                <iframe src="https://player.vimeo.com/video/{{ block.settings.external_video_url.id }}?autoplay=1&autopause=1&background=1&loop=1&muted=1&transparent=0&responsive=1&portrait=0&title=0&byline=0&color={{ settings.color_accent | remove_first: '#' }}" allow="autoplay; encrypted-media;" allowfullscreen="allowfullscreen"></iframe>
+              {%- endif -%}
+            </template>
+          </hdt-video-player>
+      {%- endif -%}
+      <div class="hdt-place-self-center">
+         {% content_for "blocks" %}
+      </div>
+    </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:blocks.video.name",
+  "tag": null,
+  "blocks": [{ "type": "text" },{"type": "button"},{"type": "heading"},{"type": "spacer"},{"type": "_text-content"}],
+  "settings": [
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        {
+          "value": "adapt_image_first",
+          "label": "t:blocks.video.settings.video_height.adapt_to_video"
+        },
+        {
+          "value": "full",
+          "label": "t:sections.slideshow.settings.image_height.options__3.label"
+        },
+        {
+          "value": "fixed",
+          "label": "t:sections.slideshow.settings.image_height.options__4.label"
+        }
+      ],
+      "default": "adapt_image_first",
+      "label": "t:blocks.video.settings.video_height.label",
+      "info": "t:sections.slideshow.settings.image_height.info"
+    },
+    {
+      "type": "range",
+      "id": "fixed_height",
+      "min": 200,
+      "max": 1000,
+      "step": 10,
+      "unit": "px",
+      "label": "t:blocks.video.settings.fix_height.label",
+      "default": 860
+    },
+    {
+      "type": "select",
+      "id": "image_height_mb",
+      "options": [
+        {
+          "value": "adapt_image_first",
+          "label": "t:blocks.video.settings.video_height.adapt_to_video"
+        },
+        {
+          "value": "full",
+          "label": "t:sections.slideshow.settings.image_height.options__3.label"
+        },
+        {
+          "value": "fixed",
+          "label": "t:sections.slideshow.settings.image_height.options__4.label"
+        }
+      ],
+      "default": "adapt_image_first",
+      "label": "t:blocks.video.settings.video_height.label_2"
+    },
+    {
+      "type": "range",
+      "id": "fixed_height_mb",
+      "min": 100,
+      "max": 1000,
+      "step": 10,
+      "unit": "px",
+      "label": "t:blocks.video.settings.fix_height.label_2",
+      "default": 300
+    },
+    {
+      "type": "paragraph",
+      "content": "t:blocks.video.settings.paragraph.content"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "t:blocks.video.settings.video.label",
+      "info": "t:blocks.video.settings.video.info"
+    },
+    {
+      "type": "video_url",
+      "id": "external_video_url",
+      "accept": [
+        "vimeo",
+        "youtube"
+      ],
+      "label": "t:blocks.video.settings.external_video.label",
+      "default": "https://www.youtube.com/watch?v=_9VUPq3SxOc"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_video_controls",
+      "label": "t:blocks.video.settings.show_control.label",
+      "info": "t:blocks.video.settings.show_control.info",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.video.name",
+      "blocks": [
+        {
+          "type": "_text-content",
+          "settings": {
+            "heading": "Heading",
+            "tag": "h2",
+            "heading_size": 50,
+            "heading_size_tb": 30,
+            "heading_size_mb": 24,
+            "alignment": "center"
+          }
+        },
+        {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 20,
+            "space_md": 20,
+            "space": 20
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "text": "<p>Share information about your brand with your customers. Describe a product, make announcements, or welcome customers to your store.<\/p>",
+            "text_size": "base"
+          }
+        },
+        {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 20,
+            "space_md": 20,
+            "space": 20
+          }
+        },
+        {
+          "type": "button",
+          "settings": {
+            "label": "Button label",
+            "link": "",
+            "open_in_new_tab": false,
+            "full_width": false,
+            "btn_style": "",
+            "icon": "truck",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

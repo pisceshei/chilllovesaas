@@ -1,0 +1,282 @@
+{
+  "sections": {
+    "ce923555-ffa8-4195-8e7c-38581d4edd34": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-slider--home .m-slide__description {\n  font-family: \"M-Body-font\";\n}\n.m-collection-list--home .m-mixed-layout__inner {\n  align-items: center;\n}\n.m-collection-list--home .m-collection-card__title {\n  font-family: \"M-Body-font\";\n}\n\n.m-hero--home .m-hero__text {\n  color: #666;\n}\n.m-hero--home .m-hero__subtitle {\n  font-size: 13px;\n  text-transform: uppercase;\n  font-weight: 500;\n}\n.m-newsletter--home {\n  --color-border: 0,0,0;\n}\n\n@media (min-width: 1280px) {\n  .m-hero--home .m-hero__title,\n  .m-newsletter--home .m-newsletter-section__heading {\n    font-size: 40px;\n    line-height: 56px;\n    margin-bottom: 10px;\n  }\n  .m-hero--home .m-hero__content {\n    margin-right: 150px;\n  }\n  .m-slider--home .m-slide__description {\n    font-size: 20px;\n  }\n}\n\n@media (max-width: 767px) {\n  .m-collection-list--home .m-section__subheading img {\n    margin-bottom: 20px;\n    max-width: 80px;\n  }\n  .m-hero--home .m-hero__title {\n    margin-bottom: 10px;\n  }\n  .m-newsletter--home .m-newsletter-section__heading {\n    font-size: 24px;\n    line-height: 34px;\n  }\n  .m-instagram--home .m-section-my {\n    margin-bottom: 20px;\n  }\n  .m-hero--home .m-hero__content {\n    text-align: center;\n  }\n}"
+      }
+    },
+    "1623138304311cff05": {
+      "type": "slider",
+      "blocks": {
+        "1623138304311cff05-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "<span class=\"mb__content-heading\">Youth On The Move<\/span>",
+            "description": "<p>Browse modern and vintage mirrors<br\/> to add a final flourish to your look. <\/p>",
+            "image_link": "",
+            "button_text": "Explore All Things",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "Slice Mirror - Round",
+            "footer_button": "Shop Now",
+            "footer_link": "#"
+          }
+        },
+        "1623138304311cff05-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Deck yourself up",
+            "description": "<p>Browse modern and vintage mirrors<br\/> to add a final flourish to your look.<\/p>",
+            "image_link": "",
+            "button_text": "Explore All Things",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "Slice Mirror - Round",
+            "footer_button": "Shop Now",
+            "footer_link": "#"
+          }
+        },
+        "1623138304311cff05-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "A style for every story",
+            "description": "<p>Browse modern and vintage mirrors<br\/> to add a final flourish to your look.<\/p>",
+            "image_link": "",
+            "button_text": "Explore All Things",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "Slice Mirror - Round",
+            "footer_button": "Shop Now",
+            "footer_link": "#"
+          }
+        }
+      },
+      "block_order": [
+        "1623138304311cff05-0",
+        "1623138304311cff05-1",
+        "1623138304311cff05-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "1623138808240cdaab": {
+      "type": "collection-list",
+      "blocks": {
+        "1623138808240cdaab-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Wall Mirrors"
+          }
+        },
+        "1623138808240cdaab-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Full Length Mirrors"
+          }
+        },
+        "1623138808240cdaab-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Table Mirrors"
+          }
+        }
+      },
+      "block_order": [
+        "1623138808240cdaab-0",
+        "1623138808240cdaab-1",
+        "1623138808240cdaab-2"
+      ],
+      "settings": {
+        "heading": "Browse Modern and Vintage Mirrors to<br> Add a Final Flourish to Your Yook.",
+        "heading_size": "h3",
+        "subheading": "<img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/4_229e0127-a7c7-4eac-a2da-12c133710a79.png?v=1623138925\" width=\"140px\" height=\"140px\" style=\"padding-bottom: 32px; margin: 0 auto;\">",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 50,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "16231394239b998a9b": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "container-fluid",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "right middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "<span class=\"mb__content-heading\">Slender Window Mirror.<\/span>",
+        "subtitle": "<span class=\"custom__subtitle\">New collection<\/span>",
+        "text": "<p>It can be hung on a wall or propped on a<br\/> surface as you wish.<\/p>",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--home",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1623139580ad43291e": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Most Popular Designs",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162313963013908f4f": {
+      "type": "newsletter",
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "Stay up to date with all fashion news<br> and exclusive offers",
+        "description": "",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email",
+        "submit_button": "Subscribe",
+        "text_color": "black",
+        "show_icon": true,
+        "icon_img_width": "40",
+        "show_agreement": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-newsletter--home",
+        "animations": "inherit"
+      }
+    },
+    "162313966077fafdb8": {
+      "type": "instagram",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 10,
+        "mobile_gap": 10,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-instagram--home section__flush-bottom"
+      }
+    }
+  },
+  "order": [
+    "ce923555-ffa8-4195-8e7c-38581d4edd34",
+    "1623138304311cff05",
+    "1623138808240cdaab",
+    "16231394239b998a9b",
+    "1623139580ad43291e",
+    "162313963013908f4f",
+    "162313966077fafdb8"
+  ]
+}

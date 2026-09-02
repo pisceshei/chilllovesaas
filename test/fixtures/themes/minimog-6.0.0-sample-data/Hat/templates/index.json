@@ -1,0 +1,304 @@
+{
+  "sections": {
+    "ca5be9ac-a1fb-48d6-a260-bbae50d49733": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": "@media (min-width: 768px) {\n  .m-image-cards--home .m-image-card:nth-child(2) .m-richtext,\n  .m-image-cards--home .m-image-card:nth-child(3) .m-richtext {\n    display: grid;\n    height: 100%;\n    justify-items: start;\n  }\n  .m-image-cards--home .m-image-card:nth-child(2) .m-richtext__button,\n  .m-image-cards--home .m-image-card:nth-child(3) .m-richtext__button {\n    align-self: end;\n  }\n}"
+      }
+    },
+    "1621423239df69a3b1": {
+      "type": "video",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "",
+        "video_type": "shopify",
+        "ratio": "16:9",
+        "video_title": "<div style=\"letter-spacing: 20px;\">SUNBATHING<\/div>",
+        "text_size": "large",
+        "text_color": "white",
+        "play_style": "outline",
+        "play_size": "large",
+        "width": "100%",
+        "autoplay": true,
+        "loop": true,
+        "muted": false,
+        "show_controls": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf_video_home",
+        "animations": "inherit"
+      }
+    },
+    "16215659493d37c6cb": {
+      "type": "image-with-text-1",
+      "blocks": {
+        "16215659493d37c6cb-0": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "link": "",
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "white",
+            "title": "<div style=\"letter-spacing: 4px;line-height:1.4;\">THE MIRAGE<br> SEASON<\/div>",
+            "subtitle": "COLLETION",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "16215659493d37c6cb-1": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "dark",
+            "link": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "white",
+            "title": "<div style=\"letter-spacing: 4px;line-height:1.4;\">STRAW<\/div>",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-small",
+            "button_fixed": false
+          }
+        },
+        "16215659493d37c6cb-2": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "link": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "title": "<div style=\"letter-spacing: 4px;line-height:1.4;\">COLORFUL<br>BUCKET<\/div>",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-small",
+            "button_fixed": false
+          }
+        }
+      },
+      "block_order": [
+        "16215659493d37c6cb-0",
+        "16215659493d37c6cb-1",
+        "16215659493d37c6cb-2"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "layout": "layout_4",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "mobile_gap": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-image-cards--home",
+        "animations": "inherit"
+      }
+    },
+    "1621237927dbabc289": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "NEW ARRIVALS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 40,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1621238273e643fc73": {
+      "type": "custom-content",
+      "blocks": {
+        "b4b333a3-54f2-4e0e-a904-208e9abd758a": {
+          "type": "lookbook",
+          "settings": {
+            "color_scheme": "",
+            "width": "50%",
+            "top_1": 38,
+            "left_1": 68,
+            "top_2": 26,
+            "left_2": 50,
+            "product_2": "",
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "83270816-f06f-4d76-b586-fbb8cb411781": {
+          "type": "product",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "m-custom-content-block-product",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "b4b333a3-54f2-4e0e-a904-208e9abd758a",
+        "83270816-f06f-4d76-b586-fbb8cb411781"
+      ],
+      "settings": {
+        "heading": "SHOP OUR LOOK",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "section__flush-bottom"
+      }
+    },
+    "16212389466bfb8355": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "BEST SELLERS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 40,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf__featured-collection-2",
+        "animations": "inherit"
+      }
+    },
+    "162123936329b4d610": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "OUR JOURNAL",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 16,
+        "article_image_aspect_ratio": "4\/3",
+        "article_align_content": "text-center",
+        "article_show_tags": true,
+        "article_show_date": true,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "VIEW MORE",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-blog-post",
+        "animations": "inherit"
+      }
+    },
+    "1621239557643c9283": {
+      "type": "instagram",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 0,
+        "mobile_gap": 10,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-instagram"
+      }
+    }
+  },
+  "order": [
+    "ca5be9ac-a1fb-48d6-a260-bbae50d49733",
+    "1621423239df69a3b1",
+    "16215659493d37c6cb",
+    "1621237927dbabc289",
+    "1621238273e643fc73",
+    "16212389466bfb8355",
+    "162123936329b4d610",
+    "1621239557643c9283"
+  ]
+}

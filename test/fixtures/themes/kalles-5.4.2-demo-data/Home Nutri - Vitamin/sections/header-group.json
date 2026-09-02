@@ -1,0 +1,362 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "announcement_bar_QKnWCh": {
+      "type": "announcement-bar",
+      "blocks": {
+        "announcement_izeF7X": {
+          "type": "announcement",
+          "settings": {
+            "link": "",
+            "text": "Today deal sale off <strong>70%<\/strong>. End in[countdown].  <a href=\"\/collections\/all\" title=\"All products\">Hurry Up [icon_arrow]<\/a>",
+            "adding_border": false,
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "text_highlight": "",
+            "hdt_font_size": 16
+          }
+        },
+        "announcement_fekMnb": {
+          "type": "announcement",
+          "settings": {
+            "link": "",
+            "text": "Welcome to our store",
+            "adding_border": false,
+            "countdown": "2024-12-30 15:00:00",
+            "txt_day": "days",
+            "text_highlight": "",
+            "hdt_font_size": 16
+          }
+        }
+      },
+      "block_order": [
+        "announcement_izeF7X",
+        "announcement_fekMnb"
+      ],
+      "disabled": true,
+      "settings": {
+        "show_line_separator": false,
+        "close_btn": "1",
+        "height": 45,
+        "fontsize": 12,
+        "design": "slider",
+        "hdt_using_image_icon": false,
+        "space_item": 30,
+        "speed": 0.3,
+        "direction": "rtl",
+        "pausable": false,
+        "effect": "carousel",
+        "au_time": 5,
+        "pause_when_hover": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-6707cc8e-6558-49d9-8759-f7d934d9fe4f",
+        "background_opacity": 1,
+        "full_width": true
+      }
+    },
+    "top_bar_3qfcq8": {
+      "type": "top-bar",
+      "blocks": {
+        "info_FXxzPi": {
+          "type": "info",
+          "settings": {
+            "show_email": true,
+            "email": "kalles@domain.com",
+            "show_phone": true,
+            "phone": "+0123456789",
+            "hide": false
+          }
+        },
+        "text_yBAEgJ": {
+          "type": "text",
+          "settings": {
+            "text1": "Summer sale discount off <strong>50%<\/strong>! <a href=\"\/collections\/all\" title=\"All products\">Shop Now<\/a>",
+            "text2": "",
+            "text3": "",
+            "adding_border": false,
+            "countdown": "2024-12-30 15:00:00",
+            "txt_day": "days",
+            "effect": "carousel",
+            "au_time": 3,
+            "pause_when_hover": false,
+            "hide": false
+          }
+        },
+        "cur_4KAVdD": {
+          "type": "cur",
+          "settings": {
+            "show_currency": true,
+            "show_language": true,
+            "use_location": true,
+            "txt_location": "Location",
+            "url_location": "shopify:\/\/pages\/store-locator",
+            "open_link": "_self",
+            "hide": true
+          }
+        }
+      },
+      "block_order": [
+        "info_FXxzPi",
+        "text_yBAEgJ",
+        "cur_4KAVdD"
+      ],
+      "disabled": true,
+      "settings": {
+        "height": 41,
+        "fontsize": 12,
+        "show_line_separator": false,
+        "full_width": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1
+      }
+    },
+    "header_inline_blocks_xePFbC": {
+      "type": "header-inline-blocks",
+      "blocks": {
+        "mega_block_7DJYPE": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_PKdDaN": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "nutri-vitamin",
+              "healthy"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "scheme-1",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_ntakNQ": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_7qDM6U": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "airborne-supplement",
+              "centrum-for-mens",
+              "ceylon-cinnamon",
+              "culturelle-probiotic",
+              "naomi-vitamin",
+              "nature-bounty-c",
+              "nature-vitamin-c"
+            ],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_MtwFkx": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_Jbe4K9": {
+          "type": "_mega_block",
+          "disabled": true,
+          "settings": {
+            "title": "Blog",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_blog",
+            "html": "",
+            "page": "",
+            "blog": "fashion",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? <\/span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com<\/b><\/span><span>Phone: <b>(212) 555-1234<\/b><\/span><\/span>"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_7DJYPE",
+        "mega_block_PKdDaN",
+        "mega_block_ntakNQ",
+        "mega_block_7qDM6U",
+        "mega_block_MtwFkx",
+        "mega_block_Jbe4K9"
+      ],
+      "custom_css": [
+        "@media (width >= 1350px) {.hdt-container-full {padding-inline: 45px; }}"
+      ],
+      "settings": {
+        "header_layout": "logo_center",
+        "header_fullwidth": true,
+        "header_height": 99,
+        "logo": "shopify:\/\/shop_images\/kalles.svg",
+        "logo_width": 95,
+        "header_colors": "",
+        "main_menu": "main-menu-imported-9064",
+        "lazy_mn": false,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "normal",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "menu_type": "default",
+        "header_menu_colors": "",
+        "h_icon": "kalles",
+        "hover_icon": "2",
+        "search_type": "icon",
+        "show_currency": false,
+        "show_language": false,
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_socials": false,
+        "header_height_mb": 60,
+        "logo_width_mb": 95,
+        "header_transparent": true,
+        "header_transparent_colors": "",
+        "background_opacity_transparent": 0,
+        "header_space_top": 0,
+        "header_space_top_mobile": 0,
+        "sticky_type": "on_scroll_up",
+        "header_sticky_colors": "",
+        "background_opacity_sticky": 1,
+        "sticky_glass": false
+      }
+    },
+    "custom_liquid_BCTxT9": {
+      "type": "custom-liquid",
+      "name": "t:sections.custom-liquid.name",
+      "settings": {
+        "custom_liquid": "{%-liquid \n  assign demos = pages['demos'].metafields.home.menu.value | default: pages['demo'].metafields.home.menu.value\n  assign demo_size = demos.count | plus: 0\n  if demo_size < 1\n    continue\n  endif\n-%}\n<style>\n  html:has(#drawer-demo-themes:checked){\n    overflow: hidden;\n    padding-inline-end: var(--scrollbar-w);\n  }\n  .hdt-demoo-container {\n    --container-w: min(700px,70vw);\n    --spacing-x: 20px;\n    --spacing-y: 20px;\n    z-index: 9999;\n    position: relative;\n    .backdrop{\n      position:fixed;\n      inset: 0;\n      width:100%;\n      height:100%;\n      background-color: rgb(0 0 0 \/ 0.3);\n      content: \"\";\n      cursor: var(--cursor-close-svg-url) 28 28,auto;\n      opacity: 0;\n      content-visibility: hidden;\n      pointer-events: none;\n    }\n  \n    &:has(#drawer-demo-themes:checked){\n      .backdrop{\n        opacity: 1;\n        content-visibility: visible;\n        pointer-events: auto;\n      }\n      .hdt-demoo-buy-theme{\n        right: var(--container-w);\n        .hdt-demoos-btn{\n          .hdt-demoo-close-icon{\n            transform: translateY(0);\n            opacity: 1;\n          }\n        }\n        .hdt-demoos-count{\n          opacity: 0;\n          pointer-events: none;\n          transform: translateY(-15px);\n        }\n      }\n      .hdt-demoo-wrap{\n        transform: translateX(0);\n        opacity: 1;\n      }\n    }\n    .hdt-demoo-wrap{\n      max-width: var(--container-w);\n      position: fixed;\n      right: 0;\n      transition: 0.3s ease-in-out;\n      z-index: 999;\n      top: 0;\n      bottom: 0;\n      overflow-y: auto;\n      background-color: #fafafa;\n      color: #000;\n      padding: 40px 20px;\n      transform: translateX(100%);\n      opacity: 0;\n      @media (750px < width < 1300px){\n        padding: 40px 20px 80px;\n      }\n    }\n    .hdt-demoo-header{\n      margin-bottom: 30px;\n      h3{ \n        font-size: clamp(28px, 4vw, 40px);\n        font-weight: 600;\n        span {\n          font-size: clamp(16px, 2vw, 24px);\n        }\n      }\n    }\n    .hdt-demoo-item{\n      .hdt-demoo-wrap-title{\n        margin-top: 15px;\n      }\n      .hdt-demoo-item-image{\n        transition: .3s ;\n        box-shadow: 3px 5px 25px 0 rgba(0,0,0,.1);\n        &:hover{\n          box-shadow: 3px 5px 35px 0 rgba(0,0,0,.15);\n          transform: translateY(-5px);\n        }\n      }\n    }\n    .hdt-demoo-buy-theme{\n      position: fixed;\n      right: 0;\n      transition: 0.3s ease-in-out;\n      z-index: 1;\n      top: 0;\n      bottom: 0;\n      height: 100%;\n      display: flex;\n      flex-direction: column;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n    }\n    .hdt-demoos-btn {\n      pointer-events: auto;\n      a&{\n        .hdt-demoos-count{\n          gap: 5px;\n        }\n      }\n      &.hdt-purschase-btn{\n        .hdt-btn-wrappp{\n          background: #f21e4e;\n          color: #fff;\n        }\n      }\n      .hdt-btn-wrappp{\n        display: flex;\n        align-items: center;\n        justify-content: center;\n        padding: 10px 20px;\n        min-width: 150px;\n        color: #000;\n        background: #fafafa;\n        position: relative;\n        min-height: 44px;\n        font-size: clamp(14px, 2vw, 18px);\n        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.1);\n        overflow: hidden;\n        &:hover{\n          box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.2);\n        }\n      }\n      .hdt-demoos-count{\n        white-space: nowrap;\n        display: flex;\n        align-items: center;\n        justify-content: space-between;\n        transition: 0.2s ease-in-out;\n        opacity: 1;\n        position: absolute;\n        left: 0;\n        top: 0;\n        height: 100%;\n        width: fit-content;\n        right: 0;\n        bottom: 0;\n        margin: 0 auto;\n        transition-delay: 0.5s;\n      }\n      .hdt-demoos-num{\n        font-weight: 600;\n      }\n      .hdt-demoo-close-icon{\n        position: absolute;\n        left: 0;\n        top: 0;\n        height: 100%;\n        width: 100%;\n        transition: 0.2s ease-in-out;\n        display: flex;\n        align-items: center;\n        justify-content: center;\n        opacity: 0;\n        transform: translateY(15px);\n        transition-delay: 0.5s;\n      }\n    }\n  }\n  @keyframes dmoo-count {\n    0%{\n      opacity: 1;\n      \n    }\n    100%{\n      opacity: 0;\n      width: 0;\n      opacity: 0;\n    }\n  }\n  \n<\/style>\n<div class=\"hdt-demoo-container hdt-hidden md:hdt-block\">\n  <div class=\"backdrop\" onclick=\"document.getElementById('drawer-demo-themes').checked = false;\"><\/div>\n  <div class=\"hdt-demoo-buy-theme hdt-pe-none\">\n    <label for=\"drawer-demo-themes\" class=\"hdt-demoos-btn\" aria-controls=\"drawer-demo-themes\" aria-label=\"Open demo themes\">\n      <div class=\"hdt-btn-wrappp\">\n        <div class=\"hdt-demoos-count\">\n          <div class=\"hdt-demoos-num\">{{ demo_size }}+<\/div>\n          <span style=\"width:3px\"><\/span>\n          <span class=\"hdt-demoos-label\">demos<\/span>\n        <\/div>\n        <div class=\"hdt-demoo-close-icon\">\n          Close\n        <\/div>\n      <\/div>\n    <\/label>\n    <a href=\"https:\/\/1.envato.market\/nL6xBa\" target=\"_blank\" class=\"hdt-demoos-btn hdt-purschase-btn\">\n      <div class=\"hdt-btn-wrappp\">\n        <div class=\"hdt-demoos-count\">\n          <div class=\"hdt-icon-plus\">\n            <svg x=\"0px\" y=\"0px\" width=\"16px\" height=\"20px\" viewBox=\"0 0 16 20\" enable-background=\"new 0 0 16 20\" xml:space=\"preserve\">\n              <path fill=\"currentColor\" d=\"M16.097,5.831v12.751c0,0.232-0.084,0.434-0.251,0.602c-0.168,0.17-0.368,0.254-0.601,0.254H1.852\n                c-0.231,0-0.433-0.084-0.601-0.254C1.083,19.016,1,18.814,1,18.582V5.87c0-0.259,0.083-0.473,0.251-0.642\n                C1.419,5.06,1.62,4.976,1.852,4.976H4.02V4.587c0-1.269,0.445-2.352,1.335-3.246C6.245,0.447,7.296,0,8.51,0h0.077\n                c1.213,0,2.265,0.447,3.155,1.341s1.336,1.977,1.336,3.246v0.389h2.167c0.232,0,0.426,0.078,0.581,0.233\n                C16.007,5.391,16.097,5.598,16.097,5.831L16.097,5.831z M14.355,6.686h-1.277v1.478c0,0.259-0.084,0.473-0.252,0.641\n                c-0.168,0.169-0.368,0.253-0.6,0.253c-0.259,0-0.472-0.084-0.64-0.253c-0.168-0.168-0.251-0.382-0.251-0.641V6.686H5.761v1.478\n                c0,0.259-0.084,0.473-0.251,0.641C5.342,8.974,5.129,9.058,4.871,9.058c-0.232,0-0.433-0.084-0.601-0.253\n                C4.103,8.637,4.02,8.423,4.02,8.164V6.686H2.742v11.041h11.613V6.686z M5.761,4.976h5.575V4.587c0-0.803-0.271-1.483-0.813-2.041\n                C9.98,1.989,9.336,1.71,8.587,1.71H8.51c-0.749,0-1.394,0.279-1.936,0.836C6.032,3.104,5.761,3.784,5.761,4.587V4.976z\"><\/path>\n              <\/svg>\n          <\/div>\n          <span class=\"hdt-demoos-label\">Buy now<\/span>\n        <\/div>\n        <div class=\"hdt-demoo-close-icon\">\n          Buy now\n        <\/div>\n      <\/div>\n    <\/a>\n  <\/div>\n  <input type=\"checkbox\" class=\"hdt-hidden\" id=\"drawer-demo-themes\">\n  <div class=\"hdt-demoo-wrap\">\n    <div class=\"hdt-demoo-inner\">\n      <div class=\"hdt-demoo-header\">\n        <h3 class=\"hdt-text-center\">{{ demo_size }} <span>demos<\/span><\/h3>\n        <p class=\"hdt-text-center hdt-body-base\">Can't decide on one demo? Features from different demos can be<br class=\"hdt-hidden md:hdt-block\"> combined! Start creating your website<\/p>\n      <\/div>\n      <div class=\"hdt-demoo-grid hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-2 lg:hdt-grid-cols-3\">\n        {%- for demo in demos -%}\n          {% liquid\n            assign image = demo.image \n            assign labels = demo.label\n            assign url = demo.url.value.url\n            assign name = demo.name\n          %}\n          <div class=\"hdt-demoo-item\">\n            <a href=\"{{ url }}\" class=\"hdt-demoo-inner\">\n              <div class=\"hdt-demoo-item-image\">\n                {%- if image != blank -%}\n                  {{ image | image_url: width: image.width, height: image.height | image_tag: loading: 'lazy', width: image.width, widths:'100,200,300,400,500,600,700,800,900,1000,1200,1400',\n                    loading: 'lazy', sizes: '', class: 'hdt-object-cover hdt-obj-eff' }}\n                {%- endif -%}\n              <\/div>\n              <div class=\"hdt-demoo-wrap-title hdt-flex hdt-justify-between hdt-align-center\">\n                <div class=\"hdt-demoo-item-title\">{{ name }}<\/div>\n                <div class=\"hdt-demo-label hdt-flex\">\n                  {%- for label in labels.value -%}\n                    <span class=\"hdt-demo_{{ label | handle }} hdt-flex hdt-align-center hdt-justify-center hdt-text-xs hdt-font-medium\">{{ label }}<\/span>\n                  {%- endfor -%}\n                <\/div>\n              <\/div>\n            <\/a>\n          <\/div>\n        {%- endfor -%}\n      <\/div>\n  \n    <\/div>\n  <\/div>\n<\/div>\n<style>\n.hdt-demoo-item-title:hover {\ncolor: rgb(var(--color-accent))\n}\n<\/style>",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    }
+  },
+  "order": [
+    "announcement_bar_QKnWCh",
+    "top_bar_3qfcq8",
+    "header_inline_blocks_xePFbC",
+    "custom_liquid_BCTxT9"
+  ]
+}

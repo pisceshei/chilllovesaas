@@ -1,0 +1,158 @@
+{
+  "sections": {
+    "16230292343186aa09": {
+      "type": "custom-content",
+      "blocks": {
+        "16230292343186aa09-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "100%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16230292343186aa09-1"
+      ],
+      "settings": {
+        "heading": "Coffee can be roasted better, brewed<br>  better and, most importantly.",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "<a href=\"#\" class=\"no-underline m-button m-button--link\">Discover Now<\/a>",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1623029917d161b538": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Explore hidden coast coffees",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 9,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "1623029987b41ab1d0": {
+      "type": "collection-list",
+      "blocks": {
+        "1623029987b41ab1d0-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Single Origin"
+          }
+        },
+        "1623029987b41ab1d0-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Blends Coffee"
+          }
+        },
+        "1623029987b41ab1d0-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Espresso Coffee"
+          }
+        }
+      },
+      "block_order": [
+        "1623029987b41ab1d0-0",
+        "1623029987b41ab1d0-1",
+        "1623029987b41ab1d0-2"
+      ],
+      "settings": {
+        "heading": "Which is for you?",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-collection-list",
+        "animations": "inherit"
+      }
+    },
+    "1623031460e96df954": {
+      "type": "custom-content",
+      "settings": {
+        "heading": "“If you can’t get to paradise, I’ll bring it to you”",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "- Don The Beachcomber",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 60,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-content-section"
+      }
+    }
+  },
+  "order": [
+    "16230292343186aa09",
+    "1623029917d161b538",
+    "1623029987b41ab1d0",
+    "1623031460e96df954"
+  ]
+}

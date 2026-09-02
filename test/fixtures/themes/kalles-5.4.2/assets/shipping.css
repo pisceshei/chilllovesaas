@@ -1,0 +1,174 @@
+/* section options */
+.hdt-shipping .hdt-content-inner{
+  --icon-color: rgb(var(--color-foreground));
+}
+.hdt-shipping .hdt-ship-item-wrap{
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.hdt-shipping .hdt-content-align-center .hdt-ship-item-wrap{
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.hdt-shipping .hdt-content-align-right .hdt-ship-item-wrap{
+  flex-direction: row-reverse;
+  text-align: end;
+}
+
+.hdt-shipping .hdt-center-content .hdt-ship-item-wrap{
+  align-items: center;
+}
+.hdt-shipping .hdt-ship-icon {
+  flex: 0 0 auto;
+  width: auto;
+}
+.hdt-shipping .hdt-ship-icon:empty{
+  display: none;
+}
+.hdt-shipping .hdt-ship-content{
+  flex: 1 0 0%;
+  padding-block-end: 2px;
+}
+
+/* icon */
+
+.hdt-shipping :where(.hdt-icon,svg){
+  width: var(--icon-width,auto);
+  height: auto;
+  fill: currentColor;
+  color: var(--icon-color);
+  z-index: 2;
+}
+.hdt-shipping .hdt-ship-icon{
+  width: var(--width-box, auto);
+  height: var(--width-box, auto);
+  border-radius: var(--radius-box,0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-box,none);
+  position: relative;
+}
+.hdt-shipping .hdt-ship-item-wrap{
+  background: var(--background-item,transparent);
+  border: var(--border-item,none);
+  /* box-shadow: inset -1px -1px rgb(var(--color-line-border)), -1px -1px rgb(var(--color-line-border)); */
+}
+/* circle */
+.hdt-shipping .hdt-icon-circle {
+  --border-box: 1px solid var(--icon-color);
+  --radius-box: 9999px;
+}
+/* use border */
+.hdt-shipping .hdt-use-border {
+  --border-item: 1px solid rgb(var(--color-line-border));
+  --background-item: rgb(var(--color-background2));
+}
+.hdt-shipping .hdt-use-border .hdt-ship-item-wrap{
+  padding: var(--padding-item,15px);
+}
+/* space padding 2 */
+.hdt-shipping .hdt-space-padding-true.hdt-use-border{
+  --padding-item: 17px 5px;
+}
+/* icon size */
+.hdt-shipping .hdt-icon-size-none .hdt-ship-icon{
+  display: none;
+}
+.hdt-shipping .hdt-icon-size-small{
+  --icon-width: 24px;
+}
+.hdt-shipping .hdt-icon-size-medium{
+  --icon-width: 36px;
+}
+.hdt-shipping .hdt-icon-size-large{
+  --icon-width: 48px;
+}
+/* icon size with circle */
+.hdt-shipping .hdt-icon-size-small.hdt-icon-circle{
+  --width-box: 60px;
+}
+.hdt-shipping .hdt-icon-size-medium.hdt-icon-circle{
+  --width-box: 80px;
+}
+.hdt-shipping .hdt-icon-size-large.hdt-icon-circle{
+  --width-box: 96px;
+}
+
+/* Icon color */
+.hdt-shipping .hdt-icon-secondary{
+  --icon-color: rgb(var(--color-foreground2));
+}
+.hdt-shipping .hdt-icon-tertiary{
+  --icon-color: rgb(var(--color-tertiary));
+}
+.hdt-shipping .hdt-icon-accent{
+  --icon-color: rgb(var(--color-accent));
+}
+
+/* carousel dots */
+.hdt-shipping .hdt-shipping-dots{
+  margin: 20px auto 0;
+  /* display: flex; */
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  --size-dot: 11px;
+  --background-dot: rgb(var(--color-foreground));
+  --opacity-dot: 0.5;
+  --opacity-dot-active: 1;
+}
+.hdt-shipping .hdt-shipping-dot{
+  width: var(--size-dot);
+  height: var(--size-dot);
+  background: var(--background-dot);
+  border-radius: var(--radius-dot,0px);
+  opacity: var(--opacity-dot);
+  transition: opacity 0.3s;
+}
+.hdt-shipping .hdt-shipping-dot.hdt-scrollsnap-dot__link--active{
+  opacity: var(--opacity-dot-active);
+}
+.hdt-shipping .hdt-dot-rounded-true{
+  --radius-dot: 9999px;
+}
+.hdt-shipping .hdt-dot-secondary{
+  --background-dot: rgb(var(--color-secondary));
+}
+.hdt-shipping .hdt-dot-tertiary{
+  --background-dot: rgb(var(--color-tertiary));
+}
+.hdt-shipping .hdt-dot-accent{
+  --background-dot: rgb(var(--color-accent));
+}
+
+@media (min-width: 1150px) and (pointer: fine){
+  .hdt-shipping-item:hover .hdt-ship-icon {
+    -webkit-animation: bounceIn 0.5s ease;
+    -o-animation: bounceIn 0.5s ease;
+    animation: bounceIn 0.5s ease;
+  }
+  .hdt-icon-circle .hdt-ship-icon:before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    background-color: var(--icon-color);
+    transition: 0.3s;
+    transform: scale(0);
+    border-radius: inherit;
+  }
+  .hdt-icon-circle .hdt-shipping-item:hover .hdt-ship-icon:before {
+    transform: scale(1);
+  }
+  .hdt-icon-circle .hdt-shipping-item:hover .hdt-ship-icon .hdt-icon{
+    color: rgb(var(--color-background));
+    border-color: rgb(var(--color-background));
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "sections": {
+    "1620813069167db316": {
+      "type": "slider",
+      "blocks": {
+        "c0ce169f-1329-47fc-9e42-915e4961aa32": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "right middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "CRAFTED WITH<br>\nEXCELLENT.",
+            "description": "<p>Time flies. Our watch will make you fly too.<\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1620813069167db316-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "right middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "DESIGNED TO<br>\nPERFORM.",
+            "description": "<p>Like its namesake flower, the Mini Tulipano is simple.<\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "27403af4-f4e3-4833-9189-9868705845f7": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "right middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "WEAR YOUR<br>\nSTYLE.",
+            "description": "<p>Get the fashion that matters with time.<\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "c0ce169f-1329-47fc-9e42-915e4961aa32",
+        "1620813069167db316-0",
+        "27403af4-f4e3-4833-9189-9868705845f7"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-custom-slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1621053534356ea7a7": {
+      "type": "collection-list",
+      "blocks": {
+        "1621053534356ea7a7-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Choronos"
+          }
+        },
+        "1621053534356ea7a7-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Altitude"
+          }
+        },
+        "1621053534356ea7a7-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Rogue"
+          }
+        }
+      },
+      "block_order": [
+        "1621053534356ea7a7-0",
+        "1621053534356ea7a7-1",
+        "1621053534356ea7a7-2"
+      ],
+      "settings": {
+        "heading": "SHOP BY CATEGORY",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16210538020a747262": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "TRENDING NOW",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-button-all-full-mb",
+        "animations": "inherit"
+      }
+    },
+    "162105398711a2f1a6": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "right",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "<span class=\"leading-tight\">LEATHER<br>ESSENTIALS<\/span>",
+        "sub_title": "",
+        "text": "<p>There are literally thousands of watchmakers around the world, the goal at Minigear is to introduce the timepieces that are worthy of your attention and possess the quality.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "SHOP NOW",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-image-with-text",
+        "animations": "inherit"
+      }
+    },
+    "16210558883dc2b6b3": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "dark",
+        "container": "container-fluid",
+        "hero_size": "adapt",
+        "show_overlay": true,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "<div class=\"font-bold\">GET YOUR EPIC TIME<\/div>",
+        "subtitle": "",
+        "text": "<p>Inspiration through dedicated craftsmanship.<\/p>",
+        "button_label": "ABOUT US",
+        "button_link": "",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-custom-hero m-button-all-full-mb",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1621056073463ea8bc": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "OUR JOURNAL",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 30,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-left",
+        "article_show_tags": true,
+        "article_show_date": true,
+        "article_show_excerpt": true,
+        "article_show_button": true,
+        "button_link": "",
+        "button_text": "View More",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-blog-post",
+        "animations": "inherit"
+      }
+    },
+    "162105600368da1e43": {
+      "type": "newsletter",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "dark",
+        "form_layout": "vertical",
+        "form_design": "2",
+        "heading": "JOIN THE CORE CLUB",
+        "description": "",
+        "text_size": "h3",
+        "email_placeholder": "Enter your email address",
+        "submit_button": "Subscribe",
+        "text_color": "white",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": false,
+        "padding_top": 60,
+        "padding_bottom": 60,
+        "custom_class": "m-custom-newsletter",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1620813069167db316",
+    "1621053534356ea7a7",
+    "16210538020a747262",
+    "162105398711a2f1a6",
+    "16210558883dc2b6b3",
+    "1621056073463ea8bc",
+    "162105600368da1e43"
+  ]
+}

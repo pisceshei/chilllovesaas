@@ -1,0 +1,15 @@
+<div class="hdt-quote-wrap quote_01">
+  {%- if block.settings.image_avata -%}
+    {%- assign image = block.settings.image_avata -%} 
+      {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, widths: '200,400,600,800,1000', class: 'hdt-quote-avatar' }}
+    {%- endif -%}
+  <div class="hdt-quote-content">
+     {%- render 'rating_star', rating: block.settings.rating -%}
+     {% if block.settings.heading != blank %}
+     <h3 class="hdt-testimonial-heading">{{ block.settings.heading }}</h3>
+     {% endif %}
+    {{ block.settings.content }}
+    <div class="hdt-quote-author">{{ block.settings.title }}</div>
+    {%- if block.settings.pos != blank -%}<div class="hdt-quote-position">{{ block.settings.pos }}</div>{%- endif -%} 
+  </div>
+</div>

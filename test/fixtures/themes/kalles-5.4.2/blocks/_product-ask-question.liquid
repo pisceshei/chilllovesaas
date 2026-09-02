@@ -1,0 +1,37 @@
+
+{%- liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+  unless product.available
+    continue
+  endunless
+-%}
+<div class="hdt-pr-popup__ask-wrap hdt-inline-flex">
+  <div class="hdt-pr-popup__ask-product hdt-flex hdt-align-center hdt-gap-10">
+    {{ product.featured_media | image_url: width: 120, height: 120, crop: 'center' | image_tag: class: 'hdt-pr-popup__ask-product-image hdt-radius-full' }}
+    <div class="hdt-pr-popup__ask-product-info">
+      <div class="hdt-pr-popup__ask-product-title hdt-s-text hdt-text-base hdt-font-semibold">
+        {{ product.title }}
+      </div>
+      <div class="hdt-pr-popup__ask-product-price">
+        <div class="hdt-product__price">
+          {%- render 'card-price', section_id: section.id, product: product, show_volume_note: true -%}
+        </div>
+      </div>  
+    </div>
+  </div>
+  <button class="hdt-pr-popup__ask hdt-s-text hdt-text-base hdt-font-semibold" aria-controls="modal-contactFormAsk" data-featured-image="{{ product.featured_media | image_url: width: 240 }}" data-product="{{ product.title | replace: '"', "''" }} - {{ request.origin }}{{ product.url }}">{{ 'products.product.ask_question' | t }}</button>
+</div>
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.extra_link.settings.header_ask.content",
+  "tag": null,
+  "settings": [
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main-product.blocks.extra_link.settings.header_ask.content"
+    }
+  ]
+}
+{% endschema %}

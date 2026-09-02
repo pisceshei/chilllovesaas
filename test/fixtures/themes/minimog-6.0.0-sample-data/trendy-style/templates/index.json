@@ -1,0 +1,434 @@
+{
+  "sections": {
+    "4e452834-2ebb-4073-9a24-a0416ce216a9": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__iconbox-1 .m-icon-box__heading {\n  line-height: 26px;\n  font-weight: 500;\n  font-size: 20px;\n}\n.sf-home__iconbox-1 {\n  border-top: 1px solid #eee;\n}\n.m-hero--home .m-hero__text {\n  color: var(--color-sub-text) !important;\n}\n.sf-home__video .m-video__title {\n  font-weight: 800;\n  letter-spacing: 2px;\n  margin-top: 12px;\n}\n@media (min-width: 1280px) {\n  .sf-home__video .m-video__title {\n    font-size: 30px;\n    letter-spacing: 4px;\n    margin-top: 37px;\n  }\n  .sf-home__video .m-video__play {\n    width: 115px;\n    height: 115px;\n  }\n  .sf-home__video .m-video__inner {\n    --aspect-ratio: 39\/20 !important;\n  }\n}\n@media (max-width: 767px) {\n  .sf-home__iconbox-1 .m-icon-box__heading {\n    font-size: 18px;\n    margin-bottom: 2px;\n  }\n  .sf-home__image-card .m-richtext__button {\n    margin-top: 0;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">New Collection<\/span>",
+            "title": "High Polish <br>\nLow Effort",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">New Arrivals<\/span>",
+            "title": "Discover <br>\nYour Color",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">Simply Elegant\n<\/span>",
+            "title": "Get Ready <br>\nStay Classic",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1626407454ef1db93c": {
+      "type": "image-with-text-1",
+      "blocks": {
+        "1626407454ef1db93c-0": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Handbags",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1626407454ef1db93c-1": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sneakers",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1626407454ef1db93c-2": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sandals",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1626407454ef1db93c-4": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Jackets",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1626407454ef1db93c-3": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Glasses",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        }
+      },
+      "block_order": [
+        "1626407454ef1db93c-0",
+        "1626407454ef1db93c-1",
+        "1626407454ef1db93c-2",
+        "1626407454ef1db93c-4",
+        "1626407454ef1db93c-3"
+      ],
+      "settings": {
+        "heading": "Shop by Categories",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "layout": "layout_3",
+        "gap": 30,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__image-card",
+        "animations": "inherit"
+      }
+    },
+    "1626365858fd9bd41d": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "The boutique style guide",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 12,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16264080972a75445e": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "footer",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "right middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "<span style=\"font-weight:400;\">Poplin Top With<br> Ruffle Trim<\/span>",
+        "subtitle": "",
+        "text": "<p>We believe in crafting pieces where sustainability and<br\/> style go hand in hand. Made from materials like<br\/> recycled cashmere and sust<\/p>",
+        "button_label": "Shop Collection",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--home",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "162640858491025138": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "New-in this week",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 12,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1626409062a3cb7a09": {
+      "type": "video",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "video_type": "shopify",
+        "video_link": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+        "ratio": "16:9",
+        "video_title": "LOOKBOOK VIDEO",
+        "text_size": "large",
+        "text_color": "white",
+        "play_style": "outline",
+        "play_size": "large",
+        "width": "",
+        "autoplay": false,
+        "loop": false,
+        "muted": false,
+        "show_controls": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__video",
+        "animations": "inherit"
+      }
+    },
+    "1626409066d2bbc274": {
+      "type": "icon-box",
+      "blocks": {
+        "1626409066d2bbc274-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Shipping",
+            "description": "<p>Free Shipping for orders over £130<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1626409066d2bbc274-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Money Guarantee",
+            "description": "<p>Within 30 days for an exchange.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1626409066d2bbc274-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Online Support",
+            "description": "<p>24 hours a day, 7 days a week<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "ce10398a-4ce5-437d-a9ac-b40458464042": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Flexible Payment",
+            "description": "<p>Pay with Multiple Credit Cards<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1626409066d2bbc274-0",
+        "1626409066d2bbc274-1",
+        "1626409066d2bbc274-2",
+        "ce10398a-4ce5-437d-a9ac-b40458464042"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "horizontal",
+        "image_max_width": "30px",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "sf-home__iconbox-1",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "4e452834-2ebb-4073-9a24-a0416ce216a9",
+    "1621243260e1af0c20",
+    "1626407454ef1db93c",
+    "1626365858fd9bd41d",
+    "16264080972a75445e",
+    "162640858491025138",
+    "1626409062a3cb7a09",
+    "1626409066d2bbc274"
+  ]
+}

@@ -1,0 +1,130 @@
+{% if block.settings.menu != blank %}
+  <div class="hdt-{{ block.id }}" {{ block.shopify_attributes }}>
+    <ul class="hdt-menu-list {%- if block.settings.menu_inline == true %} hdt-flex hdt-justify-{{ block.settings.align_mb | replace: 'left', 'start' | replace: 'right', 'end' }} md:hdt-justify-{{ block.settings.align | replace: 'left', 'start' | replace: 'right', 'end' }} hdt-menu-inline{% endif %}">
+      {% for link in block.settings.menu.links %}
+        <li> <a href="{{ link.url }}" class="hdt--menu_item hdt-s-text2 hdt-text-{{ block.settings.text_size }}"> {{ link.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {%- if block.settings.text_size == "custom" -%}
+    {%- style -%}
+      .hdt-{{ block.id }} .hdt--menu_item {
+        --text-custom-lg: {{ block.settings.font_size_text_lg }}px; --text-custom-md: {{ block.settings.font_size_text_md }}px; --text-custom-mb: {{ block.settings.font_size_text }}px; --text-fw: {{ block.settings.font_weight_text }}; --text-ls: {{ block.settings.letter_spacing_text }}px; 
+      }
+    {%- endstyle -%}
+  {%- endif -%}
+{% endif %}
+{% schema %}
+  {
+    "name": "t:blocks.link_list.name",
+    "class": "hdt-menu",
+    "settings": [
+      {
+        "type":"checkbox",
+        "id":"menu_inline",
+        "label":"t:blocks.link_list.settings.menu_inline",
+        "default": false
+      },
+      {
+        "type": "text_alignment",
+        "id": "align",
+        "label": "t:settings_schema.global.settings.text_alignment.label",
+        "visible_if": "{{ block.settings.menu_inline }}"
+      },
+      {
+        "type": "text_alignment",
+        "id": "align_mb",
+        "label": "t:settings_schema.global.settings.text_alignment.label_mb",
+        "visible_if": "{{ block.settings.menu_inline }}"
+      },
+      {
+        "type": "link_list",
+        "id": "menu",
+        "default": "footer",
+        "label": "t:blocks.link_list.settings.menu_link.label"
+      },
+      {
+        "type": "select",
+        "id": "text_size",
+        "label": "t:settings_schema.typography.settings.font_size.label",
+        "options": [
+            {
+              "value": "xs",
+              "label": "t:settings_schema.typography.settings.font_size.xs"
+            },
+            {
+              "value": "sm",
+              "label": "t:settings_schema.typography.settings.font_size.sm"
+            },
+            {
+              "value": "base",
+              "label": "t:settings_schema.typography.settings.font_size.base"
+            },
+            {
+              "value": "lg",
+              "label": "t:settings_schema.typography.settings.font_size.lg"
+            },
+            {
+              "value": "xl",
+              "label": "t:settings_schema.typography.settings.font_size.xl"
+            },
+            {
+              "value": "2xl",
+              "label": "t:settings_schema.typography.settings.font_size.2xl"
+            },
+            {
+              "value": "4xl",
+              "label": "t:settings_schema.typography.settings.font_size.4xl"
+            },
+            {
+              "value": "custom",
+              "label": "t:settings_schema.typography.settings.font_size.custom"
+            }
+          ],
+        "default": "base"
+      },
+      {
+        "type": "header",
+        "content": "t:settings_schema.typography.settings.font_size.custom",
+        "visible_if": "{{ block.settings.text_size == 'custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "font_size_text_lg",
+        "min": 10,
+        "max": 70,
+        "step": 1,
+        "unit": "px",
+        "label": "t:settings_schema.typography.settings.font_size.label",
+        "default": 16,
+        "visible_if": "{{ block.settings.text_size == 'custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "font_size_text",
+        "min": 10,
+        "max": 50,
+        "step": 2,
+        "unit": "px",
+        "label": "t:settings_schema.typography.settings.font_size.mobile_font_size",
+        "default": 14,
+        "visible_if": "{{ block.settings.text_size == 'custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "letter_spacing_text",
+        "min": -10,
+        "max": 10,
+        "step": 0.2,
+        "label": "t:settings_schema.typography.settings.letter_spacing",
+        "default": 0,
+        "visible_if": "{{ block.settings.text_size == 'custom' }}"
+      },
+    ],
+    "presets":[
+      {
+        "name":"t:blocks.link_list.name"
+      }
+    ]
+  }
+{% endschema %}

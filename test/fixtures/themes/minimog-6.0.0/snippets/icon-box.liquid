@@ -1,0 +1,144 @@
+{% doc %}
+  @param {object} block - Block object
+  @param {string} [card_style] - Style: vertical or horizontal
+  @param {string} [card_color_scheme] - Icon box color scheme
+  @param {string} [heading_size] - Heading size
+  @param {string} [text_size] - Text size
+  @param {string} [content_alignment] - Content alignment
+  @param {string} [image_max_width] - External classes
+  @param {string} [section_color_scheme] - Section color scheme
+  @param {string} [hover_effect] - Image hover effect
+  @param {boolean} [is_scrollable] - Enable slider or scroll mobile
+  @param {boolean} [animated] - Animated
+  @param {string} [animation_effect] - Animation effect
+  @param {string} [external_classes] - External classes
+  @param {string} index - Index
+{% enddoc %}
+
+{% liquid
+  assign card_style = card_style | default: 'vertical'
+  assign card_content_alignment = content_alignment | default: 'start'
+  if section_color_scheme == blank
+    assign section_color_scheme = settings.color_schemes | first
+  endif
+
+  if card_color_scheme == null
+    assign card_color_scheme = block.settings.card_color_scheme
+  endif
+
+  if card_color_scheme == section_color_scheme
+    assign color_scheme_inherit = true
+  endif
+
+  assign card_classes = 'm:flex-col'
+  assign alignment = 'sm:m:items-' | append: card_content_alignment
+  assign text_alignment = 'sm:m:text-' | append: card_content_alignment | replace: 'start', 'left' | replace: 'end', 'right'
+  assign icon_classes = 'm:items-start'
+
+  if card_style == 'horizontal'
+    assign card_classes = 'm:flex-row m:flex-nowrap'
+    if is_scrollable
+      assign alignment = 'm:items-' | append: card_content_alignment
+      assign text_alignment = 'm:text-' | append: card_content_alignment | replace: 'start', 'left' | replace: 'end', 'right'
+    else
+      assign text_alignment = 'm:text-left sm:m:text-' | append: card_content_alignment | replace: 'start', 'left' | replace: 'end', 'right'
+      assign alignment = ''
+    endif
+  else
+    assign text_alignment = 'm:text-' | append: card_content_alignment | replace: 'start', 'left' | replace: 'end', 'right'
+    assign icon_classes = 'm:items-' | append: card_content_alignment
+    assign alignment = 'm:items-' | append: card_content_alignment
+  endif
+
+  assign hover = 'm-hover-box'
+  case hover_effect
+    when 'scaling-down'
+      assign hover = hover | append: ' m-hover-box--scale-down'
+    when 'scaling-up'
+      assign hover = hover | append: ' m-hover-box--scale-up'
+    when 'zoom-in'
+      assign hover = hover | append: ' m-hover-box--zoom-in'
+    else
+      assign hover = ''
+  endcase
+%}
+
+{% capture classes %}
+  m-icon-box m-icon-box--{{ card_style }} m-gradient m-color-{{ card_color_scheme }} 
+  {% if animated %} m-scroll-trigger animate--{{ animation_effect }}{% endif %} 
+  {% unless color_scheme_inherit %} m:blocks-radius{% else %} color-scheme-inherit{% endunless %} {{ external_classes }}
+{% endcapture %}
+
+<div
+  class="{{ classes | strip | strip_newlines }}"
+  {% if animated %}
+    data-cascade
+    style="--animation-order: {{ index }};"
+  {% endif %}
+>
+  <div class="m-icon-box__inner {{ card_classes }} {{ alignment }}">
+    {% if block.settings.link != blank %}
+      {%- assign tag = 'a' -%}
+    {% else %}
+      {%- assign tag = 'div' -%}
+    {% endif %}
+    <{{ tag }}
+      {% if block.settings.link != blank %}
+        href="{{ block.settings.link }}"
+      {% endif %}
+      class="m-icon-box__icon {{ hover }} {{ icon_classes }}{% if color_scheme_inherit %} m:blocks-radius{% endif %}"
+      {% if image_max_width != blank %}
+        style="width: {{ image_max_width }};"
+      {% endif %}
+    >
+      <div class="m-hover-box__wrapper m:w-full">
+        {% if block.settings.image_by_url != blank %}
+          <img
+            src="{{ block.settings.image_by_url }}"
+            width="auto"
+            height="auto"
+            loading="lazy"
+            alt="{{ block.settings.title }}"
+            class="m-icon-box__external-image m-image"
+          >
+        {% elsif block.settings.image != blank %}
+          {% render 'responsive-image',
+            image: block.settings.image,
+            wrapper_class: 'm:w-full',
+            image_class: 'm:w-full'
+          %}
+        {% else %}
+          {{ 'product-1' | placeholder_svg_tag: 'm-placeholder-svg m-image m:w-full' }}
+        {% endif %}
+      </div>
+    </{{ tag }}>
+
+    <div class="m-icon-box__content m:flex-1 {{ text_alignment }}">
+      {% if block.settings.title != blank %}
+        <h3 class="m-icon-box__heading {{ heading_size | default: 'h4' }}">{{ block.settings.title }}</h3>
+      {% endif %}
+      {% if block.settings.description != blank %}
+        <div class="m-icon-box__description rte {{ text_size | default: 'text-base' | prepend: 'm:' }}">
+          {{ block.settings.description }}
+        </div>
+      {% endif %}
+      {% if block.settings.button_label != blank %}
+        {% capture arrow %}<svg class="m-rlt-reverse-x" width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7.03062 2.4694L12.0306 7.4694C12.1005 7.53908 12.156 7.62187 12.1939 7.71304C12.2317 7.8042 12.2512 7.90194 12.2512 8.00065C12.2512 8.09936 12.2317 8.1971 12.1939 8.28827C12.156 8.37943 12.1005 8.46222 12.0306 8.5319L7.03062 13.5319C6.88973 13.6728 6.69863 13.752 6.49937 13.752C6.30012 13.752 6.10902 13.6728 5.96812 13.5319C5.82723 13.391 5.74807 13.1999 5.74807 13.0007C5.74807 12.8014 5.82723 12.6103 5.96812 12.4694L10.4375 8.00003L5.9675 3.53065C5.8266 3.38976 5.74745 3.19866 5.74745 2.9994C5.74745 2.80015 5.8266 2.60905 5.9675 2.46815C6.10839 2.32726 6.29949 2.2481 6.49875 2.2481C6.69801 2.2481 6.8891 2.32726 7.03 2.46815L7.03062 2.4694Z" fill="currentColor"/>
+          </svg>{% endcapture %}
+        {% liquid
+          assign is_button_icon = false
+          if block.settings.button_label contains '[arrow]'
+            assign is_button_icon = true
+          endif
+        %}
+        <a
+          href="{{ block.settings.button_link | default: "#" }}"
+          class="m-button{% if is_button_icon %} m-button--text-with-icon{% endif %} {{ block.settings.button_style | replace: 'sf__btn-primary', 'm-button--primary' | replace: 'sf__btn-secondary', 'm-button--secondary' | replace: 'sf__btn-link', 'm-button--link' | replace: 'sf__btn-white', 'm-button--white' }} {{ block.settings.button_size }}"
+        >
+          {{- block.settings.button_label | replace: '[arrow]', arrow -}}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>

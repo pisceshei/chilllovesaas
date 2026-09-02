@@ -1,0 +1,80 @@
+.hdt-lookbook-product{
+  .hdt-content-container{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    @media (width < 767px){
+      grid-template-columns: 1fr;
+    }
+    .hdt-col-parent{
+      align-self: center;
+      .hdt-slider{
+        max-width: 35rem;
+        margin: 0 auto;
+      }
+    }
+    .hdt-media-overlap-content{
+      --media-overlap-content-gap-r: 0px;
+      --media-overlap-content-gap-c: 0px;
+      .hdt-pin-wrap{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+      }
+    }
+  }
+  @media (width < 767px){
+    .hdt-card-product{
+      .hdt-card-product__wrapper{
+        display: flex;
+        gap: 10px;
+        flex-direction: row;
+        .hdt-card-product__media{
+          width: 150px;
+          flex: 0 0 150px;
+        }
+        .hdt-card-product__info{
+          display: block;
+          margin-top: 0;
+          flex: 0 1 auto;
+          text-align: start;
+          justify-items: flex-start;
+          & > *{
+            display: block;
+          }
+          .hdt-card-product__title{
+            /* line-height: 1; */
+          }
+        }
+      }
+    }
+  }
+  .hdt-slider .hdt-navigation.hdt-style-outline{
+    --nav-border:rgb(var(--hdt-btn-outline-color)/.1);
+    --nav-color: rgb(var(--hdt-btn-outline-color)/.5);
+  }
+  .hdt-slider .hdt-navigation button{
+    border-width: 1px;
+  }
+  @media (width > 1366px){
+    .hdt-slider .hdt-navigation.hdt-position-out_side{
+      --nav-width-visible-hv: min(var(--nav-width) + calc(var(--nav-size) * 2.5),calc(100vw - var(--scrollbar-w,0px)));
+      left: calc(var(--nav-size) * 1.25 * -1 * var(--value-logical-flip));
+      .dir--rtl &{
+        left: auto;
+        right: calc(var(--nav-size) * 1.25 * -1 * var(--value-logical-flip) * -1);
+      }
+    }
+  }
+  :where(.hdt-pin_btn[aria-current="false"]) .hdt-zoompin{
+    animation: none;
+    opacity: 0;
+  }
+  .hdt-pin_btn:hover .hdt-zoompin{
+    animation: 2s ease 0s infinite normal none running zoompin;
+    opacity: 1;
+  }
+}

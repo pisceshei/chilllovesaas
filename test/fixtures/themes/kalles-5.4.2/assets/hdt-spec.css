@@ -1,0 +1,198 @@
+.hdt-banner-spec {
+  @media (width < 767px){
+    .hdt-row-grid.hdt-content-wrap{
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-wrap: nowrap;
+      scroll-snap-type: x mandatory;
+      & > div {
+        flex: 0 0 90%;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+      }
+    }
+  }
+  @media (768px <= width < 1150px){
+    .hdt-row-grid.hdt-content-wrap {
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-wrap: nowrap;
+      scroll-snap-type: x mandatory;
+      &.md\:hdt-grid-cols-2-2 > div {
+        flex: 0 0 40%;
+      }
+    }
+  }
+  .hdt-spec-item{
+    --box-mw: 7.4%;
+    --btn-w: 12.8%;
+
+    --box-bg: rgb(var(--color-background));
+    --box-border: rgb(var(--color-line-border));
+
+    --quickview-color: rgb(var(--color-foreground));
+    --quickview-bg: rgb(var(--color-background2));
+    --quickview-border: rgb(var(--color-line-border));
+    --quickview-hover-bg: rgb(var(--color-foreground));
+    --quickview-hover-color: rgb(var(--color-background));
+
+    --box-color: rgb(var(--color-foreground));
+    --item-border: rgb(var(--color-line-border));
+
+    --position: clamp(10px,calc(var(--box-mw,0) / 2), 22px);
+
+    user-select: none;
+    label{
+      position: absolute;
+      bottom: var(--position);
+      inset-inline-end: var(--position);
+      width: min(76px,var(--btn-w));
+      aspect-ratio: 1; 
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 100%;
+      background: var(--box-bg);
+      color: var(--box-color);
+      transition: all 0.3s ease;
+      svg{
+        transition: all 0.3s ease;
+        width: 43%;
+      }
+    }
+    .hdt-wrap-box{
+      position: absolute;
+      inset-inline-start: var(--position);
+      inset-inline-end: var(--position);
+      bottom: var(--position);
+      /* max-width: calc(100% - var(--box-mw)); */
+      max-height: calc(100% - var(--box-mw));
+      margin: auto;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-start;
+      flex-direction: column;
+      justify-content: flex-end;
+      background: var(--box-bg);
+      padding: 12px var(--position);
+      gap: 10px;
+      transition: all .35s ease-in-out;
+      transform: scale(0);
+      --origin: calc(100% - var(--btn-w)/2 - var(--box-mw)/2);
+      transform-origin: var(--origin) var(--origin);
+      animation: none;
+      .dir--rtl & {
+        transform-origin: calc(var(--btn-w)/2 - var(--box-mw)/2) var(--origin);
+      }
+      .hdt-spec-box__title{
+        --fz: clamp(20px, 2vw, 32px);
+        --lh: 1.5;
+        font-size: var(--fz);
+        line-height: var(--lh);
+        min-height: calc(var(--fz) * var(--lh));
+        max-width: calc(100% - var(--box-mw));
+      }
+      .hdt-box-inner{
+        width: 100%;
+        max-height: var(--origin);
+        overflow-y: auto;
+        .hdt-list-products{
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          .hdt-product-item{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            gap: 10px;
+            border-bottom: 1px solid var(--item-border);
+            .hdt-product-item__inner{
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              flex: 1 1 auto;
+              .hdt-product-item__info{
+                .hdt-product-item__title{
+                  margin-bottom: 12px;
+                  font-weight: var(--font-medium);
+                  font-size: clamp(14px, 1vw, 16px);
+                  line-height: 1;
+                  display: block;
+                  transition: color .3s ease;
+                  &:hover {
+                    color: rgb(var(--color-accent));
+                  }
+                }
+                .hdt-price{
+                  font-weight: var(--font-medium);
+                  font-size: var(--text-base);
+                }
+                .hdt-compare-at-price{
+                  font-size: var(--text-base);
+                }
+              }
+              .hdt-product-item__image{
+                max-width: 46px;
+              }
+            }
+            wrapp-hdt-open-modal-btn{
+              flex: 0 0 var(--quickview-w);
+              --quickview-w: clamp(32px, 10%, 48px);
+              button{
+                width: 100%;
+                aspect-ratio: 1;
+                border-radius: 100%;
+                background: var(--quickview-bg);
+                border: 1px solid var(--quickview-border);
+                position: relative;
+                overflow: hidden;
+                color: var(--quickview-color);
+                *{
+                  z-index: 2;
+                }
+                &::after{
+                  content: '';
+                  position: absolute;
+                  top: 100%;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background: var(--quickview-hover-bg);
+                  z-index: 1;
+                  transition: all 0.3s ease;
+                }
+                &:hover{
+                  color: var(--quickview-hover-color);
+                  &::after{
+                    top: 0;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    .hdt-item-inner:has(input:checked){
+      label{
+        transform: rotate(45deg);
+      }
+      .hdt-wrap-box{
+        transform: scale(1);
+        /* animation: spec-box-open .35s ease-in-out .35s forwards; */
+        transition: transform .35s cubic-bezier(0.4, 0.67, 0.26, 1.18), opacity .4s, border-radius .4s cubic-bezier(0.4, 0.67, 0.26, 1.18);
+      }
+    }
+  }
+}

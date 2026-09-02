@@ -1,0 +1,248 @@
+{
+  "sections": {
+    "main": {
+      "type": "page",
+      "settings": {}
+    },
+    "store_locator_zJyWfJ": {
+      "type": "store-locator",
+      "blocks": {
+        "text_Weri7c": {
+          "type": "text",
+          "settings": {
+            "heading": "Address",
+            "heading_size": "h4",
+            "text": "<p>461 Valencia Street San Francisco, CA 94103</p>",
+            "text_size": "text-base",
+            "button_label": "Get Direction",
+            "button_link": "#",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "text_AgKif8": {
+          "type": "text",
+          "settings": {
+            "heading": "We're Open",
+            "heading_size": "h4",
+            "text": "<p>Our store has re-opened for shopping, exchanges Every day 11am to 7pm</p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "text_78Yd8p": {
+          "type": "text",
+          "settings": {
+            "heading": "Message",
+            "heading_size": "h4",
+            "text": "<p>Send us a text & an ambassador will respond when available. <br/><a href=\"tel:1-814-251-9966\" title=\"tel:1-814-251-9966\">1-814-251-9966</a></p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "social_media_44Y9B8": {
+          "type": "social_media",
+          "settings": {
+            "heading": "Follow us",
+            "heading_size": "h4"
+          }
+        }
+      },
+      "block_order": [
+        "text_Weri7c",
+        "text_AgKif8",
+        "text_78Yd8p",
+        "social_media_44Y9B8"
+      ],
+      "name": "Store locator",
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "container_color_scheme": "",
+        "heading": "Valencia Street Shop",
+        "heading_size": "h3",
+        "description": "",
+        "image_width": "large",
+        "image_position": "left",
+        "item_columns": "2",
+        "item_column_gap": 30,
+        "item_row_gap": 30,
+        "item_columns_mobile": "2",
+        "item_column_gap_mobile": 20,
+        "item_row_gap_mobile": 32,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "store_locator_QK7djr": {
+      "type": "store-locator",
+      "blocks": {
+        "text_8jrtbR": {
+          "type": "text",
+          "settings": {
+            "heading": "Address",
+            "heading_size": "h4",
+            "text": "<p>461 Valencia Street San Francisco, CA 94103</p>",
+            "text_size": "text-base",
+            "button_label": "Get Direction",
+            "button_link": "#",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "text_bLXNqn": {
+          "type": "text",
+          "settings": {
+            "heading": "We're Open",
+            "heading_size": "h4",
+            "text": "<p>Our store has re-opened for shopping, exchanges Every day 11am to 7pm</p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "text_xLxFYB": {
+          "type": "text",
+          "settings": {
+            "heading": "Message",
+            "heading_size": "h4",
+            "text": "<p>Send us a text & an ambassador will respond when available. <br/><a href=\"tel:1-814-251-9966\" title=\"tel:1-814-251-9966\">1-814-251-9966</a></p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "social_media_eDHfLw": {
+          "type": "social_media",
+          "settings": {
+            "heading": "Follow us",
+            "heading_size": "h4"
+          }
+        }
+      },
+      "block_order": [
+        "text_8jrtbR",
+        "text_bLXNqn",
+        "text_xLxFYB",
+        "social_media_eDHfLw"
+      ],
+      "name": "Store locator",
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "container_color_scheme": "",
+        "heading": "Williamsburg",
+        "heading_size": "h3",
+        "description": "",
+        "image_width": "large",
+        "image_position": "right",
+        "item_columns": "2",
+        "item_column_gap": 30,
+        "item_row_gap": 30,
+        "item_columns_mobile": "2",
+        "item_column_gap_mobile": 20,
+        "item_row_gap_mobile": 32,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "store_locator_BpDYDj": {
+      "type": "store-locator",
+      "blocks": {
+        "text_F766dN": {
+          "type": "text",
+          "settings": {
+            "heading": "Address",
+            "heading_size": "h4",
+            "text": "<p>461 Valencia Street San Francisco, CA 94103</p>",
+            "text_size": "text-base",
+            "button_label": "Get Direction",
+            "button_link": "#",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "text_M7nT6d": {
+          "type": "text",
+          "settings": {
+            "heading": "We're Open",
+            "heading_size": "h4",
+            "text": "<p>Our store has re-opened for shopping, exchanges Every day 11am to 7pm</p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "text_PRJm9m": {
+          "type": "text",
+          "settings": {
+            "heading": "Message",
+            "heading_size": "h4",
+            "text": "<p>Send us a text & an ambassador will respond when available. <br/><a href=\"tel:1-814-251-9966\" title=\"tel:1-814-251-9966\">1-814-251-9966</a></p>",
+            "text_size": "text-base",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "social_media_tfXMJz": {
+          "type": "social_media",
+          "settings": {
+            "heading": "Follow us",
+            "heading_size": "h4"
+          }
+        }
+      },
+      "block_order": [
+        "text_F766dN",
+        "text_M7nT6d",
+        "text_PRJm9m",
+        "social_media_tfXMJz"
+      ],
+      "name": "Store locator",
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "container_color_scheme": "",
+        "heading": "Stanford Center",
+        "heading_size": "h3",
+        "description": "",
+        "image_width": "large",
+        "image_position": "left",
+        "item_columns": "2",
+        "item_column_gap": 30,
+        "item_row_gap": 30,
+        "item_columns_mobile": "2",
+        "item_column_gap_mobile": 20,
+        "item_row_gap_mobile": 32,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "store_locator_zJyWfJ",
+    "store_locator_QK7djr",
+    "store_locator_BpDYDj"
+  ]
+}

@@ -1,0 +1,2347 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slider_1950x_c4da9655-c391-4b77-9e04-7f68101d27aa.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-dfb98c5c-bec3-44e8-9343-9a8fdd1f72bf",
+            "content_position_type": "auto",
+            "position_x": 50,
+            "position_y": 30,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "media_LHiUTT": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/text-slider.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            },
+            "spacer_VwQkzE": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 6,
+                "space_md": 6,
+                "space": 6
+              },
+              "blocks": {}
+            },
+            "heading_MzV9Ty": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>TRUST THE NATURE!<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 34,
+                "font_size_heading": 34,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_fFNyjC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 50,
+                "space_md": 50,
+                "space": 30
+              },
+              "blocks": {}
+            },
+            "button_3yEDmG": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify:\/\/collections\/organic",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 152,
+                "min_height_btn": 26,
+                "rounded": "hdt-btn-radius-none",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "media_LHiUTT",
+            "spacer_VwQkzE",
+            "heading_MzV9Ty",
+            "spacer_fFNyjC",
+            "button_3yEDmG"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-weight: 800;}"
+      ],
+      "settings": {
+        "image_height": "adapt_image",
+        "fixed_height": 700,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ",,22px,"
+      }
+    },
+    "custom_section_Ac7dbK": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_pFUrkE": {
+          "type": "_multi_column",
+          "name": "t:blocks.column.name",
+          "settings": {
+            "column_dk": "12",
+            "column_tb": "12",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "#ffffff",
+            "rounded": "none"
+          },
+          "blocks": {
+            "spacer_qRtJr3": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 30
+              },
+              "blocks": {}
+            },
+            "heading_7xPqGt": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p><strong>WELCOME TO ORGANIK<\/strong><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "text_custom_xBetGU": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "From our family farm right to your doorstep.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#878787",
+                "font_size": 15,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_qRtJr3",
+            "heading_7xPqGt",
+            "text_custom_xBetGU"
+          ]
+        },
+        "multi_column_WDxNJ4": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "4",
+            "column_tb": "4",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "spacer_h9AzCL": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "media_bNXLf7": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/banner1_360x_553c0d04-23c3-43ff-93cd-cbebae2f609b.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            },
+            "spacer_WfCmmr": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 22
+              },
+              "blocks": {}
+            },
+            "heading_maErAT": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>WHO WE ARE?<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 22,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_DyhA4M": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 8,
+                "space_md": 8,
+                "space": 8
+              },
+              "blocks": {}
+            },
+            "text_6UbrNw": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Understanding the sometimes harmful methods of modern agriculture, we started a niche for quality organic produce grown.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_9WLhFL": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_CYKVDr": {
+              "type": "button",
+              "settings": {
+                "label": "Read More",
+                "link": "shopify:\/\/blogs\/organic-02\/lay-the-pumpkin-pieces-on-a-towel-and-let-cool-completely",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-outline",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 20,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_h9AzCL",
+            "media_bNXLf7",
+            "spacer_WfCmmr",
+            "heading_maErAT",
+            "spacer_DyhA4M",
+            "text_6UbrNw",
+            "spacer_9WLhFL",
+            "button_CYKVDr"
+          ]
+        },
+        "multi_column_PamYXk": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "4",
+            "column_tb": "4",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 35,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "spacer_jpFKKz": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "media_LKbqbW": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/banner-2_360x_5656c0cd-5068-4d71-a559-5f36b5fe0308.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            },
+            "spacer_9mVRwR": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 22
+              },
+              "blocks": {}
+            },
+            "heading_3NWbhQ": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>HOW WE WORK?<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 22,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_qAB4U3": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 8,
+                "space_md": 8,
+                "space": 8
+              },
+              "blocks": {}
+            },
+            "text_Nfq9Y7": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We believe it’s the best way to inspire our community to relish in the taste of real, seasonal produce and keep connected to the land.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_nd8MVD": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_gcbftT": {
+              "type": "button",
+              "settings": {
+                "label": "Read More",
+                "link": "shopify:\/\/blogs\/organic-02\/caring-for-your-body-with-antioxidant-rich-organic-superfoods",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-outline",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 20,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_jpFKKz",
+            "media_LKbqbW",
+            "spacer_9mVRwR",
+            "heading_3NWbhQ",
+            "spacer_qAB4U3",
+            "text_Nfq9Y7",
+            "spacer_nd8MVD",
+            "button_gcbftT"
+          ]
+        },
+        "multi_column_Pxdhb9": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "4",
+            "column_tb": "4",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "spacer_LeXKAt": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "media_DwKPTp": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/banner-3_360x_dc7a9947-26d1-4c4f-b3bf-88003981cc4d.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            },
+            "spacer_kAfCFd": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 22
+              },
+              "blocks": {}
+            },
+            "heading_yVGqd4": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>WHAT WE GROW?<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 22,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_HRkiqn": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 8,
+                "space_md": 8,
+                "space": 8
+              },
+              "blocks": {}
+            },
+            "text_afqedL": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We take special care to select and grow specific crop varieties where exceptional flavor is the focus, with a determination to bring the best-tasting produce.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_mVKydH": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_CgckHF": {
+              "type": "button",
+              "settings": {
+                "label": "Read More",
+                "link": "shopify:\/\/blogs\/organic-02\/how-to-steam-and-puree-your-sugar-pie-pumkin",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-outline",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 20,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_LeXKAt",
+            "media_DwKPTp",
+            "spacer_kAfCFd",
+            "heading_yVGqd4",
+            "spacer_HRkiqn",
+            "text_afqedL",
+            "spacer_mVKydH",
+            "button_CgckHF"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_pFUrkE",
+        "multi_column_WDxNJ4",
+        "multi_column_PamYXk",
+        "multi_column_Pxdhb9"
+      ],
+      "custom_css": [
+        "img {justify-self: center;}",
+        ".hdt-h_custom {font-family: var(--f_family_1);}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "12",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "shipping_BzBkYj": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_XVyUhx": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "truck",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_p7jJ9i": {
+              "type": "heading",
+              "settings": {
+                "heading": "<h4>FREE SHIPPING<\/h4>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "normal",
+                "heading_size": "h6",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_JcEiGw": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_cAqwBH": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Free shipping on all US orders or orders above $100<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_p7jJ9i",
+            "spacer_JcEiGw",
+            "text_cAqwBH"
+          ]
+        },
+        "shipping_rxkANh": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "help",
+            "icon": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" fill=\"currentColor\" version=\"1.1\" width=\"43\" height=\"32\" viewbox=\"0 0 43 32\">\n<path d=\"M21.333 0c-8.823 0-16 7.177-16 16s7.177 16 16 16c8.823 0 16-7.177 16-16s-7.177-16-16-16zM21.333 2.667c0.448 0 0.896 0.042 1.333 0.083v4.042c-0.438-0.063-0.88-0.125-1.333-0.125s-0.896 0.063-1.333 0.125v-4.042c0.438-0.042 0.885-0.083 1.333-0.083zM17.333 3.25v4.333c-1.938 0.927-3.495 2.479-4.417 4.417h-4.292c1.297-4.167 4.552-7.448 8.708-8.75zM25.333 3.25c4.151 1.302 7.448 4.599 8.75 8.75h-4.333c-0.922-1.938-2.479-3.495-4.417-4.417zM21.333 9.333c3.698 0 6.667 2.969 6.667 6.667s-2.969 6.667-6.667 6.667c-3.698 0-6.667-2.969-6.667-6.667s2.969-6.667 6.667-6.667zM8.083 14.667h4c-0.063 0.432-0.083 0.885-0.083 1.333 0 0.453 0.063 0.896 0.125 1.333h-4.042c-0.042-0.438-0.083-0.885-0.083-1.333s0.042-0.896 0.083-1.333zM30.542 14.667h4.042c0.042 0.438 0.083 0.885 0.083 1.333s-0.042 0.896-0.083 1.333h-4.042c0.063-0.438 0.125-0.88 0.125-1.333s-0.063-0.896-0.125-1.333zM8.583 20h4.333c0.922 1.938 2.479 3.495 4.417 4.417v4.333c-4.151-1.302-7.448-4.599-8.75-8.75zM29.75 20h4.333c-1.302 4.151-4.599 7.448-8.75 8.75v-4.333c1.938-0.922 3.495-2.479 4.417-4.417zM20 25.208c0.438 0.063 0.88 0.125 1.333 0.125s0.896-0.063 1.333-0.125v4.042c-0.438 0.042-0.885 0.083-1.333 0.083s-0.896-0.042-1.333-0.083z\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "heading_XaXrX9": {
+              "type": "heading",
+              "settings": {
+                "heading": "<h3>SUPPORT 24\/7<\/h3>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "normal",
+                "heading_size": "h6",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_cKBicA": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_bn6cAb": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Contact us 24 hours a day, 7 days a week<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_XaXrX9",
+            "spacer_cKBicA",
+            "text_bn6cAb"
+          ]
+        },
+        "shipping_rrLPC7": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "back",
+            "icon": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" viewbox=\"0 0 32 32\"><path d=\"M 22.1875 2.28125 L 20.78125 3.71875 L 25.0625 8 L 4 8 L 4 10 L 25.0625 10 L 20.78125 14.28125 L 22.1875 15.71875 L 28.90625 9 Z M 9.8125 16.28125 L 3.09375 23 L 9.8125 29.71875 L 11.21875 28.28125 L 6.9375 24 L 28 24 L 28 22 L 6.9375 22 L 11.21875 17.71875 Z\"><\/path><\/svg>"
+          },
+          "blocks": {
+            "heading_g6tbwq": {
+              "type": "heading",
+              "settings": {
+                "heading": "<h3>30 DAYS RETURN<\/h3>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "normal",
+                "heading_size": "h6",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_NTdmd3": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_Mtwt8f": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Simply return it within 30 days for an exchange.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_g6tbwq",
+            "spacer_NTdmd3",
+            "text_Mtwt8f"
+          ]
+        },
+        "shipping_fQTB6w": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "door-lock",
+            "icon": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" viewbox=\"0 0 32 32\"><path d=\"M 2 7 L 2 25 L 30 25 L 30 7 L 2 7 z M 4 9 L 28 9 L 28 23 L 4 23 L 4 9 z M 6 11 L 6 13 L 16 13 L 16 11 L 6 11 z M 20 11 L 20 16 L 26 16 L 26 11 L 20 11 z M 6 14 L 6 16 L 13 16 L 13 14 L 6 14 z M 8.5 17 C 7.895 17 7.4695 17.34425 7.1875 17.65625 C 6.9065 17.96925 6.69925 18.3165 6.53125 18.6875 C 6.19525 19.4345 6 20.238 6 21 L 8 21 C 8 20.68 8.156 19.984 8.375 19.5 C 8.437 19.359 8.5005 19.31175 8.5625 19.21875 C 8.6365 19.32075 8.69125 19.38625 8.78125 19.53125 C 8.92625 19.76525 9.08625 20.0475 9.28125 20.3125 C 9.47625 20.5785 9.71475 21.01525 10.46875 21.03125 C 11.06275 21.04325 11.2455 20.8285 11.4375 20.6875 C 11.6285 20.5465 11.76125 20.41425 11.90625 20.28125 C 12.00425 20.19125 12.08225 20.1255 12.15625 20.0625 C 12.18325 20.1015 12.294703 20.16725 12.845703 20.40625 C 13.512703 20.69825 14.523 21 16 21 L 16 19 C 14.77 19 14.12925 18.80075 13.65625 18.59375 C 13.18325 18.38675 12.824 18 12 18 C 11.398 18 11.2465 18.234 11.0625 18.375 C 10.8985 18.5 10.78525 18.633 10.65625 18.75 C 10.59725 18.656 10.57 18.609 10.5 18.5 C 10.332 18.227 10.13275 17.918 9.84375 17.625 C 9.55475 17.332 9.098 17 8.5 17 z M 20 19 L 20 21 L 26 21 L 26 19 L 20 19 z\"><\/path><\/svg>"
+          },
+          "blocks": {
+            "heading_rYwxQm": {
+              "type": "heading",
+              "settings": {
+                "heading": "<h3>100% PAYMENT SECURE<\/h3>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "normal",
+                "heading_size": "h6",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_VT8iRQ": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_DHTNrG": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We ensure secure payment with PEV<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_rYwxQm",
+            "spacer_VT8iRQ",
+            "text_DHTNrG"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_XVyUhx",
+        "shipping_rxkANh",
+        "shipping_rrLPC7",
+        "shipping_fQTB6w"
+      ],
+      "name": "t:sections.shipping.name",
+      "settings": {
+        "content_align": "left",
+        "align_center": true,
+        "icon_design": "default",
+        "use_border": false,
+        "space_padding": false,
+        "icon_size": "large",
+        "icon_color": "",
+        "col_dk": "4",
+        "col_tb": "2",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1e767f52-aacd-4175-a534-2508ffcd4fc5",
+        "background_opacity": 1,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": ",,120px,",
+        "mg_mb": ",,80px,",
+        "pd": "33px,0,33px,0",
+        "pd_mb": "30px,,30px,"
+      }
+    },
+    "custom_section_eAU3in": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_WHhmmt": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 15,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "product_deals_Hwz8eQ": {
+              "type": "product-deals",
+              "name": "Product deals",
+              "settings": {
+                "colors_by_block": false,
+                "color_scheme": "",
+                "layout": "1",
+                "show_border": true,
+                "rounded": "none",
+                "alignment": "left",
+                "alignment_mb": "center",
+                "countdown_text": "",
+                "date_countdown": "",
+                "countdown_content_color": "#ffffff",
+                "countdown_background_color": "#e4573d",
+                "space_bottom": 0,
+                "product_list": [
+                  "fresh-peach",
+                  "chinese-cabbage",
+                  "organic-tomato",
+                  "fresh-potatoes",
+                  "cucumber"
+                ],
+                "products_count": 8,
+                "col_dk": "4",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "box_layout": "carousel",
+                "hdt_slide_center": false,
+                "loop": false,
+                "autoplay": 0,
+                "pauseOnHover": false,
+                "navUI": true,
+                "nav_position": "on_border",
+                "nav_visible": "always",
+                "nav_style": "default",
+                "nav_shape": "rounded",
+                "nav_size": "small",
+                "nav_hide_mobile": true,
+                "dotUI": true,
+                "pag_style": "default",
+                "pag_rounded": true,
+                "pag_space": 10,
+                "pag_mgt": 30,
+                "only_show_mobile": true,
+                "pag_hide_mobile": false
+              },
+              "blocks": {
+                "deals-title": {
+                  "type": "heading",
+                  "static": true,
+                  "settings": {
+                    "heading": "<p>Daily Deal Of The Day<\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "line_height": "",
+                    "font_weight": "semibold",
+                    "heading_size": "h_custom",
+                    "text_color": "hdt-s-text",
+                    "font_size_heading_lg": 40,
+                    "font_size_heading": 24,
+                    "letter_spacing_heading": 0
+                  },
+                  "blocks": {}
+                },
+                "product-deals-product": {
+                  "type": "_deals_product",
+                  "static": true,
+                  "settings": {
+                    "product": "{{ closest.product }}",
+                    "product_design": "1",
+                    "show_vendor": false,
+                    "show_countdown": false,
+                    "image_ratio": "adapt_image",
+                    "image_size": true,
+                    "show_stock_bar": true,
+                    "text_sold": "Sold:",
+                    "text_available": "Available:",
+                    "background_color_1": "#9af4ae",
+                    "background_color_2": "#5fbd74"
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": []
+            }
+          },
+          "block_order": [
+            "product_deals_Hwz8eQ"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_WHhmmt"
+      ],
+      "custom_css": [
+        ".show-border-true {border-width: 2px; border-radius: 5px;}",
+        ".hdt-card-product__info {text-align: start !important; justify-items: start;}",
+        ".hdt-card-product__title {letter-spacing: 0.5px;}",
+        ".hdt-stock-bar--status {font-weight: 500;}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c688c86d-f310-4ee2-9f00-694ec27352ea",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,65px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "accordion_myQTD8": {
+      "type": "accordion",
+      "blocks": {
+        "accordion_item_zxDyfD": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": true,
+            "icon": "none",
+            "title": "What Is Organic?",
+            "content": "<p><strong>What does “organic” mean?<\/strong><\/p><p>Simply stated, organic produce and other ingredients are grown without the use of pesticides, synthetic fertilizers, sewage sludge, genetically modified organisms, or ionizing radiation.<\/p><p><strong>The USDA National Organic Program (NOP) defines organic as follows:<\/strong><\/p><p><em>Organic food is produced by farmers who emphasize the use of renewable resources and the conservation of soil and water to enhance environmental quality for future generations. Organic meat, poultry, eggs, and dairy products come from animals that are given no antibiotics or growth hormones.<\/em><\/p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_c48FLU": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "What does the USDA Organic seal mean?",
+            "content": "<p>The USDA Organic seal assures consumers of the quality and integrity of organic products. Organic-certified operations must have an organic system plan and records that verify compliance with that plan. Operators are inspected annually in addition there are random checks to assure standards are being met.<\/p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_fJ3r66": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "How do I know if something is organic?",
+            "content": "<p>The USDA has identified for three categories of labeling organic products: 100% Organic: Made with 100% organic ingredients<\/p><p>Organic: Made with at least 95% organic ingredients<\/p><p>Made With Organic Ingredients: Made with a minimum of 70% organic ingredients with strict restrictions on the remaining 30% including no GMOs (genetically modified organisms)<\/p><p>Products with less than 70% organic ingredients may list organically produced ingredients on the side panel of the package, but may not make any organic claims on the front of the package.<\/p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_nKYFVV": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "Why does organic products cost more?",
+            "content": "<p><strong>The truth of the matter is that organic food doesn’t always cost more. When the cost is higher, consider these facts:<\/strong><\/p><p>- Organic farmers don’t receive federal subsidies like conventional farmers do. Therefore, the price of organic food reflects the true cost of growing.<\/p><p>- The price of conventional food does not reflect the cost of environmental cleanups that we pay for through our tax dollars.<\/p><p>- Organic farming is more labor and management intensive.<\/p><p>- Organic farms are usually smaller than conventional farms and so do not benefit from the economies of scale that larger growers get.<\/p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_8rfgMU": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "Does the organic food taste better?",
+            "content": "<p>Taste is definitely an individual matter, but hundreds of gourmet chefs across the nation are choosing organic food to prepare because they believe it has superior taste and quality.<\/p><p>An increasing number of consumers are also of the opinion that organic food tastes better. Because organic food is grown in well-balanced soil, it makes sense that these healthy plants have a great taste. Try organic food for yourself and see what you think!<\/p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_zEczGE": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "Is organic food more nutritious than conventional food?",
+            "content": "<p>At this time, there is no definitive research that makes this claim. It is extremely difficult to conduct studies that would control the many variables that might affect nutrients, such as seeds, soil type, climate, postharvest handling, and crop variety.<\/p><p>However, some recently published studies in peer-reviewed journals have shown organic foods to have higher nutritional value. For example, researchers at the University of California, Davis, recently found that organic tomatoes had higher levels of phytochemicals and vitamin C than conventional tomatoes.<\/p>"
+          },
+          "blocks": {}
+        },
+        "accordion_item_mM6CMR": {
+          "type": "_accordion-item",
+          "settings": {
+            "open": false,
+            "icon": "none",
+            "title": "How does a farmer go about converting land to organic status?",
+            "content": "<p><strong>Converting land to organic status is a three-year process.<\/strong>There is a two-year conversion process consisting of building up the fertility of the land. Produce grown in the first year cannot be stated as organic. In the second year produce may be stated as “In Conversion”. It is not until the third year that produce may be stated as fully organic. Soil and natural fertility building are important parts of organic farming.<\/p>"
+          },
+          "blocks": {}
+        },
+        "accordion-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_n6iTAG": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Why choose ORGANIC PRODUCTS",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_n6iTAG"
+          ]
+        }
+      },
+      "block_order": [
+        "accordion_item_zxDyfD",
+        "accordion_item_c48FLU",
+        "accordion_item_fJ3r66",
+        "accordion_item_nKYFVV",
+        "accordion_item_8rfgMU",
+        "accordion_item_zEczGE",
+        "accordion_item_mM6CMR"
+      ],
+      "custom_css": [
+        ".hdt-accordion-item .hdt-accordion-content {background-color: rgb(var(--color-background2)) !important;}",
+        "@media (width >= 1350px) {.hdt-container {--container-max-width: 800px; }}"
+      ],
+      "name": "t:sections.accordion.name",
+      "settings": {
+        "accordion_des": "2",
+        "section_layout": "wrapper_container",
+        "section_background": "shopify:\/\/shop_images\/organic-banner-2_1950x_1296x_f19b09ff-0330-41e7-931d-5e251e2b3f6a.jpg",
+        "hdt_background_parallax": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-79c0be3b-04b4-4594-8491-24d9f084225a",
+        "background_opacity": 0,
+        "mg": ",,90px,",
+        "mg_mb": ",,30px,",
+        "pd": "100px,0px,100px,0px",
+        "pd_mb": "50px,,50px,"
+      }
+    },
+    "custom_section_L74pjD": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_LacXGX": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 0,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "spacer_YiC7Ha": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 30
+              },
+              "blocks": {}
+            },
+            "media_kigz9k": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/heading-png_180x_200x_c1c19153-cd67-4427-af6a-e10f739728a1.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            },
+            "spacer_JW4MYx": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 8,
+                "space_md": 8,
+                "space": 8
+              },
+              "blocks": {}
+            },
+            "heading_bPC46f": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p><strong>OUR PRODUCTS<\/strong><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_yTVMtL": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 26,
+                "space_md": 26,
+                "space": 26
+              },
+              "blocks": {}
+            },
+            "media_tUQt9i": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/line_400x_09fd1d96-fbaa-4043-8ae9-267da805dbe9.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_YiC7Ha",
+            "media_kigz9k",
+            "spacer_JW4MYx",
+            "heading_bPC46f",
+            "spacer_yTVMtL",
+            "media_tUQt9i"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_LacXGX"
+      ],
+      "custom_css": [
+        "img {justify-self: center;}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,15px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "tabs_collection_8eWabh": {
+      "type": "tabs-collection",
+      "blocks": {
+        "tab_collection_yeJkGU": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "All",
+            "collection": "",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_JpijTX": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "organic-all",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "none",
+                "product_des": "1",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "4",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": true,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_JpijTX"
+          ]
+        },
+        "tab_collection_AGiqNb": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Fruits",
+            "collection": "organic",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_8CVbtB": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "{{ closest.collection }}",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "none",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "4",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": true,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_8CVbtB"
+          ]
+        },
+        "tab_collection_ieXJ7X": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Vegetables",
+            "collection": "organic-fruits",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_a8d4BL": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "{{ closest.collection }}",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "none",
+                "product_des": "1",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "4",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_a8d4BL"
+          ]
+        },
+        "tab_collection_9BMWnG": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Juices",
+            "collection": "organic-all",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_dtMbgU": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "{{ closest.collection }}",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "none",
+                "product_des": "1",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "4",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": true,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_dtMbgU"
+          ]
+        },
+        "tab_collection_pmmYgG": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Dried",
+            "collection": "organic-fruits",
+            "hdt_show_icon_image": false,
+            "hdt_icon_spacing": 8
+          },
+          "blocks": {
+            "product_grid_ijyfhB": {
+              "type": "_product-grid",
+              "settings": {
+                "collection": "{{ closest.collection }}",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "none",
+                "product_des": "1",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "4",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": true,
+                "pagination_color_scheme": "",
+                "pagination_type": "load_more",
+                "enable_progressbar": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "endable_btn_icon": false,
+                "size": "m",
+                "btn_fw": "medium",
+                "rounded": "",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_grid_ijyfhB"
+          ]
+        },
+        "tabs-collection-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "tab_collection_yeJkGU",
+        "tab_collection_AGiqNb",
+        "tab_collection_ieXJ7X",
+        "tab_collection_9BMWnG",
+        "tab_collection_pmmYgG"
+      ],
+      "name": "t:sections.tabs_collections.grid_name",
+      "settings": {
+        "enable_tabs_on_heading": false,
+        "tabs_des": "underline_divider",
+        "tabs_list_pos": "center",
+        "tab_item_size": "lg",
+        "tab_item_border": "solid",
+        "border_width": 2,
+        "spacing_tabs_items": 30,
+        "tabs_head_spacing": 30,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,85px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "banners_Y8g8rF": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_6zgMMd": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "none",
+            "b_effect": "plus-zoom-overlay",
+            "colors_by_block": true,
+            "color_scheme": "scheme-dfb98c5c-bec3-44e8-9343-9a8fdd1f72bf",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "spacer_KgYxUX": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 120,
+                "space_md": 50,
+                "space": 50
+              },
+              "blocks": {}
+            },
+            "image_Lr7Gwf": {
+              "type": "image",
+              "name": "t:blocks.image.name",
+              "settings": {
+                "img": "shopify:\/\/shop_images\/Summer-season.png",
+                "image_ratio": "adapt_image",
+                "img_effect": "none",
+                "b_effect": "none",
+                "custom_width": "custom",
+                "image_w": 100,
+                "image_w_mb": 50,
+                "rounded": ""
+              },
+              "blocks": {}
+            },
+            "spacer_aeTbbX": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "heading_gmwp8P": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>NATURAL FRESH FRUITS<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 23,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_6BAqyq": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_DFcTPq": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify:\/\/collections\/organic",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 132,
+                "min_height_btn": 25,
+                "rounded": "hdt-btn-radius-none",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/banner-oranges_1080x_700x_cd4006cd-dd9c-41d7-9ac6-40bab8cd0b45.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_KgYxUX",
+            "image_Lr7Gwf",
+            "spacer_aeTbbX",
+            "heading_gmwp8P",
+            "spacer_6BAqyq",
+            "button_DFcTPq"
+          ]
+        },
+        "banner_item_dY3gYi": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "none",
+            "b_effect": "plus-zoom-overlay",
+            "colors_by_block": true,
+            "color_scheme": "scheme-dfb98c5c-bec3-44e8-9343-9a8fdd1f72bf",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "spacer_PBcmBP": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 120,
+                "space_md": 50,
+                "space": 50
+              },
+              "blocks": {}
+            },
+            "image_gjB96U": {
+              "type": "image",
+              "name": "t:blocks.image.name",
+              "settings": {
+                "img": "shopify:\/\/shop_images\/Packaging.png",
+                "image_ratio": "adapt_image",
+                "img_effect": "none",
+                "b_effect": "none",
+                "custom_width": "custom",
+                "image_w": 100,
+                "image_w_mb": 50,
+                "rounded": ""
+              },
+              "blocks": {}
+            },
+            "spacer_y6eH9G": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 0,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "heading_dykJrT": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>GOURMET DRIED FRUITS<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 23,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_dcxF6g": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_Ufpy7T": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify:\/\/collections\/organic",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 132,
+                "min_height_btn": 25,
+                "rounded": "hdt-btn-radius-none",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/lg-banner-2_1080x_700x_51a011fa-3357-43f0-a0b7-1bb71ca9a1c1.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true,
+                "rounded": ""
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_PBcmBP",
+            "image_gjB96U",
+            "spacer_y6eH9G",
+            "heading_dykJrT",
+            "spacer_dcxF6g",
+            "button_Ufpy7T"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_6zgMMd",
+        "banner_item_dY3gYi"
+      ],
+      "custom_css": [
+        ".hdt-slider__slide:last-child [class^=\"hdt-block-image_\"] {z-index: -1; margin-bottom: -10px;}",
+        ".hdt-h_custom {letter-spacing: 2px;}",
+        "@media (width >= 1150px) {.hdt-image-wrap {width: 400px; }}"
+      ],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 460,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 300,
+        "space_items": "0px",
+        "space_items_tb": "0px",
+        "space_items_mb": "0px",
+        "col_dk": "2",
+        "col_tb": "2",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,80px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ",,26px,"
+      }
+    },
+    "blog_post_EHfB4N": {
+      "type": "blog-post",
+      "blocks": {
+        "article_carousel_9yMmxk": {
+          "type": "_article-carousel",
+          "settings": {
+            "blog": "organic-02",
+            "limit": 8,
+            "col_dk": "3",
+            "col_tb": "3",
+            "col_mb": "1",
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "outline",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": false,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "pag_hide_mobile": false
+          },
+          "blocks": {
+            "article-carousel": {
+              "type": "_article-card",
+              "static": true,
+              "settings": {
+                "article_des": "1",
+                "show_cate": true,
+                "show_content": true,
+                "show_tags": false,
+                "show_author": true,
+                "show_comment": false,
+                "show_readmore": false,
+                "show_date": true,
+                "date": "%b %d",
+                "content_align": "start",
+                "image_ratio": "-square",
+                "image_size": true,
+                "img_effect": "zoom",
+                "b_effect": "overlay"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        },
+        "feature-blog-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 55
+          },
+          "blocks": {
+            "heading_section_x8KHPg": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "FROM OUR BLOG",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_x8KHPg"
+          ]
+        }
+      },
+      "block_order": [
+        "article_carousel_9yMmxk"
+      ],
+      "name": "t:sections.feature-blog.name",
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,75px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "custom_line_mUFmhA": {
+      "type": "custom-line",
+      "name": "t:sections.custom_line.name",
+      "settings": {
+        "line_style": "solid",
+        "line_width": 100,
+        "line_height": 1,
+        "line_cl": "#e6e6e6",
+        "line_pos": "start",
+        "full_width": false,
+        "mg": ",,30px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "image_gallery_7g44if": {
+      "type": "image-gallery",
+      "blocks": {
+        "image_ddBRyr": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/client-01_180x_100x_212af631-d758-4641-9299-32c1d39712bc.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 50,
+            "image_w_mb": 50,
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "image_hwkJPB": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/client-02_180x_200x_724d2228-5a34-46d7-83ab-22ac40737a04.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 55,
+            "image_w_mb": 50,
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "image_YyQTcA": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/client-03-fixed_180x_200x_c344d710-6c44-4153-8c7e-0ae6491a6bc5.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 55,
+            "image_w_mb": 50,
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "image_k7Cjb7": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/client-04-fixed_180x_200x_e704680f-7592-4876-9c05-484a4b8bc5be.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 55,
+            "image_w_mb": 50,
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "image_NfXcMn": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/client-06-fixed_180x_200x_4b3d2d9b-d3fc-4bee-91fb-323d75a19021.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 55,
+            "image_w_mb": 50,
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "image-gallery-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "image_ddBRyr",
+        "image_hwkJPB",
+        "image_YyQTcA",
+        "image_k7Cjb7",
+        "image_NfXcMn"
+      ],
+      "custom_css": [
+        "[class^=\"hdt-block-image_\"] {justify-self: center;}"
+      ],
+      "name": "t:sections.image_gallery.name",
+      "settings": {
+        "hdt_disable_zoom": true,
+        "col_dk": "5",
+        "col_tb": "2",
+        "col_mb": "2",
+        "space_items": "x",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": "",
+        "border_radius": 0
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "custom_section_Ac7dbK",
+    "shipping_BzBkYj",
+    "custom_section_eAU3in",
+    "accordion_myQTD8",
+    "custom_section_L74pjD",
+    "tabs_collection_8eWabh",
+    "banners_Y8g8rF",
+    "blog_post_EHfB4N",
+    "custom_line_mUFmhA",
+    "image_gallery_7g44if"
+  ]
+}

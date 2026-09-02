@@ -1,0 +1,323 @@
+{%- liquid
+	assign selected_variant = product.selected_or_first_available_variant
+	assign fbt_form_id = 'fbt-form-' | append: section.id | append: '-' | append: selected_variant.id
+	#assign complementary_products = product.metafields.shopify--discovery--product_recommendation.complementary_products.value | default: product_list
+	assign complementary_products = product_list
+	if complementary_products != blank
+    assign complementary_products_available = complementary_products | where: "available", true
+	endif
+  assign image_size = 244
+-%}
+{%- if complementary_products_available.size > 0 -%}
+	<div class="hdt-product__fbt-wrap">
+    <h3 class="hdt-fbt__products-title hdt-text-lg hdt-font-semibold">{{ 'products.fbt.title' | t }}</h3>
+    <wrapp-hdt-pr-frm-bundle class="hdt-contents">
+      {%- form 'product', product, id: fbt_form_id, class: 'hdt-product-form-fbt', novalidate: 'novalidate' -%}
+        <div class="hdt-row-flex">
+          <div class="hdt-col hdt-fbt-col-img hdt-oh">
+            <hdt-scrollsnap class="hdt-product__fbt-list">
+              <div id="Scroller-fbt" class="hdt-fbt__snap hdt-scroll-snap hdt-flex hdt-align-center hdt-snap-x">
+                <div class="hdt-product__fbt-image hdt-inline-block hdt-observe-fbt-item is-checked" id="observe-{{ section.id }}-{% increment index3 %}">
+                  {{ selected_variant.image | default: product.featured_image | image_url: width: image_size | image_tag: srcset: nil, sizes: '122px', update-img: '' }}
+                </div>
+                {%- for item in complementary_products_available limit: 10 -%}
+                  {%- if product.id == item.id -%} {%- continue -%}{%- endif -%}
+                  <div class="hdt-product__fbt-image hdt-product__fbt-image-wrap hdt-inline-flex hdt-align-center hdt-observe-fbt-item is-checked" id="observe-{{ section.id }}-{% increment index3 %}">
+                    <div class="hdt-product__fbt-plus">
+                      {% comment %} <svg class="hdt-inline-block" xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 9 9" fill="currentColor"><path d="M9 5.14286H5.14286V9H3.85714V5.14286H0V3.85714H3.85714V0H5.14286V3.85714H9V5.14286Z"/></svg> {% endcomment %}
+                      <svg focusable="false" class="hdt-inline-block" viewBox="0 0 10 10" role="presentation"><path d="M6 4h4v2H6v4H4V6H0V4h4V0h2v4z" fill="currentColor" fill-rule="evenodd"></path></svg>
+                    </div>
+                    <a href="{{ item.url }}" class="hdt-inline-block">
+                      {%- liquid
+                        assign v_image = item.variants.first.image | default: item.featured_image
+                        if v_image != blank
+                          echo v_image | image_url: width: image_size | image_tag: srcset: nil, sizes: '122px', update-img: ''
+                        else
+                          echo '<span class="hdt-product__fbt-placeholder"></span>'
+                        endif
+                      -%}
+                    </a>
+                  </div>
+                {%- endfor -%}
+              </div>
+            </hdt-scrollsnap>
+            <hdt-scrollbar observes="Scroller-fbt" class="hdt-scrollbar hdt-product__fbt-progress hdt-radius-full md:hdt-hidden">
+              <div class="hdt-radius-full" style="background-color:rgb(var(--color-foreground));width:calc(var(--scrollbar-progress) * 100%);height: 100%;transition: width 1s;"></div>
+            </hdt-scrollbar>
+            <div class="hdt-fbt__swatches">
+              {%- liquid
+                assign available_v = product.variants | where: "available"
+                assign available_v_first = available_v.first
+                assign total_price = selected_variant.price
+                assign total_compare_at_price = selected_variant.compare_at_price | default: total_price
+              -%}
+              <hdt-bundle-product class="hdt-product-fbt__item hdt-block hdt-s-text2 is-checked" observes="observe-{{ section.id }}-{% increment index0 %}">
+                <div class="hdt-product__fbt-check hdt-inline-block">
+                  <input autocomplete="off" type="checkbox" checked="checked" id="fbt-ck-{{ section.id }}-{% increment index %}" class="sr-only">
+                  <label for="fbt-ck-{{ section.id }}-{% increment index2 %}" class="hdt-pe-none no-js-hidden"><svg class="hdt-icon-checked" width="10" height="10" viewBox="0 0 24 24"><path d="M9 20l-7-7 3-3 4 4L19 4l3 3z"></path></svg></label>
+                </div>
+                <span class="hdt-product__fbt-title hdt-text-base"><strong>{{ 'products.fbt.this_item' | t }}</strong> {{ product.title }}</span>
+                {%- if product.has_only_default_variant -%}
+                  <input data-groups-pr-sl name="items[][id]" data-cpprice="{{ available_v_first.compare_at_price | default: available_v_first.price }}" data-price="{{ available_v_first.price }}" value="{{ available_v_first.id }}" type="hidden">
+                {%- else -%}
+                  <div class="hdt-product__fbt-variant hdt-relative hdt-inline-block">
+                    <select name="items[][id]" autocomplete="off" class="hdt-select hdt-s-text" data-cpprice="{{ available_v_first.compare_at_price | default: available_v_first.price }}" data-price="{{ available_v_first.price }}">
+                      {%- for variant in available_v -%}
+                        <option data-img="{{ variant.image | default: product.featured_image | image_url: width: image_size }}" data-cpprice="{{ variant.compare_at_price | default: variant.price }}" data-price="{{ variant.price }}" data-qty="{{ variant.quantity_rule.min }}" value="{{ variant.id }}"{% if forloop.first %} selected="selected"{% endif %}>{{ variant.title | escape }}</option>
+                    {%- endfor -%}
+                    </select>
+                  </div>
+                {%- endif -%}
+                <input update-qty value="{{ available_v_first.quantity_rule.min }}" type="hidden" name="items[][quantity]">
+                <span class="hdt-product__fbt-price" update-price>
+                  <hdt-compare-at-price class="hdt-compare-at-price" {% unless available_v_first.compare_at_price > available_v_first.price %} hidden{% endunless %}>
+                    <span class="sr-only sr-only--inline">{{ 'products.product.price.regular_price' | t }}</span>
+                    <span class="hdt-money">{{ available_v_first.compare_at_price | money }}</span>
+                  </hdt-compare-at-price>
+                  <hdt-price class="hdt-price">
+                    <span class="sr-only sr-only--inline">{{ 'products.product.price.sale_price' | t }}</span>
+                    <span class="hdt-money">{{ available_v_first.price | money }}</span>
+                  </hdt-price>
+                </span>
+              </hdt-bundle-product>
+              {%- for item in complementary_products_available limit: 10 -%}
+                {%- liquid
+                  if product.id == item.id
+                    continue
+                  endif
+                  assign available_v = item.variants | where: "available"
+                  assign available_v_first = available_v.first
+                  assign cu_pr = available_v_first.price
+                  assign cp_pr = available_v_first.compare_at_price | default: cu_pr
+                  assign total_price = total_price | plus: cu_pr
+                  assign total_compare_at_price = total_compare_at_price | plus: cp_pr
+                -%}
+                <hdt-bundle-product class="hdt-product-fbt__item hdt-block hdt-s-text2 is-checked" observes="observe-{{ section.id }}-{% increment index0 %}">
+                  <div class="hdt-product__fbt-check hdt-inline-block">
+                    <input autocomplete="off" type="checkbox" checked="checked" id="fbt-ck-{{ section.id }}-{% increment index %}" class="sr-only">
+                    <label for="fbt-ck-{{ section.id }}-{% increment index2 %}" class="no-js-hidden"><svg class="hdt-icon-checked" width="10" height="10" viewBox="0 0 24 24"><path d="M9 20l-7-7 3-3 4 4L19 4l3 3z"></path></svg></label>
+                  </div>
+                  <a class="hdt-product__fbt-title hdt-text-base" href="{{ item.url }}">{{ item.title }}</a>
+                    {%- if item.has_only_default_variant -%}
+                      <input data-groups-pr-sl name="items[][id]" data-cpprice="{{ available_v_first.compare_at_price | default: available_v_first.price }}" data-price="{{ available_v_first.price }}" value="{{ available_v_first.id }}" type="hidden">
+                    {%- else -%}
+                      <div class="hdt-product__fbt-variant hdt-relative hdt-inline-block">
+                        <select name="items[][id]" autocomplete="off" class="hdt-select hdt-s-text" data-cpprice="{{ available_v_first.compare_at_price | default: available_v_first.price }}" data-price="{{ available_v_first.price }}">
+                          {%- for variant in available_v -%}
+                            <option data-img="{{ variant.image | default: item.featured_image | image_url: width: image_size }}" data-cpprice="{{ variant.compare_at_price | default: variant.price }}" data-price="{{ variant.price }}" data-qty="{{ variant.quantity_rule.min }}" value="{{ variant.id }}"{% if forloop.first %} selected="selected"{% endif %}>{{ variant.title | escape }}</option>
+                        {%- endfor -%}
+                        </select>
+                      </div>
+                    {%- endif -%}
+                    <input update-qty value="{{ available_v_first.quantity_rule.min }}" type="hidden" name="items[][quantity]">
+                    <span class="hdt-product__fbt-price" update-price>
+                      <hdt-compare-at-price class="hdt-compare-at-price"{% unless available_v_first.compare_at_price > available_v_first.price %} hidden{% endunless %}>
+                        <span class="sr-only sr-only--inline">{{ 'products.product.price.regular_price' | t }}</span>
+                        <span class="hdt-money">{{ available_v_first.compare_at_price | money }}</span>
+                      </hdt-compare-at-price>
+                      <hdt-price class="hdt-price">
+                        <span class="sr-only sr-only--inline">{{ 'products.product.price.sale_price' | t }}</span>
+                        <span class="hdt-money">{{ available_v_first.price | money }}</span>
+                      </hdt-price>
+                    </span>
+                  </hdt-bundle-product>
+              {%- endfor -%}
+            </div>
+          </div>
+          <div class="hdt-col hdt-fbt__col-total-price">
+            <div class="hdt-fbt__total-wrap">
+              <div class="hdt-product__fbt-total hdt-s-text2" update-total data-cpprice="{{ total_compare_at_price }}" data-price="{{ total_price }}">
+                <span class="hdt-product__fbt-total-title hdt-block">{{ 'products.fbt.tt_price' | t }}</span>
+                <hdt-compare-at-price class="hdt-compare-at-price"{% unless total_compare_at_price > total_price %} hidden{% endunless %}>
+                  <span class="sr-only sr-only--inline">{{ 'products.product.price.regular_total_price' | t }}</span>
+                  <span class="hdt-money">{{ total_compare_at_price | money_with_currency }}</span>
+                </hdt-compare-at-price>
+                <hdt-price class="hdt-price">
+                  <span class="sr-only sr-only--inline">{{ 'products.product.price.sale_total_price' | t }}</span>
+                  <span class="hdt-money">{{ total_price | money_with_currency }}</span>
+                </hdt-price>
+              </div>
+              <button id="ProductfbtSubmitButton-{{ section.id }}" type="submit" name="add" class="hdt-product__fbt-submit hdt-btn-accent hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn hdt-oh hdt-btn-solid hdt-text-base hdt-font-semibold hdt-btn-loading__svg">
+                <span class="hdt-btn-atc_text">{{ 'products.product.add_selected_to_cart' | t }}</span>
+                <span class="hdt-loading__spinner hdt-absolute" hidden>
+                  <svg width="16" height="16" class="hdt-svg-spinner" focusable="false" role="presentation" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="hdt-path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle></svg>
+                  </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      {%- endform -%}
+    </wrapp-hdt-pr-frm-bundle>
+	</div>
+{%- endif -%}
+{%- style -%}
+.hdt-fbt__swatches>:not(:last-child) {
+  margin-bottom: 1rem
+}
+.hdt-product-form-fbt input[type=checkbox]+label {
+    width: 2.4rem;
+    height: 2.4rem;
+    border: .1rem solid;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .2rem;
+    margin-inline-end: .5rem
+}
+
+.hdt-product__fbt-check svg {
+    display: block;
+    color: rgb(var(--color-accent-secondary));
+    fill: currentColor;
+    transform: scale(0);
+    transition: .25s ease-in-out;
+    width: 15px;
+    height: 15px;
+}
+
+.hdt-product-form-fbt input[type=checkbox]:checked+label {
+    background-color: rgb(var(--color-accent));
+    border-color: rgb(var(--color-accent));
+    color: rgb(var(--color-background,var(--color-base-background)));
+}
+
+.hdt-product-form-fbt input[type=checkbox]:checked+label svg {
+    transform: scale(1)
+}
+
+:is(.hdt-observe-fbt-item):not(.is-checked) {
+    opacity: .2
+}
+
+.hdt-product__fbt-wrap {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
+.hdt-product__fbt-title {
+    transition: .3s
+}
+
+.hdt-product__fbt-price,
+.hdt-product__fbt-variant {
+    margin-inline-start: 0.5rem
+}
+
+.hdt-fbt__swatches {
+    margin: 3rem 0;
+}
+
+.hdt-product__fbt-variant .hdt-select {
+    height: 3.6rem;
+}
+
+.hdt-fbt__products-title {
+    margin-bottom: 2rem;
+}
+
+.hdt-product__fbt-placeholder,
+.hdt-product__fbt-image img {
+    width: 11.5rem;
+    max-width: 11.5rem;
+    display: inline-block;
+    border-radius: var(--radius-xs);
+}
+
+.hdt-product__fbt-placeholder {
+    background-color: #f5f5f5;
+}
+.hdt-product__fbt-plus{margin:0 1rem}
+.hdt-product__fbt-plus svg{width:1rem; height:1rem}
+.hdt-fbt__scrollsnap-dots {
+    margin-top: 15px
+}
+
+.hdt-fbt__scrollsnap-dots button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: var(--spacing-1);
+    height: var(--spacing-1);
+    border-radius: var(--radius-full);
+    background-color: rgb(var(--color-foreground));
+    border-color: rgb(var(--color-foreground));
+    margin: 0 var(--spacing-0-4);
+    cursor: pointer;
+    opacity: .5;
+    transition: .3s
+}
+
+.hdt-fbt__scrollsnap-dots button.hdt-scrollsnap-dot__link--active {
+    opacity: 1
+}
+
+.hdt-product__fbt-price .hdt-compare-at-price {
+    font-size: var(--text-base);
+    font-weight: var(--font-normal);
+    color: rgb(var(--color-pr-price))
+}
+
+.hdt-product__fbt-price .hdt-price {
+    font-size: var(--text-base);
+    font-weight: var(--font-normal);
+    letter-spacing: 0
+}
+.hdt-product__fbt-total {
+    margin-top: .8rem;
+    /* justify-content: center; */
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    line-height: 1
+}
+.hdt-product__fbt-total .hdt-price {
+    font-size: var(--text-xl);
+    font-weight:var(--font-medium);
+    letter-spacing: 0;
+}
+
+.hdt-product__fbt-total .hdt-compare-at-price {
+    font-size: var(--text-xl);
+    font-weight:var(--font-medium);
+}
+
+.hdt-product__fbt-submit{margin-top:1rem}
+.hdt-product__fbt-progress {
+    width: 100%;
+    height: .3rem;
+    background-color: rgb(var(--color-line-border));
+    margin: 2rem 0
+}
+
+@media (min-width:1150px) {
+    .hdt-fbt__snap {
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
+    }
+    .hdt-product__fbt-wrap {
+      margin-top: 5rem
+    }
+}
+
+@media (max-width:767px) {
+    .hdt-row-flex .hdt-col.hdt-fbt__col-total-price {
+        flex: 1
+    }
+    .hdt-fbt__scrollsnap-dots {
+        display: block
+    }
+    .hdt-product__fbt-placeholder,
+    .hdt-product__fbt-image img {
+        max-width: 7rem;
+        width: 7rem;
+    }
+}
+
+@media (-moz-touch-enabled:0),
+(hover:hover) and (min-width:1150px) {
+    a.hdt-product__fbt-title:hover {
+        color: rgb(var(--color-accent))
+    }
+}
+{%- endstyle -%}

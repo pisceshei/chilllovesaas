@@ -1,0 +1,153 @@
+<!-- sections/brands.liquid -->
+{% style %}hdt-brands{--spacing-x:0px;--spacing-y:0px;}hdt-brands .hdt-brand-title{margin-bottom:15px;text-transform:uppercase;}hdt-brands .hdt-brand-inner{padding:20px 10px;}hdt-brands .hdt-brand-inner ul{list-style: square;padding-left: 20px;line-height: 1.6;}hdt-brands .hdt-brand-item{box-shadow:inset -1px -1px rgb(var(--color-line-border)), -1px -1px rgb(var(--color-line-border))}hdt-brands a{transition: all .3s;word-wrap:break-word;}@media (min-width:1150px){hdt-brands a:hover{opacity:0.6;}hdt-brands button:not([disabled=""]):hover{color:rgb(var(--color-foreground))} }hdt-brands button{padding:10px 20px;text-transform:uppercase;line-height:1;box-shadow:inset -1px -1px rgb(var(--color-line-border)), -1px -1px rgb(var(--color-line-border));color:rgb(var(--color-foreground2));transition:all .3s;}hdt-brands button.active{color:rgb(var(--color-foreground));background:rgb(var(--color-background2));}hdt-brands .hdt-btns-filter{margin-bottom:35px;flex-wrap:wrap;}@keyframes filter-show{ 0%{transform: scale(0)}100%{transform:scale(1)}} @keyframes filter-hide{0%{transform: scale(1)}100%{transform:scale(0)}}hdt-brands .animate-filter-show{animation: filter-show 0.3s ease 0s 1 normal forwards}hdt-brands .animate-filter-hide{animation:filter-hide 0.3s ease 0s 1 normal forwards}hdt-brands ul li::marker{color: rgb(var(--color-foreground2))}
+ 
+ {% render 'spacing-vars', box: section %}
+{% endstyle %}
+<div class="hdt-section-spacing hdt-s-gradient hdt-section-spacing-{{ section.id }}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};" {%- endif %}>
+  <hdt-brands id="Brands-{{ section.id }}" class="hdt-container hdt-block">
+    {%- if section.settings.source != 'vendor' -%}
+      <div class="hdt-flex hdt-justify-center hdt-align-center hdt-btns-filter">
+        {%- for link in linklists[section.settings.menu].links -%} 
+          {%-liquid
+            assign disabled = ''
+            if link.links == blank 
+              assign disabled = ' disabled'
+            endif
+            if link.url contains '#*'
+              assign disabled = ''
+            endif
+            assign link_handle = link.title | handle
+            assign data_filter = '_filter-'| append: link_handle 
+          -%}
+          <button class="hdt-text-base hdt-font-semibold{% if forloop.index == 1 %} active{% endif %}" data-filter=".{{ data_filter }}"{{ disabled }}>{{ link.title }}</button>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+    <div class="hdt-row-flex hdt-flex-cols-2 md:hdt-flex-cols-3 lg:hdt-flex-cols-4">
+      {%- if section.settings.source == 'vendor' -%}
+        {%- for product_vendor in shop.vendors -%}   
+          <div class="hdt-col hdt-brand-item hdt-brand-vendor hdt-text-center">
+            <div class="hdt-col-inner hdt-brand-inner hdt-h-full hdt-flex hdt-align-center hdt-justify-center">
+              {{ product_vendor | link_to_vendor }}
+            </div>
+          </div>
+        {%- endfor -%}
+      {%- else -%}
+      {%- for link in linklists[section.settings.menu].links -%}
+        {%- if link.links != blank -%}
+          {%- assign link_handle = link.title | handle -%}
+          {%- assign data_filter_ = '_filter-'| append: link_handle -%} 
+          <div class="hdt-col hdt-brand-item {{ data_filter_ }}">
+            <div class="hdt-col-inner hdt-brand-inner hdt-h-full">
+              <h3 class="hdt-brand-title hdt-text-lg hdt-s-text">{{ link.title }}</h3>
+              <ul class="hdt-oh">
+                {%- for _link in link.links -%}
+                  <li>
+                    <a href="{{ _link.url }}" class="hdt-text-base hdt-s-text2 hdt-brand-link">{{ _link.title }}</a>
+                  </li>
+                {%- endfor -%}   
+              </ul>
+            </div>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+      {%- endif -%}
+      
+    </div>
+  </hdt-brands>
+</div>
+{% schema %}
+  {
+    "name": "t:sections.brands.name",
+    "tag": "section",
+    "disabled_on": {
+      "groups": [
+        "*"
+      ]
+    },
+    "settings": [
+      {
+        "type": "select",
+        "id": "source",
+        "label": "t:sections.brands.settings.source.label",
+        "options": [
+          {
+            "value": "vendor",
+            "label": "t:sections.brands.settings.source.vendor"
+          },
+          {
+            "value": "menu",
+            "label": "t:sections.brands.settings.source.linklist"
+          }
+        ],
+        "default": "vendor"
+      },
+      {
+        "type": "link_list",
+        "id": "menu",
+        "label": "t:sections.brands.settings.menu"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "range",
+        "id": "background_opacity",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "label": "t:sections.all.background.opacity",
+        "default": 0,
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.brands.name",
+        "category": "t:sections_categories.05_section.name"
+      }
+    ]
+  }
+{% endschema %}

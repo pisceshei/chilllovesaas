@@ -1,0 +1,63 @@
+<div class="hdt-slider__slide">
+  <div class="hdt-tes-item">
+    <div class="hdt-tes-inner">
+      {%- if block.settings.text != blank -%}
+        <div class="hdt-tes-text hdt-s-text2">{{ block.settings.text }}</div>
+      {%- endif -%}
+      {%- if block.settings.image != blank -%}
+        <div class="hdt-tes-image">{{ block.settings.image | image_url: width: block.settings.image.width | image_tag: loading: 'lazy', width: block.settings.image.width, height: block.settings.image.height, class: 'hdt-object-cover hdt-radius-sm', widths: '10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200' }}</div>
+      {%- endif -%}
+      {%- if block.settings.name != blank -%}
+        <h6 class="hdt-tes-name hdt-s-text">{{ block.settings.name }}</h6>
+      {%- endif -%}
+      {%- if block.settings.verify -%}
+        <div class="hdt-tes-verify hdt-s-text">
+          <span class="hdt-tes-verify-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.0001 18.3334C14.5834 18.3334 18.3334 14.5834 18.3334 10C18.3334 5.41669 14.5834 1.66669 10.0001 1.66669C5.41675 1.66669 1.66675 5.41669 1.66675 10C1.66675 14.5834 5.41675 18.3334 10.0001 18.3334Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6.45825 10L8.81659 12.3583L13.5416 7.64166" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>              
+          </span>
+          <span class="hdt-tes-verify-text">{{ 'sections.testimonials.verified_buyer' | t }}</span>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Item",
+    "tag": null,
+    "settings": [
+
+      {
+        "type": "richtext",
+        "id": "text",
+        "label": "Text",
+        "default": "<p>Everything is just as described. The are comfortable and help tremendously with back pain. I love it! Ordered a few more as gifts.</p>"
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Avatar"
+      },
+      {
+        "type": "text",
+        "id": "name",
+        "label": "Name",
+        "default": "Anna Brew"
+      },
+      {
+        "type": "checkbox",
+        "id": "verify",
+        "label": "Verified buyer",
+        "default": true
+      },
+    ],
+    "presets": [
+      {
+        "name": "Item"
+      }
+    ]
+  }
+{% endschema %}

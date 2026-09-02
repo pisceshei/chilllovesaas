@@ -1,0 +1,15 @@
+{%- if localization.available_languages.size > 1 -%}
+  {%- render 'hdt_language' -%}
+{%- endif -%}
+{% schema %}
+  {
+    "name": "Language",
+    "tag": null,
+    "settings": [
+    
+    ],
+    "presets": [
+      { "name": "Language" }
+    ]
+  }
+{% endschema %}

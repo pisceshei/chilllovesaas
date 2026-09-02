@@ -1,0 +1,127 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "collections_list_simple_4yRUED": {
+      "type": "top-list-collections",
+      "name": "Top list collections",
+      "settings": {
+        "show_type": "all",
+        "menu": "footer",
+        "sort": "alphabetical",
+        "hide_mobile": false,
+        "navUI": true,
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 1,
+        "section_layout": "container",
+        "mg": "",
+        "mg_mb": "",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "main_heading_yWrpnJ": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_DQLY3L": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ collection.title }}",
+            "line_height": "",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "heading_brc_QCC4Ga": {
+          "type": "_heading_brc",
+          "name": "t:sections.heading-page.blocks.breadcrumb.label",
+          "settings": {},
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_DQLY3L",
+        "heading_brc_QCC4Ga"
+      ],
+      "settings": {
+        "use_dynamic_source": false,
+        "image": "shopify://shop_images/bg_collections.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 54,
+        "space_item": 0,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "55px,,55px,",
+        "pd_mb": "34px,,34px,"
+      }
+    },
+    "main-collection": {
+      "type": "main-collection",
+      "settings": {
+        "show_description": false,
+        "use_read_more": false,
+        "read_more_height": 300,
+        "description_position": "before",
+        "product_des": "1",
+        "image_ratio": "custom-pr",
+        "image_size": true,
+        "show_vendor": false,
+        "pr_border": "none",
+        "products_count": 12,
+        "col_dk": "4",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "pagination_type": "load_more",
+        "enable_progressbar": true,
+        "paginate_pos": "center",
+        "dis_pagination": 40,
+        "btn_label": "",
+        "btn_style": "hdt-btn-outline",
+        "size": "m",
+        "btn_fw": "medium",
+        "enable_sorting": true,
+        "enable_filtering": true,
+        "enable_num_cols_selector": true,
+        "widget_heading": "Product categories",
+        "cat_source": "1",
+        "cat_link_list": "",
+        "count": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,30px,",
+        "pd_mb": ",,22px,",
+        "sidebar_drawer": false,
+        "sidebar_position": "left",
+        "sidebar_size": "small",
+        "colors_by_section_sb": true,
+        "color_scheme_sb": "",
+        "background_opacity_sb": 1
+      }
+    }
+  },
+  "order": [
+    "collections_list_simple_4yRUED",
+    "main_heading_yWrpnJ",
+    "main-collection"
+  ]
+}

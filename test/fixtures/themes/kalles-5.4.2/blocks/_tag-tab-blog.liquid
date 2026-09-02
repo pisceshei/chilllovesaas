@@ -1,0 +1,25 @@
+
+{%- assign tag = block.settings.title -%}
+{%- if current_tags contains tag -%}
+  <a href="{{ blog.url }}" class="is--selected hdt-text-base hdt-font-medium">{{ tag | remove : 'category_' | strip }}<span class="hdt-blog-count"> ({{ tag.total_count }})</span></a>
+{%- else -%}
+  <a href="{{ blog.url }}/tagged/{{ tag | handle }}"class="hdt-text-base hdt-font-medium">{{ tag | remove : 'category_' | strip }} <span class="hdt-blog-count"> ({{ tag.total_count }})</span></a>
+{%- endif -%}
+{% schema %}
+  {
+    "name": "tag",
+    "class": "a",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Tag name"
+      }
+    ],
+    "presets":[
+      {
+      "name":"tag"
+      }
+    ]
+  }
+{% endschema %}

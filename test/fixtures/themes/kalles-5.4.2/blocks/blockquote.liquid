@@ -1,0 +1,50 @@
+{%- if block.settings.quote != blank -%}
+  <div class="hdt-rte {{ block.settings.text_color }}">
+    <blockquote class="hdt-oh">
+      {{ block.settings.quote }}
+    </blockquote>
+  </div>
+{%- endif -%}
+{% schema %}
+  {
+    "name": "t:sections.blockquote.name",
+    "settings": [
+      {
+        "type": "richtext",
+        "id": "quote",
+        "label": "t:sections.blockquote.settings.quote.label",
+        "default": "<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam recusandae magni ex cum dolorum cumque reiciendis, facilis quasi quaerat modi porro laborum repellat quidem ducimus, sunt aperiam qui numquam quas?</p>"
+      },
+      {
+        "type": "select",
+        "id": "text_color",
+        "options": [
+          {
+            "value": "hdt-s-text",
+            "label": "t:default"
+          },
+          {
+            "value": "hdt-text-secondary",
+            "label": "t:settings_schema.colors.secondary"
+          },
+          {
+            "value": "hdt-text-tertiary",
+            "label": "t:settings_schema.colors.tertiary"
+          },
+          {
+            "value": "hdt-text-primary",
+            "label": "t:settings_schema.colors.accent"
+
+          }
+        ],
+        "label": "Text color",
+        "default": "hdt-s-text"
+      },
+    ],
+    "presets":[
+      {
+        "name": "t:sections.blockquote.name"
+      }
+    ]
+  }
+{% endschema %}

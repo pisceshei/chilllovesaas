@@ -1,0 +1,375 @@
+{
+  "sections": {
+    "1659926191a36ed220": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom-brand-list .m-image {\n  opacity: 0.4;\n  transition: all 0.3s;\n}\n.m-custom-brand-list .m-image:hover {\n  opacity: 1;\n}\n.m-custom-bundle .product-bundles__item-info h3 {\n  font-size: 16px;\n  font-weight: var(--font-weight-header) !important; \n  text-transform: capitalize; \n}\n.m-custom-bundle .product-bundles__item-index {\n  border-color: #e1e1e1 !important; \n}\n@media (min-width: 1280px) {\n  .sf-home__hero .m-hero__content {\n    margin-top: 6rem;\n  }\n}\n@media (min-width: 1536px) {\n  .sf-home__hero .m-hero__title {\n    font-size: 110px;\n    letter-spacing: 10px;\n  }\n  .m-custom-collection-list .m-collection-list__container {\n    --column-gap: 100px !important;\n  }\n}"
+      }
+    },
+    "165959683132f7888b": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center top",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "CAMPING",
+        "subtitle": "",
+        "text": "<p>Homecamp source the best in honestly crafted, useful<br\/> goods to inspire an outdoor lifestyle.<\/p>",
+        "button_label": "SHOP NOW",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf-home__hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "16599418582876781f": {
+      "type": "brands-list",
+      "blocks": {
+        "1659941857023f7719-0": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "1659941857023f7719-1": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "1659941857023f7719-2": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "1659941857023f7719-3": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "a991031a-e08c-4592-b2ca-2a98a36002a3": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        }
+      },
+      "block_order": [
+        "1659941857023f7719-0",
+        "1659941857023f7719-1",
+        "1659941857023f7719-2",
+        "1659941857023f7719-3",
+        "a991031a-e08c-4592-b2ca-2a98a36002a3"
+      ],
+      "custom_css": [
+        ".m-section {border-bottom: 1px solid rgb(var(--color-border));}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 5,
+        "column_gap": 30,
+        "row_gap": 30,
+        "column_gap_mobile": 10,
+        "row_gap_mobile": 10,
+        "enable_slider": true,
+        "show_nav": false,
+        "show_pagination": false,
+        "autorotate": true,
+        "autorotate_speed": 3,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "m-custom-brand-list",
+        "animations": "inherit"
+      }
+    },
+    "1659587158ce41b7ac": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "INSPIRED BY YOU",
+        "heading_size": "h2",
+        "subheading": "OUR PRODUCTS",
+        "description": "Shop online for high-end bath accessories, bathroom sinks, vanities, <br>shower faucets, & more fixtures",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 6,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16595850289c0b4c41": {
+      "type": "collection-list",
+      "blocks": {
+        "16595850286b090433-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Chair"
+          }
+        },
+        "16595850286b090433-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Blankets"
+          }
+        },
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Decaration"
+          }
+        },
+        "16595850286b090433-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Lighting"
+          }
+        },
+        "028a1ca7-81df-4d8c-8c00-68b2282e5b70": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Gifts"
+          }
+        }
+      },
+      "block_order": [
+        "16595850286b090433-0",
+        "16595850286b090433-1",
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd",
+        "16595850286b090433-2",
+        "028a1ca7-81df-4d8c-8c00-68b2282e5b70"
+      ],
+      "settings": {
+        "heading": "We want you to enjoy the bush, beach and <br>garden with quality gear.",
+        "heading_size": "h3",
+        "subheading": "AS NATURE LOVERS",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "footer",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": false,
+        "image_rounded": true,
+        "items_per_row": 5,
+        "item_gap": 50,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 30,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16599437071ec5779e": {
+      "type": "custom-content",
+      "blocks": {
+        "deb96e12-ab0c-44cc-aa6f-dc05e3515edb": {
+          "type": "lookbook",
+          "settings": {
+            "color_scheme": "",
+            "width": "50%",
+            "top_1": 70,
+            "left_1": 21,
+            "top_2": 49,
+            "left_2": 47,
+            "top_3": 80,
+            "left_3": 61,
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "477d775f-c5a6-4ef6-b48d-6cdfcaaa275e": {
+          "type": "product_bundles",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "title": "BUILD YOUR BUNDLES",
+            "subheading": "BUNDLE & SAVE",
+            "text_size": "h2",
+            "show_reviews": false,
+            "block_custom_class": "m-custom-bundle",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "deb96e12-ab0c-44cc-aa6f-dc05e3515edb",
+        "477d775f-c5a6-4ef6-b48d-6cdfcaaa275e"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 150,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "165994413405ff7a6a": {
+      "type": "lookbook",
+      "blocks": {
+        "16599441342e6d881a-1": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "button_text": "",
+            "button_link": "",
+            "button_style": "light",
+            "top_1": 39,
+            "left_1": 51,
+            "top_2": 63,
+            "left_2": 28,
+            "top_3": 54,
+            "left_3": 80,
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": ""
+          }
+        }
+      },
+      "block_order": [
+        "16599441342e6d881a-1"
+      ],
+      "settings": {
+        "heading": "AN OUTDOOR LIFESTYLE",
+        "heading_size": "h2",
+        "subheading": "SHOP THIS LOOK",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "image_aspect_ratio": "original",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1659944371e42957c1": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "GIFTS UNDER $100",
+        "heading_size": "h2",
+        "subheading": "OUR PRODUCTS",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "Shop now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1659926191a36ed220",
+    "165959683132f7888b",
+    "16599418582876781f",
+    "1659587158ce41b7ac",
+    "16595850289c0b4c41",
+    "16599437071ec5779e",
+    "165994413405ff7a6a",
+    "1659944371e42957c1"
+  ]
+}

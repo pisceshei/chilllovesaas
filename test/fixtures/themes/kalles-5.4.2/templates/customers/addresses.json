@@ -1,0 +1,62 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+ {
+  "sections": {
+    "heading": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_GiRd4a": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page_title }}",
+            "line_height": "",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": true,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_GiRd4a"
+      ],
+      "settings": {
+        "use_dynamic_source": false,
+        "image": "shopify://shop_images/bg-heading.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 50,
+        "space_item": 0,
+        "pd": "50px,,50px,",
+        "pd_mb": "50px,,50px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "main": {
+      "type": "main-addresses",
+      "settings": {
+        "color_scheme": "",
+        "pd": "30px,,30px,",
+        "pd_mb": "22px,,22px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    }
+  },
+  "order": [
+    "heading",
+    "main"
+  ]
+}

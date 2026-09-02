@@ -1,0 +1,79 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "container": "container",
+        "color_scheme": "dark",
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "show_divider": false,
+        "show_nav": false,
+        "autorotate": false,
+        "autorotate_speed": 3
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "d0890be7-4ef1-4c70-8e06-9ccc45c7f1b6": {
+          "type": "topbar",
+          "settings": {
+            "color_scheme": "dark",
+            "show_divider": false,
+            "show_phone_numb": false,
+            "show_email": false,
+            "show_social_links": true,
+            "show_stores_page": false,
+            "show_currency_switcher": true,
+            "show_country_selector": false,
+            "show_language_switcher": true,
+            "alert_message": "Open Doors To A World Of Fashion  |  <span class=\"underline ml-2\"> Discover More<\/span>"
+          }
+        }
+      },
+      "block_order": [
+        "d0890be7-4ef1-4c70-8e06-9ccc45c7f1b6"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "color_scheme_menu": "default",
+        "header_design": "logo-center__2l",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "transparent_text_color": "#ffffff",
+        "logo_text": "MINIMOG",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 145,
+        "sticky_logo_max_width": 140,
+        "mobile_logo_max_width": 105,
+        "main_menu": "main-menu",
+        "secondary_menu": "",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": true,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

@@ -1,0 +1,162 @@
+{%- comment -%}
+  Renders product media list.
+  Accepts:
+  - product: {Object} product object.
+  - class: {String} a class list
+  - un_no_pick
+  - selected_variant
+
+  Usage:
+  {%- render 'product-media' -%}
+{%- endcomment -%}
+
+{%- liquid
+  #assign selected_variant_featured_media = selected_variant.featured_media
+  assign group_media_obj = product.metafields.theme.group_media_obj.value
+  assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src'
+  assign desktop_media_layout = section.settings.desktop_media_layout
+  assign mobile_media_layout = section.settings.mobile_media_layout
+  if product.media.size < 1
+    assign desktop_media_layout = 'no_media_size'
+  elsif product.media.size == 1
+    assign desktop_media_layout = 'one_media_size'
+  endif
+  if desktop_media_layout == '2_columns'
+    assign desktop_columns = 2
+  else
+    assign desktop_columns = 1
+  endif
+  if mobile_media_layout == '2_columns'
+    assign mobile_columns = 2
+  else
+    assign mobile_columns = 1
+  endif
+  assign media_width = section.settings.media_width | divided_by: 100.0
+  assign models = product.media | where: 'media_type', 'model'
+  assign first_3d_model = models | first
+-%}
+
+{%- capture sizes -%}
+  (min-width: 1150px) {{ settings.page_width | minus: 100 | times: media_width | divided_by: desktop_columns | round }}px, (min-width: 768px) calc((100vw - 10rem) / 2), calc(100vw / {{ mobile_columns }} - 4rem)
+{%- endcapture -%}
+
+{%- if first_3d_model -%}
+<link rel="stylesheet" href="https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css" media="print" onload="this.media='all'; this.onload = null">
+{%- endif -%}
+
+<hdt-product-media show-thumb section-id="{{ section.id }}" class="hdt-product-media hdt-product-media__layout-{{ desktop_media_layout }} hdt-mobile-media-layout--{{ mobile_media_layout }}" form="{{ product_form_id }}"{% if section.settings.enable_media_autoplay %} autoplay-media{% endif %}{% if variant_images.size > 0 and product.images.size > 1 and section.settings.use_select_varaint_change_media %} update-when-variant-change{% endif %} image-zoom="{{ section.settings.image_zoom }}" max-zoom="{{ section.settings.max_zoom_lightbox }}" zoom-options='{"type": "{{ section.settings.image_zoom_type }}","magnify": {{ section.settings.zoom_level }}}'{% if group_media_obj.size > 0 %} can-has-media-group{% endif %}>
+  {%- case desktop_media_layout -%}
+    {%- when 'no_media_size' -%}
+      {%- assign image = settings.placeholder_img -%}
+      {%- if image != blank -%}
+        <div class="hdt-product-media__main hdt-ratio--adapt_image">
+          <div class="hdt-ratio hdt-product__media" style="--aspect-ratioapt:{{ image.aspect_ratio }};--mw-media:{{ image.width }}px">
+            {{ image | image_url: width: image.width | image_tag: sizes: sizes, widths: '246, 493, 600, 713, 823, 990, 1100, 1206, 1346, 1426, 1646, 1946', hdt-el: '' }}
+          </div>
+        </div>
+      {%- endif -%}
+    {%- when 'one_media_size' -%}
+      <div class="hdt-product-media__main hdt-ratio--adapt_image">
+        {%- render 'media', media: product.media.first, lazy_load: false, sizes: sizes -%}
+      </div>
+
+    {%- when 'thumbnail_bottom' or 'thumbnail_left' or 'thumbnail_right' or 'without_thumbnails' -%}
+      <div class="hdt-product-media__main">
+        <hdt-slider id="slider-{{ section.id }}-{{ product.id }}" aria-controls="slider-thumb-{{ section.id }}-{{ product.id }}" autoheight class="hdt-slider hdt-ratio--adapt_image" config='{ "align": "start", "autoHeight": true, "slidesToScroll": 1, "watchDrag": "onlyTypeImage", "slides": ".hdt-slider__slide:not([hidden])"{% unless group_media_obj.size > 0 %}, "startIndex": {% if section.settings.show_first_media or un_no_pick == false %}0{% else %}{{ selected_variant_featured_media.position | default: 1 | minus: 1 }}{% endif %}{% endunless %} }'>
+          <div class="hdt-slider__viewport">
+            <div class="hdt-slider__container">
+                {%- liquid
+                  for media in product.media
+                    assign lazy_load = false
+                    if media.position > 1
+                      assign lazy_load = true
+                    endif
+                    render 'media', media: media, selected_variant: selected_variant, un_no_pick: un_no_pick, position: media.position, group_media_obj: group_media_obj, variant_images: variant_images, class: 'hdt-slider__slide', autoplay: section.settings.enable_media_autoplay, loop: section.settings.enable_video_looping, lazy_load: lazy_load, sizes: sizes
+                  endfor
+                -%}
+            </div>
+          </div>
+        </hdt-slider>
+      </div>
+      <div class="hdt-product-media__thumb hdt-text-center">
+        <hdt-slider-thumb stagger id="slider-thumb-{{ section.id }}-{{ product.id }}" aria-controls="slider-{{ section.id }}-{{ product.id }}" autoheight class="hdt-slider hdt-ratio--adapt_image hdt-slides-5 hdt-slide-spacing-10{% if mobile_media_layout != 'thumbnails' %} hdt-hidden lg:hdt-block{% endif %}" config='{ "active": {% if mobile_media_layout != 'thumbnails' %}false{% else %}true{% endif %}, "autoHeight": false, "classNames": false, "dragFree": false, "slidesToScroll": 1, "align": "center", "axis": "x", "slides": ".hdt-slider__slide:not([hidden])"{% if desktop_media_layout == 'thumbnail_left' or desktop_media_layout == 'thumbnail_right' %}, "breakpoints": { "(min-width: 1150px)": { "active": true, "axis": "y", "direction": "ltr", "watchSlides": false } }{% endif %} }'>
+          <div class="hdt-slider__viewport">
+            <div class="hdt-slider__container">
+                {%- liquid
+                  for media in product.media
+                    render 'media-thumb', media: media, selected_variant: selected_variant, un_no_pick: un_no_pick, group_media_obj: group_media_obj, class: 'hdt-slider__slide', autoplay: section.settings.enable_media_autoplay, loop: section.settings.enable_video_looping, lazy_load: lazy_load
+                  endfor
+                -%}
+            </div>
+          </div>
+        </hdt-slider-thumb>
+        {%- if mobile_media_layout != 'thumbnails' -%}
+          <hdt-slider-counter class="hdt-slider-counter hdt-slider-fraction hdt-inline-flex hdt-align-center lg:hdt-hidden" slider="slider-{{ section.id }}-{{ product.id }}">
+            <button disabled name="previous" aria-label="previous" aria-controls="slider-{{ section.id }}-{{ product.id }}" class="no-js-hidden">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 10 6"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" fill="currentColor"></path></svg>
+            </button>
+            <span>
+              <span update-current class="hdt-slider-counter--current">1</span>
+              <span aria-hidden="true"> / </span>
+              <span class="sr-only">{{ 'general.slider.of' | t }}</span>
+              <span update-total class="hdt-slider-counter--total">{{ product.media.size }}</span>
+            </span>
+            <button disabled name="next" aria-label="next" aria-controls="slider-{{ section.id }}-{{ product.id }}" class="no-js-hidden">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 10 6"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" fill="currentColor"></path></svg>
+            </button>
+          </hdt-slider-counter>
+        {%- endif -%}
+      </div>
+
+    {%- else -%}
+      <div class="hdt-product-media__main">
+        <hdt-slider id="slider-{{ section.id }}-{{ product.id }}" aria-controls="slider-thumb-{{ section.id }}-{{ product.id }}" autoheight class="hdt-slider hdt-ratio--adapt_image" config='{ "active": true, "autoHeight": true, "slidesToScroll": 1, "watchDrag": "onlyTypeImage", "slides": ".hdt-slider__slide:not([hidden])"{% unless group_media_obj.size > 0 %}, "startIndex": {% if section.settings.show_first_media or un_no_pick == false %}0{% else %}{{ selected_variant_featured_media.position | default: 1 | minus: 1 }}{% endif %}{% endunless %}, "breakpoints": { "(min-width: 1150px)": { "active": false } } }'>
+          <div class="hdt-slider__viewport">
+            <div class="hdt-slider__container">
+                {%- liquid
+                 for media in product.media
+                   assign lazy_load = false
+                   if media.position > 1
+                     assign lazy_load = true
+                   endif
+                   render 'media', media: media, selected_variant: selected_variant, un_no_pick: un_no_pick, position: media.position, group_media_obj: group_media_obj, variant_images: variant_images, class: 'hdt-slider__slide', autoplay: section.settings.enable_media_autoplay, loop: section.settings.enable_video_looping, lazy_load: lazy_load, sizes: sizes
+                 endfor
+                -%}
+            </div>
+          </div>
+        </hdt-slider>
+      </div>
+      <div class="hdt-product-media__thumb hdt-text-center lg:hdt-hidden">
+        {%- if mobile_media_layout == 'thumbnails' -%}
+          <hdt-slider-thumb stagger id="slider-thumb-{{ section.id }}-{{ product.id }}" aria-controls="slider-{{ section.id }}-{{ product.id }}" autoheight class="hdt-slider hdt-ratio--adapt_image hdt-slides-5 hdt-slide-spacing-10" config='{ "active": true, "autoHeight": false, "classNames": false, "containScroll": "trimSnaps", "dragFree": false, "slidesToScroll": 1, "align": "center", "axis": "x", "slides": ".hdt-slider__slide:not([hidden])", "breakpoints": { "(min-width: 1150px)": { "active": false } } }'>
+            <div class="hdt-slider__viewport">
+              <div class="hdt-slider__container">
+                  {%- liquid
+                    for media in product.media
+                      render 'media-thumb', media: media, selected_variant: selected_variant, un_no_pick: un_no_pick, group_media_obj: group_media_obj, class: 'hdt-slider__slide', autoplay: section.settings.enable_media_autoplay, loop: section.settings.enable_video_looping, lazy_load: lazy_load
+                    endfor
+                  -%}
+              </div>
+            </div>
+          </hdt-slider-thumb>
+        {%- else -%}
+          <hdt-slider-counter class="hdt-slider-counter hdt-slider-fraction hdt-inline-flex hdt-align-center" slider="slider-{{ section.id }}-{{ product.id }}">
+            <button disabled name="previous" aria-label="previous" aria-controls="slider-{{ section.id }}-{{ product.id }}" class="no-js-hidden">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 10 6"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" fill="currentColor"></path></svg>
+            </button>
+            <span>
+              <span update-current class="hdt-slider-counter--current">1</span>
+              <span aria-hidden="true"> / </span>
+              <span class="sr-only">{{ 'general.slider.of' | t }}</span>
+              <span update-total class="hdt-slider-counter--total">{{ product.media.size }}</span>
+            </span>
+            <button disabled name="next" aria-label="next" aria-controls="slider-{{ section.id }}-{{ product.id }}" class="no-js-hidden">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 10 6"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" fill="currentColor"></path></svg>
+            </button>
+          </hdt-slider-counter>
+        {%- endif -%}
+      </div>
+
+  {%- endcase -%}
+</hdt-product-media>
+{%- if first_3d_model -%}<script type="application/json" id="ModelJson-{{ section.id }}">{{ models | json }}</script>{% endif -%}

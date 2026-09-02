@@ -1,0 +1,92 @@
+{%- style -%}
+  {% render 'spacing-vars', box: block %}
+{%- endstyle -%}
+<div id="{{ block.id }}" class="hdt-banner-navigation hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-{{ block.settings.column_show }} hdt-section-spacing hdt-section-spacing-{{ block.id }}" {{ block.shopify_attributes }}>
+  {%- if block.settings.menu != blank -%}
+    {%- for link in block.settings.menu.links -%}
+      {% assign link_arr = link.title | split: '[' %}
+      <div class="hdt-navigation-item">
+        <a href="{{ link.url }}" class="hdt-navigation-link hdt-s-text hdt-font-medium hdt-text-lg hdt-block">
+          {{ link_arr[0] }}
+        </a>
+        {%- if link.links != blank -%}
+          <ul class="hdt-navigation-submenu">
+            {%- for childlink in link.links -%}
+              {% assign childlink_arr = childlink.title | split: '[' %}
+              <li class="hdt-navigation-submenu-item">
+                <a href="{{ childlink.url }}" class="hdt-navigation-submenu-link hdt-s-text2 hdt-text-base hdt-block">{{ childlink_arr[0] }}</a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {% endif %}
+      </div>
+    {%- endfor -%}
+  {%- else -%}
+    {%- for i in (1..6) -%}
+      <div class="hdt-navigation-item">
+        <a href="#" class="hdt-navigation-link hdt-s-text hdt-font-medium hdt-text-lg hdt-block">
+          Heading {{ i }}
+        </a>
+        <ul class="hdt-navigation-submenu">
+          {%- for j in (1..5) -%}
+            <li class="hdt-navigation-submenu-item">
+              <a href="#" class="hdt-navigation-submenu-link hdt-s-text2 hdt-text-base hdt-block">Menu item {{ j }}</a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endfor -%}
+  {%- endif -%}
+</div>
+{% schema %}
+  {
+    "name": "Menus",
+    "tag": null,
+    "settings": [
+      {
+        "type": "header",
+        "content": "Navigation settings"
+      },
+      {
+        "type": "link_list",
+        "id": "menu",
+        "label": "Menu",
+        "info": "Select menu to display"
+      },
+      {
+        "type": "select",
+        "id": "column_show",
+        "label": "Column show",
+        "visible_if": "{{ block.settings.menu != blank }}",
+        "options": [
+          {
+            "value": "2",
+            "label": "2"
+          },
+          {
+            "value": "3",
+            "label": "3"
+          },
+        ],
+        "default": "3",
+        "info": "Apply for tablet & desktop"
+      },
+      {
+        "type": "text",
+        "id": "pd",
+        "label": "Padding inner",
+        "default":"30px,30px,30px,30px",
+        "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+        "visible_if": "{{ block.settings.menu != blank }}",
+      },
+      {
+        "type": "text",
+        "id": "pd_mb",
+        "label": "Padding inner (Mobile)",
+        "default":"15px,15px,15px,15px",
+        "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+        "visible_if": "{{ block.settings.menu != blank }}",
+      },
+    ],
+  }
+{% endschema %}

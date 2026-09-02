@@ -1,0 +1,63 @@
+
+<div class="hdt-article-title" timeline hdt-reveal="slide-in">
+  {% if block.settings.show_title_first %}<h2>{{ article.title }}</h2>{% endif %}
+  {% if block.settings.show_au or block.settings.show_dt or block.settings.show_cm %}
+      <ul class="hdt-flex">
+          {%- if block.settings.show_au -%}<li><span>{{ 'blogs.article.by' | t }} {{ article.author | replace_first: 'ad clnt', 'admin' }}</span></li>{%- endif -%}
+          {%- if block.settings.show_dt -%}<li><span>{{ article.created_at | date: "%b %d" }}</span></li>{%- endif -%}
+          {%- if block.settings.show_cm -%}
+            {%- liquid
+                if comment.status == 'pending' 
+                  assign number_of_comments = article.comments_count | plus: 1 
+                else 
+                  assign number_of_comments = article.comments_count 
+                endif
+                if number_of_comments > 0
+                  assign cm_link = '#comments'
+                else
+                  assign cm_link = '#comment_form'
+                endif
+            -%}
+            <li><a href="{{ article.url }}{{ cm_link }}">{{ 'blogs.comments.with_count.other' | t: count: article.comments_count }}</a></li>
+          {%- endif -%}
+      </ul>
+  {% endif %}
+  {% unless block.settings.show_title_first %}<h2>{{ article.title }}</h2>{% endunless %}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.main-article.title_name",
+    "tag":null,
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_title_first",
+        "label": "t:sections.main-article.show_title_first",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_au",
+        "label": "t:sections.main-article.show_au",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_dt",
+        "label": "t:sections.main-article.show_dt",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_cm",
+        "label": "t:sections.main-article.show_cm",
+        "default": true
+      }
+    ],
+    "presets":[
+      {
+        "name":"t:sections.main-article.title_name"
+      }
+    ]
+  }
+{% endschema %}

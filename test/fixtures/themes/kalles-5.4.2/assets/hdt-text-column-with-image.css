@@ -1,0 +1,26 @@
+.hdt-tcwi-item{
+  .hdt-tcwi-content{
+    margin-top: 2rem;
+  }
+}
+
+.hdt-tcwi-style-alternative{
+  .hdt-tcwi-inner:has(.hdt-eff){
+    --alternative: 7.2rem;
+    --pd: 2rem;
+    --max-w: calc(100% - var(--pd) * 2);
+    @media (width < 767px){
+      --alternative: 3.6rem;
+      --pd: 1.5rem;
+    }
+    .hdt-tcwi-content{
+      max-width: var(--max-w);
+      margin-inline: auto;
+      margin-block-start: calc(var(--alternative) * -1);
+      background: rgb(var(--color-background,var(--color-base-background)));
+      position: relative;
+      z-index: 3;
+      padding: var(--pd);
+    }
+  }
+}

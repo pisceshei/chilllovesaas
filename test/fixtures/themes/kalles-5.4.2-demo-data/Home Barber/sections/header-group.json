@@ -1,0 +1,298 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "announcement_bar_QKnWCh": {
+      "type": "announcement-bar",
+      "blocks": {
+        "announcement_izeF7X": {
+          "type": "announcement",
+          "settings": {
+            "link": "",
+            "text": "Today deal sale off <strong>70%<\/strong>. End in[countdown].  <a href=\"\/collections\/baber\" title=\"Baber\">Hurry Up [icon_arrow]<\/a>",
+            "hdt_font_size": 13,
+            "adding_border": false,
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days"
+          }
+        },
+        "announcement_fekMnb": {
+          "type": "announcement",
+          "settings": {
+            "link": "",
+            "text": "Welcome to our store",
+            "hdt_font_size": 13,
+            "adding_border": false,
+            "countdown": "2024-12-30 15:00:00",
+            "txt_day": "days"
+          }
+        }
+      },
+      "block_order": [
+        "announcement_izeF7X",
+        "announcement_fekMnb"
+      ],
+      "settings": {
+        "show_line_separator": false,
+        "close_btn": "1",
+        "height": 41,
+        "fontsize": 12,
+        "design": "slider",
+        "hdt_using_image_icon": false,
+        "space_item": 30,
+        "speed": 0.3,
+        "direction": "rtl",
+        "pausable": false,
+        "effect": "carousel",
+        "au_time": 5,
+        "pause_when_hover": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-fe88a2ec-47a1-478d-8953-54da0178e18c",
+        "background_opacity": 1,
+        "full_width": true
+      }
+    },
+    "header_inline_blocks_xePFbC": {
+      "type": "header-inline-blocks",
+      "blocks": {
+        "mega_block_7DJYPE": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "scheme-e3da6fb4-2e75-46a7-98be-2c98a2859807",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_PKdDaN": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "haircut-tools",
+              "shaving"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "scheme-1",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_ntakNQ": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_7qDM6U": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "deluxea-shaving-kit",
+              "hair-food-sulfate",
+              "gillette-men-s-razor",
+              "kit-pepper-mill"
+            ],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_MtwFkx": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_Jbe4K9": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Blog",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_blog",
+            "html": "",
+            "page": "",
+            "blog": "barber",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "landscape",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? <\/span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com<\/b><\/span><span>Phone: <b>(212) 555-1234<\/b><\/span><\/span>"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_7DJYPE",
+        "mega_block_PKdDaN",
+        "mega_block_ntakNQ",
+        "mega_block_7qDM6U",
+        "mega_block_MtwFkx",
+        "mega_block_Jbe4K9"
+      ],
+      "custom_css": [
+        "summary:not(:has(.hdt-sub-menu)) .hdt-menu-link-text > span,#hdt-menu-buy-theme {font-size: 1.5rem !important; font-family: var(--font-heading-family);}",
+        ".hdt-navigation {text-align: start;}",
+        ".hdt-collection-title-text {font-family: var(--font-heading-family);}",
+        "@media (width >= 1150px) {.hdt-container-full {padding-inline: 2.5rem; }}"
+      ],
+      "settings": {
+        "header_layout": "logo_left",
+        "header_fullwidth": true,
+        "header_height": 90,
+        "logo": "shopify:\/\/shop_images\/logo_black.png",
+        "logo_width": 95,
+        "header_colors": "scheme-e3da6fb4-2e75-46a7-98be-2c98a2859807",
+        "main_menu": "main-menu",
+        "lazy_mn": false,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "medium",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "menu_type": "default",
+        "header_menu_colors": "scheme-e3da6fb4-2e75-46a7-98be-2c98a2859807",
+        "h_icon": "line",
+        "hover_icon": "2",
+        "search_type": "icon",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_socials": false,
+        "header_height_mb": 60,
+        "logo_width_mb": 95,
+        "header_transparent": false,
+        "header_transparent_colors": "",
+        "background_opacity_transparent": 0,
+        "header_space_top": 0,
+        "header_space_top_mobile": 0,
+        "sticky_type": "on_scroll_up",
+        "header_sticky_colors": "scheme-e3da6fb4-2e75-46a7-98be-2c98a2859807",
+        "background_opacity_sticky": 1,
+        "sticky_glass": false
+      }
+    },
+    "custom_liquid_wcNJJm": {
+      "type": "custom-liquid",
+      "name": "t:sections.custom-liquid.name",
+      "settings": {
+        "custom_liquid": "{% render 'sticky-demos' %}",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    }
+  },
+  "order": [
+    "announcement_bar_QKnWCh",
+    "header_inline_blocks_xePFbC",
+    "custom_liquid_wcNJJm"
+  ]
+}

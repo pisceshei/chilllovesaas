@@ -1,0 +1,373 @@
+[
+ {
+  "key": "section(header).logo",
+  "count": 468,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(header).logo_transparent",
+  "count": 117,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(age-verifier-popup).bg_image",
+  "count": 78,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "settings.drawer_popup_color_scheme",
+  "count": 78,
+  "type": "color_scheme",
+  "value": "<unset>",
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(header).logo_mobile",
+  "count": 78,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "settings.cart_drawer_trust_badge",
+  "count": 40,
+  "type": "image_picker",
+  "value": "<unset>",
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "settings.loading_logo",
+  "count": 39,
+  "type": "image_picker",
+  "value": "<unset>",
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "settings.loading_design_mode",
+  "count": 39,
+  "type": "checkbox",
+  "value": "<unset>",
+  "verdict": "ENGINE-GAP?(checkbox no default => official false)"
+ },
+ {
+  "key": "settings.social_tumblr_link",
+  "count": 39,
+  "type": "text",
+  "value": "<unset>",
+  "verdict": "settings-default(nil legit: text)"
+ },
+ {
+  "key": "settings.social_snapchat_link",
+  "count": 39,
+  "type": "text",
+  "value": "<unset>",
+  "verdict": "settings-default(nil legit: text)"
+ },
+ {
+  "key": "settings.social_youtube_link",
+  "count": 39,
+  "type": "text",
+  "value": "<unset>",
+  "verdict": "settings-default(nil legit: text)"
+ },
+ {
+  "key": "settings.social_vimeo_link",
+  "count": 39,
+  "type": "text",
+  "value": "<unset>",
+  "verdict": "settings-default(nil legit: text)"
+ },
+ {
+  "key": "section(footer).image_custom_payment",
+  "count": 39,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(custom-content).content_color_scheme",
+  "count": 32,
+  "type": "color_scheme",
+  "value": null,
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(custom-content).color_scheme",
+  "count": 32,
+  "type": "color_scheme",
+  "value": null,
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(custom-content).animations",
+  "count": 28,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(custom-content).background_image_mobile",
+  "count": 28,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(custom-content).background_image",
+  "count": 28,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "settings.pcard_default_image",
+  "count": 18,
+  "type": "image_picker",
+  "value": "<unset>",
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(collection-page-header).bg_image",
+  "count": 16,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(collection-page-header).vertical_alignment",
+  "count": 15,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(image-with-text).image_2",
+  "count": 15,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(main-product).change_product_variant_on_fitlering",
+  "count": 8,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(recent-viewed-products).custom_class",
+  "count": 7,
+  "type": "text",
+  "value": null,
+  "verdict": "settings-default(nil legit: text)"
+ },
+ {
+  "key": "section(recent-viewed-products).color_scheme",
+  "count": 7,
+  "type": "color_scheme",
+  "value": null,
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(image-with-text).image",
+  "count": 5,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(image-with-text).description",
+  "count": 5,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(image-with-text).background_color",
+  "count": 5,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(image-with-text).header_alignment",
+  "count": 5,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(product-recommendations).color_scheme",
+  "count": 5,
+  "type": "color_scheme",
+  "value": null,
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(product-recommendations).custom_class",
+  "count": 5,
+  "type": "text",
+  "value": null,
+  "verdict": "settings-default(nil legit: text)"
+ },
+ {
+  "key": "section(store-locator).subheading",
+  "count": 4,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(store-locator).header_alignment",
+  "count": 4,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(store-locator).image",
+  "count": 4,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(hotspots-image).mobile_image",
+  "count": 3,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(apps).description",
+  "count": 2,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(collection-page-header).color_scheme",
+  "count": 2,
+  "type": "color_scheme",
+  "value": null,
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(hotspots-image).image",
+  "count": 2,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(apps).animations",
+  "count": 2,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(icon-box).color_scheme",
+  "count": 1,
+  "type": "color_scheme",
+  "value": null,
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(collapsible-tabs).image",
+  "count": 1,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(image-comparison).custom_id",
+  "count": 1,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(image-comparison).animations",
+  "count": 1,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(hotspots-image).enable_preload_image",
+  "count": 1,
+  "type": "checkbox",
+  "value": null,
+  "verdict": "ENGINE-GAP?(checkbox no default => official false)"
+ },
+ {
+  "key": "section(brands-list).description",
+  "count": 1,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(product-details-tabs).custom_class",
+  "count": 1,
+  "type": "text",
+  "value": null,
+  "verdict": "settings-default(nil legit: text)"
+ },
+ {
+  "key": "section(product-details-tabs).color_scheme",
+  "count": 1,
+  "type": "color_scheme",
+  "value": null,
+  "verdict": "ENGINE-GAP?(color_scheme no default => first scheme)"
+ },
+ {
+  "key": "section(rich-text).image_3",
+  "count": 1,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(rich-text).image_2",
+  "count": 1,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(rich-text).image_1",
+  "count": 1,
+  "type": "image_picker",
+  "value": null,
+  "verdict": "settings-default(nil legit: image_picker)"
+ },
+ {
+  "key": "section(page-search).show_columns_switcher",
+  "count": 1,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(page-search).sidebar",
+  "count": 1,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ },
+ {
+  "key": "section(page-search).color_swatches_design",
+  "count": 1,
+  "type": null,
+  "value": null,
+  "verdict": "theme-quirk(not-in-schema)"
+ }
+]

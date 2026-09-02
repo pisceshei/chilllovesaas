@@ -1,0 +1,73 @@
+{%- comment -%}
+  https://ui-elements-generator.myshopify.com/pages/line-item-property
+  Renders line item properties
+
+  Accepts:
+  - form_id: {String} Form cart ID (required)
+  - block: {Object} (required)
+
+  Usage:
+   {%- render 'line-item-properties', form_id: form_id, block: block -%}
+{%- endcomment -%}
+
+{%- liquid
+  assign id = "property" | append: block.id
+  assign property_type = block.settings.property_type
+  if  block.settings.show_at_ck_cart
+    assign property_name = block.settings.title | escape
+  else
+    assign property_name = '_' | append: block.settings.title | escape
+  endif
+-%}
+
+{%- case property_type -%}
+  {%- when 'checkbox' -%}
+    <hdt-block-required detect="checked" event="change" class="hdt-line-item-property hdt-line-item-property--{{ property_type }}" {{ block.shopify_attributes }}>
+      <input form="{{ form_id }}" class="hdt-grid-1x1" type="checkbox" id="{{ id }}"{% if block.settings.use_required %} required{% endif %} name="properties[{{ property_name }}]" value="{{ block.settings.ck_value | escape }}">
+      <label for="{{ id }}">{{ block.settings.title }}</label>
+    </hdt-block-required>
+
+  {%- when 'text' -%}
+    <hdt-block-required detect="length" event="input" class="hdt-line-item-property hdt-line-item-property--{{ property_type }}" {{ block.shopify_attributes }}>
+      <div class="hdt-field">
+        {%- if block.settings.type_text == 'short' -%}
+        <input class="hdt-field__input hdt-input"  placeholder="{{ block.settings.title | escape }}" type="text" id="{{ id }}" form="{{ form_id }}"{% if block.settings.use_required %} required{% endif %} name="properties[{{ property_name }}]"{% if block.settings.max_characters > 0 %} maxlength="{{ block.settings.max_characters }}"{% endif %}>
+        {%- else -%}
+        <textarea class="hdt-field__input hdt-textarea"  placeholder="{{ block.settings.title | escape }}" rows="4" id="{{ id }}" form="{{ form_id }}"{% if block.settings.use_required %} required{% endif %} name="properties[{{ property_name }}]"{% if block.settings.max_characters > 0 %} maxlength="{{ block.settings.max_characters }}"{% endif %}></textarea>
+        {%- endif -%}
+        <label class="hdt-field__label" for="{{ id }}">{{ block.settings.title }}</label>
+      </div>
+    </hdt-block-required>
+
+  {%- when 'options' -%}
+    {%- liquid
+      assign arr_options = block.settings.options | newline_to_br | split: '<br />'
+      if arr_options.size == 0
+        continue
+      endif
+    -%}
+    <hdt-block-required detect="checked" event="change" class="hdt-line-item-property hdt-line-item-property--{{ property_type }}" {{ block.shopify_attributes }}>
+      <label>{{ block.settings.title }}</label><br>
+      {%- if block.settings.type_options == 'radio' -%}
+        {%- for option in arr_options -%}
+          <div class="hdt-property-option">
+            <input id="{{ id }}__{{ forloop.index }}" type="radio" form="{{ form_id }}"{% if block.settings.use_required %} required{% endif %} name="properties[{{ property_name }}]" value="{{ option | strip | escape }}">
+            <label for="{{ id }}__{{ forloop.index }}">{{ option }}</label>
+          </div>
+        {%- endfor -%}
+      {%- elsif block.settings.type_options == 'select' -%}
+        <select class="hdt-select" id="{{ id }}" form="{{ form_id }}" name="properties[{{ property_name }}]"{% if block.settings.use_required %} required{% endif %}>
+          {%- for option in arr_options %}<option value="{{ option | strip | escape }}">{{ option }}</option>{% endfor -%}
+        </select>
+      {%- else -%}
+        {%- for option in arr_options -%}
+          <div class="hdt-property-option">
+            <input id="{{ id }}__{{ forloop.index }}" type="checkbox" sync-name="properties[{{ property_name }}]" value="{{ option | strip | escape }}">
+            <label for="{{ id }}__{{ forloop.index }}">{{ option }}</label>
+          </div>
+        {%- endfor -%}
+        <input type="hidden" form="{{ form_id }}" id="{{ id }}" name="properties[{{ property_name }}]"{% if block.settings.use_required %} required{% endif %}>
+      {%- endif -%}
+    </hdt-block-required>
+
+{%- endcase -%}

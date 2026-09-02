@@ -1,0 +1,273 @@
+<!-- sections/main-heading.liquid -->
+{%- liquid
+  if section.settings.use_dynamic_source
+    case request.page_type
+      when 'collection'
+        assign image = collection.featured_image | default: section.settings.image
+      when 'article'
+        assign image = article.image | default: section.settings.image
+    else
+      assign image = section.settings.image
+    endcase
+  else
+    assign image = section.settings.image 
+  endif
+-%}
+{% style %}
+  {% render 'spacing-vars', box: section %}
+  #shopify-section-{{ section.id }} .hdt-heading-image{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+  #shopify-section-{{ section.id }} .hdt-heading-image+*{
+    position: relative;
+    z-index: 0;
+  }
+  #shopify-section-{{ section.id }} .hdt-heading-image:before{
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgb(var(--color-overlay));
+    opacity: var(--bg-overlay);
+  }
+  #shopify-section-{{ section.id }} .hdt-row-grid{
+    row-gap: {{ section.settings.space_item | divided_by: 2.00 }}px;
+  }
+  @media (min-width: 768px) {
+    #shopify-section-{{ section.id }} .hdt-row-grid{
+      row-gap: {{ section.settings.space_item }}px;
+    }
+  }
+{% endstyle %}
+<div class="hdt-section-spacing hdt-section-spacing-{{ section.id }} hdt-relative hdt-oh" color-scheme="{{ section.settings.color_scheme }}">
+  <h1 class="sr-only hdt-pe-none">{{ page_title }}</h1>
+  <div class="hdt-heading-image hdt-h-overlay hdt-pe-none" style="--bg-overlay:{{ section.settings.bg_overlay | divided_by: 100.00 }};">
+    {%- if image != blank -%}
+      {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, sizes: "100vw", widths: '375,550,750,1100,1500,1780,1920,2000,3000,3840', alt: image.alt, class:'hdt-w-full hdt-h-full hdt-object-cover' }}
+    {%- endif -%}
+  </div>
+  <div class="hdt-container">
+    <div class="hdt-row-grid hdt-grid-cols-1 hdt-text-center">
+      {% content_for 'blocks' %}
+    </div>
+  </div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.heading-page.name",
+  "class": "hdt-section hdt-section-heading hdt-main-heading",
+  "tag":"section",
+  "disabled_on": {
+    "groups":[
+      "*"
+    ],
+    "templates": [
+      "index"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.heading-page.settings.header_options"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_dynamic_source",
+      "label": "t:sections.heading-page.settings.use_dynamic_source",
+      "default": false,
+    },
+    {
+      "type": "image_picker",
+      "label": "t:sections.heading-page.settings.background_heading",
+      "id": "image"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "range",
+      "id": "bg_overlay",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "t:sections.all.background.overlay",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "space_item",
+      "min": 0,
+      "max": 50,
+      "step": 0.5,
+      "unit": "px",
+      "label": "t:sections.all.space_items.label",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "blocks": [
+    {
+      "type": "_heading_liquid"
+    },
+    {
+      "type": "_heading_search"
+    },
+    {
+      "type": "_heading_brc"
+    }
+  ],
+  /*"presets": [
+    {
+      "name": "t:sections.heading-page.article",
+      "settings": {
+        "use_dynamic_source": true,
+        "bg_overlay": 54,
+        "padding_top": 50,
+        "padding_bottom": 50,
+        "padding_rate": 100,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d"
+      },
+      "blocks": [
+        {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ article.title }}",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "uppercase": true
+          }
+        },
+        {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ article.published_at | date: format: 'date' }}",
+            "italic": true
+          }
+        },
+        {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "<span>{{ 'blogs.article.in' | t }} <a href=\"{{ blog.url }}\">{{ blog.title }}</a> </span> <span class=\"hdt-comment-number hdt-relative\"><a href=\"{{ article.url }}#comment_form\">{{ 'blogs.comments.with_count' | t: count: article.comments_count }}</a></span>",
+            "italic": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "t:sections.heading-page.collection",
+      "settings": {
+        "use_dynamic_source": true,
+        "bg_overlay": 54,
+        "padding_top": 80,
+        "padding_bottom": 80,
+        "padding_rate": 62,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d"
+      },
+      "blocks": [
+        {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ collection.title }}",
+            "text_size": "2xl",
+          }
+        },
+        {
+          "type": "_heading_brc",
+        }
+      ]
+    },
+    {
+      "name": "t:sections.heading-page.page",
+      "settings": {
+        "use_dynamic_source": true,
+        "bg_overlay": 54,
+        "padding_top": 50,
+        "padding_bottom": 50,
+        "padding_rate": 100,  
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d"
+      },
+      "blocks": [
+        {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page.title }}",
+            "text_size": "2xl",
+            "uppercase": true
+          }
+        },
+      ]
+    },
+    {
+      "name": "t:sections.heading-page.collection2",
+      "settings": {
+        "use_dynamic_source": true,
+        "bg_overlay": 54,
+        "space_item":0,
+        "padding_top": 55,
+        "padding_bottom": 55,
+        "padding_rate": 100,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d"
+      },
+      "blocks": [
+        {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ collection.title }}",
+            "text_size": "2xl",
+          }
+        },
+        {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ collection.description }}"
+          }
+        }
+      ]
+    },
+  ]*/
+}
+{% endschema %}

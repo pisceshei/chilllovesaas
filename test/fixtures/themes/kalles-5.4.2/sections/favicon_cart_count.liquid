@@ -1,0 +1,113 @@
+{%- unless settings.favicon -%}
+  {% continue %}
+{%- endunless -%}
+{% liquid 
+  assign protect_product = settings.protect_product
+  assign protect_product_id = protect_product.selected_or_first_available_variant.id | default: protect_product.variants.first.id | default: protect_product.id | default: 'kalles-5'
+  assign has_protect_product = 0
+  if settings.enable_shipping_protection
+    assign has_protect_product = cart.items | where: 'variant_id', protect_product_id | size
+  endif
+%}
+<favicon-cart-badge cart-count="{{ cart.item_count | minus: has_protect_product }}" bg-color="{{ section.settings.bgColor }}" text-color="{{ section.settings.textColor }}" type="{{ section.settings.type }}" animation="{{ section.settings.animation }}" position="{{ section.settings.position }}"></favicon-cart-badge>
+{% schema %}
+  {
+    "name": "t:sections.favicon_cart_count.name",
+    "class": "hdt-section",
+    "limit": 1,
+    "enabled_on": {
+      "groups": ["custom.system"]
+    },
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "t:sections.favicon_cart_count.settings.paragraph"
+      },
+      {
+        "type": "color",
+        "id": "bgColor",
+        "label": "t:sections.favicon_cart_count.settings.bgColor.label",
+        "default": "#34c134"
+      },
+      {
+        "type": "color",
+        "id": "textColor",
+        "label": "t:sections.favicon_cart_count.settings.textColor.label",
+        "default": "#fff"
+      },
+      {
+        "type": "select",
+        "id": "type",
+        "options": [
+          {
+            "value": "circle",
+            "label": "t:sections.favicon_cart_count.settings.type.options.circle"
+          },
+          {
+            "value": "rectangle",
+            "label": "t:sections.favicon_cart_count.settings.type.options.rectangle"
+          }
+        ],
+        "label": "t:sections.favicon_cart_count.settings.type.label",
+        "default": "circle"
+      },
+      {
+        "type": "select",
+        "id": "position",
+        "options": [
+          {
+            "value": "up",
+            "label": "t:sections.favicon_cart_count.settings.position.options.up"
+          },
+          {
+            "value": "down",
+            "label": "t:sections.favicon_cart_count.settings.position.options.down"
+          },
+          {
+            "value": "left",
+            "label": "t:sections.favicon_cart_count.settings.position.options.left"
+          },
+          {
+            "value": "upleft",
+            "label": "t:sections.favicon_cart_count.settings.position.options.upleft"
+          }
+        ],
+        "label": "t:sections.favicon_cart_count.settings.position.label",
+        "default": "down"
+      },
+      {
+        "type": "select",
+        "id": "animation",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.favicon_cart_count.settings.animation.options.none"
+          },
+          {
+            "value": "slide",
+            "label": "t:sections.favicon_cart_count.settings.animation.options.slide"
+          },
+          {
+            "value": "fade",
+            "label": "t:sections.favicon_cart_count.settings.animation.options.fade"
+          },
+          {
+            "value": "pop",
+            "label": "t:sections.favicon_cart_count.settings.animation.options.pop"
+          },
+          {
+            "value": "popFade",
+            "label": "t:sections.favicon_cart_count.settings.animation.options.popFade"
+          }
+        ],
+        "label": "t:sections.favicon_cart_count.settings.animation.label",
+        "default": "slide"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.favicon_cart_count.name"
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,337 @@
+{%- liquid
+    assign target = product
+    assign product = section.settings.product | default: target
+    unless product.available 
+      continue
+    endunless
+    assign metaobj_theme_countdown = shop.metaobjects.theme_countdown.values | first
+    assign theme_countdown = metaobj_theme_countdown.date_time.value
+    assign product_countdown = theme_countdown| default: product.metafields.theme.countdown.value
+    if product_countdown == blank
+        continue
+    endif
+    if settings.pick_mode == 'no' and product.variants.size > 1
+    assign selected_variant = product.selected_variant
+    elsif settings.pick_mode == 'first' and settings.hide_sold_out == false
+      assign selected_variant = product.selected_variant | default: product.variants.first
+    else
+      assign selected_variant = product.selected_or_first_available_variant
+    endif
+    assign product_form_id = 'product-form-'| append: section.id | append: product.id
+  -%}
+  <div class="hdt-product-info__item hdt-product__countdown" {{ block.shopify_attributes }}>
+    <countdown-timer class="hdt-product-info__item hdt-product__countdown hdt-block" {%- unless selected_variant.available %} style="display: none;"{%- endunless -%} form="{{ product_form_id }}">
+        <hdt-countdown class="hdt-block" config='{"month":"{{ product_countdown | date: '%m' | plus: 0 }}", "date":"{{ product_countdown | date: '%d, %Y %H:%M:%S' }}", "hideTimerOnComplete": true, "hasZero": true }'>
+          <div class="hdt-product__countdown-wrap hdt-flex hdt-flex-col hdt-align-{{ block.settings.alignment }}">
+            {%- if block.settings.content != blank -%}
+              <div class="hdt-product__countdown-mess hdt-inline-flex hdt-align-center hdt-s-text hdt-font-medium hdt-icon-block">
+                {%- liquid
+                    assign class = block.settings.ani | append: ' is--infinite '
+                    if block.settings.svg_upload != blank
+                    echo '<div class="' | append: class | append:'">'
+                        echo block.settings.svg_upload 
+                      echo '</div>'
+                    elsif block.settings.image_upload != blank
+                      echo block.settings.image_upload | image_url: width: 25 | image_tag: widths: '25, 50, 100, 200, 300, 400, 500', class: class
+                    else
+                      render 'icons', icon: block.settings.icon, class: class
+                    endif
+                  -%}
+                <p class="hdt-inline-block">{{ block.settings.content }}</p>
+              </div>
+            {%- endif -%}
+            <div class="hdt-product__countdown-inner hdt-s-text hdt-relative hdt-inline-flex hdt-flex-wrap hdt-items-center hdt-justify-{{ block.settings.alignment }}" aria-hidden="true">
+              <div class="hdt-product__countdown-item hdt-text-center">
+                <hdt-countdown-amount effect="move_top" data-days>00</hdt-countdown-amount>
+                <hdt-countdown-text singular="{{ 'sections.countdown_timmer.day' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.day_plural' | t }}</hdt-countdown-text>
+              </div>
+              <div class="hdt-product__countdown-item hdt-text-center">
+                <hdt-countdown-amount effect="move_top" data-hours>00</hdt-countdown-amount>
+                <hdt-countdown-text singular="{{ 'sections.countdown_timmer.hr' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.hr_plural' | t }}</hdt-countdown-text>
+              </div>
+              <div class="hdt-product__countdown-item hdt-text-center">
+                <hdt-countdown-amount effect="move_top" data-minutes>00</hdt-countdown-amount>
+                <hdt-countdown-text singular="{{ 'sections.countdown_timmer.min' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.min_plural' | t }}</hdt-countdown-text>
+              </div>
+              <div class="hdt-product__countdown-item hdt-text-center">
+                <hdt-countdown-amount effect="move_top" data-seconds>00</hdt-countdown-amount>
+                <hdt-countdown-text singular="{{ 'sections.countdown_timmer.sec' | t }}" class="hdt-grid">{{ 'sections.countdown_timmer.sec_plural' | t }}</hdt-countdown-text>
+              </div>
+            </div>
+          </div>
+        </hdt-countdown>
+      </countdown-timer>
+  </div>
+  {% schema %}
+  {
+    "name": "t:sections.main-product.blocks.countdown_timer.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "t:sections.main-product.blocks.countdown_timer.settings.paragraph.content"
+      },
+      {
+        "type": "select",
+        "id": "icon",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:blocks.icon.options.none"
+          },
+          {
+            "value": "arrow_right",
+            "label": "t:blocks.icon.options.arrow_right"
+          },
+          {
+            "value": "arrow_simple",
+            "label": "t:blocks.icon.options.arrow_simple"
+          },
+          {
+            "value": "arrow_bottom",
+            "label": "t:blocks.icon.options.arrow_bottom"
+          },
+          {
+            "value": "arrow_stretch",
+            "label": "t:blocks.icon.options.arrow_stretch"
+          },
+          {
+            "value": "car",
+            "label": "t:blocks.icon.options.car"
+          },
+          {
+            "value": "truck",
+            "label": "t:blocks.icon.options.truck"
+          },
+          {
+            "value": "diamond",
+            "label": "t:blocks.icon.options.diamond"
+          },
+          {
+            "value": "door-lock",
+            "label": "t:blocks.icon.options.door_lock"
+          },
+          {
+            "value": "gym",
+            "label": "t:blocks.icon.options.gym"
+          },
+          {
+            "value": "hammer",
+            "label": "t:blocks.icon.options.hammer"
+          },
+          {
+            "value": "headphones",
+            "label": "t:blocks.icon.options.headphones"
+          },
+          {
+            "value": "helm",
+            "label": "t:blocks.icon.options.helm"
+          },
+          {
+            "value": "hourglass",
+            "label": "t:blocks.icon.options.hourglass"
+          },
+          {
+            "value": "map",
+            "label": "t:blocks.icon.options.map"
+          },
+          {
+            "value": "piggy",
+            "label": "t:blocks.icon.options.piggy"
+          },
+          {
+            "value": "refesh",
+            "label": "t:blocks.icon.options.refesh"
+          },
+          {
+            "value": "rocket",
+            "label": "t:blocks.icon.options.rocket"
+          },
+          {
+            "value": "shield",
+            "label": "t:blocks.icon.options.shield"
+          },
+          {
+            "value": "shield2",
+            "label": "t:blocks.icon.options.shield_2"
+          },
+          {
+            "value": "smile",
+            "label": "t:blocks.icon.options.smile"
+          },
+          {
+            "value": "scissors",
+            "label": "t:blocks.icon.options.scissors"
+          },
+          {
+            "value": "shuffle",
+            "label": "t:blocks.icon.options.shuffle"
+          },
+          {
+            "value": "cloud_upload",
+            "label": "t:blocks.icon.options.cloud_upload"
+          },
+          {
+            "value": "cash",
+            "label": "t:blocks.icon.options.cash"
+          },
+          {
+            "value": "way",
+            "label": "t:blocks.icon.options.way"
+          },
+          {
+            "value": "wristwatch",
+            "label": "t:blocks.icon.options.wristwatch"
+          },
+          {
+            "value": "world",
+            "label": "t:blocks.icon.options.world"
+          },
+          {
+            "value": "wallet",
+            "label": "t:blocks.icon.options.wallet"
+          },
+          {
+            "value": "unlock",
+            "label": "t:blocks.icon.options.unlock"
+          },
+          {
+            "value": "umbrella",
+            "label": "t:blocks.icon.options.umbrella"
+          },
+          {
+            "value": "repeat",
+            "label": "t:blocks.icon.options.repeat"
+          },
+          {
+            "value": "refesh-2",
+            "label": "t:blocks.icon.options.refesh_2"
+          },
+          {
+            "value": "medal",
+            "label": "t:blocks.icon.options.medal"
+          },
+          {
+            "value": "portfolio",
+            "label": "t:blocks.icon.options.portfolio"
+          },
+          {
+            "value": "like",
+            "label": "t:blocks.icon.options.like"
+          },
+          {
+            "value": "plance",
+            "label": "t:blocks.icon.options.plance"
+          },
+          {
+            "value": "map-maker",
+            "label": "t:blocks.icon.options.map_maker"
+          },
+          {
+            "value": "help",
+            "label": "t:blocks.icon.options.help"
+          },
+          {
+            "value": "gift",
+            "label": "t:blocks.icon.options.gift"
+          },
+          {
+            "value": "cart",
+            "label": "t:blocks.icon.options.cart"
+          },
+          {
+            "value": "box",
+            "label": "t:blocks.icon.options.box"
+          },
+          {
+            "value": "back",
+            "label": "t:blocks.icon.options.back"
+          },
+          {
+            "value": "back2",
+            "label": "t:blocks.icon.options.back2"
+          }
+        ],
+        "default": "none",
+        "label": "t:blocks.icon.name"
+      },
+      {
+        "type": "liquid",
+        "id": "svg_upload",
+        "label": "t:blocks.icon.settings.svg_upload.label",
+        "info": "[Line Awesome](https://themes.the4.co/the4-icon/lineAwesome-main/) svg icons"
+      },
+      {
+        "type": "image_picker",
+        "id": "image_upload",
+        "label": "t:blocks.icon.settings.image_upload.label"
+      },
+      {
+        "type": "select",
+        "id": "ani",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.main-product.blocks.ani.settings.options__none.label"
+          },
+          {
+            "value": "hdt-ani-bounce",
+            "label": "t:sections.main-product.blocks.ani.settings.options__1.label"
+          },
+          {
+            "value": "hdt-ani-tada",
+            "label": "t:sections.main-product.blocks.ani.settings.options__2.label"
+          },
+          {
+            "value": "hdt-ani-swing",
+            "label": "t:sections.main-product.blocks.ani.settings.options__3.label"
+          },
+          {
+            "value": "hdt-ani-flash",
+            "label": "t:sections.main-product.blocks.ani.settings.options__4.label"
+          },
+          {
+            "value": "hdt-ani-fadeIn",
+            "label": "t:sections.main-product.blocks.ani.settings.options__5.label"
+          },
+          {
+            "value": "hdt-ani-heartBeat",
+            "label": "t:sections.main-product.blocks.ani.settings.options__6.label"
+          },
+          {
+            "value": "hdt-ani-shake",
+            "label": "t:sections.main-product.blocks.ani.settings.options__7.label"
+          }
+        ],
+        "label": "t:sections.main-product.blocks.ani.label"
+      },
+      {
+        "type": "textarea",
+        "id": "content",
+        "label": "t:sections.main-product.blocks.countdown_timer.settings.content.label",
+        "default": "Hurry up! Sale Ends in"
+      },
+      {
+        "type": "select",
+        "id": "alignment",
+        "label": "t:settings_schema.global.settings.text_alignment.label",
+        "options": [
+          {
+            "value": "start",
+            "label": "t:settings_schema.global.settings.text_alignment.left"
+          },
+          {
+            "value": "center",
+            "label": "t:settings_schema.global.settings.text_alignment.center"
+          },
+          {
+            "value": "end",
+            "label": "t:settings_schema.global.settings.text_alignment.right"
+          }
+        ],
+        "default": "start"
+      }
+    ],
+    "presets": [{ "name": "t:sections.main-product.blocks.countdown_timer.name" }]
+  }
+  {% endschema %}

@@ -1,0 +1,16 @@
+{%- liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+-%}
+{%- if product.has_only_default_variant == false -%}
+  {%- for product_option in product.options_with_values -%}
+    <div class="hdt-option-wrapper hdt-s-text2">{{ product_option.name | escape }}: <span class="hdt-productMeta__value hdt-option-value hdt-csecondary hdt-inline-block hdt-s-text">{{ product_option.values | join: ', ' }}</span></div>
+  {%- endfor -%}
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.meta.settings.show_options.label",
+  "tag": null,
+  "presets": [{ "name": "t:sections.main-product.blocks.meta.settings.show_options.label" }]
+}
+{% endschema %}

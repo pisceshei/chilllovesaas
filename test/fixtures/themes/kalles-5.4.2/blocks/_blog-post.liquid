@@ -1,0 +1,117 @@
+<hdt-accordion class="hdt-contents" {{ block.shopify_attributes }}>
+  <details class="hdt-widget hdt-widget-featured-products" open>
+    {%- if block.settings.widget_heading != blank -%}
+      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+        <span>{{ block.settings.widget_heading }}</span>
+        <span accordion-icon>
+          <svg class="hdt-facet-title_icon" xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+        </span>
+      </summary>
+    {%- endif -%}
+    <div class="hdt-widget-content">
+      <div class="hdt-blogs-list hdt-row-grid hdt-row-grid--modify hdt-ratio--{{ block.settings.image_ratio }} {% if block.settings.image_size %} hdt-object-cover{% else %} hdt-object-contain{% endif %} lg:hdt-grid-cols-1">
+        {%- for article in blogs[block.settings.blog].articles limit: block.settings.blogs_count -%}
+          {% assign image = article.image %}
+          {%- render 'post-loop-sidebar', article: article, image: image, date: block.settings.date, image_ratio: block.settings.image_ratio, image_size: block.settings.image_size -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </details>
+</hdt-accordion>
+{% schema %}
+  {
+    "name": "t:sections.sidebar_blog.post.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "widget_heading",
+        "label": "t:sections.main-collection.blocks.heading",
+        "default": "t:sections.sidebar_blog.post.name"
+      },
+      {
+        "id": "blog",
+        "type": "blog",
+        "label": "t:sections.feature-blog.settings.blog"
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "options": [
+          {
+            "value": "adapt_image",
+            "label": "t:sections.all.images.ratio.adapt_image.label"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.images.ratio.square.label"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.all.images.ratio.portrait.label"
+          },
+          {
+            "value": "asos",
+            "label": "t:sections.all.images.ratio.asos.label"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.images.ratio.landscape.label"
+          },
+          {
+            "value": "custom-pr",
+            "label": "t:sections.all.images.ratio.custom.label"
+          }
+        ],
+        "label": "t:sections.all.images.ratio.label",
+        "default": "adapt_image"
+      },
+      {
+        "type": "checkbox",
+        "id": "image_size",
+        "label": "t:sections.all.images.size.cover",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "blogs_count",
+        "min": 1,
+        "max": 20,
+        "step": 1,
+        "label": "t:sections.all.limit",
+        "default": 3
+      },
+      {
+        "type": "select",
+        "id": "date",
+        "options": [
+          {
+            "value": "abbreviated_date",
+            "label": "t:blocks.article_card.settings.date.options.option_1"
+          },
+          {
+            "value": "basic",
+            "label": "t:blocks.article_card.settings.date.options.option_2"
+          },
+          {
+            "value": "date",
+            "label": "t:blocks.article_card.settings.date.options.option_3"
+          },
+          {
+            "value": "%b %d",
+            "label": "t:blocks.article_card.settings.date.options.option_4"
+          }
+        ],
+        "label": "t:blocks.article_card.settings.date.label",
+        "info": "t:blocks.article_card.settings.date.info",
+        "default": "%b %d"
+      }
+    ],
+    "presets":[
+      {
+        "name":"t:sections.sidebar_blog.post.name"
+      }
+    ]
+  }
+{% endschema %}
+ 

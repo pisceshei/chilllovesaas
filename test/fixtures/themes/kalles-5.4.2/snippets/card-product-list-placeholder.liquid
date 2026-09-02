@@ -1,0 +1,65 @@
+{%- liquid
+  assign product_url = '/admin/products'
+-%}
+
+<div class="hdt-slider__slide hdt-product_list_item">
+ <div class="hdt-slider__inner hdt-product-wrapper">
+  <div class="hdt-product-inner">
+    <div class="hdt-product-img hdt-oh">
+      <a href="{{ product_url }}" class="hdt-ratio" style="--aspect-ratioapt: {{ image.aspect_ratio | default: 1 }}">
+        {%- liquid
+          if placeholder_image
+            echo placeholder_image | placeholder_svg_tag: 'hdt-placeholder-svg'
+          else
+            echo 'product-apparel-2' | placeholder_svg_tag: 'hdt-placeholder-svg'
+          endif -%}
+      </a>
+    </div>
+    <div class="hdt-product-info hdt-text-{{ section.settings.alignment }}">
+      <div class="hdt-product-info__inner">
+        <h3 class="hdt-product-title">
+          <a href="{{ product_url }}">{{ title }}</a>
+        </h3>
+        <div class="hdt-product-price__wrapper">
+          <div class="hdt-inline-block">
+            {% render 'card-price', section_id: section.id, product: product, show_volume_note: false %}
+          </div>
+        </div>
+        <div class="hdt-product-des">
+          The perfect leggings for your fitness program. Suitable for all sports and universally applicable. Ingenious design and high-quality workmanship.
+        </div>
+          {%- capture style -%}
+            {%- if section.settings.icon != "none" -%}--gap-btn-icon: {{ section.settings.icon_spacing }}px; --height-btn-icon: {{ section.settings.icon_height }}px;{%- endif -%}
+            {%- if section.settings.size == "custom custom-inline" -%}--hdt-btn-padding-x: {{ section.settings.padding_btn }}px; --hdt-btn-line-height: {{ section.settings.min_height_btn }}px; font-size: {{ section.settings.font_size_btn }}px;--minw-button: {{ section.settings.min_width_btn }}px; --minwdt-button: {{ section.settings.min_width_dt_btn }}px;{%- endif -%}
+            {%- if section.settings.btn_style == 'hdt-btn-custom' -%}--hdt-btn-color: {{ section.settings.color_btn.rgb }}; --hdt-btn-hover-color: {{ section.settings.color_hover_btn.rgb }}; --hdt-btn-bg: {% if section.settings.background_btn == "rgba(0,0,0,0)" %}transparent{% else %}{{ section.settings.background_btn.rgb }}{% endif %}; --hdt-btn-hover-bg: {% if section.settings.background_hover_btn == "rgba(0,0,0,0)" %}transparent{% else %}{{ section.settings.background_hover_btn.rgb }}{% endif %};
+            {% if section.settings.border_w_btn != blank %}
+              --hdt-btn-border-color: {{ section.settings.border_btn.rgb }}; --hdt-btn-hover-border-color: {{ section.settings.border_hover_btn.rgb }}; --hdt-btn-border-width: {{ section.settings.border_w_btn }};
+            {%- else -%}
+              --hdt-btn-border-color: {{ section.settings.background_btn.rgb }}; --hdt-btn-hover-border-color: {{ section.settings.background_hover_btn.rgb }}; --hdt-btn-border-width: {{ section.settings.border_w_btn }};
+            {%- endif -%}
+          {%- endif -%}
+          {%- endcapture -%}
+          {%- capture class -%}
+            hdt-button-block hdt-btn hdt-relative hdt-oh hdt-font-{{ section.settings.font_weight }} hdt-btn--size-{{ section.settings.size }} {{ section.settings.text_size }} {{ section.settings.btn_style }}{% if section.settings.boder_hover %} hdt-btn-boder-hover{% endif %}{% if section.settings.full_width %} hdt-btn-full-width{% endif %} {{ section.settings.rounded }}{% if section.settings.icon != "none" %} hdt-btn--with-icon hdt-btn--pos-icon-{{ section.settings.icon_position }}{% endif %}
+          {%- endcapture -%}
+          <div class="hdt-product-btn">
+            {% comment %} <a href="{{ product_url }}" class="hdt-btn hdt-btn-primary">{{ btn_label }}</a> {% endcomment %}
+            <a {{ effect }} id="block-{{ section.id }}" href="{{ product_url }}" class="{{ class }}" style="{{ style }}">  
+              {%- liquid
+                if section.settings.icon != 'none'
+                  render 'icons', icon: section.settings.icon
+                endif
+              -%}
+              <span>
+                {%- liquid
+                  echo btn_label | default: 'Shop now'
+                -%}
+              </span>
+            </a>
+          </div>
+      </div>
+    </div>
+  </div>
+
+ </div>
+</div>

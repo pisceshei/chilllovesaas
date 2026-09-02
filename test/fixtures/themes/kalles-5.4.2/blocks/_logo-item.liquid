@@ -1,0 +1,143 @@
+<!-- blocks/logo-item.liquid -->
+<div class="hdt-logo-item-{{ block.id }} hdt-logo-item hdt-eff-{{ block.settings.b_effect }} hdt-eff-img-{{ block.settings.img_effect }} hdt-eff" {{ block.shopify_attributes }}>
+  <a  calc-nav {% if block.settings.url == blank %}role="link" aria-disabled="true"{% else %}href="{{ block.settings.url }}"{% endif %} class="hdt-item-inner">
+    <div class="hdt-ratio"{% if section.settings.image_ratio == 'adapt_image' %} style="--aspect-ratioapt: {{ block.settings.image.aspect_ratio | default: 1.7777 }};max-width: {{ block.settings.image.width }}px;margin: 0 auto;"{% endif %}>
+      {%-liquid
+        if section.settings.section_layout == "full_width" 
+          assign sizes = '(min-width: 1150px) calc( 100vw * 12 / ' | append: section.settings.col_dk | append: ' / 12), (min-width: 768px) calc( 100vw * 12 / ' | append: section.settings.col_tb | append: ' / 12), calc(100vw * 12 / ' | append: section.settings.col_mb | append: ' / 12)'
+        else
+          assign sizes = '(min-width: 1150px) calc( ' | append: settings.page_width | append: 'px * 12 / ' | append: section.settings.col_dk | append: ' / 12), (min-width: 768px) calc( 100vw * 12 / ' | append: section.settings.col_tb | append: ' / 12), calc(100vw * 12 / ' | append: section.settings.col_mb | append: ' / 12)'
+        endif
+        if block.settings.image != blank
+          echo block.settings.image | image_url: width: block.settings.image.width | image_tag: loading: 'lazy', width: block.settings.image.width, height: block.settings.image.height, class: 'hdt-obj-eff', widths: '200,300,400,500,600,700,800,900,1000,1200,1400,1600,1800,2000',sizes: sizes
+        else 
+          echo 'logo' | placeholder_svg_tag: 'placeholder-svg hdt-obj-eff'
+        endif
+      -%}
+    </div>
+  </a>
+  {%- style -%}
+    {% if section.settings.layout_mode == 'carousel' and block.settings.custom_width == true %}
+      @media (width > 1150px){
+        .hdt-logo-item-{{ block.id }}.hdt-logo-item {
+          max-width: min({{ block.settings.hdt_max_width_image }}px);
+        }
+      }
+    {% endif %}
+  {%- endstyle -%}
+</div>
+{% schema %}
+  {
+    "name": "t:blocks.logo_item.name",
+    "class": "hdt-slider__slide",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:blocks.banner_item.settings.image"
+      },
+      {
+        "type": "url",
+        "id": "url",
+        "label": "t:blocks.logo_item.settings.url.label"
+      },
+      {
+        "type": "select",
+        "id": "img_effect",
+        "label": "t:sections.all.image_effect.image_hover_eff.label",
+        "info": "t:sections.all.image_effect.image_hover_eff.info",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.none"
+          },
+          {
+            "value": "zoom",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.zoom"
+          },
+          {
+            "value": "rotate",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.rotate"
+          },
+          {
+            "value": "translateToTop",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToTop"
+          },
+          {
+            "value": "translateToRight",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToRight"
+          },
+          {
+            "value": "translateToBottom",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToBottom"
+          },
+          {
+            "value": "translateToLeft",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToLeft"
+          },
+          {
+            "value": "filter",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.filter"
+          },
+          {
+            "value": "bounceIn",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.bounceIn"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "b_effect",
+        "label": "t:sections.all.image_effect.item_eff.label",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.all.image_effect.item_eff.options.none"
+          },
+          {
+            "value": "border-run",
+            "label": "t:sections.all.image_effect.item_eff.options.border_run"
+          },
+          {
+            "value": "pervasive-circle",
+            "label": "t:sections.all.image_effect.item_eff.options.pervasive_circle"
+          },
+          {
+            "value": "plus-zoom-overlay",
+            "label": "t:sections.all.image_effect.item_eff.options.plus_zoom_overlay"
+          },
+          {
+            "value": "overlay",
+            "label": "t:sections.all.image_effect.item_eff.options.overlay"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "custom_width",
+        "label": "Use custom width",
+        "default": false,
+        "visible_if": "{{ section.settings.layout_mode == 'carousel' }}"
+      },
+      {
+        "type": "range",
+        "id": "hdt_max_width_image",
+        "label": "Max width image",
+        "min": 50,
+        "max": 250,
+        "step": 2,
+        "default": 250,
+        "unit": "px",
+        "info": "Work on desktop",
+        "visible_if": "{{ section.settings.layout_mode == 'carousel' and block.settings.custom_width == true }}"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.logo_item.name"
+      }
+    ]
+  }
+{% endschema %}

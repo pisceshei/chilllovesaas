@@ -1,0 +1,17 @@
+<div class="hdt-banner_masonry__item" style="--item-column-span: {{ col_w }}; --item-row-span: {{ row_count }};--item-column-span-mb: {{ col_w_mb }}; --item-row-span-mb: {{ row_count_mb }};" {%- if colors_by_section %} color-scheme="{{ color_scheme }}" style="--background-opacity: {{ background_opacity }};" {%- endif %}>
+  <div class="hdt-item_inner hdt-radius hdt-radius-f">
+    {%- liquid
+      capture btn_wishlist_code
+        if settings.wishlist_mode != '0'
+          render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+        endif
+      endcapture
+      if product != blank
+        render 'card-product10', card_product: product, section_id: section.id, class: 'hdt-pr-style10', sizes: sizes, image_ratio: "adapt_image", color_list: color_list, size_list: size_list, product_url: product.url, btn_wishlist_code: btn_wishlist_code, show_vendor: show_vendor
+      else
+        assign placeholder_image = 'product-apparel-1'
+        render 'card-product-placeholder', image_ratio: 'adapt_image', placeholder_image: placeholder_image, section_id: section.id, class: 'hdt-slider__slide'
+      endif
+    -%}
+  </div>
+</div>

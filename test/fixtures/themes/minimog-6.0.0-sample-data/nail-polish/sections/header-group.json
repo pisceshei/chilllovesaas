@@ -1,0 +1,71 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "blocks": {
+        "item_c6BT9d": {
+          "type": "item",
+          "settings": {
+            "message": "<span style=\"letter-spacing: 1px;\">FREE SHIPPING ON ALL U.S. ORDERS $50+<\/span>",
+            "message_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "item_c6BT9d"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "scheme-fdd8b176-2e7d-4824-b1c0-d3d3dc52b25e",
+        "show_announcement": true,
+        "homepage_only": true,
+        "show_close": false,
+        "show_divider": false,
+        "show_nav": false,
+        "autorotate": false,
+        "autorotate_speed": 3
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        
+        "color_scheme_menu": "default",
+        "header_design": "logo-center__2l",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "transparent_text_color": "#ffffff",
+        "logo_text": "STORE LOGO",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 120,
+        "sticky_logo_max_width": 105,
+        "mobile_logo_max_width": 105,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

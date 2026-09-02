@@ -1,0 +1,374 @@
+{
+  "sections": {
+    "4772dad8-85d7-4958-8aa1-9ee0a70d87d4": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": "body .added-to-wishlist:not(.in-prod-page,.m-tooltip--style-2), \nbody .added-to-compare:not(.in-prod-page,.m-tooltip--style-2) {\n  color: rgba(var(--text-black),1);\n}"
+      }
+    },
+    "16363593679dba0967": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": true,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "TIME TO BRING<br>\nYOUR A GAME",
+        "subtitle": "",
+        "text": "<p>RAISE YOUR CONFIDENCE</p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "16363603444aee9960": {
+      "type": "custom-content",
+      "blocks": {
+        "b56e351e-c043-4a5b-978b-46bf141724e6": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "default",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "protein",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-large",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "sf__custom-image-card-block-1",
+            "animations": "inherit"
+          }
+        },
+        "a6207bb1-e98f-407e-8e40-dbe86de9d293": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "default",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "pre-workout",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-large",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "sf__custom-image-card-block-1",
+            "animations": "inherit"
+          }
+        },
+        "af54b0a0-e5c7-4190-9b2a-9f89ec349829": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "default",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Hydration",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-large",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "sf__custom-image-card-block-1",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "b56e351e-c043-4a5b-978b-46bf141724e6",
+        "a6207bb1-e98f-407e-8e40-dbe86de9d293",
+        "af54b0a0-e5c7-4190-9b2a-9f89ec349829"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "default",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 40,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-content-section"
+      }
+    },
+    "162252047554676bc9": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "OUR BEST SELLERS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "16363624673307470a": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 120,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "6",
+        "hover_effect": true,
+        "title": "PUSH YOUR<br>  LIMITS FORWARD",
+        "sub_title": "new in",
+        "text": "<p>Train with the best experts in bodybuilding field. Your results will<br/> speak to themselves. Try the latest exercising trends, innovative <br/>equipment and special nutrition plans.</p>",
+        "text_size": "large",
+        "content_alignment": "left",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16225208417f633bd7": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "HOT THIS WEEK",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "16363652651c1a7c52": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 120,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "right",
+        "image_column_size": "6",
+        "hover_effect": true,
+        "title": "UNIVERSITY-STUDIES <br>FORMULATED",
+        "sub_title": "collection",
+        "text": "<p>Train with the best experts in bodybuilding field. Your results will<br/> speak to themselves. Try the latest exercising trends, innovative<br/> equipment and special nutrition plans.</p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16363653089f0b6a2b": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": true,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "UP TO 80% <br>\nSALE OFF",
+        "subtitle": "",
+        "text": "<p>ONLY FOR ONLINE EXCLUSIVE</p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1622521896cc75a02a": {
+      "type": "icon-box",
+      "blocks": {
+        "1622521896cc75a02a-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "FREE DELIVERY",
+            "description": "<p>Free delivery on orders over £39. <br/>Order by 9pm for next-day delivery.</p>",
+            "link": "",
+            "button_label": "learn more",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "1622521896cc75a02a-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "FLEXIBLE PAYMENT",
+            "description": "<p>Free delivery on orders over £39. <br/>Order by 9pm for next-day delivery.</p>",
+            "link": "",
+            "button_label": "learn more",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "a92f4695-c66b-47d3-a317-7125f4e8d242": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "MONEY GUARANTEE",
+            "description": "<p>Free delivery on orders over £39. <br/>Order by 9pm for next-day delivery.</p>",
+            "link": "",
+            "button_label": "learn more",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1622521896cc75a02a-1",
+        "1622521896cc75a02a-2",
+        "a92f4695-c66b-47d3-a317-7125f4e8d242"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 16,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "90px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf__index-icon-box-2",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "4772dad8-85d7-4958-8aa1-9ee0a70d87d4",
+    "16363593679dba0967",
+    "16363603444aee9960",
+    "162252047554676bc9",
+    "16363624673307470a",
+    "16225208417f633bd7",
+    "16363652651c1a7c52",
+    "16363653089f0b6a2b",
+    "1622521896cc75a02a"
+  ]
+}

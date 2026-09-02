@@ -1,0 +1,225 @@
+<div class="hdt-main-gift-cart hdt-s-gradient hdt-section-spacing hdt-section-spacing-{{ section.id }}" color-scheme="{{ section.settings.color_scheme }}">
+  <div class="hdt-container hdt-s-text hdt-text-center">
+    <div class="hdt-gift-cart-wapper">
+      <div class="hdt-gift-cart-head">
+        {%- if section.settings.logo != blank -%}
+          <div class="hdt-gift-card__image-wrapper">
+            {%- assign logo_alt = section.settings.logo.alt | default: shop.name | escape -%}
+            {%- assign width = section.settings.logo_width -%}
+            <a href="{{ shop.url }}" class="hdt-inline-block" style="margin: 0 auto;">
+              {{ section.settings.logo | image_url: width: width | image_tag: class: 'hdt-gift-card__image', alt: logo_alt }}
+            </a>
+          </div>
+        {%- else -%}
+          <h5 class="hdt-gift-card__shop-name">{{ shop.name }}</h5>
+        {%- endif -%}
+        <h1 class="hdt-gift-card__heading">{{ 'gift_cards.issued.subtext' | t }}</h1>
+        <div class="hdt-gift-card__price">
+          <div class="">
+            {%- if settings.currency_code_enabled -%}
+              {{ gift_card.balance | money_with_currency }}
+            {%- else -%}
+              {{ gift_card.balance | money }}
+            {%- endif -%}
+          </div>
+          {%- if gift_card.enabled == false or gift_card.expired -%}
+            <p class="hdt-badge hdt-badge__sold_out">{{ 'gift_cards.issued.expired' | t }}</p>
+          {%- endif -%}
+        </div>
+      </div>
+      <div class="hdt-gift-card__image-wrapper hdt-gift-card__image-featured">
+        {%- assign image = section.settings.image -%}
+        {%- if image != blank -%}
+          {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: 'hdt-radius', sizes: "462px", widths: "462, 924"}}
+        {%- else -%} 
+          <img class="hdt-gift-card__image hdt-radius" src="{{ 'gift-card/card.svg' | shopify_asset_url }}" alt="" height="{{ 462 | divided_by: 1.59 }}" width="462">
+        {%- endif -%}
+      </div>
+
+        {%- if gift_card.expires_on -%}
+        {%- assign gift_card_expiration_date = gift_card.expires_on | date: '%B %e, %Y' -%}
+        <p class="hdt-gift-card__text">
+          {{ 'gift_cards.issued.expiration_date' | t: expires_on: gift_card_expiration_date }}
+        </p>
+        {%- endif -%}
+        {%- assign formatted_initial_value = gift_card.initial_value | money_without_trailing_zeros: gift_card.currency -%}
+        {%- assign formatted_initial_value_stripped = formatted_initial_value | strip_html -%}
+        <p class="hdt-gift-card__text">{{ 'gift_cards.issued.redeem_html' | t: value: formatted_initial_value_stripped }}</p>
+       
+        <div class="hdt-gift-card__qr-code" data-identifier="{{ gift_card.qr_identifier }}"></div>
+        <h3 id="hdt-gift-card-code" class="hdt-h6 hdt-font-semibold">{{ gift_card.code | format_code }}</h3>
+        {%- if gift_card.pass_url -%}
+          <a href="{{ gift_card.pass_url }}" class="hdt-gift_card__apple-wallet">
+            <img src="{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}" width="120" height="40" alt="{{ 'gift_cards.issued.add_to_apple_wallet' | t }}" loading="lazy">
+          </a>
+        {%- endif -%}
+        <span class="hdt-gift-card__copy-success hdt-gift-form__message" role="status"></span>
+        <template>
+          {%- render 'icon' with 'success' -%} {{ 'gift_cards.issued.copy_code_success' | t }}
+      </template>
+        <div class="hdt-text-center">
+          <button class="hdt-gift-card__copy-button hdt-btn hdt-btn-link-secondary">{{ 'gift_cards.issued.copy_code' | t }}</button>
+        </div>
+        <div class="hdt-text-center">
+          <a href="{{ shop.url }}" class="hdt-gift-card__visit-store hdt-button-block hdt-btn hdt-relative hdt-oh hdt-font-normal hdt-btn-accent" target="_blank" rel="noopener" aria-describedby="a11y-new-window-message">
+            {{ 'gift_cards.issued.shop_link' | t }}
+          </a>
+        </div>
+        <button onclick="window.print()" class="hdt-gift-card__print-button">{{ 'gift_cards.issued.print' | t }}</button>
+    </div>
+  </div>
+</div>
+{%- style -%}
+  {% render 'spacing-vars', box: section %}
+   .hdt-gift-card__shop-name{
+    font-size: 2.4rem;
+    letter-spacing: 0.6px;
+    @media (width < 767px){
+      font-size: 2rem;
+    }
+   }
+   .hdt-gift-card__heading{
+    font-size: 4rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+
+    letter-spacing: 0.6px;
+    @media (width < 767px){
+      font-size: 3rem;
+    }
+   }
+   .hdt-gift-card__price{
+    font-size: 2rem;
+    margin-top: 2rem;
+    margin-bottom: 3.6rem;
+    color: rgb(var(--color-pr-sale-price));
+    @media (width < 767px){
+      font-size: 1.6rem;
+    }
+   }
+   .hdt-gift-card__image-wrapper{
+    width: 40rem;
+    margin: 0 auto;
+    @media (width < 767px){
+      width: 32rem;
+    }
+   }
+   .hdt-gift-card__text{
+    font-size: 1.6rem;
+    margin-top: 3rem;
+    color:rgb(var(--color-foreground2));
+    letter-spacing: 0.7px;
+   }
+   .hdt-gift-card__qr-code{
+      margin:0 auto;
+      margin-top: 5rem;
+      width: fit-content;
+   }
+   #hdt-gift-card-code{
+    font-size: 1.8rem;
+    margin-top: 3rem;
+    font-weight: 400;
+    color:rgb(var(--color-foreground2));
+  }
+  .hdt-gift-card__copy-success{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin: 1rem 0 0;
+    color: rgb(var(--color-success-text));
+  }
+  .hdt-gift-card__copy-button{
+    margin-bottom: 2.2rem;
+    font-size: 1.6rem;
+  }
+  .hdt-gift-card__visit-store{
+    font-size: 1.5rem;
+    min-width: 25rem;
+    margin-bottom: 2rem;
+    height: 4.8rem;
+  }
+  .hdt-gift-card__print-button{
+    min-width: 25rem;
+    font-size: 1.5rem;
+    padding: 1.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(var(--color-foreground2));
+    border: 1px solid rgb(var(--color-line-border));
+    margin:0 auto;
+    height: 4.8rem;
+    border-radius: var(--radius-button);
+    &:hover{
+      border-color: rgb(var(--color-foreground));
+    }
+  }
+{%- endstyle -%}
+{% schema %}
+{
+  "name": "t:sections.main-gift-cart.name",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "t:sections.main-gift-cart.settings.logo.label"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "min": 50,
+      "max": 300,
+      "step": 10,
+      "default": 100,
+      "unit": "px",
+      "label": "t:sections.main-gift-cart.settings.logo_width.label"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.main-gift-cart.settings.image.label",
+      "info":"t:sections.main-gift-cart.settings.image.info"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+  ]
+}
+{% endschema %}

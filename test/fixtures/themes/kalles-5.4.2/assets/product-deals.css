@@ -1,0 +1,111 @@
+.hdt-product-deals{
+  &.show-border-true{
+    border: 1px solid rgb(var(--color-line-border));
+    padding: 3rem;
+    legend{
+      padding: 0 2rem;
+    }
+    @media (width < 767px){
+      padding: 1rem;
+      legend{
+        padding: 0 1rem;
+      }
+    }
+  }
+  &.layout-2{
+    legend{
+      width: 100%;
+      padding: 0.5rem 1rem;
+      background-color: var(--countdown-background-color);
+      border-radius: inherit;
+      .hdt-countdown-wrap{
+        padding: 0;
+      }
+    }
+  }
+  &.layout-3{
+    legend{
+      width: 100%;
+      padding: 0;
+      @media (width > 767px){
+        .hdt-title__wrap{
+          justify-content: space-between;
+        }
+      }
+      &.hdt-text-right{
+        .hdt-title__wrap{
+          flex-direction: row-reverse;
+        }
+      }
+      &.hdt-text-center{
+        width: auto;
+        .hdt-title__wrap{
+          justify-content: center;
+        }
+      }
+    }
+    .hdt-countdown-wrap{
+      gap: 0.5rem;
+      line-height: 3.6rem;
+      font-size: 1.5rem;
+      padding: 0 1.8rem;
+    }
+  }
+  legend{
+    margin-bottom: var(--space-bottom);
+  }
+  .hdt-title__wrap{
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: var(--alignment);
+    @media (width < 767px){
+      gap: 0.5rem;
+      justify-content: var(--alignment-mb);
+    }
+  }
+  .hdt-countdown-wrap{
+    padding: 0.2rem 2.4rem;
+    font-size: var(--text-base);
+    gap: 1rem;
+    color: var(--countdown-content-color);
+    background-color: var(--countdown-background-color);
+    border-radius: var(--radius-full);
+    hdt-countdown{
+      font-weight: var(--font-semibold);
+    }
+    @media (width > 1150px){
+      line-height: 6rem;
+      font-size: var(--text-xl);
+    }
+  }
+  &.box-layout-grid{
+    .hdt-product-carousel{
+      /* margin-top: calc(var(--space-bottom) * -1); */
+    }
+    .hdt-slider__slide{
+      margin-top: var(--slide-spacing);
+    }
+  }
+  .hdt-stock-bar--status{
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+  }
+  .hdt-stock-bar{
+    .hdt-progress-bar{
+      background-color: rgb(var(--color-background2));
+      --progress-bar: linear-gradient(to right, rgb(var(--background-bar-1)), rgb(var(--background-bar-2)));
+      &::before{
+        background: var(--progress-bar);
+      }
+    }
+  }
+  .hdt-card-product__wrapper{
+    gap: 1.5rem;
+    display: grid;
+  }
+  .hdt-card-product__media+.hdt-card-product__info{
+    margin-top: 0;
+  }
+}

@@ -1,0 +1,1910 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/Slider_1.jpg",
+            "image_mb": "shopify:\/\/shop_images\/Slider_1.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "auto",
+            "position_x": 22,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_YrQhtV": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Spring - Summer 2025<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_gnPapa": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 28,
+                "space_md": 28,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "heading_MzV9Ty": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Lookbook Collection<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 70,
+                "font_size_heading": 36,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_fFNyjC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 28,
+                "space_md": 28,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_3yEDmG": {
+              "type": "button",
+              "settings": {
+                "label": "Shopping Now",
+                "link": "shopify:\/\/collections\/hand-bags",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 230,
+                "min_height_btn": 36,
+                "rounded": "",
+                "icon": "arrow_right",
+                "icon_position": "after",
+                "icon_height": 24,
+                "icon_spacing": 6
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_YrQhtV",
+            "spacer_gnPapa",
+            "heading_MzV9Ty",
+            "spacer_fFNyjC",
+            "button_3yEDmG"
+          ]
+        },
+        "slide_item_7Hiifq": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/Slider_1_1.jpg",
+            "image_mb": "shopify:\/\/shop_images\/Slider_1_1.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "auto",
+            "position_x": 22,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_Xd9QLp": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Spring - Summer 2025<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_qrM66j": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 28,
+                "space_md": 28,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "heading_adPEaY": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Hot Collection <br\/>2025<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 70,
+                "font_size_heading": 36,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_qXnMXF": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 28,
+                "space_md": 28,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_PamWna": {
+              "type": "button",
+              "settings": {
+                "label": "Shopping Now",
+                "link": "shopify:\/\/collections\/hand-bags",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 230,
+                "min_height_btn": 36,
+                "rounded": "",
+                "icon": "arrow_right",
+                "icon_position": "after",
+                "icon_height": 24,
+                "icon_spacing": 6
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_Xd9QLp",
+            "spacer_qrM66j",
+            "heading_adPEaY",
+            "spacer_qXnMXF",
+            "button_PamWna"
+          ]
+        },
+        "slide_item_HpKkPQ": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/Slider_1_2.jpg",
+            "image_mb": "shopify:\/\/shop_images\/Slider_1_2.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "auto",
+            "position_x": 22,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_QDGatH": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Spring - Summer 2025<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_qWapFw": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 28,
+                "space_md": 28,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "heading_zWRKX3": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Handbag Collection<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 70,
+                "font_size_heading": 36,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_Bcb8qp": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 28,
+                "space_md": 28,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_LQNgMC": {
+              "type": "button",
+              "settings": {
+                "label": "Shopping Now",
+                "link": "shopify:\/\/collections\/hand-bags",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 230,
+                "min_height_btn": 36,
+                "rounded": "",
+                "icon": "arrow_right",
+                "icon_position": "after",
+                "icon_height": 24,
+                "icon_spacing": 6
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_QDGatH",
+            "spacer_qWapFw",
+            "heading_zWRKX3",
+            "spacer_Bcb8qp",
+            "button_LQNgMC"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM",
+        "slide_item_7Hiifq",
+        "slide_item_HpKkPQ"
+      ],
+      "custom_css": [
+        "{--radius-button: 0;}",
+        "@media (width < 768px) {.hdt-button-block {--hdt-btn-line-height: 5px !important; --hdt-btn-padding-x: 1.5rem !important; font-size: 1.4rem !important; --height-btn-icon: 18px !important; }}"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 850,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "elessi",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 7,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": ",,120px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "collections_list_JDEGAp": {
+      "type": "collections-list",
+      "blocks": {
+        "collection_item_MVBgR8": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "shoulder-bags",
+            "image": "shopify:\/\/shop_images\/Image.png",
+            "title": "Shoulder Bags",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_qdfAbf": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "tote-bags",
+            "image": "shopify:\/\/shop_images\/Image_1.png",
+            "title": "Tote Bags",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_4Wgr9U": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "hand-bags",
+            "image": "shopify:\/\/shop_images\/Image_2.png",
+            "title": "Hand Bags",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_tWTR6W": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "crossbody-bags",
+            "image": "shopify:\/\/shop_images\/Image_3.png",
+            "title": "Crossbody Bags",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "section-heading-collections-list": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 45
+          },
+          "blocks": {
+            "heading_section_fzPVzb": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Shop By Categories",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_fzPVzb"
+          ]
+        }
+      },
+      "block_order": [
+        "collection_item_MVBgR8",
+        "collection_item_qdfAbf",
+        "collection_item_4Wgr9U",
+        "collection_item_tWTR6W"
+      ],
+      "custom_css": [
+        ".hdt-collections-list {--slide-spacing: 2.1rem;}"
+      ],
+      "name": "t:sections.collections-list.name",
+      "settings": {
+        "collection_list": [],
+        "collection_des": "5",
+        "content_size": "xl",
+        "content_weight": "medium",
+        "content_position": "center",
+        "content_space": 5,
+        "show_count": true,
+        "count_label": "Products",
+        "image_rounded": true,
+        "enable_border": false,
+        "image_padding": 30,
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "img_effect": "zoom",
+        "b_effect": "overlay",
+        "col_dk": "4",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "layout_mode": "carousel",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,104px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_NaNx9b": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_carousel_DeK7xN": {
+          "type": "_product-carousel",
+          "name": "t:blocks.product_carousel.name",
+          "settings": {
+            "collection": "hand-bags",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "custom-pr",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "icon": "none",
+            "size": "m",
+            "btn_fw": "medium",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": false,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "default",
+            "nav_shape": "default",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": true,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 15,
+            "pag_mgt": 45,
+            "only_show_mobile": false,
+            "pag_hide_mobile": false
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 5,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_zXKXQz": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "New Arrivals",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_p3AYXU": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_zXKXQz",
+            "sub_heading_section_p3AYXU"
+          ]
+        }
+      },
+      "block_order": [
+        "product_carousel_DeK7xN"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,120px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "banners_bYEJ4W": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_AmLqEQ": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 52,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_KEhGYL": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Happy Women Day<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_VtFg8t": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 22
+              },
+              "blocks": {}
+            },
+            "heading_mgb6eV": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>SALE OFF 50%<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 34,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_LXDDnp": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 22
+              },
+              "blocks": {}
+            },
+            "button_CfxpVi": {
+              "type": "button",
+              "settings": {
+                "label": "Shop now",
+                "link": "shopify:\/\/collections\/hand-bags",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 160,
+                "min_height_btn": 26,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Banner_Item.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_KEhGYL",
+            "spacer_VtFg8t",
+            "heading_mgb6eV",
+            "spacer_LXDDnp",
+            "button_CfxpVi"
+          ]
+        },
+        "banner_item_AkrAGn": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 52,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_4dwCgt": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Lookbook Collection<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_NGrGYc": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 22
+              },
+              "blocks": {}
+            },
+            "heading_BetqaU": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>HUGE SALE<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 34,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_nFJt9G": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 22
+              },
+              "blocks": {}
+            },
+            "button_MQKTjx": {
+              "type": "button",
+              "settings": {
+                "label": "Shop now",
+                "link": "shopify:\/\/collections\/hand-bags",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 160,
+                "min_height_btn": 26,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Banner_Item_1.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_4dwCgt",
+            "spacer_NGrGYc",
+            "heading_BetqaU",
+            "spacer_nFJt9G",
+            "button_MQKTjx"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_AmLqEQ",
+        "banner_item_AkrAGn"
+      ],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 420,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 300,
+        "space_items": "20px",
+        "space_items_tb": "15px",
+        "space_items_mb": "15px",
+        "col_dk": "2",
+        "col_tb": "2",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,120px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_RzDbfc": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_Qnxf8c": {
+          "type": "_product-grid",
+          "name": "t:blocks.product_grid.name",
+          "settings": {
+            "collection": "hand-bags",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "pagination_color_scheme": "",
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "endable_btn_icon": false,
+            "size": "m",
+            "btn_fw": "medium"
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 5,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_fqAkH3": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Trending Products",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_CnzHnW": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_fqAkH3",
+            "sub_heading_section_CnzHnW"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_Qnxf8c"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,120px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "product_banner_2_dWiDHU": {
+      "type": "product_banner_2",
+      "blocks": {
+        "product_carousel_rVrxm7": {
+          "type": "_product-carousel",
+          "settings": {
+            "collection": "hand-bags",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "1",
+            "col_tb": "1",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "icon": "none",
+            "size": "m",
+            "btn_fw": "medium",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "on_border",
+            "nav_visible": "always",
+            "nav_style": "outline",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": true,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 10,
+            "pag_mgt": 30,
+            "only_show_mobile": false,
+            "pag_hide_mobile": false
+          },
+          "blocks": {}
+        },
+        "banner-item-2": {
+          "type": "_banner-item",
+          "static": true,
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Banner_Item_2.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        },
+        "banner-heading-2": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 15
+          },
+          "blocks": {
+            "heading_section_baD4Qq": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Featured Items",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_baD4Qq"
+          ]
+        }
+      },
+      "block_order": [
+        "product_carousel_rVrxm7"
+      ],
+      "custom_css": [
+        ":where(.hdt-slider.hdt-pr-border_on_item, .hdt-slider.hdt-collection-products) .hdt-slider__viewport {padding: 0px;}",
+        "@media (768px <= width <= 1350px) {.hdt-navigation {display: none; }}",
+        "@media (width >= 768px) {.hdt-price-wrapp {margin-block-end: 19.5px; } .hdt-product-carousel {max-width: 345px; width: 345px; } .hdt-g-col:first-of-type {order: 1; } .hdt-products-wrap {margin: auto; } .hdt-slider__viewport {box-shadow: 1px 1px 8px 0 rgba(0, 0, 0, 0.15); }}",
+        "@media (width < 768px) {.hdt-navigation {display: none; }}"
+      ],
+      "name": "Product with banner 2",
+      "settings": {
+        "show_on_title": false,
+        "image_height": "fixed",
+        "fixed_height": 820,
+        "image_height_mb": "adapt_image",
+        "fixed_height_mb": 300,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,120px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "image_gallery_GrG4tD": {
+      "type": "image-gallery",
+      "blocks": {
+        "image_FHa4yi": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Mask_group.jpg",
+            "image_ratio": "square",
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_YfmRbb": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/image.jpg",
+            "image_ratio": "square",
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_XdFEYX": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Mask_group_1.jpg",
+            "image_ratio": "square",
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_K6nECA": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Item.jpg",
+            "image_ratio": "square",
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_JD83TR": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Item_1.jpg",
+            "image_ratio": "square",
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_Ut6qdN": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Item_2.jpg",
+            "image_ratio": "square",
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_wUKMW3": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Item_3.jpg",
+            "image_ratio": "square",
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image-gallery-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 12,
+            "margin_bottom": 35
+          },
+          "blocks": {
+            "heading_section_grXRAT": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Shop Instagram",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_Ub8HzL": {
+              "type": "_sub_heading_section",
+              "name": "t:blocks.section_heading.sub_heading",
+              "settings": {
+                "text": "<p>Inspire and let yourself be inspired, from one unique fashion to another.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_grXRAT",
+            "sub_heading_section_Ub8HzL"
+          ]
+        }
+      },
+      "block_order": [
+        "image_FHa4yi",
+        "image_YfmRbb",
+        "image_XdFEYX",
+        "image_K6nECA",
+        "image_JD83TR",
+        "image_Ut6qdN",
+        "image_wUKMW3"
+      ],
+      "custom_css": [
+        "@media (768px <= width <= 1350px) {.hdt-s-gradient > div {--pd-inline-start: 1.5rem !important; --pd-inline-end: 1.5rem !important; }}"
+      ],
+      "name": "t:sections.image_gallery.name",
+      "settings": {
+        "col_dk": "7",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,120px,",
+        "mg_mb": ",,30px,",
+        "pd": ",50px,,50px",
+        "pd_mb": ",15px,,15px",
+        "border_radius": 0
+      }
+    },
+    "icon_box_2_kjyXNc": {
+      "type": "icon-box-2",
+      "blocks": {
+        "icon_box_2_tpKW8k": {
+          "type": "_icon_box_2",
+          "name": "Icon box 2",
+          "settings": {
+            "url": "",
+            "open_in_new_tab": false,
+            "icon_position": "top",
+            "image": "shopify:\/\/shop_images\/chat_double.png",
+            "image_width": 32,
+            "svg_upload": "",
+            "svg_width": 60,
+            "svg_width_mb": 40
+          },
+          "blocks": {
+            "spacer_x6xiJa": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "heading_66mbz4": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>Need Help?<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_pDpFHa": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_CaEExa": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>Chat with one of our customer service reps<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_gCYxhk": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 24,
+                "space_md": 24,
+                "space": 24
+              },
+              "blocks": {}
+            },
+            "button_AfmTXQ": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "Chat now",
+                "link": "https:\/\/kalles-5.myshopify.com\/pages\/contact-us",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 142,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_x6xiJa",
+            "heading_66mbz4",
+            "spacer_pDpFHa",
+            "text_CaEExa",
+            "spacer_gCYxhk",
+            "button_AfmTXQ"
+          ]
+        },
+        "icon_box_2_BXwbQi": {
+          "type": "_icon_box_2",
+          "name": "Icon box 2",
+          "settings": {
+            "url": "",
+            "open_in_new_tab": false,
+            "icon_position": "top",
+            "image": "shopify:\/\/shop_images\/call-calling.png",
+            "image_width": 33,
+            "svg_upload": "",
+            "svg_width": 60,
+            "svg_width_mb": 40
+          },
+          "blocks": {
+            "spacer_88gkFh": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "heading_pMXnPG": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>Call Us - 1-800-123-4567<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_HiW8RV": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_nWqNRM": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>We’re here to answer your questions<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_8J6hQN": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 32,
+                "space_md": 32,
+                "space": 32
+              },
+              "blocks": {}
+            },
+            "socials_ynrcdK": {
+              "type": "socials",
+              "name": "t:settings_schema.social-media.name",
+              "settings": {
+                "text_color": "hdt-s-text",
+                "type": "follow",
+                "share_facebook": false,
+                "share_x": false,
+                "share_pinterest": false,
+                "share_tumblr": false,
+                "share_telegram": false,
+                "share_email": false,
+                "share_whatsapp": false,
+                "socials_style": "outline",
+                "socials_size": "medium",
+                "bd_radius": 30,
+                "space_item": 8
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_88gkFh",
+            "heading_pMXnPG",
+            "spacer_HiW8RV",
+            "text_nWqNRM",
+            "spacer_8J6hQN",
+            "socials_ynrcdK"
+          ]
+        },
+        "icon_box_2_6R4Caa": {
+          "type": "_icon_box_2",
+          "name": "Icon box 2",
+          "settings": {
+            "url": "",
+            "open_in_new_tab": false,
+            "icon_position": "top",
+            "image": "shopify:\/\/shop_images\/location.png",
+            "image_width": 32,
+            "svg_upload": "",
+            "svg_width": 60,
+            "svg_width_mb": 40
+          },
+          "blocks": {
+            "spacer_4tbX4i": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "heading_7VcEgn": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>Store Locator<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_ipQEph": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_7cyJUq": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>Explore a retail store or outlet near you.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_kkVzYj": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 24,
+                "space_md": 24,
+                "space": 24
+              },
+              "blocks": {}
+            },
+            "button_tMpDjb": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "Find a store",
+                "link": "https:\/\/kalles-5.myshopify.com\/pages\/store-locator",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 142,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_4tbX4i",
+            "heading_7VcEgn",
+            "spacer_ipQEph",
+            "text_7cyJUq",
+            "spacer_kkVzYj",
+            "button_tMpDjb"
+          ]
+        },
+        "icon-box": {
+          "type": "section-heading",
+          "disabled": true,
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "icon_box_2_tpKW8k",
+        "icon_box_2_BXwbQi",
+        "icon_box_2_6R4Caa"
+      ],
+      "custom_css": [
+        ".hdt-socials__style-outline li a {border: 0.1rem solid rgb(var(--color-line-border));}",
+        "@media (768px <= width < 1350px) {.hdt-slider__slide:nth-child(2) .hdt-iconbox-item-wrapper {border-inline: none; } .hdt-slider__slide:first-child .hdt-iconbox-item-wrapper {border-left: 0; } .hdt-slider__slide:last-child .hdt-iconbox-item-wrapper {border-top: 0; }}"
+      ],
+      "name": "Icon box 2",
+      "settings": {
+        "enable_border": true,
+        "hdt_border_full_box": true,
+        "enable_box_shadow": false,
+        "border_color": "#cdd0dd",
+        "icon_color": "#222222",
+        "color_box": "#ffffff",
+        "color_box_hover": "#95562b",
+        "color_content_hover": "#ffffff",
+        "source": "image",
+        "padding": "120px,20px,120px,20px",
+        "col_dk": "3",
+        "col_tb": "2",
+        "col_mb": "1",
+        "space_horizontal": "30",
+        "space_vertical": "0",
+        "space_horizontal_mb": "30",
+        "space_vertical_mb": "0",
+        "layout": "grid",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": false,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "only_show_mobile": false,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,0px,",
+        "mg_mb": ",,0px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "collections_list_JDEGAp",
+    "featured_collection_NaNx9b",
+    "banners_bYEJ4W",
+    "featured_collection_RzDbfc",
+    "product_banner_2_dWiDHU",
+    "image_gallery_GrG4tD",
+    "icon_box_2_kjyXNc"
+  ]
+}

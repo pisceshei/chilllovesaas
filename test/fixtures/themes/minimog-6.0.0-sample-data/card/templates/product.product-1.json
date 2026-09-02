@@ -1,0 +1,271 @@
+{
+  "sections": {
+    "1634180879bccef517": {
+      "type": "breadcrumb",
+      "settings": {
+        "container": "container",
+        "text_alignment": "center",
+        "hide_current": false,
+        "hide_on_mb": false,
+        "animations": "inherit"
+      }
+    },
+    "main": {
+      "type": "main-product",
+      "blocks": {
+        "price": {
+          "type": "price",
+          "settings": {
+            "show_saving": false,
+            "sale_badge_type": "percentage"
+          }
+        },
+        "title": {
+          "type": "title",
+          "settings": {
+          }
+        },
+        "b8fdad34-11a8-4f1d-afd3-dd67baab79b6": {
+          "type": "shopify:\/\/apps\/product-reviews\/blocks\/star_rating\/bae150af-8da8-48b2-9867-398188115e5f",
+          "settings": {
+            "stars_fill_color": "#000000",
+            "star_size": 15,
+            "text_align": "center",
+            "product": "{{product}}",
+            "stars_text_empty": "No reviews"
+          }
+        },
+        "a7c33681-2e92-4afe-af6c-09be8f611b30": {
+          "type": "short_description",
+          "settings": {
+          }
+        },
+        "1bfc8830-45fe-4840-b192-262d4a0ed107": {
+          "type": "visitors",
+          "settings": {
+            "live_views_text": "{count_number} people are viewing this right now",
+            "live_views_range": "20-30",
+            "live_view_duration": "10",
+            "live_view_icon_blinks": true
+          }
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "settings": {
+            "size_title": "Size"
+          }
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_quantity_selector": true,
+            "show_atc_button": true,
+            "show_dynamic_checkout": false,
+            "show_gift_card_recipient": true
+          }
+        },
+        "addons": {
+          "type": "addons",
+          "settings": {
+            "show_atcp": true,
+            "show_ask_a_question": true,
+            "show_social": true
+          }
+        },
+        "98eecea7-1e9e-46dd-8fc4-b00c7702dbda": {
+          "type": "shipping",
+          "settings": {
+            "show_delivery_times": true,
+            "deliver_text": "Estimated Delivery:",
+            "deliver_days": "7",
+            "date_format": "%b %d",
+            "show_shipping_text": true,
+            "shipping_text": "<p><strong>Free Shipping & Returns: <\/strong>On all orders over $75<\/p>"
+          }
+        },
+        "95858a21-0a8c-42d1-be95-cd4f1797f5fc": {
+          "type": "trust_badge",
+          "settings": {
+            "trust_badges_text": "<p>Guarantee safe & secure checkout<\/p>",
+            "trust_badges_image_width": "320px",
+            "position": "below"
+          }
+        }
+      },
+      "block_order": [
+        "price",
+        "title",
+        "b8fdad34-11a8-4f1d-afd3-dd67baab79b6",
+        "a7c33681-2e92-4afe-af6c-09be8f611b30",
+        "1bfc8830-45fe-4840-b192-262d4a0ed107",
+        "variant_picker",
+        "buy_buttons",
+        "addons",
+        "98eecea7-1e9e-46dd-8fc4-b00c7702dbda",
+        "95858a21-0a8c-42d1-be95-cd4f1797f5fc"
+      ],
+      "settings": {
+        "container": "container",
+        "layout": "layout-2",
+        "show_atwl": true,
+        "enable_history_state": true,
+        "enable_variant_group_images": false,
+        "disable_selected_variant_default": false,
+        "show_featured_media": true,
+        "show_zoom_button": true,
+        "enable_video_autoplay": false,
+        "show_nav_media_mobile": false,
+        "show_pagination_mobile": true,
+        "use_sticky_atc": true,
+        "use_sticky_atc_on_mobile": true,
+        "enable_dynamic_checkout": false,
+        "sticky_atc_wishtlist": false,
+        "sticky_atc_compare": false
+      }
+    },
+    "product-details-tabs": {
+      "type": "product-details-tabs",
+      "blocks": {
+        "description": {
+          "type": "description",
+          "settings": {
+            "header": "Product description"
+          }
+        },
+        "tab": {
+          "type": "tab",
+          "settings": {
+            "header": "Shipping & Return",
+            "content": "<p>Shipping cost is based on weight. Just add products to your cart and use the Shipping Calculator to see the shipping price.<\/p><p>We want you to be 100% satisfied with your purchase. Items can be returned or exchanged within 30 days of delivery.<\/p>",
+            "content_page": ""
+          }
+        }
+      },
+      "block_order": [
+        "description",
+        "tab"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "default_open": true,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom-content": {
+      "type": "custom-content",
+      "blocks": {
+        "738fcb4e-f5f8-4f2f-bd48-84198bac2a3e": {
+          "type": "html",
+          "settings": {
+            "code": "<ul class=\"sf__custom-list\">\n<li>\n<div class=\"img_box\"><img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0595\/7291\/2305\/files\/icon-6.svg?v=1631810887\"><\/div>\n<div class=\"content_box rte\">\n<h3>Different Sound Experiences<\/h3>\n<p>Designed to be positioned up against<br> the wall on a shelf or side table.<\/p>\n<\/div>\n<\/li>\n<li>\n<div class=\"img_box\"><img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0595\/7291\/2305\/files\/icon-7.svg?v=1631810887\"><\/div>\n<div class=\"content_box rte\">\n<h3>Sound Performance<\/h3>\n<p>Designed to be positioned up against<br> the wall on a shelf or side table.<\/p>\n<\/div>\n<\/li>\n<li>\n<div class=\"img_box\"><img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0595\/7291\/2305\/files\/icon-8.svg?v=1631810887\"><\/div>\n<div class=\"content_box rte\">\n<h3>Active Room Compensation<\/h3>\n<p>Designed to be positioned up against<br> the wall on a shelf or side table.<\/p>\n<\/div>\n<\/li>\n<\/ul>",
+            "width": "33%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "738fcb4e-f5f8-4f2f-bd48-84198bac2a3e"
+      ],
+      "settings": {
+        "heading": "A wireless speaker with a dynamic acoustic performance",
+        "heading_size": "h3",
+        "subheading": "A PREMIUM SOUND.",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-custom-content sf__product-custom-content"
+      }
+    },
+    "163193713276a3d718": {
+      "type": "apps",
+      "blocks": {
+        "8f4356a7-e8b4-4e46-98b0-76eefbdf1a92": {
+          "type": "shopify:\/\/apps\/product-reviews\/blocks\/reviews\/bae150af-8da8-48b2-9867-398188115e5f",
+          "settings": {
+          }
+        }
+      },
+      "block_order": [
+        "8f4356a7-e8b4-4e46-98b0-76eefbdf1a92"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "container": "container",
+        "background_color": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "product-recommendations": {
+      "type": "product-recommendations",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "remove_params": false,
+        "heading": "You Might Also Like",
+        "heading_size": "h3",
+        "text_align": "left",
+        "limit": 8,
+        "columns": 4,
+        "column_gap": 30,
+        "enable_slider": true,
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "recent-viewed-products": {
+      "type": "recent-viewed-products",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "heading": "Recently Viewed Products",
+        "heading_size": "h3",
+        "text_align": "left",
+        "limit": 8,
+        "columns": 4,
+        "column_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1634180879bccef517",
+    "main",
+    "product-details-tabs",
+    "custom-content",
+    "163193713276a3d718",
+    "product-recommendations",
+    "recent-viewed-products"
+  ]
+}

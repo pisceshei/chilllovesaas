@@ -1,0 +1,56 @@
+<!-- _article-infos -->
+{%- if block.settings.show_cate or block.settings.show_author or block.settings.show_tags -%}
+  <div class="hdt-article-infos">
+    <div class="hdt-flex hdt-text-center hdt-justify-content-center">
+      {%- if block.settings.show_cate -%}
+        <div class="hdt-col-item">
+          <span class="hdt-block hdt-font-semibold">{{ 'blogs.portfolio.category' | t }}</span>
+          <a class="hdt-text-secondary" href="{{ blog.url }}">{{ blog.title }}</a>
+        </div>
+      {%- endif -%}
+      {%- if block.settings.show_author -%}
+        <div class="hdt-col-item">
+          <span class="hdt-block hdt-font-semibold">{{ 'blogs.portfolio.author' | t }}</span>
+          <span class="hdt-text-secondary">{{ article.author | replace_first: 'ad clnt', 'admin' | capitalize }}</span>
+        </div>
+      {%- endif -%}
+      {%- if block.settings.show_tags and article.tags.size > 0 -%}
+        <div class="hdt-col-item">
+          <span class="hdt-block hdt-font-semibold">{{ 'blogs.portfolio.tags' | t }}</span>
+          {%- for tag in article.tags %}<a href="{{ blog.url }}/tagged/{{ tag | handle }}" class="hdt-text-secondary">{{ tag | remove : 'category_' | strip }}</a>{% unless forloop.last %}, {% endunless %}{% endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+{% schema %}
+  {
+    "name": "t:sections.main-blogs.article.infos.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_cate",
+        "label": "t:sections.main-blogs.article.infos.show_cate",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_author",
+        "label": "t:sections.main-blogs.article.infos.show_author",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_tags",
+        "label": "t:sections.main-blogs.article.infos.show_tags",
+        "default": true
+      }
+    ],
+    "presets":[
+      {
+        "name": "t:sections.main-blogs.article.infos.name"
+      }
+    ]
+  }
+{% endschema %}

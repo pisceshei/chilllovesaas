@@ -2510,3 +2510,40 @@ static_environments 否則 {% render %} 內消失）；④/admin/store 主題清
 Ella 7.2.0 整頁冒煙通過。突變七格實跑轉紅（含兩輪「殺不死」triage：
 單條 registry 突變被變體事件冗餘遮蔽、drain 端到端被 ResyncConsumer bump 遮蔽
 ——改接線斷言＋行為隔離）。偏離與未實作面登 91 §3.48。
+
+## D78（2026-09-02）最終驗收目標改為「主題無關」＋買斷主題入倉授權（Minimog 6.0.0／Kalles 5.4.2）
+
+使用者裁定（原話）：「我要的最終結果是，我可以 import 不同的 shopify theme 就能
+直接使用。如果有需要我也可以提供其他的 theme。我和 shopify 購買了幾套 theme。」
+⇒ 引擎的驗收單位改為 **Shopify 主題平台契約條目**（objects／filters／tags／
+theme architecture／storefront APIs），不再是「Ella 消費到什麼」；Ella 7.2.0 與
+之後每套主題都是探針，各踩契約的不同角落。
+
+同日先提供 **Minimog 5.9.0（FoxEcom，OS 2.0）**主題原始碼與 sample data
+（85 組 demo preset），裁定：「我授權你入倉，版權問題已經買斷」；隨後改提供
+**Minimog 6.0.0**（同套 sample data 隨包附帶，zip 位元組相同）並裁定
+「你把剛才給你的刪掉，重新研究這個」，再加 **Kalles 5.4.2（The4，official zip）**
+連同其 Template Demo v5（136 個模板 JSON）與 Demo Data v5（逐 demo 的
+config／sections／templates；圖片不入倉）：「你給我研究這幾個」。
+⇒ 比照 Ella（鐵律 9 註記）放進：
+`test/fixtures/themes/minimog-6.0.0/`、`test/fixtures/themes/minimog-6.0.0-sample-data/`、
+`test/fixtures/themes/kalles-5.4.2/`、`test/fixtures/themes/kalles-5.4.2-template-demo/`、
+`test/fixtures/themes/kalles-5.4.2-demo-data/`——只供測試、不隨產品出貨給租戶。
+5.9.0 不入 main（只存在於未合併分支的工作樹，已依裁定刪除）。
+
+真店基準同日提供：https://hoko.vip/（真 Ella 7.2.0、空店、公開）＋
+admin.shopify.com/store/pnrjnw-sy（Chrome 已登入）。兩套主題同日也裝進該店
+（主題庫：`minimog-6-0-0`、`kalles-v5-4-2-official`，未發布），使用者裁定：
+「兩個主題都安裝在 shopify 的，如果需要真店實際跑。你自己 Publish，自己實測抓取」
+⇒ 真店的 **Publish（切換已發布主題）** 自此獲授權，用於抓取同一套主題原始碼在
+本尊引擎的輸出當金標本；其餘寫入（改設定值、刪主題、建資料）仍未授權，12.2 的
+全權寫入僅適用測試店 chill-love-u5q5mnzq。
+
+首跑 conformance（同日，`spec/liquid/theme_conformance_spec.rb` TC-M1／TC-K1）：
+Minimog 6.0.0＝41 頁、Kalles 5.4.2＝60 頁，全部 200／404 正確、0 Liquid error、
+0 例外；count_miss 鍵 Minimog 77、Kalles 215（引擎級與資料級分類隨後續包）。
+另跑 preset：Minimog BFCM／Barber／Bedding、Kalles Template Demo（138 頁）與
+Home Fashion 01／Cosmetic／Digital／Barber 四個 demo——全部 0 error／0 例外。
+`customers/*`、`gift_card.liquid`、`password.{json,liquid}` 三類未路由模板照登記。
+Kalles 的 section／block schema 有 194 檔帶尾逗號（非嚴格 JSON），引擎的
+`tolerant_json` 全數可解（三套主題 711 個 schema 0 失敗）。

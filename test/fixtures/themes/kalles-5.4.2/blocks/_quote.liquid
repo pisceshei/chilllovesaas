@@ -1,0 +1,137 @@
+<div class="hdt-tetimonials-item hdt-slider__slide"hdt-reveal="slide-in" timeline {{ block.shopify_attributes }}>
+  {%-
+    liquid
+    assign image = block.settings.image
+    assign widths = ' 244, 488, 1000 '
+    assign sizes = '100vw'
+  -%}
+  <div class="hdt-testimonial-inner hdt-flex hdt-justify-{{ section.settings.content_align }} hdt-radius">
+    {%- if section.settings.testimonial_des == "3" and image != blank -%}
+      <div class="hdt-col-wrap">
+        <div class="hdt-poropost-image hdt-oh">
+          {{ image | image_url: width: image.width | image_tag: loading: "lazy", width: image.width, height: image.height, sizes: sizes, class: "hdt-object-cover hdt-radius-sm", widths: widths }}
+        </div>
+      </div>
+    {%- endif -%}
+    <div class="hdt-col-wrap hdt-testimonial-info hdt-flex hdt-flex-col hdt-text-{{ section.settings.content_align }}">
+      {%- if section.settings.testimonial_des == "2" -%}
+        <div class="hdt-testimonial-author hdt-row-flex hdt-align-center hdt-justify-{{ section.settings.content_align }}">
+          {%- if block.settings.author != blank -%}
+            <p class="hdt-testimonial-name hdt-text-base hdt-font-bold hdt-s-text">
+              {{ block.settings.author }}
+            </p>
+          {%- endif -%} 
+         
+        </div>
+        {%- if block.settings.pos != blank -%}
+          <p class="hdt-testimonial-metas hdt-text-base hdt-s-text2">
+            {{ block.settings.pos }}
+           </p>
+        {%- endif -%}
+      {%- endif -%}
+      {%- if section.settings.testimonial_des == "4" -%}
+        <div class="hdt-poropost-image hdt-flex hdt-justify-{{ section.settings.content_align }}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="46" height="31" viewBox="0 0 46 31" fill="none">
+            <path d="M32.4413 30.5L37.8204 19.9545L38.1913 19.2273H37.375H26.375V0.5H45.5V19.6071L39.9438 30.5H32.4413ZM6.56633 30.5L11.9454 19.9545L12.3163 19.2273H11.5H0.5V0.5H19.625V19.6071L14.0688 30.5H6.56633Z" stroke="#B5B5B5"/>
+            </svg>
+        </div>
+      {%- endif -%}
+      <div class="hdt-testimonial-rating hdt-flex hdt-justify-{{ section.settings.content_align }}">
+        {%- render 'rating_star', rating: block.settings.rating -%}
+      </div>
+      {%- if block.settings.heading != blank -%}
+        <div class="hdt-testimonial-heading-item">
+          <span class="hdt-testi-head hdt-s-text hdt-text-xl hdt-font-semibold">
+            {{ block.settings.heading }}
+          </span>
+        </div>
+      {%- endif -%}
+      {%- if block.settings.content != blank -%}
+        <div class="hdt-testimonial-content hdt-s-text hdt-rte">
+            {{ block.settings.content }}
+        </div>
+      {%- endif -%}
+      {%- if section.settings.testimonial_des == "1" or section.settings.testimonial_des == "3" -%}
+        <div class="hdt-testimonial-author">
+          {%- if block.settings.author != blank -%}
+            <p class="hdt-testimonial-name hdt-text-base hdt-font-semibold hdt-s-text">
+              {{ block.settings.author }}
+            </p>
+          {%- endif -%} 
+          {%- if block.settings.pos != blank -%}
+            <p class="hdt-testimonial-metas hdt-text-base hdt-s-text2">
+              {{ block.settings.pos }}
+             </p>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+      {%- if section.settings.testimonial_des == "4" -%}
+        <div class="hdt-testimonial-line {% if section.settings.content_align == "center" %} hdt-line-center {% endif %}"></div>
+        <div class="hdt-testimonial-author">
+          {%- if block.settings.author != blank -%}
+            <p class="hdt-testimonial-name hdt-text-base hdt-font-semibold hdt-s-text">
+              {{ block.settings.author }}
+            </p>
+          {%- endif -%} 
+          {%- if block.settings.pos != blank -%}
+            <p class="hdt-testimonial-metas hdt-text-base hdt-s-text2">
+              {{ block.settings.pos }}
+             </p>
+          {%- endif -%}
+        </div>
+        
+      {%- endif -%}
+    </div>
+  </div>  
+</div>
+
+{% schema %}
+  {
+    "name": "Quote",
+    "tag":null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:sections.testimonials.blocks.settings.image.label",
+        "visible_if": "{{  section.settings.testimonial_des == '3'  }}"
+      },
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "t:sections.testimonials.blocks.settings.heading.label"
+      },
+      {
+        "type": "richtext",
+        "id": "content",
+        "label": "t:sections.testimonials.blocks.settings.content.label",
+        "default": "<p>I am so happy to find a web fashion site that offers a great selection of stylish and affordable plus size clothing.</p>"
+      },
+      {
+        "type": "text",
+        "id": "author",
+        "label": "t:sections.testimonials.blocks.settings.author.label",
+        "default": "Author's name"
+      },
+      {
+        "type": "text",
+        "id": "pos",
+        "label": "t:sections.testimonials.blocks.settings.pos.label"
+      },
+      {
+        "type": "range",
+        "id": "rating",
+        "min": 2,
+        "max": 5,
+        "step": 1,
+        "label": "t:sections.testimonials.blocks.settings.rating.label",
+        "default": 5
+      }
+    ],
+    "presets": [
+      {
+        "name": "Quote"
+      }
+    ]
+  }
+{% endschema %}

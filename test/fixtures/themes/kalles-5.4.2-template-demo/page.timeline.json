@@ -1,0 +1,171 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "heading": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_M4pi3m": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page_title }}",
+            "line_height": "hdt-lh-1",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_M4pi3m"
+      ],
+      "settings": {
+        "use_dynamic_source": false,
+        "image": "shopify://shop_images/shopping-cart-head.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 57,
+        "space_item": 0,
+        "pd": "70px,,70px,",
+        "pd_mb": "43px,,43px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "full_width": false,
+        "color_scheme": "",
+        "pd": ",,30px,",
+        "pd_mb": ",,22px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "timeline_n6QAQ3": {
+      "type": "timeline",
+      "blocks": {
+        "timeline_RdpDtc": {
+          "type": "timeline",
+          "settings": {
+            "image": "shopify://shop_images/timeline1.jpg",
+            "img_pos": "left",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "step_label": "1980",
+            "sub_heading": "PHASE 1",
+            "heading": "Inception and Brand Establishment",
+            "description": "<p>Inception, in the context of brand establishment, refers to the initial phase of creating and introducing a brand to the market. It involves laying down the foundational elements that will define the brand's identity, values, and positioning in the minds of consumers.</p>",
+            "label": "",
+            "link": "",
+            "open_in_new_tab": false,
+            "btn_style": "",
+            "icon": "truck",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "timeline_efi3Dx": {
+          "type": "timeline",
+          "settings": {
+            "image": "shopify://shop_images/timeline2.jpg",
+            "img_pos": "right",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "step_label": "2000",
+            "sub_heading": "PHASE 2",
+            "heading": "Debut Collection and Market Entry",
+            "description": "<p>Entering the market with a debut collection requires careful planning, creativity, and perseverance. By following these steps and staying true to your vision, you can increase your chances of success in the fashion industry.</p>",
+            "label": "",
+            "link": "",
+            "open_in_new_tab": false,
+            "btn_style": "",
+            "icon": "truck",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "timeline_qVi3rz": {
+          "type": "timeline",
+          "settings": {
+            "image": "shopify://shop_images/timeline3.jpg",
+            "img_pos": "left",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "step_label": "2010",
+            "sub_heading": "PHASE 3",
+            "heading": "Growth and Recognition",
+            "description": "<p>During the Growth and Recognition phase of a brand's journey, several key elements come into play to propel its expansion and solidify its position in the market. Here's an outline of what typically occurs during this phase</p>",
+            "label": "",
+            "link": "",
+            "open_in_new_tab": false,
+            "btn_style": "",
+            "icon": "truck",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "timeline_pWwbWQ": {
+          "type": "timeline",
+          "settings": {
+            "image": "shopify://shop_images/timeline4.jpg",
+            "img_pos": "right",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "step_label": "2025",
+            "sub_heading": "PHASE 4",
+            "heading": "Sustainable Initiatives",
+            "description": "<p>Sustainable initiatives play a crucial role in the growth and development of a brand, especially in today's environmentally conscious and socially responsible market landscape. Here are some examples of sustainable initiatives that brands may undertake</p>",
+            "label": "",
+            "link": "",
+            "open_in_new_tab": false,
+            "btn_style": "",
+            "icon": "truck",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        }
+      },
+      "block_order": [
+        "timeline_RdpDtc",
+        "timeline_efi3Dx",
+        "timeline_qVi3rz",
+        "timeline_pWwbWQ"
+      ],
+      "name": "t:sections.timeline.name",
+      "settings": {
+        "line_style": "dashed",
+        "enable_shadow": false,
+        "color_scheme": "scheme-e0b73555-c767-4eda-aa6d-4e44e10aefce",
+        "full_width": false,
+        "pd": "50px,,50px,",
+        "pd_mb": "37px,,37px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    }
+  },
+  "order": [
+    "heading",
+    "main",
+    "timeline_n6QAQ3"
+  ]
+}

@@ -1,0 +1,284 @@
+/* heading */
+
+.hdt-font-italic-true{font-style: italic !important;}
+.hdt-article-heading-category a{transition: all .3s ease;}
+.hdt-article-infos{
+  .hdt-col-item:not(:last-child){
+    border-right: 1px solid rgb(var(--color-line-border));
+  }
+}
+:where(.hdt-article-infos, .hdt-article-tags) a:hover{
+  color: rgb(var(--color-accent));
+}
+@media (-moz-touch-enabled: 0), (hover: hover) and (min-width: 1150px){
+  .hdt-article-heading-category a:hover{
+    color:rgb(var(--color-foreground2) /.65)
+  }
+}
+.hdt-sidebar-article {
+  width: 100%;
+}
+.hdt-main-section__article .hdt-blogs-content {
+  display: flex;
+  row-gap: 15px;
+  flex-direction: column;
+}
+/* cate alternative */
+.hdt-article-image .hdt-article-cate-alternative {
+  top: 14px;
+  left: 14px;
+  pointer-events: none;
+}
+.dir--rtl .hdt-article-image .hdt-article-cate-alternative {left: auto;right:14px}
+.hdt-article-cate-alternative .hdt-article-cate-text{
+  min-width: 90px;
+  padding: 0 5px;
+  line-height: 30px;
+  display: inline-block;
+  vertical-align: top;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background-color: #4768dc;
+  pointer-events: auto;
+}
+.hdt-article-cate-default{
+  margin-top:20px;
+}
+
+
+/* related */
+.hdt-article-related .hdt-post-title{
+  margin-bottom:5px;
+  transition: all 0.3s ease;
+}
+.hdt-article-related .hdt-post-title:hover{
+  color: rgb(var(--color-accent))
+}
+.hdt-article-related .hdt-post-time {
+  font-style: italic;
+}
+.hdt-article-related .hdt-article-cate-alternative{
+  position: relative;
+  margin-top: -10%;
+  z-index: 5;
+  margin-bottom: 10px;
+}
+.hdt-article-related .hdt-article-related-thumb{
+  margin-bottom:20px;
+}
+.hdt-article-related .hdt-container-heading {
+  margin-bottom:30px;
+}
+.hdt-article-related .hdt-article-1 .hdt-article-content_wapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgb(var(--color-background) / .8);
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  transform: scaleY(0);
+}
+.hdt-article-related .hdt-main-article-item:hover .hdt-article-content_wapper {
+  transform: scaleY(1);
+}
+.hdt-article-related .hdt-article-2 .hdt-post-title a {
+  border-bottom: 1px solid rgb(var(--color-foreground));
+  padding-bottom: 1px;
+  /* text-transform: uppercase; */
+  &:hover{
+    border-color: rgb(var(--color-accent));
+  }
+}
+
+/* navigation */
+.hdt-article-navigation{
+  margin-top: 15px;
+}
+.hdt-article-navigation a{
+  padding: 0 30px;
+  display: inline-flex;
+  svg{
+    fill: currentColor;
+  }
+  &:hover{
+    color: rgb(var(--color-accent));
+  }
+}
+
+.hdt-article-navigation svg{
+  width: 40px;
+  height: 40px;
+}
+/* tag */
+.hdt-article-tags{
+  --spacing-x:0px;
+  --spacing-y:0px;
+}
+.hdt-article-tag-comments .hdt-article-tags {  
+  padding: 15px 20px;
+  border:1px solid rgb(var(--color-line-border));
+}
+.hdt-article-tags-list{
+  flex:1 0 0%;
+  margin-inline-end: 15px;
+}
+.hdt-comment-link{
+  flex:0 0 auto;
+}
+.hdt-article-tags-list svg {
+  margin-inline-end: 10px;
+}
+.hdt-article-tags-list a {
+  margin-inline-start: 6px;
+}
+.hdt-comment-link svg {
+  margin-inline-end: 9px;
+}
+/* comment */
+.hdt-article-comment input:not([type=submit]):not([type=checkbox]), .hdt-article-comment select, .hdt-article-comment textarea{
+  border: 1px solid rgb(var(--color-line-border));
+  font-size: 13px;
+  outline: 0;
+  padding: 0 15px;
+  color: var(--color-foreground2);
+  border-radius: 0;
+  width: 100%;
+}
+.hdt-article-comment input[type=date], input[type=email], input[type=number], input[type=password], input[type=tel], input[type=text], input[type=url], .hdt-article-comment select, .hdt-article-comment textarea {
+  width: 100%;
+  height: 40px;
+  box-shadow: none;
+  border-radius: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.hdt-article-comment #CommentForm-body {
+  min-height: 230px;
+  overflow: hidden;
+  padding: 10px 15px;
+}
+.hdt-comments-form__notes {
+  margin-bottom: 30px;
+}
+.hdt-comments-form__notes .hdt-required{
+  color: rgb(var(--color-error-text));
+}
+.hdt-comments-form__heading {
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.hdt-article-comment .hdt-line-space {
+  margin: 55px 0;
+  border-bottom: 1px solid rgb(var(--color-line-border));
+}
+.hdt-article-comment .hdt-line-space:first-of-type{
+  margin-top: 0;
+}
+.hdt-comment-metas{
+  gap:20px;
+}
+.hdt-comment-info >*{
+  margin-bottom:5px;
+}
+.hdt-comments-heading {
+  margin-bottom: 30px;
+}
+.hdt-col_avatar_cm{
+  flex: 0 0 auto;
+  width:auto;
+}
+.hdt-CommentForm{
+  margin-bottom:25px;
+}
+.hdt-main-article input.hdt-input--error {
+  border-color: rgb(var(--color-error-text)) !important;
+  margin-bottom: 5px;
+}
+.hdt-article-comment .hdt-form-message{
+  margin-bottom: 20px;
+}
+.hdt-article-comment .hdt-form-message--success{
+  color: rgb(var(--color-success-text));
+}
+.hdt-form-message--error {
+  color: rgb(var(--color-foreground2));
+  border: 1px solid rgb(var(--color-error-text));
+  background-color:rgb(var(--color-error-background));
+  padding: 15px 20px;
+  text-align: start;
+  width: 100%;
+  margin: 0 0 27.5px;
+}
+.hdt-article-comment .hdt-form-message__title {
+  font-size: var(--text-base);
+  margin-bottom: 10px;
+  font-weight:var(--font-semibold);
+}
+.hdt-form-message ul{
+  margin-bottom: 20px;
+  padding-inline-start: 17px;
+}
+.hdt-form-message ul li {
+  list-style: disc;
+  list-style-position: inside;
+  color: rgb(var(--color-foreground2));
+}
+.hdt-message-error{
+  gap:5px;
+}
+/* navigation */
+.hdt-next_article, .hdt-previous_article{
+  opacity: 0;
+  visibility: hidden;
+}
+.hdt-main-article-page>div:not(:last-child){
+  margin-bottom: 30px;
+}
+/* title */
+.hdt-article-title h2{
+  font-size:29px;
+}
+.hdt-article-title ul {
+  list-style: disc;
+}
+.hdt-article-title ul li:first-child {
+  list-style: none;
+  margin-inline-start: 0px;
+}
+.hdt-article-title ul li {
+  margin: 0px 20px;
+}
+.hdt-article-infos .hdt-col-item{
+  flex: 1 0 auto;
+}
+@media(min-width:768px){
+  /* comment */
+  .hdt-CommentForm{
+    grid-column: span 2;
+  } 
+}
+@media(max-width:767px){
+  
+  /* tags */
+  .hdt-article-tags > div{
+    flex-direction:column;
+  }
+  .hdt-comment-link {
+    margin-top:20px;
+  }
+  
+}
+@media(min-width:1150px){
+  .hdt-main-article-page>div:not(:last-child){
+    margin-bottom: 50px;
+  }
+}

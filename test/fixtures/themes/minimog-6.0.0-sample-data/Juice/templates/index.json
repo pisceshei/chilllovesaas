@@ -1,0 +1,416 @@
+{
+  "sections": {
+    "16608053141c882bae": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-slider--home .m-slide__description {\n  font-weight: 600;\n}\n.m-custom--image-with-text .m-richtext__description,\n.m-custom--product-list .m-richtext__description {\n  color: #666;\n}\n@media (min-width: 768px) {\n  .m-instagram--home .m-instagram {\n    margin: 0 15px;\n  }\n}\n@media (min-width: 1280px) {\n  .m-slider--home .m-slide__description {\n    font-size: 20px;\n  }\n  .m-custom--image-with-text .m-richtext__title {\n    font-size: 34px;\n    line-height: 48px;\n  }\n  .m-collection--home .m-section__heading,\n  .m-icon-box--large .m-section__heading,\n  .m-custom--product-list .m-richtext__title {\n    font-size: 40px;\n  }\n}\n@media (max-width: 767px) {\n  .m-custom--image-with-text .m-custom-content__block {\n    width: 100%;\n  }\n  .m-custom--image-with-text .m-richtext__button {\n    margin-top: 15px;\n  }\n  .m-instagram--home .m-section-my {\n    margin-bottom: 20px;\n  }\n}"
+      }
+    },
+    "16231213304c742b47": {
+      "type": "slider",
+      "blocks": {
+        "16231213304c742b47-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Pure and<br> premium juice",
+            "description": "<p>A fruit gives healthy mind but a fruit juice gives<br\/> you healthy body too<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "start",
+            "footer_text": "",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "16231213304c742b47-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Feel good,<br> Feel pure",
+            "description": "<p>A fruit gives healthy mind but a fruit juice gives<br\/> you healthy body too<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "16231213304c742b47-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Be natural,<br> Be fresh",
+            "description": "<p>A fruit gives healthy mind but a fruit juice gives<br\/> you healthy body too<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "16231213304c742b47-1",
+        "16231213304c742b47-0",
+        "16231213304c742b47-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "1623122551c20ec9e9": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Our Best Sellers",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "1623122641c6363d71": {
+      "type": "icon-box",
+      "blocks": {
+        "1623122641c6363d71-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-semibold\">Smoothies<\/span>",
+            "description": "<p>Try our convenient protein-packed<br\/> smoothies!<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1623122641c6363d71-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-semibold\">Juices<\/span>",
+            "description": "<p>A fruit gives healthy mind but a fruit juice gives you healthy body too <\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1623122641c6363d71-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-semibold\">Wellness shots<\/span>",
+            "description": "<p>Try to be rigid with yourself, lenient<br\/> won’t makes your body fit<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "b82eeb97-242b-49f5-bd87-777c25e11f5f": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-semibold\">Bundle<\/span>",
+            "description": "<p>Choose your own daily DOSE of wellness<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1623122641c6363d71-0",
+        "1623122641c6363d71-1",
+        "1623122641c6363d71-2",
+        "b82eeb97-242b-49f5-bd87-777c25e11f5f"
+      ],
+      "settings": {
+        "heading": "A day without juice is like a day without sunshine.<br> Feel better with fruit juice 😍",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-icon-box--large",
+        "animations": "inherit"
+      }
+    },
+    "1623124005244843ea": {
+      "type": "custom-content",
+      "blocks": {
+        "1623124005244843ea-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "1623124005244843ea-0": {
+          "type": "text",
+          "settings": {
+            "title": "Create your pack",
+            "subheading": "",
+            "text": "<p>Get a special offer on your first box.<br\/>FREE SHIPPING all the time.<\/p>",
+            "width": "25%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "a27a3d3f-1a6e-43d1-ab1b-d17eeac1ccd5": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "5627fa48-a27f-426a-9109-40d74a6f3dd4": {
+          "type": "text",
+          "settings": {
+            "title": "100% fruit, <br>\n0% anything else",
+            "subheading": "",
+            "text": "<p>A fruit gives healthy mind but a fruit juice<br\/> gives you healthy body too <\/p>",
+            "width": "25%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "What Makes Us Different",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1623124005244843ea-1",
+        "1623124005244843ea-0",
+        "a27a3d3f-1a6e-43d1-ab1b-d17eeac1ccd5",
+        "5627fa48-a27f-426a-9109-40d74a6f3dd4"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 30,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom--image-with-text"
+      }
+    },
+    "16231243586e68b32a": {
+      "type": "custom-content",
+      "blocks": {
+        "16231243586e68b32a-0": {
+          "type": "text",
+          "settings": {
+            "title": "Shot Bundles",
+            "subheading": "",
+            "text": "<p>Our shot bundles help you make<br\/> wellness a regular part of your routine.<\/p>",
+            "width": "25%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "VIEW ALL",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "8b579ad5-2deb-4307-b179-aeb820b81b34": {
+          "type": "product",
+          "settings": {
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "c6b62773-ba55-4b44-84d3-ff182f860cd3": {
+          "type": "product",
+          "settings": {
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "f097e831-f100-45fc-bb56-07805c0bc7af": {
+          "type": "product",
+          "settings": {
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16231243586e68b32a-0",
+        "8b579ad5-2deb-4307-b179-aeb820b81b34",
+        "c6b62773-ba55-4b44-84d3-ff182f860cd3",
+        "f097e831-f100-45fc-bb56-07805c0bc7af"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "scheme-8d4e74b4-5e0a-4129-bf84-d4a120388ff1",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 46,
+        "padding_bottom": 100,
+        "custom_class": "m-custom--product-list"
+      }
+    },
+    "1623125396487d73a5": {
+      "type": "instagram",
+      "settings": {
+        "heading": "Follow us on instagram",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "<span class=\"m:text-black m:font-semi-bold\">@freshly_juice<\/span>",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 30,
+        "mobile_gap": 10,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-instagram--home section__flush-bottom"
+      }
+    }
+  },
+  "order": [
+    "16608053141c882bae",
+    "16231213304c742b47",
+    "1623122551c20ec9e9",
+    "1623122641c6363d71",
+    "1623124005244843ea",
+    "16231243586e68b32a",
+    "1623125396487d73a5"
+  ]
+}

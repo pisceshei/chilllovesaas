@@ -1,0 +1,265 @@
+{% liquid
+  assign effect = 'hdt-reveal="slide-in" timeline'
+  if section.id contains 'slideshow'
+    assign effect = 'reval'
+  endif   
+  if section.id contains 'footer' or section.location contains 'footer'
+    assign effect = ''
+  endif
+%}
+
+{%- capture css -%}
+  {%- if block.settings.ffamily != '' -%}--ff:var({{ block.settings.ffamily }}); {%- endif -%}
+{%- endcapture -%}
+
+<div {{ effect }} id="block-{{ block.id }}" class="hdt-text-warry hdt-rte {{ block.settings.text_color }}{% if block.settings.hidden_br_mobile %} hdt-br-hidden{% endif %}{% if block.settings.hidden_on_mobile %} hdt-hide-mobile{% endif %} hdt-text-{{ block.settings.text_size }} hdt-font-{{ block.settings.font_weight }} {{ block.settings.line_height }}" {{ block.shopify_attributes }} {%- if css != blank %} style="{{ css }}"{% endif %}>
+  {%- assign now_y = 'now' | date: '%Y' -%}
+  {%- capture cap_date -%}
+    <hdt-countdown config='{"month":"{{ block.settings.countdown | date: '%m' | plus: 0 }}", "date":"{{ block.settings.countdown | date: '%d, %Y %H:%M:%S' }}", "hideTimerOnComplete": true, "hasZero": true }'>
+      <hdt-countdown-amount data-days>00</hdt-countdown-amount> {{  block.settings.txt_day }} <hdt-countdown-amount data-hours>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-minutes>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-seconds>00</hdt-countdown-amount>
+    </hdt-countdown>
+  {%- endcapture -%}
+  {{ block.settings.text | replace: "[year]", now_y | replace: '[countdown]', cap_date }}
+</div>
+{%- if block.settings.text_size == "custom" -%}
+  {%- style -%}
+    #block-{{ block.id }} {
+      --text-custom-lg: {{ block.settings.font_size_text_lg }}px; --text-custom-mb: {{ block.settings.font_size_text }}px; --text-ls: {{ block.settings.letter_spacing_text }}px; 
+    }
+  {%- endstyle -%}
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:blocks.text.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:sections.top-bar.blocks.text.settings.countdown.info"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "t:blocks.text.settings.content.label",
+      "default": "<p>Share information about your brand with your customers. Describe a product, make announcements, or welcome customers to your store.</p>",
+      "info": "t:blocks.text.settings.content.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "hidden_br_mobile",
+      "label": "t:blocks.text.settings.hidden_br_mobile",
+      "default": false,
+      "visible_if": "{{ block.settings.text contains '<br/>' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "hidden_on_mobile",
+      "label": "t:blocks.text.settings.hidden_on_mobile",
+      "default": false,
+      "visible_if": "{{ block.settings.text != blank }}"
+    },
+    {
+      "type": "select",
+      "id": "ffamily",
+      "options": [
+        {
+          "value": "",
+          "label": "t:settings_schema.typography.settings.font_family.default"
+        },
+        {
+          "value": "--f_family_1",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_1"
+        },
+        {
+          "value": "--f_family_2",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_2"
+        },
+        {
+          "value": "--f_family_3",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_3"
+        },
+        {
+          "value": "--f_family_4",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_4"
+        },
+        {
+          "value": "--f_family_5",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_5"
+        }
+      ],
+      "label": "t:settings_schema.typography.settings.font_family.label",
+      "default": ""
+    },
+    {
+      "type": "select",
+      "id": "text_size",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "options": [
+          {
+            "value": "xs",
+            "label": "t:settings_schema.typography.settings.font_size.xs"
+          },
+          {
+            "value": "sm",
+            "label": "t:settings_schema.typography.settings.font_size.sm"
+          },
+          {
+            "value": "base",
+            "label": "t:settings_schema.typography.settings.font_size.base"
+          },
+          {
+            "value": "lg",
+            "label": "t:settings_schema.typography.settings.font_size.lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:settings_schema.typography.settings.font_size.xl"
+          },
+          {
+            "value": "2xl",
+            "label": "t:settings_schema.typography.settings.font_size.2xl"
+          },
+          {
+            "value": "4xl",
+            "label": "t:settings_schema.typography.settings.font_size.4xl"
+          },  
+          {
+            "value": "custom",
+            "label": "t:settings_schema.typography.settings.font_size.custom"
+          }
+        ],
+      "default": "base"
+    },
+    {
+      "type": "select",
+      "id": "line_height",
+      "label": "t:settings_schema.typography.settings.line_height.label",
+      "options": [
+        {
+          "value": "",
+          "label": "t:settings_schema.typography.settings.line_height.default"
+        },
+        {
+          "value": "hdt-lh-1-2",
+          "label": "t:settings_schema.typography.settings.line_height.hdt-lh-1-2"
+        },
+        {
+          "value": "hdt-lh-1",
+          "label": "t:settings_schema.typography.settings.line_height.hdt-lh-1"
+        }
+      ],
+      "default": ""
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "t:settings_schema.typography.settings.font_weight.label",
+      "options": [
+        {
+          "value": "light",
+          "label": "t:settings_schema.typography.settings.font_weight.light"
+        },
+        {
+          "value": "normal",
+          "label": "t:settings_schema.typography.settings.font_weight.normal"
+        },
+        {
+          "value": "medium",
+          "label": "t:settings_schema.typography.settings.font_weight.medium"
+        },
+        {
+          "value": "semibold",
+          "label": "t:settings_schema.typography.settings.font_weight.semibold"
+        },
+        {
+          "value": "bold",
+          "label": "t:settings_schema.typography.settings.font_weight.bold"
+        },
+      ],
+      "default": "normal"
+    },
+    {
+      "type": "select",
+      "id": "text_color",
+      "options": [
+        {
+          "value": "hdt-s-text",
+          "label": "t:default"
+        },
+        {
+          "value": "hdt-text-secondary",
+          "label": "t:settings_schema.colors.secondary"
+        },
+        {
+          "value": "hdt-text-tertiary",
+          "label": "t:settings_schema.colors.tertiary"
+        },
+        {
+          "value": "hdt-text-primary",
+          "label": "t:settings_schema.colors.accent"
+        }
+      ],
+      "label": "t:blocks.text.text_color.label",
+      "default": "hdt-s-text"
+    },
+    {
+      "type": "text",
+      "id": "countdown",
+      "label": "t:blocks.countdown.settings.countdown.label",
+      "default": "2025-12-30 15:00:00",
+      "placeholder": "2025-12-30 15:00:00",
+      "visible_if": "{{ block.settings.text contains '[countdown]' }}"
+    },
+    {
+      "type": "text",
+      "id": "txt_day",
+      "label": "t:blocks.countdown.settings.txt_day.label",
+      "default": "days",
+      "visible_if": "{{ block.settings.text contains '[countdown]' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.text.custom_size_options.label",
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_text_lg",
+      "min": 10,
+      "max": 70,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "default": 16,
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_text",
+      "min": 10,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.mobile_font_size",
+      "default": 14,
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing_text",
+      "min": -10,
+      "max": 10,
+      "step": 0.2,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.letter_spacing",
+      "default": 0,
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.text.name"
+    }
+  ]
+}
+{% endschema %}

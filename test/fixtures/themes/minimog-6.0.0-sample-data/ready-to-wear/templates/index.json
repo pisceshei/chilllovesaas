@@ -1,0 +1,433 @@
+{
+  "sections": {
+    "f25d5536-f163-4780-ab60-47895940c8e7": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-topbar { --color-border: #eee; }\n\n.sf-home__slideshow .m-slide__description {\n  color: #666666;\n  font-weight: 500;\n}\n.sf-home__collection-list .m-section-my { margin-top: 30px; }\n.sf-home__collection-list sup {\n  top: -1em;\n  right: -0.2em;\n}\n.sf-home__collection-list .m-collection-card__link:hover {\n  color: #666666;\n}\n\n.sf-home__iconbox {\n  border-top: 1px solid #eeeeee;\n}\n.sf-home__iconbox .m-icon-box__heading {\n  font-weight: 500;\n  font-size: 20px;\n}\n.sf-home__testimonials .m-testimonial__name {\n  font-weight: 600;\n}\n\n@media (min-width: 1280px) {\n  .sf-home__slideshow .m-slide__description {\n    font-size: 20px;\n  }\n}\n@media (min-width: 1536px) {\n  .sf-home__slideshow .m-slide__title {\n    font-size: 70px;\n    line-height: 90px;\n  }\n  .sf-home__testimonials .swiper-pagination {\n    margin-top: 60px;\n  }\n}"
+      }
+    },
+    "16184552193b4706ec": {
+      "type": "slider",
+      "blocks": {
+        "16184552193b4706ec-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "New<br>\nCollection",
+            "description": "<p>Shop your outfit style.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "16184552193b4706ec-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Everyday<br>Fashion",
+            "description": "<p>Choose the best. Choose us.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "16184552193b4706ec-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "The Perfect<br>\nMatch",
+            "description": "<p>Be Stylish, be our customer.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "16184552193b4706ec-0",
+        "16184552193b4706ec-1",
+        "16184552193b4706ec-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "16184584660def4136": {
+      "type": "collection-list",
+      "blocks": {
+        "16184584660def4136-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Jackets"
+          }
+        },
+        "16184584660def4136-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Glasses"
+          }
+        },
+        "16184584660def4136-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Tops"
+          }
+        },
+        "e82c4b3f-453c-4aef-be00-fa3c8bf221f5": {
+          "type": "collection_block",
+          "settings": {
+            "title": "New arrivals"
+          }
+        }
+      },
+      "block_order": [
+        "16184584660def4136-0",
+        "16184584660def4136-2",
+        "16184584660def4136-1",
+        "e82c4b3f-453c-4aef-be00-fa3c8bf221f5"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "1618459461b6f9a6ca": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "This Week's Highlights",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "162130168271c1c590": {
+      "type": "testimonials",
+      "blocks": {
+        "162130168271c1c590-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“ These are beautiful, well made & comfortable! I bought them to wear to work & casually. I wore them immediately walking in the city & has no problem. “<\/p>",
+            "footer": "<p>Dean D. US<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "162130168271c1c590-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love my new purchase",
+            "description": "<p>“ Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt.”<\/p>",
+            "footer": "<p>Gloria T.<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "162130168271c1c590-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "What a delight to find you",
+            "description": "<p>“ Clothers are addicting! Love this brand and shoe. The arch support is wonderful and helps for long hours on your body. The narrow heel is wonderfully ! “<\/p>",
+            "footer": "<p>Adelia C.<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "162130168271c1c590-3": {
+          "type": "testimonial",
+          "disabled": true,
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“ Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.”<\/p>",
+            "footer": "<p>Dean D. US<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "162130168271c1c590-4": {
+          "type": "testimonial",
+          "disabled": true,
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“ Clothers are addicting! Love this brand and shoe. The arch support is wonderful and helps for long hours on your body. The narrow heel is wonderfully ! “<\/p>",
+            "footer": "<p>Dean D. US<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "162130168271c1c590-5": {
+          "type": "testimonial",
+          "disabled": true,
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>Short, flared dress in jersey with a crinkled texture. V-neck with a sewn-in wrapover <\/p>",
+            "footer": "<p>Dean D. US<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "162130168271c1c590-0",
+        "162130168271c1c590-1",
+        "162130168271c1c590-2",
+        "162130168271c1c590-3",
+        "162130168271c1c590-4",
+        "162130168271c1c590-5"
+      ],
+      "settings": {
+        "heading": "What People Are Saying",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "scheme-ec73d878-e6dd-4a31-9188-f9dbf1e84035",
+        "design": "testimonials-3",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__testimonials",
+        "animations": "inherit"
+      }
+    },
+    "1626320896bef268a6": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "Mix and Match",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 16,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-left",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "More Posts",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__blogpost",
+        "animations": "inherit"
+      }
+    },
+    "1626321811f956c963": {
+      "type": "icon-box",
+      "blocks": {
+        "1626321811f956c963-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Shipping",
+            "description": "<p>Free Shipping for orders over £130<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1626321811f956c963-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Money Guarantee",
+            "description": "<p>Within 30 days for an exchange.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1626321811f956c963-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Online Support",
+            "description": "<p>24 hours a day, 7 days a week<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "51c43d7d-d336-4181-936e-136f2af5cdf6": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Flexible Payment",
+            "description": "<p>Pay with Multiple Credit Cards<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1626321811f956c963-0",
+        "1626321811f956c963-1",
+        "1626321811f956c963-2",
+        "51c43d7d-d336-4181-936e-136f2af5cdf6"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 16,
+        "card_color_scheme": "",
+        "card_style": "horizontal",
+        "image_max_width": "30px",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "sf-home__iconbox",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "f25d5536-f163-4780-ab60-47895940c8e7",
+    "16184552193b4706ec",
+    "16184584660def4136",
+    "1618459461b6f9a6ca",
+    "162130168271c1c590",
+    "1626320896bef268a6",
+    "1626321811f956c963"
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "93571032-b171-4c66-8b3e-96cd91946363": {
+          "type": "our_store",
+          "settings": {
+            "title": "Our store",
+            "description": "<p>St Albans VIC 3021, Australia</p>",
+            "show_email": true,
+            "show_phone": true,
+            "show_socials_link": true,
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "spacing_fhWiep": {
+          "type": "spacing",
+          "settings": {
+            "width": "16%"
+          }
+        },
+        "menu_e9DdGT": {
+          "type": "menu",
+          "settings": {
+            "menu": "main-menu",
+            "title": "Shop",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "7ebc2f78-975b-4a81-b874-103c3355a866": {
+          "type": "menu",
+          "settings": {
+            "menu": "main-menu",
+            "title": "Information",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "menu_wxt3Bi": {
+          "type": "menu",
+          "settings": {
+            "menu": "main-menu",
+            "title": "Support",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "93571032-b171-4c66-8b3e-96cd91946363",
+        "spacing_fhWiep",
+        "menu_e9DdGT",
+        "7ebc2f78-975b-4a81-b874-103c3355a866",
+        "menu_wxt3Bi"
+      ],
+      "custom_css": [
+        ".m-footer--bottom-inner {border-top: 1px solid rgb(var(--color-border));}",
+        ".m-accordion--item-button {font-weight: 600; text-transform: uppercase; margin-bottom: 20px;}",
+        ".m-footer--middle .m-accordion--item .m-accordion--item-content {max-width: 240px;}",
+        "@media screen and (min-width: 1024px) {.m-footer--bottom-inner {padding: 27px 0; }}"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "design": "footer-1",
+        "container": "container-fluid",
+        "bordered": false,
+        "copyright": "© 2024, Minimog. All Rights Reserved.",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": false,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "default",
+        "footer_bottom_menu": "",
+        "show_menu_item_divider": false
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?</p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.</p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

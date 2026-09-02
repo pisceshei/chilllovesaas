@@ -1,0 +1,38 @@
+{%- assign label = block.settings.label | default: block.settings.page.title -%}
+{%- if label != blank and block.settings.page.content != blank -%}
+  <button class="hdt-s-text hdt-text-base hdt-font-semibold" aria-controls="modal-{{ block.id }}" aria-expanded="false">{{ label }}</button>
+  <hdt-modal class="hdt-modal hdt-product__modal hdt-modal__size-chart hdt-product__modal hdt-modal__link-popup hdt-contents" color-scheme="{{ settings.color_scheme_dialog }}">
+    <dialog id="modal-{{ block.id }}" class="hdt-dialog hdt-dialog-modal" scroll-lock>
+      <div class="hdt-dialog-modal__header">
+        <h3 class="hdt-product__modal-title">{{ label }}</h3>
+        <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="modal-{{ block.id }}" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+      </div>
+      <div class="hdt-dialog-modal__inner hdt-current-scrollbar">
+        <div class="hdt-rte">{{ block.settings.page.content }}</div>
+      </div>
+    </dialog>
+  </hdt-modal>
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.extra_link.link_popup.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "label",
+      "label": "t:sections.main-product.blocks.extra_link.link_popup.settings.label"
+    },
+    {
+      "type": "page",
+      "id": "page",
+      "label": "t:sections.main-product.blocks.extra_link.link_popup.settings.page"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main-product.blocks.extra_link.link_popup.name"
+    }
+  ]
+}
+{% endschema %}

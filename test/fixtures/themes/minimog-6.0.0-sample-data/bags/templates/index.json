@@ -1,0 +1,357 @@
+{
+  "sections": {
+    "1620813069167db316": {
+      "type": "slider",
+      "blocks": {
+        "1620813069167db316-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/icon_407c4205-67b4-4ae8-9415-472b2bf51b21.svg?v=1626840646\">",
+            "title": "THE WAIT<br>IS ORVER",
+            "description": "<p>New models and a pop revival that frames <br\/>the season with lots of color.<br\/><\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "27403af4-f4e3-4833-9189-9868705845f7": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/icon_407c4205-67b4-4ae8-9415-472b2bf51b21.svg?v=1626840646\">",
+            "title": "PRE-FALL 21<br>\nCOLLECTION",
+            "description": "<p>The new collection of bags and accessories<br\/>is waiting to be discovered.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "c0ce169f-1329-47fc-9e42-915e4961aa32": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/icon_407c4205-67b4-4ae8-9415-472b2bf51b21.svg?v=1626840646\">",
+            "title": "MADE IN<br>MELBOURNE",
+            "description": "<p>Pair them with the light-hearted <br\/>and free style of Speedy.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1620813069167db316-0",
+        "27403af4-f4e3-4833-9189-9868705845f7",
+        "c0ce169f-1329-47fc-9e42-915e4961aa32"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-custom-slideshow",
+        "animations": "inherit"
+      }
+    },
+    "162115032956fadcc2": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "NEW ARRIVALS",
+        "heading_size": "h2",
+        "subheading": "FEATURED ITEMS",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1621150687357d32f2": {
+      "type": "collection-list",
+      "blocks": {
+        "1621150687357d32f2-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Women Bag"
+          }
+        },
+        "1621150687357d32f2-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "TOTE BAGS"
+          }
+        },
+        "1621150687357d32f2-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Women Bag"
+          }
+        },
+        "f1613aaa-d3e1-4305-8fee-049a5bfefabb": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Women Bag"
+          }
+        },
+        "6afe9930-2ff8-4bd2-8cf3-36c13393b68d": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Pencil Bag"
+          }
+        }
+      },
+      "block_order": [
+        "1621150687357d32f2-0",
+        "1621150687357d32f2-1",
+        "1621150687357d32f2-2",
+        "f1613aaa-d3e1-4305-8fee-049a5bfefabb",
+        "6afe9930-2ff8-4bd2-8cf3-36c13393b68d"
+      ],
+      "settings": {
+        "heading": "OURBAGS",
+        "heading_size": "h3",
+        "subheading": "COLLECTION",
+        "description": "Luxe, lightweight, and made with the perfect blend of cashmere and cotton.",
+        "header_alignment": "left",
+        "color_scheme": "scheme-f87788c3-097a-4a2d-802c-e56f06ae2eb4",
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "boxed",
+        "text_alignment": "center",
+        "hover_effect": "none",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16273957791fc3859b": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "BEST SELLERS",
+        "heading_size": "h3",
+        "subheading": "FEATURED ITEMS",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162115050155d04d21": {
+      "type": "featured-product-slider",
+      "blocks": {
+        "162115050155d04d21-1": {
+          "type": "product",
+          "settings": {
+            "heading": "",
+            "description": ""
+          }
+        },
+        "162115050155d04d21-2": {
+          "type": "product",
+          "settings": {
+            "heading": "",
+            "description": ""
+          }
+        },
+        "162115050155d04d21-0": {
+          "type": "product",
+          "settings": {
+            "heading": "",
+            "description": ""
+          }
+        }
+      },
+      "block_order": [
+        "162115050155d04d21-1",
+        "162115050155d04d21-2",
+        "162115050155d04d21-0"
+      ],
+      "settings": {
+        "heading": "FEATURED BAGS",
+        "heading_size": "h2",
+        "subheading": "NEW IN",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "image_placement": "right",
+        "slide_autoplay": false,
+        "show_navigation": false,
+        "show_pagination": true,
+        "autorotate_speed": 5,
+        "pcard_layout": "",
+        "pcard_alignment": "left",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16212276967bd2e716": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "w-full",
+        "color_scheme": "",
+        "item_gap": 174,
+        "item_gap_mobile": 0,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "GIFTS UNDER $50",
+        "sub_title": "DISCOUNT GIFTS",
+        "text": "<p>Give your friends 12% off. When your friends buy from<br\/>your invite link, you get 12% off!<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-image-with-text",
+        "animations": "inherit"
+      }
+    },
+    "1621151746c9bda56d": {
+      "type": "instagram",
+      "settings": {
+        "heading": "MINIMOG.BAGS",
+        "heading_size": "h2",
+        "subheading": "INSTAGRAM",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 4,
+        "grid_columns": 4,
+        "gap": 30,
+        "mobile_gap": 16,
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    }
+  },
+  "order": [
+    "1620813069167db316",
+    "162115032956fadcc2",
+    "1621150687357d32f2",
+    "16273957791fc3859b",
+    "162115050155d04d21",
+    "16212276967bd2e716",
+    "1621151746c9bda56d"
+  ]
+}

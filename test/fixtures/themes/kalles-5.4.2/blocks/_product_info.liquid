@@ -1,0 +1,42 @@
+<div class="hdt-pr-info-block hdt-flex" {%- if block.settings.colors_by_block %} color-scheme="{{ block.settings.color_scheme }}"{% endif %} {{ block.shopify_attributes }} hdt-reveal="slide-in" timeline>
+  <h4 class="hdt-text-title--pr">{{ block.settings.hdt_text_title }}</h4>
+  <div class="hdt-text-description--pr">{{ block.settings.hdt_description }}</div>
+</div>
+{% schema %}
+  {
+    "name": "Product info",
+    "class": "hdt-pr-info-block-container",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "colors_by_block",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+        "visible_if": "{{ block.settings.colors_by_block }}"
+      },
+      {
+        "type": "text",
+        "id": "hdt_text_title",
+        "label": "Title",
+        "default": "Title"
+      },
+      {
+        "type": "richtext",
+        "id": "hdt_description",
+        "label": "Description",
+        "default": "<p>Description</p>"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Product info",
+        "settings": {
+        }
+      }
+    ]
+  }
+{% endschema %}

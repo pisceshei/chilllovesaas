@@ -1,0 +1,1213 @@
+{
+  "summary": "Classify every count_miss key from the first Minimog 5.9.0 conformance run against the official Shopify Liquid contract and Minimog source usage; produce engine-gap PR plan",
+  "agentCount": 19,
+  "logs": [
+    "Triaged 40 keys: engine-gap=12",
+    "Confirmed engine gaps: 12"
+  ],
+  "result": {
+    "synthesis": "# Minimog 5.9.0 conformance miss 三分類綜合報告（2026-09-02）\n\n路徑縮寫：`<repo>` ＝ `C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/`；`engine/` ＝ `<repo>app/liquid/theme_engine/`；`minimog/` ＝ `<repo>test/fixtures/themes/minimog-5.9.0/`。官方引文皆為 2026-09-02 以 WebFetch 自 shopify.dev 取得（逐字英文見各列）。12 條 engine-gap 全部通過獨立反證嘗試（`survives: true`），其餘 28 條為 theme-quirk／data-absent／settings-default，不需引擎修改。\n\n---\n\n## (1) 全部 40 個 miss key 的分類總表\n\nmiss 總數 2,037：engine-gap 455（12 key）／theme-quirk 181（7）／data-absent 313（4）／settings-default 1,088（17）。\n\n| # | miss_key | 分類 | count | 官方值（一句） | 我方現況（file:line） | 判定理由 |\n|---|---|---|---|---|---|---|\n| 1 | CollectionDrop.sort_options | **engine-gap** | 78 | `collection.sort_options` ＝ \"The available sorting options for the collection.\" Returns array of sort_option | `engine/drops.rb:647-772` 無 `sort_options`；落到 `:768-771` liquid_method_missing ⇒ nil | 官方屬性未實作，SearchDrop 已有同型 `:1109-1111` |\n| 2 | CollectionDrop.terms | theme-quirk | 14 | collection 物件屬性清單無 `terms`；`terms` 僅在 search 物件 | `drops.rb:768-771` nil（正確） | Minimog 共用 snippet 對 collection 探測 search-only 屬性 |\n| 3 | CollectionDrop.current_vendor | **engine-gap** | 14 | \"The vendor name on a vendor collection page … `/collections/vendors` … `?q=[vendor]`\" string | `drops.rb:647-772` 無此方法；`page_renderer.rb:208-233` 無 `/collections/vendors` 路由 | 屬性＋虛擬集合路由皆缺 |\n| 4 | CollectionDrop.current_type | **engine-gap** | 14 | \"The product type on a product type collection page … `/collections/types` … `?q=[type]`\" string | 同上；`/collections/types` 路由 0 hits | 同 #3 |\n| 5 | ShopDrop.features | theme-quirk | 39 | shop 物件 33 個屬性中無 `features` | `drops.rb:1464-1515` 無；`:1512-1515` nil | 未文檔化旗標，nil ⇒ 兩個 `if` 皆 false，與功能關閉的本尊相同 |\n| 6 | ShopDrop.money_with_currency_format | **engine-gap** | 39 | \"The money format of the store with the currency included.\" | `drops.rb:1478-1481` 只有 `money_format`；`:1512-1515` nil | 官方屬性未實作，theme-data JSON 現輸出 `null` |\n| 7 | ShopDrop.description | **engine-gap** | 39 | \"The description of the store.\" | `drops.rb:1464-1515` 無；`db/schema.rb` shops 表無 description 欄 | 官方屬性未實作（含資料源缺） |\n| 8 | FormDrop.current_locale | theme-quirk | 39 | form 物件 20 個屬性中無 `current_locale`；localization 表單只文檔化 `country_code`／`language_code` hidden input | `engine/tags.rb:120` 建通用 FormDrop；`drops.rb:1870-1874` 只有 errors／posted_successfully?／id | 未文檔化屬性；本尊 runtime 是否仍暴露 ＝ 未取得 |\n| 9 | linklists.gift-wrapping | data-absent | 118 | linklists ＝ \"All of the menus in a store.\"；缺 handle 回傳值 ＝ 未取得（nil 依 types 頁 \"treated as `false`\"） | `drops.rb:1585-1598` `Menu.find_by` nil ⇒ `:1596` count_miss | runner `tmp/minimog_conformance.rb:25-42` 未 seed 任何 Menu |\n| 10 | linklists.main-menu | data-absent | 78 | link_list 設定 \"Accepted values for the `default` attribute are `main-menu` and `footer`.\" | `drops.rb:1592`／`:1596` nil；`app/models/menu.rb:7` DEFAULT_HANDLES 只是刪除守衛不 seed | 無 Menu 列；附註 coerce `:1934` 無 `link_list` 分支（回 raw string 非 blank） |\n| 11 | linklists.footer-bottom | data-absent | 39 | link_list 回 \"A `linklist` object. `blank`, if … the selection no longer exists.\" | 同上；coerce 回 `\"footer-bottom\"` 字串致 `!= blank` 守衛通過 | demo 店 handle，非 Shopify 預設；輸出等價（空 `<ul>`） |\n| 12 | pages.wishlist | data-absent | 78 | page 設定回 \"A `page` object. `blank`, if no selection … no longer exists.\" | `drops.rb:1378-1391` `Page.find_by` nil ⇒ `:1389`；coerce `:1934` 無 `page` 分支 | runner 只 seed `about-us`（`tmp/minimog_conformance.rb:38`） |\n| 13 | font_library.roboto_condensed | **engine-gap** | 78 | fonts 頁 available fonts 表列 \"Roboto Condensed \\| `roboto_condensed_n1 …`\"；font.system? \"Returns `true` if the font is a system font.\" | `engine/font_library.rb:27-41` registry 無 ⇒ `:74-81` system_drop ⇒ `:76` count_miss，family 誤為 \"Roboto\"（`:77` `split('_').first`），system?=true，weight 400 | 官方字庫字型未收錄＋顯示名推導錯 |\n| 14 | settings.drawer_popup_color_scheme | **engine-gap** | 78 | \"If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned.\" | `runtime.rb:85`＋`:331-333` 只合併有 default 的 key；`drops.rb:1886-1891` 缺 key ⇒ nil，未到 `:1931-1933` fallback | 官方回第一個 scheme `default`，我方輸出 `m-color-` |\n| 15 | settings.loading_design_mode | **engine-gap** | 39 | checkbox \"If `default` is unspecified, then the value is `false` by default.\" | `runtime.rb:331-333` 無型別隱含預設；`drops.rb:1909-1936` coerce 無 checkbox 分支 | 官方 `data-design-mode=\"false\"`，我方 `\"\"` |\n| 16 | settings.color_primary | theme-quirk | 39 | settings ＝ settings_schema.json 宣告的設定；未宣告 key 無值 | `drops.rb:1886-1891` nil ⇒ `content=\"\"` | `grep color_primary minimog/config/` exit 1，主題讀未宣告 key |\n| 17 | settings.favicon | settings-default | 39 | image_picker \"nil, if either no selection has been made\"；不支援 default | `drops.rb:1886-1891` nil；`:1917-1923` 已文檔化 blank ⇒ nil | 官方 nil ＝ 我方 nil，僅計數噪音 |\n| 18 | settings.loading_logo | settings-default | 39 | 同 image_picker | 同上 | 同上 |\n| 19 | settings.cart_drawer_trust_badge | settings-default | 40 | 同 image_picker | 同上 | 同上 |\n| 20 | settings.pcard_default_image | settings-default | 18 | 同 image_picker | 同上 | 同上 |\n| 21 | settings.social_vimeo_link | settings-default | 39 | text \"A [string]. An [`empty` object], if nothing has been entered.\" | `drops.rb:1886-1891` nil（無 text coerce，`:1934`） | `!= blank` 等價；`empty \\| json` 官方輸出 ＝ 未取得 |\n| 22 | settings.social_tumblr_link | settings-default | 39 | 同 text | 同上 | 同上 |\n| 23 | section(header).logo | settings-default | 468 | image_picker nil | `runtime.rb:331-333`／`:338`；`drops.rb:1886-1891`；`:1917-1923` | 12 lookups/page，全 nil-guarded |\n| 24 | section(header).logo_transparent | settings-default | 117 | 同 | 同 | 同 |\n| 25 | section(header).logo_mobile | settings-default | 78 | 同 | 同 | 同 |\n| 26 | section(age-verifier-popup).bg_image | settings-default | 78 | 同 | 同 | 同 |\n| 27 | section(footer).image_custom_payment | settings-default | 39 | 同 | 同 | 同 |\n| 28 | section(custom-content).content_color_scheme | **engine-gap** | 32 | 同 #14（三段 fallback，最後回第一個 scheme） | `drops.rb:1886-1891` nil；`:1931-1933` 對 `\"\"` 回 raw string | 同 #14 根因 |\n| 29 | section(custom-content).color_scheme | **engine-gap** | 32 | 同 #14 | 同 #28 | 同 #14 根因 |\n| 30 | section(custom-content).background_image | settings-default | 27 | image_picker nil | `drops.rb:1886-1891`／`:1917-1923` | 同 #17 |\n| 31 | section(custom-content).background_image_mobile | settings-default | 27 | 同 | 同 | 同 |\n| 32 | section(custom-content).animations | theme-quirk | 27 | 未取得（官方未述讀取未宣告 section setting） | `drops.rb:1886-1891` nil | section schema `minimog/sections/custom-content.liquid:1276-1490` 未宣告 `animations`，只 block 有 |\n| 33 | section(collection-page-header).bg_image | settings-default | 16 | image_picker nil | 同 #17 | 同 #17 |\n| 34 | section(collection-page-header).vertical_alignment | theme-quirk | 15 | 未取得（settings 頁：\"Any setting without an automatic default value could end up with no value, which translates to an empty string.\"） | `drops.rb:1886-1891` nil | schema `:231ff` 未宣告；只 `templates/collection.flash-sale.json:9` 有孤兒值 |\n| 35 | section(image-with-text).image_2 | settings-default | 12 | image_picker nil | 同 #17 | 同 #17 |\n| 36 | section(main-product).change_product_variant_on_fitlering | theme-quirk | 8 | 僅在 `main-collection-product-grid.liquid:350`／`page-search.liquid:229` 宣告；main-product 未宣告 ⇒ 未取得 | `drops.rb:1886-1891` nil | 共用 snippet（`snippets/tooltip.liquid:73`、`product-card-1.liquid:97/128`）讀宿主未宣告 key |\n| 37 | section(recent-viewed-products).color_scheme | **engine-gap** | 7 | 同 #14 | `drops.rb:1886-1892` nil；`:1931-1933` `\"\"` ⇒ `\"\"` | 同 #14 根因 |\n| 38 | section(recent-viewed-products).custom_class | settings-default | 7 | text empty object | `drops.rb:1886-1892` nil | `!= blank` 等價 |\n| 39 | section(product-recommendations).color_scheme | **engine-gap** | 5 | 同 #14 | 同 #37 | 同 #14 根因 |\n| 40 | section(product-recommendations).custom_class | settings-default | 5 | text empty object | 同 #38 | 同 #38 |\n\n---\n\n## (2) 已確認 engine-gap（12 key，455 miss）分成 6 個 PR 包\n\n### PR-A　`color_scheme` 三段 fallback（5 key，154 miss）— 影響最廣、單一 diff\n\n- **key**：settings.drawer_popup_color_scheme（78）、section(custom-content).content_color_scheme（32）、section(custom-content).color_scheme（32）、section(recent-viewed-products).color_scheme（7）、section(product-recommendations).color_scheme（5）\n- **官方**（`https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme`，2026-09-02）：\"When accessing the value of a `color_scheme` type setting, Shopify returns the selected `color_scheme` object from `color_scheme_group`. If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned. If the theme doesn't have `color_scheme_group` data in `settings_data.json`, then nil is returned.\"\n- **Minimog 使用**：\n  - schema 無 default：`minimog/config/settings_schema.json:2108-2112`（drawer_popup_color_scheme）、`minimog/sections/custom-content.liquid:1362-1366`／`:1367-1371`、`minimog/sections/recent-viewed-products.liquid:156-159`、`minimog/sections/product-recommendations.liquid:138-141`\n  - 消費：`minimog/snippets/cart-drawer.liquid:24`、`snippets/search-popup.liquid:11`、`sections/product-quickview.liquid:46`、`sections/pickup-availability.liquid:66`、`snippets/form__ask-a-question.liquid:1`、`snippets/main-product-blocks.liquid:896`、`sections/custom-content.liquid:10`／`:99`／`:535`／`:547`、`sections/recent-viewed-products.liquid:18`、`sections/product-recommendations.liquid:20` — 全部拼出 `m-color-<id>`\n  - 實例缺 key：`minimog/templates/product.custom-layout-1.json:161`、custom-layout-2.json:126/168/240/282、custom-layout-3/4/5.json、`templates/cart.json`；另有 `templates/index.json:291` 等為 `\"\"`（未計 miss，但同樣應 fallback）\n  - color_scheme_group：`minimog/config/settings_schema.json:515-516`（id `color_schemes`），`config/settings_data.json:67` 第一個 ＝ `default`\n- **我方**：`engine/runtime.rb:85`＋`:331-333` schema_defaults 只複製有 `default` 的 key；`engine/drops.rb:1886-1891` SettingsDrop#liquid_method_missing 缺 key 即 nil，未到 coerce；`drops.rb:1931-1933` `(@schemes && @schemes.scheme(val.to_s)) || val` 對 `\"\"`／未知 id 回 raw string。`drops.rb:1739-1741` ColorSchemeGroupDrop#first 已存在但從未當 fallback；schemes_drop 於 `runtime.rb:156-165` 建立並於 `:339`／`:382`／`:397` 傳入。輸出 `m-color-`（空）vs 官方 `m-color-default`。\n- **修法**：\n  1. `drops.rb:1886-1893`：缺 key 且 `@t[k] == \"color_scheme\"` 且 `@schemes` 存在 ⇒ 回 `@schemes.first`（schema default 已在 `runtime.rb:338/382/397` 上游合併，缺 key ＝ 無 default）。\n  2. `drops.rb:1931-1933`：改為 `(@schemes && (@schemes.scheme(val.to_s) || @schemes.first)) || val`，讓 `\"\"`／無效 id 也落到第一個 scheme；`@schemes` 為 nil（無 color_scheme_group）時維持 nil。\n  3. spec（`<repo>spec/requests/storefront_blocks_schemes_spec.rb`）四格：缺 key ⇒ `default`；`\"\"` ⇒ `default`；未知 id ⇒ `default`；無 color_scheme_group ⇒ nil；mutation 拿掉 fallback 必轉紅。\n\n### PR-B　checkbox 隱含 `false`（1 key，39 miss）— 一行改動\n\n- **官方**（`…/input-settings#checkbox`，2026-09-02）：\"When accessing the value of a `checkbox` type setting, data is returned as a boolean.\" / \"If `default` is unspecified, then the value is `false` by default.\"\n- **Minimog**：`minimog/config/settings_schema.json:783-788`（`loading_design_mode`，無 default）；消費 `minimog/snippets/page-transition.liquid:115` `data-design-mode=\"{{ settings.loading_design_mode }}\"` — 官方 `\"false\"`，我方 `\"\"`。\n- **我方**：`engine/runtime.rb:331-333` 只在 `d.key?(\"default\")` 時設值；`drops.rb:1909-1936` coerce 無 checkbox 分支。\n- **修法**：`runtime.rb:331-333` schema_defaults 加 `h[d[\"id\"]] = false if d[\"type\"] == \"checkbox\" && !d.key?(\"default\")`；因 `:338`／`:382`／`:397` 共用 schema_defaults，同時涵蓋全域／section／block。回歸：Minimog `loading_design_mode` 輸出 `false`。\n\n### PR-C　`CollectionDrop#sort_options`（1 key，78 miss）— 集合頁排序 UI 現為空\n\n- **官方**（`https://shopify.dev/docs/api/liquid/objects/collection`，2026-09-02）：sort_options — \"The available sorting options for the collection.\" \"Returns array of sort_option\"；範例 `{\"value\":\"manual\",\"name\":\"Featured\"}`、`{\"value\":\"best-selling\",\"name\":\"Best selling\"}`、`{\"value\":\"price-ascending\",\"name\":\"Price, low to high\"}`。`…/objects/sort_option`：name ＝ \"The customer-facing name of the sort option.\"；value ＝ \"The value of the sort option.\"\n- **Minimog**：`minimog/snippets/storefront-filters.liquid:20`（results 來自 `snippets/collection-sidebar.liquid:82`）；`snippets/collection-page-toolbar.liquid:5`／`:39`／`:61`（`sections/main-collection-product-grid.liquid:58` `results: collection`）；`snippets/sort-by-mobile.liquid:11`（`main-collection-product-grid.liquid:132`）。全部讀 `option.value`／`option.name`；每個 collection view 5 miss。\n- **我方**：`engine/drops.rb:647-772` 只有 `default_sort_by`（`:706`）、`sort_by`（`:707`）與 STOREFRONT_SORT 8 值表（`:668-673`）；`:768-771` nil。SearchDrop 已實作同型 `:1109-1111`。\n- **修法**：在 `drops.rb:707` 旁加 `def sort_options`，迭代 STOREFRONT_SORT.keys（manual／best-selling／title-ascending／title-descending／price-ascending／price-descending／created-ascending／created-descending）回 `BaseDrop.new({\"value\"=>v,\"name\"=>…})`，鏡像 `:1109-1111`。**`name` 的 locale key 路徑 ＝ 未取得**（官方文檔未載），需依鐵律 14 抓真引擎後定；先勿硬編英文。\n\n### PR-D　`current_vendor`／`current_type` ＋ `/collections/vendors|types` 路由（2 key，28 miss）\n\n- **官方**（`…/objects/collection`，2026-09-02）：current_vendor — \"The vendor name on a vendor collection page. You can query for products from a certain vendor at the `/collections/vendors` URL with a query parameter in the format of `?q=[vendor]`.\"；current_type — \"The product type on a product type collection page. You can query for products of a certain type at the `/collections/types` URL with a query parameter in the format of `?q=[type]`.\"\n- **Minimog**：`minimog/snippets/storefront-filters.liquid:351-352` `{%- if results.current_vendor or results.current_type -%}<input type=\"hidden\" name=\"q\" …>`；Minimog 無專用 vendors/types template。\n- **我方**：`engine/drops.rb:647-772` 兩者皆無 ⇒ `:768-771` nil；`engine/page_renderer.rb:208-233` 只解析 `/collections/<handle>`（真集合或虛擬 `all`，`:216-222`），`vendors`／`/collections/types` grep 0 hits。一般集合頁本尊亦回 nil，故 `/collections/mc-col` 現輸出相同；缺的是屬性與虛擬集合路由。\n- **修法**：(1) `drops.rb:652-654` initialize 加 `current_vendor:`／`current_type:` kwarg，在 `~:707` 加兩個 reader（非虛擬集合回 nil）；(2) `page_renderer.rb:208` 在 handle 匹配前加 `/collections/vendors`／`/collections/types` 分支，建以 `vendor = params[\"q\"]`／`product_type = params[\"q\"]` 過濾的虛擬集合。過渡可先顯式 `def current_vendor = nil`／`def current_type = nil` 消除假 miss。虛擬集合的 title／handle／預設排序 ＝ 未取得（需真店抓取，鐵律 12/14）。\n\n### PR-E　ShopDrop 兩個官方屬性（2 key，78 miss）\n\n- **官方**（`https://shopify.dev/docs/api/liquid/objects/shop`，2026-09-02）：money_with_currency_format — \"The money format of the store with the currency included.\"；description — \"The description of the store.\"\n- **Minimog**：`minimog/snippets/theme-data.liquid:11-13`（`currency_code_enabled` 時改用；該 checkbox default false，`config/settings_schema.json:2768-2770`）、`theme-data.liquid:76` 無條件輸出到 window JSON（現為 `null`）；`minimog/snippets/social-meta-tags.liquid:5` `page_description | default: shop.description | default: shop.name`（現落到 shop.name）。\n- **我方**：`engine/drops.rb:1478-1481` 只有 `money_format`（`\"#{symbol}{{amount}}\"`）；ShopDrop `:1464-1515` 無 description；`:1512-1515` nil。`<repo>db/schema.rb` shops 表無 description 欄（awk 計數 0）。\n- **修法**：`drops.rb:1481` 後加 `def money_with_currency_format`，從與 money_format 同一 symbol 源推導＋幣別碼（鐵律 7/10 單一格式源）；**官方每幣別預設 pattern（如是否為 `HK${{amount}} HKD`）＝ 未取得**，登 V。description：短期 `def description = nil`（輸出不變）；正式為 shops 表加 nullable text `description` migration（shops 是租戶根本身，非鐵律 2 豁免）＋admin 店鋪資料表單＋回 `@shop.description`。加測試斷言 theme-data.liquid:76 位置為 string 非 null。\n\n### PR-F　字型庫：Roboto Condensed ＋ helvetica ＋ 顯示名推導（1 key，78 miss）\n\n- **官方**（`…/settings/input-settings` font_picker，2026-09-02）：\"automatically populated with fonts from the Shopify font library. This library includes system fonts and a selection of Google Fonts.\" / \"The `default` attribute is required.\" / 值為 \"a `font` object\"；`…/settings/fonts` 表列 \"Roboto Condensed | `roboto_condensed_n1 roboto_condensed_i1 …`\"；`…/objects/font`：system? \"Returns `true` if the font is a system font. Returns `false` if not.\"；未知 handle 行為 ＝ 未取得。\n- **Minimog**：`minimog/config/settings_data.json:6` `roboto_condensed_n4`、`:10` `roboto_condensed_n7`；schema default `helvetica_n4`（`config/settings_schema.json:126-129`）／`helvetica_n7`（`:217-220`）；消費 `minimog/snippets/font-face.liquid:2`／`:5`／`:16`／`:23`（`.system?` 決定是否輸出 font_face）。settings_data.json:7/11 `use_custom_font_*: true`（Jost）在此 preset 視覺上遮住了差異。\n- **我方**：`engine/drops.rb:1924` ⇒ `engine/font_library.rb:27-41`，`<repo>config/storefront_fonts.yml:7-23` 只有 jost／poppins ⇒ `:38` system_drop ⇒ `:74-81` system 只有 sans_serif/serif/mono/monospace（yml `:24-28`）⇒ `:76` count_miss，`:77` `name.split(\"_\").first` 使 family 成 \"Roboto\"，system?=true，weight 固定 400。\n- **修法**：(1) `storefront_fonts.yml:23` 後加 `roboto_condensed` family（display_name \"Roboto Condensed\"，n4/n7 ＋ i4/i7），woff2 置 `<repo>public/fonts/roboto_condensed/`（**授權 ＝ 未取得，捆綁前須查**）；(2) `font_library.rb:77` 改 `name.tr('_',' ').split.map(&:capitalize).join(' ')`；(3) `storefront_fonts.yml:24` 加 `helvetica` system 條目；(4) 長期匯入官方 available-fonts 全表。\n\n---\n\n## (3) 主題無關 vs Minimog 專屬\n\n### 主題無關（任何主題都會撞到，優先修）\n\n| PR | 為什麼主題無關 |\n|---|---|\n| **PR-A color_scheme fallback** | 官方契約是設定型別層級的三段 fallback；任何 schema 未給 default 或 template 存 `\"\"` 的主題（Minimog 自己的 `index.json:291` 等 `\"\"` 實例即證明「未計 miss 也錯」）都會拼出斷裂 class |\n| **PR-B checkbox false** | 型別層級隱含預設，任何 checkbox 無 default 且以字串輸出（`data-*`、`| json`）的主題都會 `\"\"` vs `\"false\"` |\n| **PR-C sort_options** | 官方 collection 物件屬性；任何渲染集合排序下拉的主題都讀它，與 SearchDrop `:1109-1111` 已實作形成不對稱 |\n| **PR-D current_vendor／current_type ＋路由** | 官方屬性＋官方 storefront URL（`/collections/vendors`、`/collections/types`）；不論主題有無使用，路由本身缺失（其他主題實際使用行 ＝ 未取得，本輪未 grep） |\n| **PR-E money_with_currency_format／description** | 官方 shop 物件屬性，theme-data／og:description 是通用 pattern |\n| **PR-F 之 (2)(4)** | `font_library.rb:77` 多字 family 名推導錯與字庫不完整，影響所有選到非 jost/poppins 字型的主題 |\n\n### Minimog 專屬（或只是此 preset／runner 的資料）\n\n| 項目 | 性質 |\n|---|---|\n| PR-F 之 (1)(3) `roboto_condensed`、`helvetica` 具體條目 | 是 Minimog preset 值與 schema default；其他主題是否也用 ＝ 未取得（但字庫完整性本身是主題無關問題） |\n| 7 個 theme-quirk（CollectionDrop.terms、ShopDrop.features、FormDrop.current_locale、settings.color_primary、section(custom-content).animations、section(collection-page-header).vertical_alignment、section(main-product).change_product_variant_on_fitlering） | Minimog 讀未文檔化／未宣告／宿主不同的 key；我方 nil 與官方一致，**無需引擎修改**。可選：FormDrop 在 `tags.rb:120` 對 `localization` 表單注入 `current_locale`（登 V）；ShopDrop 加回 false 的 FeaturesDrop（登 V） |\n| 4 個 data-absent（linklists.gift-wrapping／main-menu／footer-bottom、pages.wishlist） | runner `tmp/minimog_conformance.rb:25-42` 未 seed Menu／wishlist Page；引擎行為正確。附帶一個**主題無關**的次要 parity 點：`drops.rb:1909` coerce 缺 `link_list`／`page` 分支（回 raw string 而非 blank），使 `!= blank` 守衛無法偵測已刪除的選單／頁面——可另開小 PR，但 `linklists[drop]`／`pages[drop]` 索引語義 ＝ 未取得，改前須驗 |\n| 17 個 settings-default（image_picker×13、text×4） | 官方明文 nil／empty，我方一致，1,088 miss 全為計數噪音。**主題無關的可選降噪**：`drops.rb:1888` 對 `@t.key?(k)` 且型別為 image_picker／video（官方不支援 default）的缺 key 不 count_miss；text 型別 `empty | json` 官方輸出 ＝ 未取得，不建議現在改 |\n\n### 未取得清單（修法落地前須另取證）\n1. PR-C sort_option `name` 的 locale key 路徑（真引擎抓取）\n2. PR-D `/collections/vendors|types` 虛擬集合 title／handle／預設排序（真店抓取）\n3. PR-E `money_with_currency_format` 每幣別官方 pattern\n4. PR-F Roboto Condensed 字型檔授權\n5. `linklists[linklist_drop]`／`pages[page_drop]` 索引語義（coerce 分支前置）\n6. `empty | json` 官方序列化（text 型 EmptyDrop parity 前置）",
+    "confirmed": [
+      {
+        "miss_key": "CollectionDrop.sort_options",
+        "classification": "engine-gap",
+        "count": 78,
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/collection-page-toolbar.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/sort-by-mobile.liquid"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/collection (fetched 2026-09-02): collection.sort_options — \"The available sorting options for the collection.\" Return type: \"Returns array of sort_option\"; example JSON shows pairs {\"value\":\"manual\",\"name\":\"Featured\"}, {\"value\":\"best-selling\",\"name\":\"Best selling\"}, {\"value\":\"price-ascending\",\"name\":\"Price, low to high\"}. https://shopify.dev/docs/api/liquid/objects/sort_option (2026-09-02): sort_option = \"A sort option for a collection or search results page.\"; name = \"The customer-facing name of the sort option.\"; value = \"The value of the sort option.\"",
+        "minimog_usage": "test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid:20 `{%- for option in results.sort_options -%}` (results: collection, passed from snippets/collection-sidebar.liquid:82); snippets/collection-page-toolbar.liquid:5 `for option in results.sort_options` plus :39 and :61 (render at sections/main-collection-product-grid.liquid:58 `results: collection`); snippets/sort-by-mobile.liquid:11 `{% for option in results.sort_options %}` (sections/main-collection-product-grid.liquid:132 `render 'sort-by-mobile', results: collection`). All uses read option.value / option.name. Per-page: 5 misses on every collection view (/collections/mc-col and all 15 ?view= alternates), 4 on filter-by-tags and flash-sale views; total 78.",
+        "ours": "app/liquid/theme_engine/drops.rb:647-772 CollectionDrop has no `sort_options` method; only `default_sort_by` (drops.rb:706) and `sort_by` (drops.rb:707) exist, with the 8-value STOREFRONT_SORT map at drops.rb:668-673. The lookup falls to `liquid_method_missing` at drops.rb:768-771 which count_miss()es and returns nil, so every Minimog sort-select / toolbar / mobile sort list renders empty. SearchDrop already implements the sibling contract at drops.rb:1109-1111 (`sort_options` returning BaseDrop({value,name}) per SORT_VALUES).",
+        "fix": "Add `def sort_options` to CollectionDrop (drops.rb, next to sort_by at ~line 707): iterate STOREFRONT_SORT.keys (the 8 official storefront values: manual, best-selling, title-ascending, title-descending, price-ascending, price-descending, created-ascending, created-descending) and return `BaseDrop.new({\"value\" => v, \"name\" => <customer-facing name>})`, mirroring SearchDrop#sort_options at drops.rb:1109-1111. `name` should come from the theme locale (Shopify's official example names: Featured / Best selling / Price, low to high …) — resolve via the engine's translation source rather than hard-coding English; the exact locale key path is 未取得 from official docs and needs a real-engine capture per 鐵律 14.",
+        "survives": true,
+        "verify": "Refutation attempt FAILED on all three escape routes; the engine-gap classification stands.\n\n(1) Official semantics (WebFetch 2026-09-02): https://shopify.dev/docs/api/liquid/objects/collection lists exactly three sort-family properties — `default_sort_by` (string), `sort_by` (string), `sort_options"
+      },
+      {
+        "miss_key": "CollectionDrop.current_vendor",
+        "classification": "engine-gap",
+        "count": 14,
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/page_renderer.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/collection (fetched 2026-09-02): current_vendor — \"The vendor name on a vendor collection page. You can query for products from a certain vendor at the `/collections/vendors` URL with a query parameter in the format of `?q=[vendor]`.\" Return type: string.",
+        "minimog_usage": "test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid:351-352 `{%- if results.current_vendor or results.current_type -%}<input type=\"hidden\" name=\"q\" value=\"{{ results.current_vendor }}{{ results.current_type }}\">` (results: collection via snippets/collection-sidebar.liquid:82). 1 miss per collection view (14 views). Minimog has no dedicated vendors/types template (templates/ grep for vendor|type = none).",
+        "ours": "app/liquid/theme_engine/drops.rb:647-772 CollectionDrop defines no `current_vendor`; falls to liquid_method_missing drops.rb:768-771 (count_miss + nil). page_renderer.rb:208-233 only resolves `/collections/<handle>` (real collection or virtual `all`, page_renderer.rb:216-222); there is no `/collections/vendors?q=` route (grep 'vendors' in page_renderer.rb = 0 hits), so the property has no data source at all. On an ordinary collection page Shopify itself returns nil for this property, so the rendered output for /collections/mc-col is currently identical to Shopify; the gap is that the property and the vendor-collection route are unimplemented.",
+        "fix": "Two-part: (1) drops.rb CollectionDrop — add `def current_vendor` returning the `q` param only when the drop was built for the vendors virtual collection, else nil (add a `current_vendor:` kwarg to initialize at drops.rb:652-654 and thread it through). (2) page_renderer.rb:208 — add a `/collections/vendors` branch (before the generic handle match) that builds a virtual collection whose products are filtered by `vendor = params[\"q\"]`, passing current_vendor: params[\"q\"]. Until (2) lands, at minimum define `def current_vendor = nil` explicitly so it stops being counted as a miss; the exact Shopify title/handle/sort defaults for the vendors virtual collection are 未取得 and need a real-store capture (鐵律 12/14).",
+        "survives": true,
+        "verify": "Cannot refute; engine-gap stands (with one precision note). (1) Official, re-fetched 2026-09-02 https://shopify.dev/docs/api/liquid/objects/collection: current_vendor — \"The vendor name on a vendor collection page.\" return type string; \"You can query for products from a certain vendor at the `/colle"
+      },
+      {
+        "miss_key": "CollectionDrop.current_type",
+        "classification": "engine-gap",
+        "count": 14,
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/page_renderer.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/collection (fetched 2026-09-02): current_type — \"The product type on a product type collection page. You can query for products of a certain type at the `/collections/types` URL with a query parameter in the format of `?q=[type]`.\" Return type: string.",
+        "minimog_usage": "test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid:351-352 `{%- if results.current_vendor or results.current_type -%}<input type=\"hidden\" name=\"q\" value=\"{{ results.current_vendor }}{{ results.current_type }}\">` (results: collection via snippets/collection-sidebar.liquid:82). 1 miss per collection view (14 views).",
+        "ours": "app/liquid/theme_engine/drops.rb:647-772 CollectionDrop defines no `current_type`; falls to liquid_method_missing drops.rb:768-771 (count_miss + nil). page_renderer.rb:208-233 has no `/collections/types?q=` route (grep '/collections/types' = 0 hits). Same shape as current_vendor: nil is what Shopify returns on a normal collection page, so /collections/mc-col output matches today, but the product-type virtual collection page and the property are unimplemented.",
+        "fix": "Same pattern as current_vendor: add `def current_type` to CollectionDrop (drops.rb ~line 707) backed by a `current_type:` initializer kwarg, and add a `/collections/types` branch in page_renderer.rb:208 building a virtual collection filtered by `product_type = params[\"q\"]`. Interim: explicit `def current_type = nil` to remove the false miss. Shopify's exact virtual-collection title/sort for /collections/types is 未取得 (needs real-store capture per 鐵律 12/14).",
+        "survives": true,
+        "verify": "Attempted refutation on all three axes; each fails.\n\n1) Already implemented under another name / fallback? No. `grep -rn \"current_type\\|current_vendor\\|collections/types\\|collections/vendors\" app/liquid/theme_engine/` hits only filters.rb:203-205 (`link_to_vendor`/`url_for_vendor`/`link_to_type`, wh"
+      },
+      {
+        "miss_key": "ShopDrop.money_with_currency_format",
+        "classification": "engine-gap",
+        "count": 39,
+        "files": [
+          "app/liquid/theme_engine/drops.rb:1478-1481",
+          "test/fixtures/themes/minimog-5.9.0/snippets/theme-data.liquid:12",
+          "test/fixtures/themes/minimog-5.9.0/snippets/theme-data.liquid:76",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_schema.json:2768-2770"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/shop (fetched 2026-09-02): money_with_currency_format — \"The money format of the store with the currency included.\"; money_format — \"The money format of the store.\" (both listed as shop properties).",
+        "minimog_usage": "snippets/theme-data.liquid:11-13 `assign money_format = shop.money_format / if settings.currency_code_enabled / assign money_format = shop.money_with_currency_format | strip_html` (setting `currency_code_enabled` is a checkbox with `\"default\": false` at config/settings_schema.json:2768-2770 and is not present in config/settings_data.json ⇒ branch not taken in this render); snippets/theme-data.liquid:76 `money_with_currency_format: {{ shop.money_with_currency_format | strip_html | json }},` emitted unconditionally into the window theme-data JSON ⇒ currently renders `null`. 39 pages × 1.",
+        "ours": "drops.rb:1478-1481 implements only `money_format` (`\"#{symbol}{{amount}}\"`, HKD ⇒ `HK${{amount}}`); no `money_with_currency_format` method ⇒ drops.rb:1512-1515 liquid_method_missing ⇒ nil. The shops table (db/schema.rb `create_table \"shops\"`) has no persisted money-format columns, so the value must be derived like money_format is.",
+        "fix": "Add to ShopDrop right after drops.rb:1481: `def money_with_currency_format = \"#{money_format} #{@shop.store_currency}\"` (derive from the same symbol source as money_format, 鐵律 7/10 — one format source). The exact Shopify default pattern for a given currency (e.g. whether it is `HK${{amount}} HKD`) is 未取得 from official docs; register as V and keep the derivation in one place so it can be replaced when shop-level money formats become persisted settings. Add a ShopDrop test asserting the JS payload at theme-data.liquid:76 is a string, not null.",
+        "survives": true,
+        "verify": "Could not refute; the engine-gap classification stands on all three counts.\n\n1. Official semantics (WebFetch https://shopify.dev/docs/api/liquid/objects/shop, 2026-09-02): `money_with_currency_format` is a listed shop property, return type `currency`, description verbatim \"The money format of the st"
+      },
+      {
+        "miss_key": "ShopDrop.description",
+        "classification": "engine-gap",
+        "count": 39,
+        "files": [
+          "app/liquid/theme_engine/drops.rb:1464-1515",
+          "test/fixtures/themes/minimog-5.9.0/snippets/social-meta-tags.liquid:5",
+          "db/schema.rb (create_table \"shops\": no description column)"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/shop (fetched 2026-09-02): description — \"The description of the store.\" (listed shop property).",
+        "minimog_usage": "snippets/social-meta-tags.liquid:5 `assign og_description = page_description | default: shop.description | default: shop.name` — nil falls through to shop.name, so the rendered og:description is shop.name (no visible error). 39 pages × 1.",
+        "ours": "ShopDrop (drops.rb:1464-1515) has no `description` method ⇒ liquid_method_missing (drops.rb:1512-1515) counts and returns nil. Data side: `awk '/create_table \"shops\"/,/^  end/' db/schema.rb | grep -c description` ⇒ 0 — the shops table has no description column, so there is also no source value yet.",
+        "fix": "Short term: add `def description = nil` (or a stored value once available) to ShopDrop near drops.rb:1470 so the official property exists and the miss counter is silent; the render output is unchanged because Minimog's `default:` chain already lands on shop.name. Proper fix: add a nullable `description` (text) column to shops via migration (business data on the tenant root — 鐵律 2 shops is not exempt but is the root itself), expose it in the admin store-details form, and return `@shop.description` here; note official `shop.description` = store meta description, which Minimog uses as the og:description fallback.",
+        "survives": true,
+        "verify": "Refutation attempt failed on all three axes; the engine-gap classification stands (with the data-absent facet the claim already records).\n\n1. Official (re-fetched 2026-09-02, https://shopify.dev/docs/api/liquid/objects/shop): `description` is listed among shop properties, type string, verbatim: \"The"
+      },
+      {
+        "miss_key": "font_library.roboto_condensed",
+        "classification": "engine-gap",
+        "count": 78,
+        "files": [
+          "app/liquid/theme_engine/font_library.rb:27",
+          "app/liquid/theme_engine/font_library.rb:38",
+          "app/liquid/theme_engine/font_library.rb:74",
+          "app/liquid/theme_engine/font_library.rb:76",
+          "app/liquid/theme_engine/drops.rb:1924",
+          "config/storefront_fonts.yml:7",
+          "config/storefront_fonts.yml:24",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_data.json:6",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_data.json:10",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_schema.json:129",
+          "test/fixtures/themes/minimog-5.9.0/snippets/font-face.liquid:16"
+        ],
+        "official": "shopify.dev/docs/storefronts/themes/architecture/settings/input-settings (2026-09-02) font_picker: \"A setting of type `font_picker` outputs a font picker field that's automatically populated with fonts from the Shopify font library. This library includes system fonts and a selection of Google Fonts.\" / \"The `default` attribute is required.\" / \"When accessing the value of a `font_picker` type setting, data is returned as a `font` object.\" shopify.dev/docs/storefronts/themes/architecture/settings/fonts (2026-09-02) available fonts table lists \"Roboto Condensed | `roboto_condensed_n1 roboto_condensed_i1 roboto_condensed_n2...` (through n9/i9)\". shopify.dev/docs/api/liquid/objects/font: family \"The family name of the font.\", system? \"Returns `true` if the font is a system font. Returns `false` if not.\" Behaviour for an unknown handle: 未取得 (not documented).",
+        "minimog_usage": "config/settings_schema.json:126-129 font_picker type_base_font default \"helvetica_n4\", :217-220 type_header_font default \"helvetica_n7\"; instance config/settings_data.json:6 `\"type_base_font\": \"roboto_condensed_n4\"`, :10 `\"type_header_font\": \"roboto_condensed_n7\"`; consumed snippets/font-face.liquid:2,5 (assign) and :16/:23 `unless use_custom_font_body or settings.type_base_font.system?` (font_face/font_url emitted when not system). 2 font_picker settings × 39 pages = 78. Note settings_data.json:7/11 use_custom_font_body/heading = true with Jost URLs, which masks the gap visually in this preset.",
+        "ours": "drops.rb:1924 `when \"font_picker\" then FontLibrary.drop(val)` → font_library.rb:27-41: handle matches HANDLE_RE, `registry[\"families\"][\"roboto_condensed\"]` is nil (config/storefront_fonts.yml:7-23 registers only jost and poppins; public/fonts has only jost/ poppins/), so font_library.rb:38 falls to system_drop → font_library.rb:74-81: registry system has only sans_serif/serif/mono/monospace (storefront_fonts.yml:24-28) ⇒ count_miss(\"font_library.roboto_condensed\") (font_library.rb:76) and returns FontDrop(family: \"Roboto\" [split('_').first.capitalize — wrong family name, drops 'Condensed'], system?: true, file: nil, weight 400 regardless of n7). Official library contains Roboto Condensed as a non-system Google font ⇒ family name, system?, weight, variants and font_face/font_url output all diverge. Same gap applies to the schema default `helvetica_n4/n7` (no 'helvetica' entry in storefront_fonts.yml either).",
+        "fix": "Add a `roboto_condensed` family to config/storefront_fonts.yml (after line 23) with display_name \"Roboto Condensed\", variants n4/n7 (+ i4/i7 as needed) and ship woff2 files under public/fonts/roboto_condensed/ (licence for Roboto Condensed: 未取得 — verify before bundling); longer-term import the official available-fonts list so every handle in shopify.dev fonts table resolves. Also fix font_library.rb:77 display-name derivation (`name.split(\"_\").first` drops multi-word families — use `name.tr('_',' ').split.map(&:capitalize).join(' ')`) and add a `helvetica` system entry at storefront_fonts.yml:24 so Minimog's schema default resolves as system?=true.",
+        "survives": true,
+        "verify": "NOT refuted — genuine engine gap, already self-registered as ⚪ but unimplemented. Evidence (2026-09-02):\n\nOFFICIAL (WebFetch shopify.dev, 2026-09-02): fonts page \"Shopify's font library is a collection of fonts that includes system fonts and a selection of Google fonts.\" Table row verbatim: \"| Robot"
+      },
+      {
+        "miss_key": "settings.drawer_popup_color_scheme",
+        "classification": "engine-gap",
+        "count": 78,
+        "official": "input-settings#color_scheme (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, fetched 2026-09-02): \"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned.\" ⇒ official never yields nil here: schema has no default and settings_data has no value, so Shopify returns the FIRST scheme of color_scheme_group (settings_data current.color_schemes first id = `default`).",
+        "minimog_usage": "config/settings_schema.json:2110 `\"id\": \"drawer_popup_color_scheme\"` (type color_scheme, NO default; block 2108-2112). Not present in config/settings_data.json current. Consumers: snippets/cart-drawer.liquid:24 `m-color-{{ settings.drawer_popup_color_scheme }}`; snippets/search-popup.liquid:11; sections/product-quickview.liquid:46; sections/pickup-availability.liquid:66; snippets/form__ask-a-question.liquid:1; snippets/main-product-blocks.liquid:896 — all emit `m-color-<id>` class, so nil gives the broken class `m-color-` instead of `m-color-default`.",
+        "ours": "app/liquid/theme_engine/runtime.rb:85 `@settings_data = schema_defaults(all_defs).merge(db_settings || file_settings_current)` + runtime.rb:331-333 `schema_defaults` only copies keys that have `default` ⇒ key absent. app/liquid/theme_engine/drops.rb:1886-1891 SettingsDrop#liquid_method_missing: `unless @v.key?(k) → count_miss → return nil`; the color_scheme fallback at drops.rb:1931-1933 (`(@schemes && @schemes.scheme(val.to_s)) || val`) is only reached when the key exists. ColorSchemeGroupDrop#first exists at drops.rb:1739 and schemes_drop is built at runtime.rb:156-165, so the fallback target is already available. Rendered: 2 misses/page × 39 pages = 78.",
+        "fix": "drops.rb:1888-1891 — before returning nil for a missing key, consult the type map: `if (@t[k] == \"color_scheme\") && @schemes then return @schemes.first end` (official: first color_scheme from color_scheme_group when neither value nor default is valid). Also apply the same rule when the key exists but `@schemes.scheme(val)` misses (drops.rb:1933 currently returns the raw invalid id instead of first scheme). Add a regression: Minimog settings_schema with no default + settings_data without the key ⇒ `{{ settings.drawer_popup_color_scheme }}` renders `default`.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json"
+        ],
+        "survives": true,
+        "verify": "Could not refute; the engine-gap classification holds on all three axes.\n\nOFFICIAL (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02, verbatim): \"If no value was entered, or the value was invalid, then the default value from `color_sc"
+      },
+      {
+        "miss_key": "settings.loading_design_mode",
+        "classification": "engine-gap",
+        "count": 39,
+        "official": "input-settings#checkbox (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#checkbox, fetched 2026-09-02): \"When accessing the value of a `checkbox` type setting, data is returned as a boolean.\" and \"If `default` is unspecified, then the value is `false` by default.\" ⇒ official value is boolean false, not nil.",
+        "minimog_usage": "config/settings_schema.json:785 `\"id\": \"loading_design_mode\"` (type checkbox, NO default; block 783-788). Absent from config/settings_data.json current. Consumer: snippets/page-transition.liquid:115 `data-design-mode=\"{{ settings.loading_design_mode }}\"` — official renders `data-design-mode=\"false\"`, ours renders `data-design-mode=\"\"`.",
+        "ours": "runtime.rb:331-333 `schema_defaults` sets a key only `if d.key?(\"default\")` — no type-aware implicit default for checkbox ⇒ key absent from @settings_data (runtime.rb:85) ⇒ drops.rb:1886-1891 count_miss + nil. drops.rb:1909-1936 `coerce` has no `checkbox` branch either (falls to `else val`). Truthiness-only consumers (`{% if %}`) behave the same, but string output differs (`\"\"` vs `\"false\"`).",
+        "fix": "runtime.rb:331-333 schema_defaults: add implicit default for checkbox — `h[d[\"id\"]] = false if d[\"type\"] == \"checkbox\" && !d.key?(\"default\")` (applies to global settings, sections and blocks since render_section/blocks reuse schema_defaults at runtime.rb:338/382/397). Regression: Minimog `loading_design_mode` renders `false`.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json"
+        ],
+        "survives": true,
+        "verify": "Refutation attempted on all three axes; the engine-gap classification survives.\n\n(1) Official re-fetched 2026-09-02, https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#checkbox — verbatim: \"data is returned as a boolean.\" and \"If `default` is unspecified, then the value"
+      },
+      {
+        "miss_key": "section(custom-content).content_color_scheme",
+        "classification": "engine-gap",
+        "count": 32,
+        "official": "shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme (fetched 2026-09-02): \"When accessing the value of a `color_scheme` type setting, Shopify returns the selected `color_scheme` object from `color_scheme_group`. If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned. If the theme doesn't have `color_scheme_group` data in `settings_data.json`, then nil is returned.\" ⇒ Minimog has color_scheme_group data (config/settings_schema.json:515-516 id `color_schemes`; config/settings_data.json current.color_schemes has 8 schemes, first = `default`), so official value = first scheme (`default`), NOT nil.",
+        "minimog_usage": "Schema: sections/custom-content.liquid:1367-1371 (`\"type\": \"color_scheme\", \"id\": \"content_color_scheme\"`, NO default). Reads: sections/custom-content.liquid:99 (`m-color-{{ section.settings.content_color_scheme }}` and `!= section.settings.color_scheme` comparison), :535 and :547 (`parent_color_scheme: section.settings.content_color_scheme`). Instances lacking the key: templates/product.custom-layout-1.json:161, product.custom-layout-2.json:126/168/240/282, product.custom-layout-3.json (5 sections), product.custom-layout-4.json (3), product.custom-layout-5.json (4) — key absent. (index.json:291 etc. have `\"\"` — invalid value, no miss counted but same official fallback applies.)",
+        "ours": "runtime.rb:331-333 schema_defaults: no default in schema ⇒ nothing merged at runtime.rb:338; drops.rb:1886-1891 SettingsDrop#liquid_method_missing returns nil when key absent (no type-aware fallback); drops.rb:1931-1933 coerce(color_scheme) = `(@schemes && @schemes.scheme(val.to_s)) || val` — for present-but-invalid values (\"\") returns the raw string instead of the first scheme. runtime.rb:156-163 schemes_drop exposes the group; drops.rb:1739-1741 ColorSchemeGroupDrop#first exists but is never used as fallback. Rendered output: `m-color-` (empty class) vs official `m-color-default`.",
+        "fix": "drops.rb:1886-1893 — before returning nil, if the declared type (@t[k], resolved as in coerce) is \"color_scheme\" and @schemes is present, return @schemes.first (schema default is already merged upstream at runtime.rb:338/382/397, so absent key means no default). drops.rb:1931-1933 — change to `(@schemes && (@schemes.scheme(val.to_s) || @schemes.first)) || val` so invalid/empty selections also fall to the first scheme per the official sentence. Keep nil when @schemes is nil (no color_scheme_group data). Add fixture: section color_scheme setting with no default + no value ⇒ first scheme id; \"\" ⇒ first scheme id; unknown id ⇒ first scheme id; theme without color_scheme_group ⇒ nil.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/custom-content.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_data.json"
+        ],
+        "survives": true,
+        "verify": "Not refuted — the engine-gap classification stands on all three legs.\n\nOFFICIAL (WebFetch 2026-09-02, https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme), verbatim: \"If no value was entered, or the value was invalid, then the default value from `color_schem"
+      },
+      {
+        "miss_key": "section(custom-content).color_scheme",
+        "classification": "engine-gap",
+        "count": 32,
+        "official": "Same color_scheme contract (input-settings#color_scheme, 2026-09-02): \"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned. If the theme doesn't have `color_scheme_group` data in `settings_data.json`, then nil is returned.\" Minimog has the group data ⇒ official = first scheme `default`.",
+        "minimog_usage": "Schema: sections/custom-content.liquid:1362-1366 (`\"type\": \"color_scheme\", \"id\": \"color_scheme\"`, NO default). Reads: sections/custom-content.liquid:10 (`append: ' m-gradient m-color-' | append: section.settings.color_scheme`), :99 (comparison with content_color_scheme). Instances without the key: templates/product.custom-layout-1.json:161 and all custom-content sections in product.custom-layout-2/3/4/5.json (see content_color_scheme row).",
+        "ours": "Same path: runtime.rb:331-333 + :338 (no default to merge), drops.rb:1886-1891 (absent ⇒ nil), drops.rb:1931-1933 (invalid value ⇒ raw string). Emits `m-color-` instead of `m-color-default`.",
+        "fix": "Same fix as content_color_scheme (drops.rb:1886-1893 type-aware fallback to @schemes.first; drops.rb:1931-1933 invalid ⇒ @schemes.first). One change covers both keys.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/custom-content.liquid"
+        ],
+        "survives": true,
+        "verify": "NOT refuted — it is a genuine engine gap, same root as content_color_scheme.\n\nOfficial (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02), verbatim: \"If no value was entered, or the value was invalid, then the default value from `colo"
+      },
+      {
+        "miss_key": "section(recent-viewed-products).color_scheme",
+        "classification": "engine-gap",
+        "count": 7,
+        "official": "color_scheme (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, fetched 2026-09-02): \"When accessing the value of a `color_scheme` type setting, Shopify returns the selected `color_scheme` object from `color_scheme_group`. If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned.\" ⇒ with no value and no default, official returns the FIRST scheme of `settings.color_schemes` (Minimog config/settings_data.json:67 first key = `default`), so `m-color-{{ … }}` renders `m-color-default`.",
+        "minimog_usage": "Declared without default: test/fixtures/themes/minimog-5.9.0/sections/recent-viewed-products.liquid:156-159 ({\"type\":\"color_scheme\",\"id\":\"color_scheme\",\"label\":\"Color scheme\"}). Consumed at sections/recent-viewed-products.liquid:18 (`assign classes = '… m-gradient m-color-' | append: section.settings.color_scheme`). Instances: templates/cart.json and templates/product.custom-layout-1..5.json recent-viewed-products sections have NO `color_scheme` key (7 misses = cart + 5 custom layouts + flash-sale view); templates/collection.json / product.grid-*.json set `\"color_scheme\": \"\"` (empty string — not counted as miss but same official fallback applies). color_scheme_group declared at config/settings_schema.json:515-516 (id `color_schemes`).",
+        "ours": "Diverges. runtime.rb:331-333 seeds no default; runtime.rb:338 instance lacks key ⇒ drops.rb:1886-1892 SettingsDrop#liquid_method_missing returns nil before reaching coerce ⇒ theme emits class `m-color-` (empty suffix) instead of official `m-color-default`. For the `\"\"` instances the key exists, coerce drops.rb:1931-1933 `(@schemes && @schemes.scheme(val.to_s)) || val` returns \"\" (no scheme with id \"\") ⇒ same `m-color-` output. schemes drop is available (runtime.rb:156-163 schemes_drop, passed at runtime.rb:339/:382/:397; ColorSchemeGroupDrop#first exists at drops.rb:1739).",
+        "fix": "In app/liquid/theme_engine/drops.rb SettingsDrop: (a) at liquid_method_missing (:1886-1892) when `@v.key?(k)` is false but `@t[k] == \"color_scheme\"` and `@schemes` present, return `@schemes.first` (still may count_miss for telemetry or not); (b) in coerce `when \"color_scheme\"` (:1931-1933) change to `@schemes&.scheme(val.to_s) || (@schemes&.first if val.nil? || val.to_s.empty? || @schemes) || val` — i.e. blank/invalid id ⇒ first scheme of the group, per official three-step fallback (value → schema default → first scheme). Schema default is already merged by runtime.rb:331-333, so only the last step is missing. Add spec in spec/requests/storefront_blocks_schemes_spec.rb: section color_scheme absent / \"\" ⇒ `{{ section.settings.color_scheme }}` == first scheme id (`default`), mutation: remove fallback ⇒ red.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/recent-viewed-products.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/cart.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_data.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/spec/requests/storefront_blocks_schemes_spec.rb"
+        ],
+        "survives": true,
+        "verify": "Claim survives; it is a genuine engine gap. (1) Official (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02) verbatim: \"When accessing the value of a `color_scheme` type setting, Shopify returns the selected `color_scheme` object from "
+      },
+      {
+        "miss_key": "section(product-recommendations).color_scheme",
+        "classification": "engine-gap",
+        "count": 5,
+        "official": "Same contract as above (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02): \"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned.\" ⇒ official renders `m-color-default` (first key of config/settings_data.json:67 color_schemes).",
+        "minimog_usage": "Declared without default at test/fixtures/themes/minimog-5.9.0/sections/product-recommendations.liquid:138-141 ({\"type\":\"color_scheme\",\"id\":\"color_scheme\",\"label\":\"Color scheme\"}). Consumed at sections/product-recommendations.liquid:20 (`'… m-gradient m-color-' | append: section.settings.color_scheme`). Instances templates/product.custom-layout-1..5.json product-recommendations sections have no `color_scheme` key (5 misses); templates/product.grid-*.json set `\"\"` (same official fallback, not counted as miss).",
+        "ours": "Diverges: nil from drops.rb:1886-1892 (absent key) or \"\" from drops.rb:1931-1933 (blank id) ⇒ class `m-color-` instead of `m-color-default`. Same root cause as section(recent-viewed-products).color_scheme.",
+        "fix": "Same single fix as the recent-viewed-products row: SettingsDrop (drops.rb:1886-1892 and :1931-1933) falls back to `@schemes.first` for declared `color_scheme` settings whose value is absent, blank, or not a known scheme id. One fix closes both keys plus the uncounted `\"\"` instances.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/product-recommendations.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/product.custom-layout-1.json"
+        ],
+        "survives": true,
+        "verify": "Not refuted — engine-gap stands on all three legs.\n\nOFFICIAL (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02, verbatim): \"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If "
+      }
+    ],
+    "rows": [
+      {
+        "miss_key": "CollectionDrop.sort_options",
+        "classification": "engine-gap",
+        "count": 78,
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/collection-page-toolbar.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/sort-by-mobile.liquid"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/collection (fetched 2026-09-02): collection.sort_options — \"The available sorting options for the collection.\" Return type: \"Returns array of sort_option\"; example JSON shows pairs {\"value\":\"manual\",\"name\":\"Featured\"}, {\"value\":\"best-selling\",\"name\":\"Best selling\"}, {\"value\":\"price-ascending\",\"name\":\"Price, low to high\"}. https://shopify.dev/docs/api/liquid/objects/sort_option (2026-09-02): sort_option = \"A sort option for a collection or search results page.\"; name = \"The customer-facing name of the sort option.\"; value = \"The value of the sort option.\"",
+        "minimog_usage": "test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid:20 `{%- for option in results.sort_options -%}` (results: collection, passed from snippets/collection-sidebar.liquid:82); snippets/collection-page-toolbar.liquid:5 `for option in results.sort_options` plus :39 and :61 (render at sections/main-collection-product-grid.liquid:58 `results: collection`); snippets/sort-by-mobile.liquid:11 `{% for option in results.sort_options %}` (sections/main-collection-product-grid.liquid:132 `render 'sort-by-mobile', results: collection`). All uses read option.value / option.name. Per-page: 5 misses on every collection view (/collections/mc-col and all 15 ?view= alternates), 4 on filter-by-tags and flash-sale views; total 78.",
+        "ours": "app/liquid/theme_engine/drops.rb:647-772 CollectionDrop has no `sort_options` method; only `default_sort_by` (drops.rb:706) and `sort_by` (drops.rb:707) exist, with the 8-value STOREFRONT_SORT map at drops.rb:668-673. The lookup falls to `liquid_method_missing` at drops.rb:768-771 which count_miss()es and returns nil, so every Minimog sort-select / toolbar / mobile sort list renders empty. SearchDrop already implements the sibling contract at drops.rb:1109-1111 (`sort_options` returning BaseDrop({value,name}) per SORT_VALUES).",
+        "fix": "Add `def sort_options` to CollectionDrop (drops.rb, next to sort_by at ~line 707): iterate STOREFRONT_SORT.keys (the 8 official storefront values: manual, best-selling, title-ascending, title-descending, price-ascending, price-descending, created-ascending, created-descending) and return `BaseDrop.new({\"value\" => v, \"name\" => <customer-facing name>})`, mirroring SearchDrop#sort_options at drops.rb:1109-1111. `name` should come from the theme locale (Shopify's official example names: Featured / Best selling / Price, low to high …) — resolve via the engine's translation source rather than hard-coding English; the exact locale key path is 未取得 from official docs and needs a real-engine capture per 鐵律 14."
+      },
+      {
+        "miss_key": "CollectionDrop.terms",
+        "classification": "theme-quirk",
+        "count": 14,
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/collection-filters-facets.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/collection (fetched 2026-09-02): full property list = all_products_count, all_tags, all_types, all_vendors, current_type, current_vendor, default_sort_by, description, featured_image, filters, handle, id, image, metafields, next_product, previous_product, products, products_count, published_at, sort_by, sort_options, tags, template_suffix, title, url — \"No property named 'terms' exists on the collection object.\" `terms` is a search-object property only: https://shopify.dev/docs/api/liquid/objects/search — terms = \"The entered search terms.\"",
+        "minimog_usage": "test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid:12-13 `{%- if results.terms -%}<input type=\"hidden\" name=\"q\" value=\"{{ results.terms | escape }}\">` and snippets/collection-filters-facets.liquid:5 `assign terms = results.terms | escape` (only reached when `results.url` is falsy, :2-6). Both snippets are shared between the collection page (results: collection — collection-sidebar.liquid:82, main-collection-product-grid.liquid:65) and the search page (results: search). On the collection page the theme is deliberately probing a search-only property so the hidden q input is skipped. 1 miss per collection view (14 views).",
+        "ours": "app/liquid/theme_engine/drops.rb:647-772 CollectionDrop intentionally has no `terms`; drops.rb:768-771 liquid_method_missing returns nil — which is exactly what Shopify returns for an undefined property, so `{%- if results.terms -%}` correctly falls through. `terms` is correctly implemented on SearchDrop at drops.rb:1100.",
+        "fix": "No engine change. Official nil is correct (property not on collection). Optionally register the key in the count_miss allow-list / conformance baseline as an expected theme-quirk so it stops counting as a gap."
+      },
+      {
+        "miss_key": "CollectionDrop.current_vendor",
+        "classification": "engine-gap",
+        "count": 14,
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/page_renderer.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/collection (fetched 2026-09-02): current_vendor — \"The vendor name on a vendor collection page. You can query for products from a certain vendor at the `/collections/vendors` URL with a query parameter in the format of `?q=[vendor]`.\" Return type: string.",
+        "minimog_usage": "test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid:351-352 `{%- if results.current_vendor or results.current_type -%}<input type=\"hidden\" name=\"q\" value=\"{{ results.current_vendor }}{{ results.current_type }}\">` (results: collection via snippets/collection-sidebar.liquid:82). 1 miss per collection view (14 views). Minimog has no dedicated vendors/types template (templates/ grep for vendor|type = none).",
+        "ours": "app/liquid/theme_engine/drops.rb:647-772 CollectionDrop defines no `current_vendor`; falls to liquid_method_missing drops.rb:768-771 (count_miss + nil). page_renderer.rb:208-233 only resolves `/collections/<handle>` (real collection or virtual `all`, page_renderer.rb:216-222); there is no `/collections/vendors?q=` route (grep 'vendors' in page_renderer.rb = 0 hits), so the property has no data source at all. On an ordinary collection page Shopify itself returns nil for this property, so the rendered output for /collections/mc-col is currently identical to Shopify; the gap is that the property and the vendor-collection route are unimplemented.",
+        "fix": "Two-part: (1) drops.rb CollectionDrop — add `def current_vendor` returning the `q` param only when the drop was built for the vendors virtual collection, else nil (add a `current_vendor:` kwarg to initialize at drops.rb:652-654 and thread it through). (2) page_renderer.rb:208 — add a `/collections/vendors` branch (before the generic handle match) that builds a virtual collection whose products are filtered by `vendor = params[\"q\"]`, passing current_vendor: params[\"q\"]. Until (2) lands, at minimum define `def current_vendor = nil` explicitly so it stops being counted as a miss; the exact Shopify title/handle/sort defaults for the vendors virtual collection are 未取得 and need a real-store capture (鐵律 12/14)."
+      },
+      {
+        "miss_key": "CollectionDrop.current_type",
+        "classification": "engine-gap",
+        "count": 14,
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/page_renderer.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/collection (fetched 2026-09-02): current_type — \"The product type on a product type collection page. You can query for products of a certain type at the `/collections/types` URL with a query parameter in the format of `?q=[type]`.\" Return type: string.",
+        "minimog_usage": "test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid:351-352 `{%- if results.current_vendor or results.current_type -%}<input type=\"hidden\" name=\"q\" value=\"{{ results.current_vendor }}{{ results.current_type }}\">` (results: collection via snippets/collection-sidebar.liquid:82). 1 miss per collection view (14 views).",
+        "ours": "app/liquid/theme_engine/drops.rb:647-772 CollectionDrop defines no `current_type`; falls to liquid_method_missing drops.rb:768-771 (count_miss + nil). page_renderer.rb:208-233 has no `/collections/types?q=` route (grep '/collections/types' = 0 hits). Same shape as current_vendor: nil is what Shopify returns on a normal collection page, so /collections/mc-col output matches today, but the product-type virtual collection page and the property are unimplemented.",
+        "fix": "Same pattern as current_vendor: add `def current_type` to CollectionDrop (drops.rb ~line 707) backed by a `current_type:` initializer kwarg, and add a `/collections/types` branch in page_renderer.rb:208 building a virtual collection filtered by `product_type = params[\"q\"]`. Interim: explicit `def current_type = nil` to remove the false miss. Shopify's exact virtual-collection title/sort for /collections/types is 未取得 (needs real-store capture per 鐵律 12/14)."
+      },
+      {
+        "miss_key": "ShopDrop.features",
+        "classification": "theme-quirk",
+        "count": 39,
+        "files": [
+          "test/fixtures/themes/minimog-5.9.0/sections/main-login.liquid:48",
+          "test/fixtures/themes/minimog-5.9.0/snippets/footer-design.liquid:3",
+          "app/liquid/theme_engine/drops.rb:1464-1515"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/shop (fetched 2026-09-02): the shop object lists 33 properties (accepts_gift_cards … vendors); WebFetch verdict: \"'Features' does not appear as a property of the shop object.\" Also absent from https://shopify.dev/docs/api/liquid/filters/login_button (\"Generates an HTML Button that enables a customer to either sign in to the storefront using their Shop account or follow the shop in the Shop App.\"; shop.features: \"Absent\") and https://shopify.dev/docs/storefronts/themes/store/requirements (\"Add a Follow on Shop button using the login_button Liquid filter…\"; shop.features: \"Absent\"). Real Shopify runtime behaviour of the undocumented shop.features.follow_on_shop? / login_with_shop_classic_customer_accounts? flags = 未取得 (WebSearch on shopify.dev 2026-09-02 found no doc; full theme-liquid-docs objects.json could not be read via WebFetch — truncated).",
+        "minimog_usage": "snippets/footer-design.liquid:3 `if shop.features.follow_on_shop? and section.settings.enable_follow_on_shop` (gates the Follow-on-Shop button); sections/main-login.liquid:48 `{%- if shop.features.login_with_shop_classic_customer_accounts? -%}` (gates `{{ shop | login_button }}` block). Miss counted once per page (39 pages × 1, tmp/minimog-conformance.json /misses).",
+        "ours": "app/liquid/theme_engine/drops.rb:1464 `class ShopDrop < Liquid::Drop` defines id/name/currency/domain/permanent_domain/url/secure_url/email/money_format/enabled_currencies/published_locales/customer_accounts_enabled/customer_accounts_optional/metafields/brand/products_count/types/vendors/enabled_payment_types; no `features` method ⇒ drops.rb:1512-1515 `liquid_method_missing` counts the miss and returns nil. In Liquid `nil.follow_on_shop?` is nil ⇒ both `if` branches false ⇒ Follow-on-Shop and Sign-in-with-Shop blocks are skipped with no error — same visible result as a Shopify store where the feature is off.",
+        "fix": "No fix required (property is not in the official shop contract; nil is the documented outcome). Optional silence-only change: add `def features = FeaturesDrop.new` next to drops.rb:1482 `enabled_currencies`, with a small drop returning false for `follow_on_shop?` and `login_with_shop_classic_customer_accounts?` (we have no Shop-app integration); mark as ours/V since the flag names are undocumented."
+      },
+      {
+        "miss_key": "ShopDrop.money_with_currency_format",
+        "classification": "engine-gap",
+        "count": 39,
+        "files": [
+          "app/liquid/theme_engine/drops.rb:1478-1481",
+          "test/fixtures/themes/minimog-5.9.0/snippets/theme-data.liquid:12",
+          "test/fixtures/themes/minimog-5.9.0/snippets/theme-data.liquid:76",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_schema.json:2768-2770"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/shop (fetched 2026-09-02): money_with_currency_format — \"The money format of the store with the currency included.\"; money_format — \"The money format of the store.\" (both listed as shop properties).",
+        "minimog_usage": "snippets/theme-data.liquid:11-13 `assign money_format = shop.money_format / if settings.currency_code_enabled / assign money_format = shop.money_with_currency_format | strip_html` (setting `currency_code_enabled` is a checkbox with `\"default\": false` at config/settings_schema.json:2768-2770 and is not present in config/settings_data.json ⇒ branch not taken in this render); snippets/theme-data.liquid:76 `money_with_currency_format: {{ shop.money_with_currency_format | strip_html | json }},` emitted unconditionally into the window theme-data JSON ⇒ currently renders `null`. 39 pages × 1.",
+        "ours": "drops.rb:1478-1481 implements only `money_format` (`\"#{symbol}{{amount}}\"`, HKD ⇒ `HK${{amount}}`); no `money_with_currency_format` method ⇒ drops.rb:1512-1515 liquid_method_missing ⇒ nil. The shops table (db/schema.rb `create_table \"shops\"`) has no persisted money-format columns, so the value must be derived like money_format is.",
+        "fix": "Add to ShopDrop right after drops.rb:1481: `def money_with_currency_format = \"#{money_format} #{@shop.store_currency}\"` (derive from the same symbol source as money_format, 鐵律 7/10 — one format source). The exact Shopify default pattern for a given currency (e.g. whether it is `HK${{amount}} HKD`) is 未取得 from official docs; register as V and keep the derivation in one place so it can be replaced when shop-level money formats become persisted settings. Add a ShopDrop test asserting the JS payload at theme-data.liquid:76 is a string, not null."
+      },
+      {
+        "miss_key": "ShopDrop.description",
+        "classification": "engine-gap",
+        "count": 39,
+        "files": [
+          "app/liquid/theme_engine/drops.rb:1464-1515",
+          "test/fixtures/themes/minimog-5.9.0/snippets/social-meta-tags.liquid:5",
+          "db/schema.rb (create_table \"shops\": no description column)"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/shop (fetched 2026-09-02): description — \"The description of the store.\" (listed shop property).",
+        "minimog_usage": "snippets/social-meta-tags.liquid:5 `assign og_description = page_description | default: shop.description | default: shop.name` — nil falls through to shop.name, so the rendered og:description is shop.name (no visible error). 39 pages × 1.",
+        "ours": "ShopDrop (drops.rb:1464-1515) has no `description` method ⇒ liquid_method_missing (drops.rb:1512-1515) counts and returns nil. Data side: `awk '/create_table \"shops\"/,/^  end/' db/schema.rb | grep -c description` ⇒ 0 — the shops table has no description column, so there is also no source value yet.",
+        "fix": "Short term: add `def description = nil` (or a stored value once available) to ShopDrop near drops.rb:1470 so the official property exists and the miss counter is silent; the render output is unchanged because Minimog's `default:` chain already lands on shop.name. Proper fix: add a nullable `description` (text) column to shops via migration (business data on the tenant root — 鐵律 2 shops is not exempt but is the root itself), expose it in the admin store-details form, and return `@shop.description` here; note official `shop.description` = store meta description, which Minimog uses as the og:description fallback."
+      },
+      {
+        "miss_key": "FormDrop.current_locale",
+        "classification": "theme-quirk",
+        "count": 39,
+        "files": [
+          "app/liquid/theme_engine/drops.rb:1870-1874",
+          "app/liquid/theme_engine/drops.rb:12-23",
+          "app/liquid/theme_engine/tags.rb:100-125",
+          "app/liquid/theme_engine/runtime.rb:101-111",
+          "test/fixtures/themes/minimog-5.9.0/snippets/language-switcher.liquid:20"
+        ],
+        "official": "https://shopify.dev/docs/api/liquid/objects/form (fetched 2026-09-02): 20 properties listed (address1, address2, author, body, city, company, country, email, errors, first_name, id, last_name, message, name, password_needed, phone, posted_successfully?, province, set_as_default_checkbox, zip); WebFetch verdict: \"The property 'current_locale' is absent from this documentation.\" https://shopify.dev/docs/api/liquid/tags/form localization section: \"The `localization` form can contain one of two selectors: A country selector [or] A language selector\" — no form properties documented. https://shopify.dev/docs/storefronts/themes/markets/multiple-currencies-languages: hidden inputs are documented as `name=\"country_code\"` and `name=\"language_code\"`; \"current_locale\", \"form.current_locale\" and \"locale_code\" not found. https://shopify.dev/docs/api/liquid/objects/localization: language — \"The currently selected language on the storefront.\" Whether Shopify's runtime still exposes an undocumented form.current_locale inside `{% form 'localization' %}` = 未取得.",
+        "minimog_usage": "snippets/language-switcher.liquid:19-20 inside `{% form 'localization', data-localization-form: '', id: form_id %}`: `<input type=\"hidden\" name=\"locale_code\" value=\"{{ form.current_locale.iso_code }}\" data-localization-input/>` (rendered from sections/header.liquid:272,309,361,399,455, snippets/footer-design.liquid:36,103,140, snippets/header__topbar.liquid:82, snippets/mega-menu-customer.liquid:47); the visible `<select>` at lines 24-29 uses the documented `localization.available_languages` / `localization.language.iso_code`. Same undocumented pattern for the deprecated currency form at snippets/currency-switcher.liquid:21,25,28 (`form.current_currency`, `form.available_currencies`). 39 pages × 1.",
+        "ours": "tags.rb:120 `context[\"form\"] = ThemeEngine::FormDrop.new` for every form type; drops.rb:1870-1874 `FormDrop < BaseDrop` seeds only `errors`/`posted_successfully?`/`id`, so BaseDrop#liquid_method_missing (drops.rb:18-22) counts `FormDrop.current_locale` and returns nil ⇒ the hidden `locale_code` input renders with an empty value. The current language is available in the same context as `localization.language` (runtime.rb:101 synthetic / runtime.rb:110 `Storefront::LocalizationContext.drop`, app/services/storefront/localization_context.rb:18-50, hash with `iso_code`).",
+        "fix": "Official contract does not define current_locale, so nil is docs-correct; no mandatory change. If the empty `locale_code` value matters for Minimog's switcher JS, the low-cost compatibility shim is in tags.rb:120: when `@type == \"localization\"`, build `FormDrop.new` with extra attrs `\"current_locale\" => context[\"localization\"]&.[](\"language\")` (and mirror `current_currency`/`available_currencies` from cart.currency / shop.enabled_currencies for the deprecated currency form) — i.e. change FormDrop#initialize (drops.rb:1871-1873) to accept an attrs hash merged over the three defaults. Register as V (undocumented property) rather than as parity."
+      },
+      {
+        "miss_key": "linklists.gift-wrapping",
+        "classification": "data-absent",
+        "count": 118,
+        "files": [
+          "test/fixtures/themes/minimog-5.9.0/layout/theme.liquid:125",
+          "test/fixtures/themes/minimog-5.9.0/snippets/style-tags.liquid:195",
+          "test/fixtures/themes/minimog-5.9.0/snippets/cart-drawer.liquid:5",
+          "test/fixtures/themes/minimog-5.9.0/sections/cart-template.liquid:5",
+          "app/liquid/theme_engine/drops.rb:1592",
+          "app/liquid/theme_engine/drops.rb:1596"
+        ],
+        "official": "shopify.dev/docs/api/liquid/objects/linklists (2026-09-02): \"All of the menus in a store.\" / \"You can access a specific menu through the `linklists` object using the menu's handle.\" Missing-handle return value: 未取得 (page silent). shopify.dev/docs/api/liquid/basics/types (2026-09-02) nil: \"An undefined value. Tags or outputs that return `nil` don't print anything to the page. They are also treated as `false`.\" The theme guards with `.links != blank`, so a nil menu is the designed no-op path.",
+        "minimog_usage": "Hard-coded handle, never declared in any schema: layout/theme.liquid:125-126 `{%- if linklists['gift-wrapping'].links != blank and linklists['gift-wrapping'].links.first.type == 'product_link' -%}` (2 lookups/page); snippets/style-tags.liquid:195 same guard (1 lookup/page ⇒ 3/page on 39 pages = 117); cart pages add snippets/cart-drawer.liquid:5-6 / sections/cart-template.liquid:5-6 (4 on /cart). Merchant opt-in: create a menu with handle `gift-wrapping` whose first link is a product.",
+        "ours": "app/liquid/theme_engine/drops.rb:1585-1598 LinkListsDrop#liquid_method_missing: `Menu.includes(:menu_items).find_by(shop_id:, handle:)`, on nil ⇒ `ThemeEngine.count_miss(\"linklists.#{name}\")` (drops.rb:1596) and returns nil. Ephemeral shop in tmp/minimog_conformance.rb:25-42 creates Product/Collection/Page/Blog/Article only — zero Menu rows (grep 'Menu' in runner: no hits); app/models/menu.rb:7 DEFAULT_HANDLES is only consulted by GraphQL menu_delete/menu_update, no auto-seed. nil is the correct official-equivalent value; miss is telemetry only.",
+        "fix": "No engine change. If conformance should exercise the gift-wrap path, seed `Menu.create!(shop_id:, title: 'Gift wrapping', handle: 'gift-wrapping')` + a MenuItem(item_type: 'product', resource_id: product.id) in tmp/minimog_conformance.rb after line 34. Optionally downgrade count_miss for optional-handle lookups guarded by `!= blank` (drops.rb:1596) — cosmetic."
+      },
+      {
+        "miss_key": "linklists.main-menu",
+        "classification": "data-absent",
+        "count": 78,
+        "files": [
+          "test/fixtures/themes/minimog-5.9.0/sections/header.liquid:753",
+          "test/fixtures/themes/minimog-5.9.0/snippets/header-main-menu-container.liquid:10",
+          "test/fixtures/themes/minimog-5.9.0/sections/footer.liquid:178",
+          "app/liquid/theme_engine/drops.rb:1592",
+          "app/liquid/theme_engine/drops.rb:1934",
+          "app/models/menu.rb:7"
+        ],
+        "official": "shopify.dev/docs/storefronts/themes/architecture/settings/input-settings (2026-09-02) link_list: \"A setting of type `link_list` outputs a menu picker field that's automatically populated with the available menus for the store.\" / \"Accepted values for the `default` attribute are `main-menu` and `footer`.\" / returns \"A `linklist` object. `blank`, if either no selection has been made or the selection no longer exists.\" ⇒ `main-menu` is a store-provided default menu on Shopify. shopify.dev/docs/api/liquid/objects/linklists: \"All of the menus in a store.\"",
+        "minimog_usage": "sections/header.liquid:750-754 schema `{\"type\":\"link_list\",\"id\":\"main_menu\",\"default\":\"main-menu\"}` (header-group.json:84 sets only secondary_menu:\"\", so default applies); consumed at snippets/header-main-menu-container.liquid:10 `{% for link in linklists[section.settings[menu_id]].links %}` — rendered twice per page (desktop + drawer) ⇒ 2×39 = 78. sections/footer.liquid:175-178 footer `menu` block also defaults to \"main-menu\".",
+        "ours": "drops.rb:1585-1598 LinkListsDrop#liquid_method_missing ⇒ nil + count_miss (drops.rb:1596) because the ephemeral shop has no Menu rows (tmp/minimog_conformance.rb:25-42 seeds none; app/models/menu.rb:7 DEFAULT_HANDLES = %w[main-menu footer footer-menu customer-account-main-menu] is a delete/rename guard only, not a seeder). Secondary note: SettingsDrop#coerce (drops.rb:1909-1935) has no `link_list` branch — `else val` (drops.rb:1934) returns the raw handle string, whereas official returns a linklist object or `blank`; Minimog re-indexes `linklists[handle]` so the string works, but `!= blank` guards on link_list settings cannot detect a deleted menu on our side.",
+        "fix": "Data: seed `Menu.create!(shop_id: shop.id, title: 'Main menu', handle: 'main-menu')` (+ items) in tmp/minimog_conformance.rb after line 34; product-level: Shop default-menu seeding on create (main-menu/footer per Menu::DEFAULT_HANDLES, app/models/menu.rb:7) is a decision item, not proven here. Optional engine parity: add `when \"link_list\"` in drops.rb:1909 coerce that resolves to LinkListDrop or nil (\"blank, if ... the selection no longer exists\") — verify `linklists[drop]` indexing before doing so (未取得 whether Shopify's linklist drop to_s yields the handle)."
+      },
+      {
+        "miss_key": "linklists.footer-bottom",
+        "classification": "data-absent",
+        "count": 39,
+        "files": [
+          "test/fixtures/themes/minimog-5.9.0/sections/footer-group.json:91",
+          "test/fixtures/themes/minimog-5.9.0/sections/footer.liquid:158",
+          "test/fixtures/themes/minimog-5.9.0/snippets/footer-design.liquid:47",
+          "test/fixtures/themes/minimog-5.9.0/snippets/footer-design.liquid:50",
+          "app/liquid/theme_engine/drops.rb:1592",
+          "app/liquid/theme_engine/drops.rb:1934"
+        ],
+        "official": "shopify.dev/docs/storefronts/themes/architecture/settings/input-settings (2026-09-02) link_list returns \"A `linklist` object. `blank`, if either no selection has been made or the selection no longer exists.\" shopify.dev/docs/api/liquid/objects/linklists: \"All of the menus in a store.\" / access \"using the menu's handle\".",
+        "minimog_usage": "sections/footer.liquid:156-160 schema `{\"type\":\"link_list\",\"id\":\"footer_bottom_menu\"}` (no default); instance value sections/footer-group.json:91 `\"footer_bottom_menu\": \"footer-bottom\"`; consumed snippets/footer-design.liquid:47-50 `{% if section.settings.footer_bottom_menu != blank %}{% assign menu = section.settings.footer_bottom_menu %}... {% for link in linklists[menu].links %}` (1 lookup/page × 39). `footer-bottom` is a demo-store menu handle shipped in the preset, not a Shopify default.",
+        "ours": "drops.rb:1585-1598 LinkListsDrop ⇒ nil + count_miss (drops.rb:1596); no Menu with handle footer-bottom exists (runner seeds no menus). Because coerce (drops.rb:1934 `else val`) hands back the string \"footer-bottom\" instead of `blank`, the `!= blank` guard at footer-design.liquid:47 passes and the lookup runs; on Shopify with the menu deleted the setting would be blank and the block skipped. Rendered output is equivalent (empty <ul> vs nothing) — cosmetic divergence.",
+        "fix": "Data: seed Menu handle 'footer-bottom' in tmp/minimog_conformance.rb if the footer-bottom row should render. Engine parity (optional, same fix as main-menu): `when \"link_list\"` branch in drops.rb:1909 coerce resolving to LinkListDrop / nil so `!= blank` guards behave as official."
+      },
+      {
+        "miss_key": "pages.wishlist",
+        "classification": "data-absent",
+        "count": 78,
+        "files": [
+          "test/fixtures/themes/minimog-5.9.0/config/settings_schema.json:2502",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_data.json:53",
+          "test/fixtures/themes/minimog-5.9.0/snippets/header-option-item__wishlist.liquid:3",
+          "test/fixtures/themes/minimog-5.9.0/snippets/customer-navs.liquid:15",
+          "test/fixtures/themes/minimog-5.9.0/sections/mobile-sticky-bar.liquid:38",
+          "app/liquid/theme_engine/drops.rb:1385",
+          "app/liquid/theme_engine/drops.rb:1389",
+          "app/liquid/theme_engine/drops.rb:1934"
+        ],
+        "official": "shopify.dev/docs/api/liquid/objects/pages (2026-09-02): \"All of the pages on a store.\" accessed by handle (`pages['about-us'].title`); missing-handle value 未取得 (page silent). shopify.dev/docs/storefronts/themes/architecture/settings/input-settings (2026-09-02) page setting: \"A setting of type `page` outputs a page picker field that's automatically populated with the available pages for the store.\" / \"`page` settings also don't support the `default` attribute.\" / returns \"A `page` object. `blank`, if no selection has been made, the selection isn't visible, or the selection no longer exists.\"",
+        "minimog_usage": "config/settings_schema.json:2501-2505 `{\"type\":\"page\",\"id\":\"wishlist_page\",\"label\":\"Wishlist page\"}` (no default, per official); config/settings_data.json:53 `\"wishlist_page\": \"wishlist\"`; consumed snippets/header-option-item__wishlist.liquid:2-6 `if settings.wishlist_page != blank / assign url = pages[settings.wishlist_page].url / else assign url = '/pages/wishlist'`, snippets/customer-navs.liquid:15 `pages[settings.wishlist_page].url`, sections/mobile-sticky-bar.liquid:38 — 2 lookups/page × 39 = 78.",
+        "ours": "drops.rb:1378-1391 PagesDrop#liquid_method_missing: `Page.find_by(shop_id:, handle:)`, nil ⇒ count_miss(\"pages.#{name}\") (drops.rb:1389). Ephemeral shop has only Page handle 'about-us' (tmp/minimog_conformance.rb:38) — no 'wishlist' page. Same secondary note: coerce (drops.rb:1934) has no `page` branch, so settings.wishlist_page is the raw string \"wishlist\" instead of page object/blank; theme's `!= blank` guard therefore does not fall back to '/pages/wishlist', and `.url` on nil renders href=\"\" (Shopify would render the literal fallback). Minor visible divergence.",
+        "fix": "Data: `Page.create!(shop_id:, title: 'Wishlist', handle: 'wishlist', body_html: '', published_at: 1.hour.ago)` in tmp/minimog_conformance.rb after line 39. Engine parity (optional): `when \"page\"` in drops.rb:1909 coerce returning PageDrop or nil per \"blank, if ... the selection no longer exists\"; confirm `pages[page_drop]` indexing semantics first (未取得)."
+      },
+      {
+        "miss_key": "font_library.roboto_condensed",
+        "classification": "engine-gap",
+        "count": 78,
+        "files": [
+          "app/liquid/theme_engine/font_library.rb:27",
+          "app/liquid/theme_engine/font_library.rb:38",
+          "app/liquid/theme_engine/font_library.rb:74",
+          "app/liquid/theme_engine/font_library.rb:76",
+          "app/liquid/theme_engine/drops.rb:1924",
+          "config/storefront_fonts.yml:7",
+          "config/storefront_fonts.yml:24",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_data.json:6",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_data.json:10",
+          "test/fixtures/themes/minimog-5.9.0/config/settings_schema.json:129",
+          "test/fixtures/themes/minimog-5.9.0/snippets/font-face.liquid:16"
+        ],
+        "official": "shopify.dev/docs/storefronts/themes/architecture/settings/input-settings (2026-09-02) font_picker: \"A setting of type `font_picker` outputs a font picker field that's automatically populated with fonts from the Shopify font library. This library includes system fonts and a selection of Google Fonts.\" / \"The `default` attribute is required.\" / \"When accessing the value of a `font_picker` type setting, data is returned as a `font` object.\" shopify.dev/docs/storefronts/themes/architecture/settings/fonts (2026-09-02) available fonts table lists \"Roboto Condensed | `roboto_condensed_n1 roboto_condensed_i1 roboto_condensed_n2...` (through n9/i9)\". shopify.dev/docs/api/liquid/objects/font: family \"The family name of the font.\", system? \"Returns `true` if the font is a system font. Returns `false` if not.\" Behaviour for an unknown handle: 未取得 (not documented).",
+        "minimog_usage": "config/settings_schema.json:126-129 font_picker type_base_font default \"helvetica_n4\", :217-220 type_header_font default \"helvetica_n7\"; instance config/settings_data.json:6 `\"type_base_font\": \"roboto_condensed_n4\"`, :10 `\"type_header_font\": \"roboto_condensed_n7\"`; consumed snippets/font-face.liquid:2,5 (assign) and :16/:23 `unless use_custom_font_body or settings.type_base_font.system?` (font_face/font_url emitted when not system). 2 font_picker settings × 39 pages = 78. Note settings_data.json:7/11 use_custom_font_body/heading = true with Jost URLs, which masks the gap visually in this preset.",
+        "ours": "drops.rb:1924 `when \"font_picker\" then FontLibrary.drop(val)` → font_library.rb:27-41: handle matches HANDLE_RE, `registry[\"families\"][\"roboto_condensed\"]` is nil (config/storefront_fonts.yml:7-23 registers only jost and poppins; public/fonts has only jost/ poppins/), so font_library.rb:38 falls to system_drop → font_library.rb:74-81: registry system has only sans_serif/serif/mono/monospace (storefront_fonts.yml:24-28) ⇒ count_miss(\"font_library.roboto_condensed\") (font_library.rb:76) and returns FontDrop(family: \"Roboto\" [split('_').first.capitalize — wrong family name, drops 'Condensed'], system?: true, file: nil, weight 400 regardless of n7). Official library contains Roboto Condensed as a non-system Google font ⇒ family name, system?, weight, variants and font_face/font_url output all diverge. Same gap applies to the schema default `helvetica_n4/n7` (no 'helvetica' entry in storefront_fonts.yml either).",
+        "fix": "Add a `roboto_condensed` family to config/storefront_fonts.yml (after line 23) with display_name \"Roboto Condensed\", variants n4/n7 (+ i4/i7 as needed) and ship woff2 files under public/fonts/roboto_condensed/ (licence for Roboto Condensed: 未取得 — verify before bundling); longer-term import the official available-fonts list so every handle in shopify.dev fonts table resolves. Also fix font_library.rb:77 display-name derivation (`name.split(\"_\").first` drops multi-word families — use `name.tr('_',' ').split.map(&:capitalize).join(' ')`) and add a `helvetica` system entry at storefront_fonts.yml:24 so Minimog's schema default resolves as system?=true."
+      },
+      {
+        "miss_key": "settings.drawer_popup_color_scheme",
+        "classification": "engine-gap",
+        "count": 78,
+        "official": "input-settings#color_scheme (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, fetched 2026-09-02): \"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned.\" ⇒ official never yields nil here: schema has no default and settings_data has no value, so Shopify returns the FIRST scheme of color_scheme_group (settings_data current.color_schemes first id = `default`).",
+        "minimog_usage": "config/settings_schema.json:2110 `\"id\": \"drawer_popup_color_scheme\"` (type color_scheme, NO default; block 2108-2112). Not present in config/settings_data.json current. Consumers: snippets/cart-drawer.liquid:24 `m-color-{{ settings.drawer_popup_color_scheme }}`; snippets/search-popup.liquid:11; sections/product-quickview.liquid:46; sections/pickup-availability.liquid:66; snippets/form__ask-a-question.liquid:1; snippets/main-product-blocks.liquid:896 — all emit `m-color-<id>` class, so nil gives the broken class `m-color-` instead of `m-color-default`.",
+        "ours": "app/liquid/theme_engine/runtime.rb:85 `@settings_data = schema_defaults(all_defs).merge(db_settings || file_settings_current)` + runtime.rb:331-333 `schema_defaults` only copies keys that have `default` ⇒ key absent. app/liquid/theme_engine/drops.rb:1886-1891 SettingsDrop#liquid_method_missing: `unless @v.key?(k) → count_miss → return nil`; the color_scheme fallback at drops.rb:1931-1933 (`(@schemes && @schemes.scheme(val.to_s)) || val`) is only reached when the key exists. ColorSchemeGroupDrop#first exists at drops.rb:1739 and schemes_drop is built at runtime.rb:156-165, so the fallback target is already available. Rendered: 2 misses/page × 39 pages = 78.",
+        "fix": "drops.rb:1888-1891 — before returning nil for a missing key, consult the type map: `if (@t[k] == \"color_scheme\") && @schemes then return @schemes.first end` (official: first color_scheme from color_scheme_group when neither value nor default is valid). Also apply the same rule when the key exists but `@schemes.scheme(val)` misses (drops.rb:1933 currently returns the raw invalid id instead of first scheme). Add a regression: Minimog settings_schema with no default + settings_data without the key ⇒ `{{ settings.drawer_popup_color_scheme }}` renders `default`.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json"
+        ]
+      },
+      {
+        "miss_key": "settings.loading_design_mode",
+        "classification": "engine-gap",
+        "count": 39,
+        "official": "input-settings#checkbox (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#checkbox, fetched 2026-09-02): \"When accessing the value of a `checkbox` type setting, data is returned as a boolean.\" and \"If `default` is unspecified, then the value is `false` by default.\" ⇒ official value is boolean false, not nil.",
+        "minimog_usage": "config/settings_schema.json:785 `\"id\": \"loading_design_mode\"` (type checkbox, NO default; block 783-788). Absent from config/settings_data.json current. Consumer: snippets/page-transition.liquid:115 `data-design-mode=\"{{ settings.loading_design_mode }}\"` — official renders `data-design-mode=\"false\"`, ours renders `data-design-mode=\"\"`.",
+        "ours": "runtime.rb:331-333 `schema_defaults` sets a key only `if d.key?(\"default\")` — no type-aware implicit default for checkbox ⇒ key absent from @settings_data (runtime.rb:85) ⇒ drops.rb:1886-1891 count_miss + nil. drops.rb:1909-1936 `coerce` has no `checkbox` branch either (falls to `else val`). Truthiness-only consumers (`{% if %}`) behave the same, but string output differs (`\"\"` vs `\"false\"`).",
+        "fix": "runtime.rb:331-333 schema_defaults: add implicit default for checkbox — `h[d[\"id\"]] = false if d[\"type\"] == \"checkbox\" && !d.key?(\"default\")` (applies to global settings, sections and blocks since render_section/blocks reuse schema_defaults at runtime.rb:338/382/397). Regression: Minimog `loading_design_mode` renders `false`.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json"
+        ]
+      },
+      {
+        "miss_key": "settings.color_primary",
+        "classification": "theme-quirk",
+        "count": 39,
+        "official": "objects/settings (https://shopify.dev/docs/api/liquid/objects/settings, fetched 2026-09-02): \"Allows you to access all of the theme's settings from the `settings_schema.json` file\" — a key not declared in settings_schema.json has no value; nil is correct. (Official page contains no statement about undefined keys; none needed since the setting does not exist.)",
+        "minimog_usage": "`grep -rn color_primary test/fixtures/themes/minimog-5.9.0/config/` ⇒ exit 1 (not in settings_schema.json nor settings_data.json). Only readers: layout/theme.liquid:36 `<meta name=\"theme-color\" content=\"{{ settings.color_primary }}\">` and layout/password.liquid:28 (same). Minimog reads a setting it never declares (legacy leftover from pre-color_scheme_group versions).",
+        "ours": "drops.rb:1886-1891 SettingsDrop#liquid_method_missing → count_miss + nil. Rendered tmp/parity-ours-home.html: `name=\"theme-color\" content=\"\"` — identical to what Shopify would emit for an undeclared setting.",
+        "fix": "None (engine correct). Optional: exclude keys absent from the theme's settings_schema from the count_miss tally so theme-quirks do not pollute the conformance report.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/layout/theme.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ]
+      },
+      {
+        "miss_key": "settings.favicon",
+        "classification": "settings-default",
+        "count": 39,
+        "official": "input-settings#image_picker (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker, fetched 2026-09-02): returns \"[nil], if either no selection has been made or the selection no longer exists.\" and \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "config/settings_schema.json:25 `\"id\": \"favicon\"` (type image_picker, no default — cannot have one; block 23-28). Absent from settings_data.json current. Readers: layout/theme.liquid:41-42 `{%- if settings.use_favicon == true and settings.favicon != blank -%}` (`use_favicon` schema default true, settings_schema.json ~line 19), layout/password.liquid:33-34, templates/gift_card.liquid:14-15 — all blank-guarded, so nil skips the <link> exactly as on Shopify.",
+        "ours": "runtime.rb:85 merge has no value ⇒ drops.rb:1886-1891 nil via liquid_method_missing. drops.rb:1917-1923 image_picker coerce comment already documents: \"空值＝nil（官方契約：blank image setting 回 nil）\". Behaviour matches official; the miss counter fires only because the key is absent rather than empty.",
+        "fix": "None required. Optional noise reduction: in SettingsDrop#liquid_method_missing (drops.rb:1888) skip count_miss when `@t.key?(k)` and the type is image_picker/video (types that officially cannot carry a default), returning nil silently.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json"
+        ]
+      },
+      {
+        "miss_key": "settings.loading_logo",
+        "classification": "settings-default",
+        "count": 39,
+        "official": "input-settings#image_picker (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker, fetched 2026-09-02): \"[nil], if either no selection has been made or the selection no longer exists.\"; \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "config/settings_schema.json:807 `\"id\": \"loading_logo\"` (type image_picker, no default; block 805-810). Absent from settings_data.json current. Reader: snippets/page-transition.liquid:121 `{% if settings.loading_logo != blank %}` guarding lines 125-129 (`.aspect_ratio`, `.alt`, image_tag) — nil takes the else branch, same as official.",
+        "ours": "runtime.rb:85 no value ⇒ drops.rb:1886-1891 nil. drops.rb:1917-1923 image_picker coerce returns nil for blank per official contract.",
+        "fix": "None required (same optional counter suppression as settings.favicon).",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/page-transition.liquid"
+        ]
+      },
+      {
+        "miss_key": "settings.cart_drawer_trust_badge",
+        "classification": "settings-default",
+        "count": 40,
+        "official": "input-settings#image_picker (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker, fetched 2026-09-02): \"[nil], if either no selection has been made or the selection no longer exists.\"; \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "config/settings_schema.json:2433 `\"id\": \"cart_drawer_trust_badge\"` (type image_picker, no default; block 2431-2435). Absent from settings_data.json current. Readers: snippets/cart-drawer.liquid:212 `{% if settings.cart_drawer_trust_badge %}` → :215 `| image_url: width: 840`; sections/cart-template.liquid:216/219 (cart page adds the 40th hit). Guarded ⇒ nil hides the badge block as on Shopify.",
+        "ours": "runtime.rb:85 no value ⇒ drops.rb:1886-1891 nil; drops.rb:1917-1923 image_picker nil contract.",
+        "fix": "None required (optional counter suppression as above).",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/cart-drawer.liquid"
+        ]
+      },
+      {
+        "miss_key": "settings.pcard_default_image",
+        "classification": "settings-default",
+        "count": 18,
+        "official": "input-settings#image_picker (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker, fetched 2026-09-02): \"[nil], if either no selection has been made or the selection no longer exists.\"; \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "config/settings_schema.json:946 `\"id\": \"pcard_default_image\"` (type image_picker, no default, info \"For products without images\"; block 944-949). Absent from settings_data.json current. Readers: snippets/product-card-1.liquid:106 `assign pcard_default_image = settings.pcard_default_image` (likewise product-card-2:105, -3:105, -4:104, -5:104) — assigned once per card render, hence only on pages with product cards (18 hits: collection/search/product pages).",
+        "ours": "runtime.rb:85 no value ⇒ drops.rb:1886-1891 nil; drops.rb:1917-1923 image_picker nil contract. Products without images then fall through to the theme's own placeholder path, same as official.",
+        "fix": "None required (optional counter suppression as above).",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/product-card-1.liquid"
+        ]
+      },
+      {
+        "miss_key": "settings.social_vimeo_link",
+        "classification": "settings-default",
+        "count": 39,
+        "official": "input-settings#text (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#text, fetched 2026-09-02): \"When accessing the value of a `text` type setting, data is returned in one of the following formats: A [string]. An [`empty` object], if nothing has been entered.\" ⇒ official value is EmptyDrop (blank), not a string; the `default` attribute is optional and Minimog gives none.",
+        "minimog_usage": "config/settings_schema.json:2297 `\"id\": \"social_vimeo_link\"` (type text, no default; block 2295-2299). Absent from settings_data.json current. Readers: snippets/social-media-links.liquid:138 `{% if settings.social_vimeo_link != blank %}` → :142 href (blank-guarded, identical outcome for nil vs empty); sections/header.liquid:23 `{{ settings.social_vimeo_link | json }}` (JSON-serialised into a script blob).",
+        "ours": "runtime.rb:85 no value ⇒ drops.rb:1886-1891 returns nil (text type has no coerce branch, drops.rb:1934 `else val`). `!= blank` behaves identically for nil and EmptyDrop. Residual difference: official `empty | json` output vs our `nil | json` (=`null`) — official rendering of EmptyDrop under `json` 未取得 (not documented on the fetched pages); header.liquid:23 only feeds a JS config array, no Liquid branch depends on it.",
+        "fix": "Value absence is correct; no fix required for the miss itself. Optional parity hardening: in SettingsDrop#liquid_method_missing (drops.rb:1888) return `Liquid::EmptyDrop`-equivalent (or \"\") for declared `text`/`textarea`/`richtext` keys instead of nil so `| json` and `.size` match; verify against a real Shopify render of header.liquid:23 before changing.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/header.liquid"
+        ]
+      },
+      {
+        "miss_key": "settings.social_tumblr_link",
+        "classification": "settings-default",
+        "count": 39,
+        "official": "input-settings#text (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#text, fetched 2026-09-02): \"When accessing the value of a `text` type setting, data is returned in one of the following formats: A [string]. An [`empty` object], if nothing has been entered.\"",
+        "minimog_usage": "config/settings_schema.json:2277 `\"id\": \"social_tumblr_link\"` (type text, no default; block 2275-2279). Absent from settings_data.json current. Readers: snippets/social-media-links.liquid:106 `{% if settings.social_tumblr_link != blank %}` → :110 href; sections/header.liquid:20 `{{ settings.social_tumblr_link | json }},`.",
+        "ours": "runtime.rb:85 no value ⇒ drops.rb:1886-1891 nil (no text coerce branch, drops.rb:1934). Blank-guard outcome identical; `| json` divergence (`null` vs official EmptyDrop serialisation) 未取得, same as social_vimeo_link.",
+        "fix": "Same as settings.social_vimeo_link — no fix required for the miss; optional EmptyDrop return for declared text-type keys at drops.rb:1888 after verifying official `empty | json` output.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/header.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(header).logo",
+        "classification": "settings-default",
+        "count": 468,
+        "official": "shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker (fetched 2026-09-02): \"When accessing the value of an `image_picker` type setting, data is returned in one of the following formats: An `image` object. nil, if either no selection has been made or the selection no longer exists.\" and \"`image_picker` settings also don't support the `default` attribute.\" ⇒ no selection ⇒ nil is the official value.",
+        "minimog_usage": "Schema: test/fixtures/themes/minimog-5.9.0/sections/header.liquid:685-688 (`\"type\": \"image_picker\", \"id\": \"logo\"`, no default — image_picker cannot carry one). Reads: sections/header.liquid:11-13 (`{% if section.settings.logo %}` / `.width` / `image_url`), :68 (`section.settings.logo.aspect_ratio | default: 2.333`), :109, :113, :121 (`.alt | default: shop.name`), :144 — all nil-guarded (12 lookups per page). Instance: sections/header-group.json:69-99 header `settings` has logo_text/logo_svg/logo_max_width but NO `logo` key (verified by key dump).",
+        "ours": "app/liquid/theme_engine/runtime.rb:331-333 schema_defaults only copies keys that have `default` (none here); runtime.rb:338 merges defaults with instance settings; app/liquid/theme_engine/drops.rb:1886-1891 SettingsDrop#liquid_method_missing returns nil + count_miss when key absent; drops.rb:1917-1923 coerce(image_picker) also returns nil for \"\"/nil. Result nil == official nil. Miss counter is diagnostic noise only.",
+        "fix": "No engine change needed. Optional: suppress count_miss in drops.rb:1889 when @t[k] == \"image_picker\" (declared-in-schema, no value) so the diagnostic stops flagging official-nil cases.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/header.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/header-group.json"
+        ]
+      },
+      {
+        "miss_key": "section(header).logo_transparent",
+        "classification": "settings-default",
+        "count": 117,
+        "official": "Same image_picker contract (input-settings#image_picker, 2026-09-02): \"nil, if either no selection has been made or the selection no longer exists.\" / \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "Schema: sections/header.liquid:695-698 (`\"type\": \"image_picker\", \"id\": \"logo_transparent\"`, no default). Read: sections/header.liquid:118 (`assign logo_transparent = section.settings.logo_transparent`), 3 lookups/page. Instance: sections/header-group.json:69-99 has `logo_transparent_svg` (\"\") but no `logo_transparent` key.",
+        "ours": "drops.rb:1886-1891 (absent key ⇒ nil) and drops.rb:1917-1923 (image_picker blank ⇒ nil); runtime.rb:331-333/338 default merge has nothing to merge. nil == official.",
+        "fix": "None required (same optional diagnostic suppression as section(header).logo).",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/header.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(header).logo_mobile",
+        "classification": "settings-default",
+        "count": 78,
+        "official": "Same image_picker contract (input-settings#image_picker, 2026-09-02): \"nil, if either no selection has been made or the selection no longer exists.\" / \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "Schema: sections/header.liquid:690-693 (`\"type\": \"image_picker\", \"id\": \"logo_mobile\"`, no default). Reads: sections/header.liquid:110 (`section.settings.logo_mobile.aspect_ratio | default: aspect_ratio`), :114 (`assign logo_mobile = section.settings.logo_mobile`), 2 lookups/page. Instance: sections/header-group.json:69-99 has `logo_mobile_svg` but no `logo_mobile` key.",
+        "ours": "drops.rb:1886-1891 (absent ⇒ nil), drops.rb:1917-1923 (image_picker blank ⇒ nil). nil == official.",
+        "fix": "None required.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/header.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(age-verifier-popup).bg_image",
+        "classification": "settings-default",
+        "count": 78,
+        "official": "input-settings#image_picker (2026-09-02): \"nil, if either no selection has been made or the selection no longer exists.\" / \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "Schema: sections/age-verifier-popup.liquid:130-135 (`\"type\": \"image_picker\", \"id\": \"bg_image\"`, info \"2000 x 800px recommended\", no default). Reads: sections/age-verifier-popup.liquid:6 (`assign bg_image = section.settings.bg_image`), :20 (`{% if section.settings.bg_image != blank %}`), 2 lookups/page. Instance: sections/footer-group.json:107-108 `age-verifier-popup` section; its settings keys are bg_blur/decline_content/decline_heading/design_mode/enable/return_button — no `bg_image`.",
+        "ours": "drops.rb:1886-1891 (absent ⇒ nil), drops.rb:1917-1923 (image_picker). nil == official; theme's `!= blank` guard handles it.",
+        "fix": "None required.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/age-verifier-popup.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/footer-group.json"
+        ]
+      },
+      {
+        "miss_key": "section(footer).image_custom_payment",
+        "classification": "settings-default",
+        "count": 39,
+        "official": "input-settings#image_picker (2026-09-02): \"nil, if either no selection has been made or the selection no longer exists.\" / \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "Schema: sections/footer.liquid:135-140 (`\"type\": \"image_picker\", \"id\": \"image_custom_payment\"`, info \"Leave blank to use icons by Payment methods\", no default). Read: snippets/payment-icons.liquid:1 (`{% if section.settings.image_custom_payment == blank %}`) and :14 (render responsive-image with it) — 1 lookup/page, blank-guarded by design. Instance: sections/footer-group.json:5-6 `footer` section settings keys (bordered, color_scheme, ..., show_payment_icons, payment_icons_width) contain no `image_custom_payment`.",
+        "ours": "drops.rb:1886-1891 (absent ⇒ nil), drops.rb:1917-1923 (image_picker). nil == official; theme falls back to payment-method icons.",
+        "fix": "None required.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/footer.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/payment-icons.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(custom-content).content_color_scheme",
+        "classification": "engine-gap",
+        "count": 32,
+        "official": "shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme (fetched 2026-09-02): \"When accessing the value of a `color_scheme` type setting, Shopify returns the selected `color_scheme` object from `color_scheme_group`. If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned. If the theme doesn't have `color_scheme_group` data in `settings_data.json`, then nil is returned.\" ⇒ Minimog has color_scheme_group data (config/settings_schema.json:515-516 id `color_schemes`; config/settings_data.json current.color_schemes has 8 schemes, first = `default`), so official value = first scheme (`default`), NOT nil.",
+        "minimog_usage": "Schema: sections/custom-content.liquid:1367-1371 (`\"type\": \"color_scheme\", \"id\": \"content_color_scheme\"`, NO default). Reads: sections/custom-content.liquid:99 (`m-color-{{ section.settings.content_color_scheme }}` and `!= section.settings.color_scheme` comparison), :535 and :547 (`parent_color_scheme: section.settings.content_color_scheme`). Instances lacking the key: templates/product.custom-layout-1.json:161, product.custom-layout-2.json:126/168/240/282, product.custom-layout-3.json (5 sections), product.custom-layout-4.json (3), product.custom-layout-5.json (4) — key absent. (index.json:291 etc. have `\"\"` — invalid value, no miss counted but same official fallback applies.)",
+        "ours": "runtime.rb:331-333 schema_defaults: no default in schema ⇒ nothing merged at runtime.rb:338; drops.rb:1886-1891 SettingsDrop#liquid_method_missing returns nil when key absent (no type-aware fallback); drops.rb:1931-1933 coerce(color_scheme) = `(@schemes && @schemes.scheme(val.to_s)) || val` — for present-but-invalid values (\"\") returns the raw string instead of the first scheme. runtime.rb:156-163 schemes_drop exposes the group; drops.rb:1739-1741 ColorSchemeGroupDrop#first exists but is never used as fallback. Rendered output: `m-color-` (empty class) vs official `m-color-default`.",
+        "fix": "drops.rb:1886-1893 — before returning nil, if the declared type (@t[k], resolved as in coerce) is \"color_scheme\" and @schemes is present, return @schemes.first (schema default is already merged upstream at runtime.rb:338/382/397, so absent key means no default). drops.rb:1931-1933 — change to `(@schemes && (@schemes.scheme(val.to_s) || @schemes.first)) || val` so invalid/empty selections also fall to the first scheme per the official sentence. Keep nil when @schemes is nil (no color_scheme_group data). Add fixture: section color_scheme setting with no default + no value ⇒ first scheme id; \"\" ⇒ first scheme id; unknown id ⇒ first scheme id; theme without color_scheme_group ⇒ nil.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/custom-content.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_data.json"
+        ]
+      },
+      {
+        "miss_key": "section(custom-content).color_scheme",
+        "classification": "engine-gap",
+        "count": 32,
+        "official": "Same color_scheme contract (input-settings#color_scheme, 2026-09-02): \"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned. If the theme doesn't have `color_scheme_group` data in `settings_data.json`, then nil is returned.\" Minimog has the group data ⇒ official = first scheme `default`.",
+        "minimog_usage": "Schema: sections/custom-content.liquid:1362-1366 (`\"type\": \"color_scheme\", \"id\": \"color_scheme\"`, NO default). Reads: sections/custom-content.liquid:10 (`append: ' m-gradient m-color-' | append: section.settings.color_scheme`), :99 (comparison with content_color_scheme). Instances without the key: templates/product.custom-layout-1.json:161 and all custom-content sections in product.custom-layout-2/3/4/5.json (see content_color_scheme row).",
+        "ours": "Same path: runtime.rb:331-333 + :338 (no default to merge), drops.rb:1886-1891 (absent ⇒ nil), drops.rb:1931-1933 (invalid value ⇒ raw string). Emits `m-color-` instead of `m-color-default`.",
+        "fix": "Same fix as content_color_scheme (drops.rb:1886-1893 type-aware fallback to @schemes.first; drops.rb:1931-1933 invalid ⇒ @schemes.first). One change covers both keys.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/custom-content.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(custom-content).background_image",
+        "classification": "settings-default",
+        "count": 27,
+        "official": "input-settings#image_picker (2026-09-02): \"nil, if either no selection has been made or the selection no longer exists.\" / \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "Schema: sections/custom-content.liquid:1376-1380 (`\"type\": \"image_picker\", \"id\": \"background_image\"`, no default). Read: sections/custom-content.liquid:15 (`assign background_image = section.settings.background_image`), 1 lookup per section instance. Instances: every custom-content section in templates/index.json (6), page.about-us.json:9, page.faqs.json, product.custom-layout-1..5.json, product.grid-1-column.json:383, product.grid-mix-columns.json lack the key (key dump).",
+        "ours": "drops.rb:1886-1891 (absent ⇒ nil), drops.rb:1917-1923 (image_picker blank ⇒ nil). nil == official.",
+        "fix": "None required.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/custom-content.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(custom-content).background_image_mobile",
+        "classification": "settings-default",
+        "count": 27,
+        "official": "input-settings#image_picker (2026-09-02): \"nil, if either no selection has been made or the selection no longer exists.\" / \"`image_picker` settings also don't support the `default` attribute.\"",
+        "minimog_usage": "Schema: sections/custom-content.liquid:1381-1385 (`\"type\": \"image_picker\", \"id\": \"background_image_mobile\"`, no default). Reads: sections/custom-content.liquid:16 (`assign background_image_mobile = ...`), :78 (`{% if section.settings.background_image_mobile != blank %}` — only reached when a background image exists, hence 1 miss per instance). Instances: same set as background_image, key absent.",
+        "ours": "drops.rb:1886-1891 (absent ⇒ nil), drops.rb:1917-1923. nil == official.",
+        "fix": "None required.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/custom-content.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(custom-content).animations",
+        "classification": "theme-quirk",
+        "count": 27,
+        "official": "未取得 — shopify.dev input-settings page documents return values only for declared setting types; no sentence covers reading a setting id that is not declared in the section schema. The theme itself treats it as optional (guarded with `if section_settings.animations and ...`).",
+        "minimog_usage": "custom-content section-level schema (sections/custom-content.liquid:1276-1490, settings ids heading…custom_class) declares NO `animations` setting; `animations` ids exist only in block schemas (e.g. :1704, :1821, :2111…). The section-level read comes from snippets/index-section-header.liquid:14-15 (`if section_settings.animations and section_settings.animations != 'inherit'` / `assign animation_effect = section_settings.animations`), invoked at sections/custom-content.liquid:101 (`{% render 'index-section-header', section_settings: section.settings %}`) — the shared snippet is written for sections that DO declare `animations` (e.g. sections/banner-with-slider.liquid:10-11, blog-posts.liquid:11-12), so for custom-content it reads an undeclared key. No template instance carries `animations` at section level (key dump: all `<absent>`); the snippet then keeps `settings.animations` (global, snippets/index-section-header.liquid:10).",
+        "ours": "drops.rb:1886-1891 SettingsDrop#liquid_method_missing ⇒ nil + count_miss; runtime.rb:331-333 has no schema entry to default from. nil makes the `and` guard false and the global `settings.animations` is used — matches the theme's intended fallback.",
+        "fix": "None. Optional diagnostic: in drops.rb:1889 tag misses whose key is absent from @t (undeclared) with a distinct label (e.g. `section(custom-content).animations[undeclared]`) so theme-quirks are separable from settings-default misses.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/custom-content.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/index-section-header.liquid"
+        ]
+      },
+      {
+        "miss_key": "section(collection-page-header).bg_image",
+        "classification": "settings-default",
+        "count": 16,
+        "official": "image_picker (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker, fetched 2026-09-02): \"When accessing the value of an `image_picker` type setting, data is returned in one of the following formats: An `image` object. nil, if either no selection has been made or the selection no longer exists.\" and \"`image_picker` settings also don't support the `default` attribute.\" ⇒ official value = nil.",
+        "minimog_usage": "Schema declares it with no default: test/fixtures/themes/minimog-5.9.0/sections/collection-page-header.liquid:297-300 ({\"type\":\"image_picker\",\"id\":\"bg_image\",\"label\":\"Image\"}). Consumed at sections/collection-page-header.liquid:4 (`assign bg_image = section.settings.bg_image`) and guarded by `if bg_image == blank` (:27) / `!= blank` (:75, :99, :105, :113, :149). No collection template instance sets it — templates/collection.json:3-11 (collection-header settings) and templates/collection.flash-sale.json:3-14 both lack a `bg_image` key (16 misses = 15 collection views + collection.json; all `<ABSENT>` in instance JSON).",
+        "ours": "Correct (nil). app/liquid/theme_engine/runtime.rb:331-333 `schema_defaults` only seeds keys that carry a `default`, so an image_picker without default stays absent; runtime.rb:338 merges instance settings (key absent); app/liquid/theme_engine/drops.rb:1886-1892 SettingsDrop#liquid_method_missing returns nil + count_miss for absent key; drops.rb:1917-1921 coerce also maps \"\"/nil image_picker to nil. `bg_image == blank` evaluates identically on both sides. Miss counter is telemetry only.",
+        "fix": "None required. Optional noise-reduction: have SettingsDrop#liquid_method_missing (drops.rb:1886) skip count_miss when @t[k] is a declared schema type (declared-but-unset ≠ undeclared).",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/collection-page-header.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/collection.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ]
+      },
+      {
+        "miss_key": "section(collection-page-header).vertical_alignment",
+        "classification": "theme-quirk",
+        "count": 15,
+        "official": "Setting is NOT declared in the section schema (schema id list at sections/collection-page-header.liquid:231ff has no `vertical_alignment`). Official statement on reading an undeclared `section.settings.<id>` = 未取得 (section object page https://shopify.dev/docs/api/liquid/objects/section only says settings are \"The settings of the section\" and defers to Access settings; the settings page https://shopify.dev/docs/storefronts/themes/architecture/settings, fetched 2026-09-02, says \"Any setting without an automatic default value could end up with no value, which translates to an empty string.\"). Undeclared ⇒ no value ⇒ empty output on both sides.",
+        "minimog_usage": "Read at test/fixtures/themes/minimog-5.9.0/sections/collection-page-header.liquid:98 (`--align-items: {{ section.settings.vertical_alignment }};`) but never declared in its {% schema %} (line 231ff). Only templates/collection.flash-sale.json:9 carries an orphan value `\"vertical_alignment\": \"center\"` (leftover from an older schema) — which is why page 15 (flash-sale view) does not miss this key while the other 15 collection views (templates/collection.json etc., key absent) do.",
+        "ours": "Correct (nil ⇒ renders `--align-items: ;`). runtime.rb:331-333 has no default to seed, runtime.rb:338 instance lacks key, drops.rb:1886-1892 returns nil. When the instance JSON carries the orphan value (flash-sale), our SettingsDrop passes it through unchanged (drops.rb:1934 `else val`).",
+        "fix": "None. Theme reads a setting it never declares.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/collection-page-header.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/collection.flash-sale.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ]
+      },
+      {
+        "miss_key": "section(image-with-text).image_2",
+        "classification": "settings-default",
+        "count": 12,
+        "official": "image_picker (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker, fetched 2026-09-02): \"nil, if either no selection has been made or the selection no longer exists.\" / \"`image_picker` settings also don't support the `default` attribute.\" ⇒ official nil.",
+        "minimog_usage": "Declared without default at test/fixtures/themes/minimog-5.9.0/sections/image-with-text.liquid:344-347 ({\"type\":\"image_picker\",\"id\":\"image_2\",\"label\":\"Second image\"}). Consumed at sections/image-with-text.liquid:30 (`if section.settings.image_2 != blank`), :80 (`!= 'blank'` — string compare, theme bug but harmless), :93, :96 (`render 'responsive-image', image: section.settings.image_2`). Instance templates/product.grid-1-column.json (section image_with_text_gHJgwp) has no `image_2` key; no template under templates/ mentions image_2 at all (grep -rln image_2 templates ⇒ empty).",
+        "ours": "Correct (nil). runtime.rb:331-333 seeds nothing (no default), runtime.rb:338 instance absent, drops.rb:1886-1892 nil + count_miss; drops.rb:1917-1921 would also nil-ify \"\". `!= blank` false on both sides so the second-image branch is skipped identically.",
+        "fix": "None required.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/image-with-text.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/product.grid-1-column.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ]
+      },
+      {
+        "miss_key": "section(main-product).change_product_variant_on_fitlering",
+        "classification": "theme-quirk",
+        "count": 8,
+        "official": "Not declared in main-product's schema (sections/main-product.liquid:204ff id list: container, layout, show_atwl, … sticky_atc_compare — no such id). The id only exists in two other sections' schemas: sections/main-collection-product-grid.liquid:350 and sections/page-search.liquid:229 (type checkbox there). Official checkbox contract (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#checkbox, 2026-09-02): \"If `default` is unspecified, then the value is `false` by default.\" — applies only to declared settings; for an undeclared id official = 未取得, falsy on both sides.",
+        "minimog_usage": "Read inside snippets rendered from main-product context: test/fixtures/themes/minimog-5.9.0/sections/main-product.liquid:131 renders 'tooltip', and snippets/tooltip.liquid:73 does `if section.settings.change_product_variant_on_fitlering`; also snippets/product-card-1.liquid:97 and :128 (`== true and product.selected_variant.image != null`), rendered via snippets/main-product-blocks.liquid:993/:996 (main-product.liquid:168 renders 'main-product-blocks'). Same pattern in product-card-2..5 (:96/:127, :95/:126). Setting is a `section.settings` read whose declaring sections are collection grid / search, so on product pages it can never be set. Templates set it only for main-collection-product-grid (templates/collection.canvas-sidebar.json:66 etc.).",
+        "ours": "Correct (nil ⇒ `if nil` false; `nil == true` false). runtime.rb:331-333 no default, runtime.rb:338 instance absent (templates/product.custom-layout-1.json main section has no such key), drops.rb:1886-1892 nil + count_miss.",
+        "fix": "None. Snippet shared across sections reads a setting only two of its host sections declare.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/main-product.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/tooltip.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/product-card-1.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/main-collection-product-grid.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ]
+      },
+      {
+        "miss_key": "section(recent-viewed-products).color_scheme",
+        "classification": "engine-gap",
+        "count": 7,
+        "official": "color_scheme (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, fetched 2026-09-02): \"When accessing the value of a `color_scheme` type setting, Shopify returns the selected `color_scheme` object from `color_scheme_group`. If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned.\" ⇒ with no value and no default, official returns the FIRST scheme of `settings.color_schemes` (Minimog config/settings_data.json:67 first key = `default`), so `m-color-{{ … }}` renders `m-color-default`.",
+        "minimog_usage": "Declared without default: test/fixtures/themes/minimog-5.9.0/sections/recent-viewed-products.liquid:156-159 ({\"type\":\"color_scheme\",\"id\":\"color_scheme\",\"label\":\"Color scheme\"}). Consumed at sections/recent-viewed-products.liquid:18 (`assign classes = '… m-gradient m-color-' | append: section.settings.color_scheme`). Instances: templates/cart.json and templates/product.custom-layout-1..5.json recent-viewed-products sections have NO `color_scheme` key (7 misses = cart + 5 custom layouts + flash-sale view); templates/collection.json / product.grid-*.json set `\"color_scheme\": \"\"` (empty string — not counted as miss but same official fallback applies). color_scheme_group declared at config/settings_schema.json:515-516 (id `color_schemes`).",
+        "ours": "Diverges. runtime.rb:331-333 seeds no default; runtime.rb:338 instance lacks key ⇒ drops.rb:1886-1892 SettingsDrop#liquid_method_missing returns nil before reaching coerce ⇒ theme emits class `m-color-` (empty suffix) instead of official `m-color-default`. For the `\"\"` instances the key exists, coerce drops.rb:1931-1933 `(@schemes && @schemes.scheme(val.to_s)) || val` returns \"\" (no scheme with id \"\") ⇒ same `m-color-` output. schemes drop is available (runtime.rb:156-163 schemes_drop, passed at runtime.rb:339/:382/:397; ColorSchemeGroupDrop#first exists at drops.rb:1739).",
+        "fix": "In app/liquid/theme_engine/drops.rb SettingsDrop: (a) at liquid_method_missing (:1886-1892) when `@v.key?(k)` is false but `@t[k] == \"color_scheme\"` and `@schemes` present, return `@schemes.first` (still may count_miss for telemetry or not); (b) in coerce `when \"color_scheme\"` (:1931-1933) change to `@schemes&.scheme(val.to_s) || (@schemes&.first if val.nil? || val.to_s.empty? || @schemes) || val` — i.e. blank/invalid id ⇒ first scheme of the group, per official three-step fallback (value → schema default → first scheme). Schema default is already merged by runtime.rb:331-333, so only the last step is missing. Add spec in spec/requests/storefront_blocks_schemes_spec.rb: section color_scheme absent / \"\" ⇒ `{{ section.settings.color_scheme }}` == first scheme id (`default`), mutation: remove fallback ⇒ red.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/runtime.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/recent-viewed-products.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/cart.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_schema.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/config/settings_data.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/spec/requests/storefront_blocks_schemes_spec.rb"
+        ]
+      },
+      {
+        "miss_key": "section(recent-viewed-products).custom_class",
+        "classification": "settings-default",
+        "count": 7,
+        "official": "text (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#text, fetched 2026-09-02): \"When accessing the value of a `text` type setting, data is returned in one of the following formats: A string. An `empty` object, if nothing has been entered.\" ⇒ official = EmptyDrop (blank).",
+        "minimog_usage": "Declared without default at test/fixtures/themes/minimog-5.9.0/sections/recent-viewed-products.liquid:389-392 ({\"type\":\"text\",\"id\":\"custom_class\",\"label\":\"Custom classes\"}). Consumed at sections/recent-viewed-products.liquid:19-20 (`if section.settings.custom_class != blank` … `append: section.settings.custom_class`). Instances templates/cart.json and templates/product.custom-layout-1..5.json recent-viewed-products sections have no `custom_class` key.",
+        "ours": "Behaviourally equivalent: runtime.rb:331-333 no default, runtime.rb:338 instance absent, drops.rb:1886-1892 returns nil; `nil != blank` is false exactly like EmptyDrop, so the append branch is skipped on both sides. Strict type differs (nil vs empty object) but no observable render difference for this consumer.",
+        "fix": "None required. (If exact-type parity is wanted: SettingsDrop#liquid_method_missing / coerce could return \"\" for declared `text`/`textarea` keys with no value, matching official empty/blank semantics; low priority.)",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/recent-viewed-products.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/cart.json",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ]
+      },
+      {
+        "miss_key": "section(product-recommendations).color_scheme",
+        "classification": "engine-gap",
+        "count": 5,
+        "official": "Same contract as above (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02): \"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from `color_scheme_group` is returned.\" ⇒ official renders `m-color-default` (first key of config/settings_data.json:67 color_schemes).",
+        "minimog_usage": "Declared without default at test/fixtures/themes/minimog-5.9.0/sections/product-recommendations.liquid:138-141 ({\"type\":\"color_scheme\",\"id\":\"color_scheme\",\"label\":\"Color scheme\"}). Consumed at sections/product-recommendations.liquid:20 (`'… m-gradient m-color-' | append: section.settings.color_scheme`). Instances templates/product.custom-layout-1..5.json product-recommendations sections have no `color_scheme` key (5 misses); templates/product.grid-*.json set `\"\"` (same official fallback, not counted as miss).",
+        "ours": "Diverges: nil from drops.rb:1886-1892 (absent key) or \"\" from drops.rb:1931-1933 (blank id) ⇒ class `m-color-` instead of `m-color-default`. Same root cause as section(recent-viewed-products).color_scheme.",
+        "fix": "Same single fix as the recent-viewed-products row: SettingsDrop (drops.rb:1886-1892 and :1931-1933) falls back to `@schemes.first` for declared `color_scheme` settings whose value is absent, blank, or not a known scheme id. One fix closes both keys plus the uncounted `\"\"` instances.",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/product-recommendations.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/templates/product.custom-layout-1.json"
+        ]
+      },
+      {
+        "miss_key": "section(product-recommendations).custom_class",
+        "classification": "settings-default",
+        "count": 5,
+        "official": "text (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#text, 2026-09-02): \"A string. An `empty` object, if nothing has been entered.\" ⇒ official blank.",
+        "minimog_usage": "Declared without default at test/fixtures/themes/minimog-5.9.0/sections/product-recommendations.liquid:282-285 ({\"type\":\"text\",\"id\":\"custom_class\",\"label\":\"Custom classes\"}). Consumed at sections/product-recommendations.liquid:21-22 (`if section.settings.custom_class != blank` … append). Instances templates/product.custom-layout-1..5.json product-recommendations sections lack the key.",
+        "ours": "Behaviourally equivalent: drops.rb:1886-1892 returns nil; `nil != blank` false, same as EmptyDrop, append branch skipped on both sides.",
+        "fix": "None required (same optional text-empty parity note as recent-viewed-products.custom_class).",
+        "files": [
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/sections/product-recommendations.liquid",
+          "C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb"
+        ]
+      }
+    ]
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Triage"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Verify"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 3,
+      "title": "Synthesize"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "triage:collection-drop",
+      "phaseIndex": 1,
+      "phaseTitle": "Triage",
+      "agentId": "a3e87f824e77957f3",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788317915570,
+      "queuedAt": 1788317915549,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318017708,
+      "tokens": 100487,
+      "toolCalls": 15,
+      "durationMs": 102134,
+      "resultPreview": "{\"rows\":[{\"miss_key\":\"CollectionDrop.sort_options\",\"classification\":\"engine-gap\",\"count\":78,\"files\":[\"C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/drops.rb\",\"C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtures/themes/minimog-5.9.0/snippets/storefront-filters.liquid\",\"C:/Users/pisce/Documents/ChatGPT/…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "triage:shop-form-drops",
+      "phaseIndex": 1,
+      "phaseTitle": "Triage",
+      "agentId": "a09ad8084b8de6a28",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788317915572,
+      "queuedAt": 1788317915549,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318110070,
+      "tokens": 115535,
+      "toolCalls": 29,
+      "durationMs": 192701,
+      "resultPreview": "{\"rows\":[{\"miss_key\":\"ShopDrop.features\",\"classification\":\"theme-quirk\",\"count\":39,\"files\":[\"test/fixtures/themes/minimog-5.9.0/sections/main-login.liquid:48\",\"test/fixtures/themes/minimog-5.9.0/snippets/footer-design.liquid:3\",\"app/liquid/theme_engine/drops.rb:1464-1515\"],\"official\":\"https://shopify.dev/docs/api/liquid/objects/shop (fetched 2026-09-02): the shop object lists 33 properties (accept…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "triage:globals-menus-pages",
+      "phaseIndex": 1,
+      "phaseTitle": "Triage",
+      "agentId": "a24cd735145a3a799",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788317915573,
+      "queuedAt": 1788317915549,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318132101,
+      "tokens": 126925,
+      "toolCalls": 23,
+      "durationMs": 214732,
+      "resultPreview": "{\"rows\":[{\"miss_key\":\"linklists.gift-wrapping\",\"classification\":\"data-absent\",\"count\":118,\"files\":[\"test/fixtures/themes/minimog-5.9.0/layout/theme.liquid:125\",\"test/fixtures/themes/minimog-5.9.0/snippets/style-tags.liquid:195\",\"test/fixtures/themes/minimog-5.9.0/snippets/cart-drawer.liquid:5\",\"test/fixtures/themes/minimog-5.9.0/sections/cart-template.liquid:5\",\"app/liquid/theme_engine/drops.rb:15…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "triage:theme-settings",
+      "phaseIndex": 1,
+      "phaseTitle": "Triage",
+      "agentId": "ab53f87aad00b6dfc",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788317915574,
+      "queuedAt": 1788317915549,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318084375,
+      "tokens": 104222,
+      "toolCalls": 13,
+      "durationMs": 167005,
+      "resultPreview": "{\"rows\":[{\"miss_key\":\"settings.drawer_popup_color_scheme\",\"classification\":\"engine-gap\",\"count\":78,\"official\":\"input-settings#color_scheme (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, fetched 2026-09-02): \\\"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invali…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "triage:section-settings-A",
+      "phaseIndex": 1,
+      "phaseTitle": "Triage",
+      "agentId": "a06e14c638a07baee",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318017722,
+      "queuedAt": 1788317915550,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318222216,
+      "tokens": 128439,
+      "toolCalls": 18,
+      "durationMs": 204493,
+      "resultPreview": "{\"rows\":[{\"miss_key\":\"section(header).logo\",\"classification\":\"settings-default\",\"count\":468,\"official\":\"shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker (fetched 2026-09-02): \\\"When accessing the value of an `image_picker` type setting, data is returned in one of the following formats: An `image` object. nil, if either no selection has been made or the selectio…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "triage:section-settings-B",
+      "phaseIndex": 1,
+      "phaseTitle": "Triage",
+      "agentId": "ab644f3d7dbd7e42d",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318084379,
+      "queuedAt": 1788317915550,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318286180,
+      "tokens": 116654,
+      "toolCalls": 14,
+      "durationMs": 201801,
+      "resultPreview": "{\"rows\":[{\"miss_key\":\"section(collection-page-header).bg_image\",\"classification\":\"settings-default\",\"count\":16,\"official\":\"image_picker (https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#image_picker, fetched 2026-09-02): \\\"When accessing the value of an `image_picker` type setting, data is returned in one of the following formats: An `image` object. nil, if either n…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 7,
+      "label": "verify:CollectionDrop.sort_options",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a39c8cb890a99e568",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318286210,
+      "queuedAt": 1788318286193,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Refutation attempt FAILED on all three escape routes; the e…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318343994,
+      "tokens": 98832,
+      "toolCalls": 9,
+      "durationMs": 57782,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Refutation attempt FAILED on all three escape routes; the engine-gap classification stands.\\n\\n(1) Official semantics (WebFetch 2026-09-02): https://shopify.dev/docs/api/liquid/objects/collection lists exactly three sort-family properties — `default_sort_by` (string), `sort_by` (string), `sort_options` — with `sort_options` described verbatim as \\\"The available sorting o…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 8,
+      "label": "verify:CollectionDrop.current_vendor",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "af512244eefe7e71c",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318286210,
+      "queuedAt": 1788318286193,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Cannot refute; engine-gap stands (with one precision note).…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318332993,
+      "tokens": 90837,
+      "toolCalls": 6,
+      "durationMs": 44596,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Cannot refute; engine-gap stands (with one precision note). (1) Official, re-fetched 2026-09-02 https://shopify.dev/docs/api/liquid/objects/collection: current_vendor — \\\"The vendor name on a vendor collection page.\\\" return type string; \\\"You can query for products from a certain vendor at the `/collections/vendors` URL with a query parameter in the format of `?q=[vendo…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 9,
+      "label": "verify:CollectionDrop.current_type",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a0d5bf9f83ff994eb",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318286211,
+      "queuedAt": 1788318286193,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Attempted refutation on all three axes; each fails. 1) Alre…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318329414,
+      "tokens": 91101,
+      "toolCalls": 6,
+      "durationMs": 41016,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Attempted refutation on all three axes; each fails.\\n\\n1) Already implemented under another name / fallback? No. `grep -rn \\\"current_type\\\\|current_vendor\\\\|collections/types\\\\|collections/vendors\\\" app/liquid/theme_engine/` hits only filters.rb:203-205 (`link_to_vendor`/`url_for_vendor`/`link_to_type`, which *emit* `/collections/types?q=` links) — no drop method, no coe…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 10,
+      "label": "verify:ShopDrop.money_with_currency_format",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ac17652a8d15e0a04",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318286212,
+      "queuedAt": 1788318286193,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Could not refute; the engine-gap classification stands on a…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318330439,
+      "tokens": 90525,
+      "toolCalls": 6,
+      "durationMs": 42041,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Could not refute; the engine-gap classification stands on all three counts.\\n\\n1. Official semantics (WebFetch https://shopify.dev/docs/api/liquid/objects/shop, 2026-09-02): `money_with_currency_format` is a listed shop property, return type `currency`, description verbatim \\\"The money format of the store with the currency included.\\\"; `money_format` verbatim \\\"The money…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 11,
+      "label": "verify:ShopDrop.description",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a41fb21e1b603cbad",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318329416,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Refutation attempt failed on all three axes; the engine-gap…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318363478,
+      "tokens": 88657,
+      "toolCalls": 5,
+      "durationMs": 34062,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Refutation attempt failed on all three axes; the engine-gap classification stands (with the data-absent facet the claim already records).\\n\\n1. Official (re-fetched 2026-09-02, https://shopify.dev/docs/api/liquid/objects/shop): `description` is listed among shop properties, type string, verbatim: \\\"The description of the store.\\\" (link target: help.shopify.com .../prefer…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 12,
+      "label": "verify:font_library.roboto_condensed",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ac1a8c510da256861",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318330441,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "NOT refuted — genuine engine gap, already self-registered a…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318410978,
+      "tokens": 99630,
+      "toolCalls": 10,
+      "durationMs": 80537,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"NOT refuted — genuine engine gap, already self-registered as ⚪ but unimplemented. Evidence (2026-09-02):\\n\\nOFFICIAL (WebFetch shopify.dev, 2026-09-02): fonts page \\\"Shopify's font library is a collection of fonts that includes system fonts and a selection of Google fonts.\\\" Table row verbatim: \\\"| Roboto Condensed | `roboto_condensed_n1 roboto_condensed_i1 … roboto_cond…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 13,
+      "label": "verify:settings.drawer_popup_color_scheme",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a13862c1b53205da6",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318332994,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Could not refute; the engine-gap classification holds on al…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318380998,
+      "tokens": 95371,
+      "toolCalls": 8,
+      "durationMs": 48003,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Could not refute; the engine-gap classification holds on all three axes.\\n\\nOFFICIAL (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02, verbatim): \\\"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the firs…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 14,
+      "label": "verify:settings.loading_design_mode",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a6080fe365958c77f",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318343995,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Refutation attempted on all three axes; the engine-gap clas…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318380416,
+      "tokens": 92603,
+      "toolCalls": 7,
+      "durationMs": 36421,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Refutation attempted on all three axes; the engine-gap classification survives.\\n\\n(1) Official re-fetched 2026-09-02, https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#checkbox — verbatim: \\\"data is returned as a boolean.\\\" and \\\"If `default` is unspecified, then the value is `false` by default.\\\" ⇒ official value is boolean false, never n…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 15,
+      "label": "verify:section(custom-content).content_color_scheme",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a15ff09d5ed101a54",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318363479,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Not refuted — the engine-gap classification stands on all t…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318406364,
+      "tokens": 91587,
+      "toolCalls": 6,
+      "durationMs": 42884,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Not refuted — the engine-gap classification stands on all three legs.\\n\\nOFFICIAL (WebFetch 2026-09-02, https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme), verbatim: \\\"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 16,
+      "label": "verify:section(custom-content).color_scheme",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ab11023cb3ba01808",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318380420,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "NOT refuted — it is a genuine engine gap, same root as cont…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318442008,
+      "tokens": 93021,
+      "toolCalls": 7,
+      "durationMs": 61588,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"NOT refuted — it is a genuine engine gap, same root as content_color_scheme.\\n\\nOfficial (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02), verbatim: \\\"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 17,
+      "label": "verify:section(recent-viewed-products).color_scheme",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a528ec58c011f7b95",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318381000,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Claim survives; it is a genuine engine gap. (1) Official (W…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318444049,
+      "tokens": 94788,
+      "toolCalls": 6,
+      "durationMs": 63048,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Claim survives; it is a genuine engine gap. (1) Official (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02) verbatim: \\\"When accessing the value of a `color_scheme` type setting, Shopify returns the selected `color_scheme` object from `color_scheme_group`. If no value was entered, or the value was invalid,…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 18,
+      "label": "verify:section(product-recommendations).color_scheme",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a696cdfdda5659b02",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318406365,
+      "queuedAt": 1788318286194,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Not refuted — engine-gap stands on all three legs. OFFICIAL…",
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318456156,
+      "tokens": 93084,
+      "toolCalls": 7,
+      "durationMs": 49790,
+      "resultPreview": "{\"refuted\":false,\"reason\":\"Not refuted — engine-gap stands on all three legs.\\n\\nOFFICIAL (WebFetch https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings#color_scheme, 2026-09-02, verbatim): \\\"If no value was entered, or the value was invalid, then the default value from `color_scheme` is returned. If the default value is also invalid, then the first `color_scheme` from …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 19,
+      "label": "synthesize",
+      "phaseIndex": 3,
+      "phaseTitle": "Synthesize",
+      "agentId": "a6b4472731da9e2aa",
+      "model": "claude-fable-5-1",
+      "state": "done",
+      "startedAt": 1788318456158,
+      "queuedAt": 1788318456157,
+      "attempt": 1,
+      "promptPreview": "HARD RULES: official semantics must be fetched with WebFetch from shopify.dev (cite URL + verbatim property description, date 2026-09-02); our-side status must cite file:line under C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/app/liquid/theme_engine/; Minimog usage must cite C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/test/fixtur…",
+      "lastProgressAt": 1788318617153,
+      "tokens": 133208,
+      "toolCalls": 0,
+      "durationMs": 160994,
+      "resultPreview": "# Minimog 5.9.0 conformance miss 三分類綜合報告（2026-09-02）\n\n路徑縮寫：`<repo>` ＝ `C:/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6/`；`engine/` ＝ `<repo>app/liquid/theme_engine/`；`minimog/` ＝ `<repo>test/fixtures/themes/minimog-5.9.0/`。官方引文皆為 2026-09-02 以 WebFetch 自 shopify.dev 取得（逐字英文見各列）。12 條 engine-gap 全部通過獨立反證嘗試（`survives: true`），其餘 28 條為 theme-quirk／data-absent／settings-defa…"
+    }
+  ],
+  "totalTokens": 1945506,
+  "totalToolCalls": 195
+}

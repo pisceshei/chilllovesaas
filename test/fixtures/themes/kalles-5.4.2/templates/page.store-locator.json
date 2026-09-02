@@ -1,0 +1,163 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main_heading_Gg63eE": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_gEADwf": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page.title }}",
+            "line_height": "hdt-lh-1",
+            "font_family": "hdt-font-1",
+            "text_size": "custom",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false,
+            "font_size_text_lg": 30,
+            "font_size_text": 30,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "heading_brc_j3H8NW": {
+          "type": "_heading_brc",
+          "name": "Breadcrumb",
+          "settings": {},
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_gEADwf",
+        "heading_brc_j3H8NW"
+      ],
+      "settings": {
+        "use_dynamic_source": true,
+        "image": "shopify://shop_images/bg-heading.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 50,
+        "space_item": 10,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "35px,,35px,",
+        "pd_mb": "35px,,35px,"
+      }
+    },
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "full_width": false,
+        "color_scheme": "",
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,30px,",
+        "pd_mb": ",,22px,"
+      }
+    },
+    "store_locator_D7WQqF": {
+      "type": "store-locator",
+      "blocks": {
+        "store_QbEGAa": {
+          "type": "store",
+          "settings": {
+            "heading": "1471 P St NW",
+            "latitude": "38.909882",
+            "longitude": "-77.034149",
+            "content": "<p>Washington DC <br/>(202) 234 7336</p>"
+          }
+        },
+        "store_tpRp9t": {
+          "type": "store",
+          "settings": {
+            "heading": "2221 I Tokyo JP",
+            "latitude": "35.689487",
+            "longitude": "139.691711",
+            "content": "<p>Tokyo, JP<br/>(306) 123 654 </p>"
+          }
+        },
+        "store_X7BdtY": {
+          "type": "store",
+          "settings": {
+            "heading": "HaNoi",
+            "latitude": "21.027763",
+            "longitude": "105.834160",
+            "content": "<p>VIETNAM<br/>(84) 123 456 789</p>"
+          }
+        },
+        "store_AKkjkM": {
+          "type": "store",
+          "settings": {
+            "heading": "1977 Taiwan",
+            "latitude": "23.697809",
+            "longitude": "120.960518",
+            "content": "<p>Taiwan <br/>(12) 345 336</p>"
+          }
+        },
+        "store_yqDiaD": {
+          "type": "store",
+          "settings": {
+            "heading": "16479 Shanghai",
+            "latitude": "37.608220",
+            "longitude": "-76.778630",
+            "content": "<p>Shanghai<br/>(993) 1902 1366</p>"
+          }
+        },
+        "store_zbjaFe": {
+          "type": "store",
+          "settings": {
+            "heading": "336 DaNang",
+            "latitude": "16.054407",
+            "longitude": "108.202164",
+            "content": "<p>DaNang City<br/>(84) 339 993</p>"
+          }
+        },
+        "store_qA8xK7": {
+          "type": "store",
+          "settings": {
+            "heading": "9978 Seoul",
+            "latitude": "37.566536",
+            "longitude": "126.977966",
+            "content": "<p>Seoul Capital<br/>(778) 1122 3335</p>"
+          }
+        }
+      },
+      "block_order": [
+        "store_QbEGAa",
+        "store_tpRp9t",
+        "store_X7BdtY",
+        "store_AKkjkM",
+        "store_yqDiaD",
+        "store_zbjaFe",
+        "store_qA8xK7"
+      ],
+      "settings": {
+        "access_token": "REDACTED-MAPBOX-TOKEN",
+        "enable_searchbox": true,
+        "style_map": "streets",
+        "zoom": 12,
+        "pitch": 60,
+        "color_marker": "#0ec1ae",
+        "color_scheme": "scheme-1",
+        "full_width": false,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "60px,,60px,",
+        "pd_mb": "30px,,30px,"
+      }
+    }
+  },
+  "order": [
+    "main_heading_Gg63eE",
+    "main",
+    "store_locator_D7WQqF"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "type": "footer",
+  "name": "t:sections.name_group.footer",
+  "sections": {
+    "footer_ziwVXA": {
+      "type": "footer",
+      "blocks": {
+        "footer_column_Xk9eJH": {
+          "type": "_footer-column",
+          "settings": {
+            "col_heading": "",
+            "hide_on_desktop": false,
+            "hide_on_mobile": false,
+            "only_mobile": false,
+            "sec_heading_size": "h4",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "font_weight_text": "normal",
+            "letter_spacing_text": 0,
+            "space": 30,
+            "alignment": "center",
+            "alignment_mb": "center",
+            "colors_by_section": false,
+            "color_scheme": "",
+            "background_opacity": 0,
+            "width_lg": 100,
+            "width_md": 100,
+            "width": 100,
+            "mg": "",
+            "mg_mb": "",
+            "pd": "",
+            "pd_mb": ""
+          },
+          "blocks": {
+            "custom_liquid_7gTHbP": {
+              "type": "_liquid",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<span class=\"hdt-text-secondary\">All Rights Reserved © 2025 <a href=\"https:\/\/1.envato.market\/Eamba9\" aria-describedby=\"a11y-external-message\" style=\"text-decoration: none;\"><span style=\"color: rgb(var(--color-accent)) !important\">Kalles<\/span><\/a> - Developed by <a class=\"t4s-secondary\" href=\"https:\/\/the4.co\/?utm_source=Kalles-Demo&amp;utm_medium=Copyright\" aria-describedby=\"a11y-external-message\" style=\"color: rgb(var(--color-foreground));text-decoration: none;\"> The4 <\/a><\/span>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "custom_liquid_7gTHbP"
+          ]
+        }
+      },
+      "block_order": [
+        "footer_column_Xk9eJH"
+      ],
+      "custom_css": [
+        "@media (max-width: 768px) {.hdt-row {text-align: center; }}"
+      ],
+      "settings": {
+        "collapse": true,
+        "full_width": false,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "20px,,20px,",
+        "pd_mb": "15px,,15px,",
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0
+      }
+    }
+  },
+  "order": [
+    "footer_ziwVXA"
+  ]
+}

@@ -1,0 +1,575 @@
+{
+  "sections": {
+    "e328d289-a749-4ca2-9851-3e5a72363f80": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-footer { border-top-width: 0; }\n\n.m-collection--home .m-section__heading span {\n  background: #F7F2F2;\n}\n\n.m-hero--home .m-hero__text,\n.m-slider--home .m-slide__description {\n  color: var(--color-sub-text);\n}\n\n.m-hero--home .m-slide__description {\n  font-weight: 500;\n}\n\n.m-collection-list--home .m-collection-card__link:hover {\n  color: var(--color-secondary);\n}\n\n.m-testimonial--home .m-testimonial__name {\n  font-weight: 600;\n}\n.m-testimonial--home .m-testimonial__image-text {\n  font-weight: 500;\n  font-size: 15px;\n  color: #a9c5b9;\n}\n.m-brand-list--home.m-brands-list .swiper-slide {\n  padding: 0;\n}\n@media (min-width: 768px) {\n  .m-instagram--home .m-section-my {\n    margin-bottom: 0;\n  }\n  .m-instagram--home .container-full {\n    padding-left: 0;\n    padding-right: 0;\n  }\n}\n@media (min-width: 1024px) {\n  .m-hero--home .m-hero__inner {\n    padding-left: 60px;\n  }\n}\n@media (min-width: 1280px) {\n  .m-hero--home .m-richtext__description {\n    font-size: 20px;\n  }\n}"
+      }
+    },
+    "16266647175adfb89e": {
+      "type": "slider",
+      "blocks": {
+        "16266647175adfb89e-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Welcome to<br> Tiny World",
+            "description": "<p>Trusted and loved by parents.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "16266647175adfb89e-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Giggle Baby<br> Stores",
+            "description": "<p>Little ones make big statements.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "16266647175adfb89e-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "All your<br> Baby needs",
+            "description": "<p>Our baby stuffs are cute, affordable, and stylish.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "16266647175adfb89e-2",
+        "16266647175adfb89e-0",
+        "16266647175adfb89e-1"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "1626665283ed396dee": {
+      "type": "collection-list",
+      "blocks": {
+        "1626665283ed396dee-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Eating"
+          }
+        },
+        "1626665283ed396dee-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Clothing"
+          }
+        },
+        "1626665283ed396dee-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Decor & Toy"
+          }
+        }
+      },
+      "block_order": [
+        "1626665283ed396dee-0",
+        "1626665283ed396dee-1",
+        "1626665283ed396dee-2"
+      ],
+      "settings": {
+        "heading": "<span>Top Categories<\/span>",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "1626666939bd2f2b78": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "<span>Hot This Week<\/span>",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "scheme-78caf6e9-261c-41f3-a1ff-cd0690880a65",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "1",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "1626667192597d558b": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 20,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "<span class=\"leading-tight\">The best thing<br>\nfor kids is here<\/span>",
+        "sub_title": "",
+        "text": "<p>We believe in crafting pieces where sustainability and<br\/> style go hand in hand. Made from materials like<br\/> recycled cashmere and sustainable alpaca.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1626667260ba28a0c1": {
+      "type": "collection-list",
+      "blocks": {
+        "1626667260ba28a0c1-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Baby Layette"
+          }
+        },
+        "1626667260ba28a0c1-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Organic Essentials"
+          }
+        },
+        "1626667260ba28a0c1-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Toys & Decor"
+          }
+        },
+        "69f81bd7-d111-475c-9686-611e56d207ec": {
+          "type": "collection_block",
+          "settings": {
+            "title": "BPA Free Baby Bottles"
+          }
+        }
+      },
+      "block_order": [
+        "1626667260ba28a0c1-0",
+        "1626667260ba28a0c1-1",
+        "1626667260ba28a0c1-2",
+        "69f81bd7-d111-475c-9686-611e56d207ec"
+      ],
+      "settings": {
+        "heading": "<span>Recommendation<\/span>",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": false,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "16266678061094e5ec": {
+      "type": "testimonials",
+      "blocks": {
+        "16266678061094e5ec-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>\"Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.\"<\/p>",
+            "footer": "<p>Dean D. US<\/p>",
+            "image_text": "<p>Hoodie with pocket<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16266678061094e5ec-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "So glad I bought them !",
+            "description": "<p>\"Thanks for the lovely time shopping and all the good work you do.\"<\/p>",
+            "footer": "<p>Dorothée F. US<\/p>",
+            "image_text": "<p>Scoop-Back Cotton<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16266678061094e5ec-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "I'd recommend it",
+            "description": "<p>\"I've been getting good wear for my kids. It's very light and soft, comfortable to wear.\"<\/p>",
+            "footer": "<p>Nancy W. US<\/p>",
+            "image_text": "<p>Hoodie with pocket<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16266678061094e5ec-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love my new purchase!",
+            "description": "<p>\"I had a wonderful experience shopping in your store today. Thank you for your help and for the story that your shop has to tell.\"<\/p>",
+            "footer": "<p>Gloria T. Brazil<\/p>",
+            "image_text": "<p>Scoop-Back Cotton<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16266678061094e5ec-4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "What a delight to find you!",
+            "description": "<p>\"I just wanted to thank you for the impeccable service from you and your staff...I will always look forward to shopping at your store.\"<\/p>",
+            "footer": "<p>Linnie H. Canada<\/p>",
+            "image_text": "<p>Hoodie with pocket<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16266678061094e5ec-5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Great stuffs for kids.",
+            "description": "<p>\"If we ever have an opportunity to recommend you, we definitely would do so as we felt your service was excellent.\"<\/p>",
+            "footer": "<p>Zeferino G. Ukraine<\/p>",
+            "image_text": "<p>Scoop-Back Cotton<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "16266678061094e5ec-0",
+        "16266678061094e5ec-1",
+        "16266678061094e5ec-2",
+        "16266678061094e5ec-3",
+        "16266678061094e5ec-4",
+        "16266678061094e5ec-5"
+      ],
+      "settings": {
+        "heading": "<span style=\"background:#EAF1F0;\">Our Lovely Customers<\/span>",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-1a4ce738-10ba-4f6a-8027-947402453f7c",
+        "design": "testimonials-1",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": false,
+        "show_pagination": true,
+        "star_color": "#e1927f",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-testimonial--home",
+        "animations": "inherit"
+      }
+    },
+    "16266680688d0606ca": {
+      "type": "brands-list",
+      "blocks": {
+        "16266680688d0606ca-0": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "16266680688d0606ca-3": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "16266680688d0606ca-1": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "16266680688d0606ca-2": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "ea03c524-fb9f-406c-ae8e-075a0c5478a4": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "b749c896-1f5c-4b45-a39d-f9cc6d72fe2c": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "5f883831-126e-46df-8698-b310b801801c": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "4bf7e8d5-e2e8-4420-844e-205b26c9c701": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "2ff340b7-261d-4c8c-955a-5bc392af3ca8": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        },
+        "37702096-cb03-4162-abd2-ebf675080a26": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": ""
+          }
+        }
+      },
+      "block_order": [
+        "16266680688d0606ca-0",
+        "16266680688d0606ca-3",
+        "16266680688d0606ca-1",
+        "16266680688d0606ca-2",
+        "ea03c524-fb9f-406c-ae8e-075a0c5478a4",
+        "b749c896-1f5c-4b45-a39d-f9cc6d72fe2c",
+        "5f883831-126e-46df-8698-b310b801801c",
+        "4bf7e8d5-e2e8-4420-844e-205b26c9c701",
+        "2ff340b7-261d-4c8c-955a-5bc392af3ca8",
+        "37702096-cb03-4162-abd2-ebf675080a26"
+      ],
+      "settings": {
+        "heading": "<span>Shop by Brands<\/span>",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 5,
+        "column_gap": 30,
+        "row_gap": 30,
+        "column_gap_mobile": 10,
+        "row_gap_mobile": 10,
+        "enable_slider": false,
+        "show_nav": false,
+        "show_pagination": false,
+        "autorotate": true,
+        "autorotate_speed": 3,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-brand-list--home",
+        "animations": "inherit"
+      }
+    },
+    "162666834017f027c8": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "container",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "<span>Baby Dreamy<br> Bedroom.<\/span>",
+        "subtitle": "",
+        "text": "<p>We believe in crafting pieces where<br\/> sustainability and style go hand in hand. <\/p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--home",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "16266686176ae44d75": {
+      "type": "instagram",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 0,
+        "mobile_gap": 16,
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-instagram--home"
+      }
+    }
+  },
+  "order": [
+    "e328d289-a749-4ca2-9851-3e5a72363f80",
+    "16266647175adfb89e",
+    "1626665283ed396dee",
+    "1626666939bd2f2b78",
+    "1626667192597d558b",
+    "1626667260ba28a0c1",
+    "16266678061094e5ec",
+    "16266680688d0606ca",
+    "162666834017f027c8",
+    "16266686176ae44d75"
+  ]
+}

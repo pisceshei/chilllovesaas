@@ -1,0 +1,299 @@
+{
+  "sections": {
+    "37468152-398e-48b5-be12-fc052c851ca4": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-richtext__subtitle,\n.m-product-tabs--home .m-tab-header {\n  font-weight: 500;\n}\n.m-custom--image-card .m-image-card__content-inner .m-richtext__button {\n  padding: 0;\n  font-weight: 400;\n}\n.m-custom--image-card .m-image-card__content-inner .m-button--link::before {\n  background-color: rgba(0, 0, 0, 0.25);\n  height: 1px;\n}\n.m-custom--image-card .m-image-card__content-inner .m-button--link::after {\n  height: 1px;\n}\n.m-custom--image-card .m-image-card__content-inner {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  height: 100%;\n  justify-content: space-between;\n}\n.m-footer {\n  border-top: 0;\n} \n@media (max-width: 767px) {\n  .m-custom--image-card .m-image-card__content {\n    padding: 15px;\n  }\n  .m-custom--image-card .m-richtext__subtitle {\n    font-size: 16px;\n  }\n  .m-custom--image-card .m-richtext__title {\n    font-size: 26px;\n  }\n  .m-custom--image-card .m-richtext__button {\n    margin-top: 12px;\n  }\n  .m-image-card--home .m-richtext__button {\n    margin-top: 0;\n  }\n  .m-instagram-section .m-section-my {\n    margin-bottom: 40px;\n  }\n  .m-product-tabs--home .m-select-custom {\n    font-size: 20px;\n  }\n}"
+      }
+    },
+    "16184552193b4706ec": {
+      "type": "slider",
+      "blocks": {
+        "16184552193b4706ec-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "center middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Waffle Hooded Coat",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "Show Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "16184552193b4706ec-2"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "#000",
+        "show_dots": false,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16184838446680fa72": {
+      "type": "custom-content",
+      "blocks": {
+        "bd79e52b-89c3-4552-9929-b2577182c691": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Glasses",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "53209273-dcc5-4a20-bb0d-8c24c8eee990": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sneakers",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "e3087e38-cca2-446d-b2d9-148d452a1c40": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Handbags",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "bd79e52b-89c3-4552-9929-b2577182c691",
+        "53209273-dcc5-4a20-bb0d-8c24c8eee990",
+        "e3087e38-cca2-446d-b2d9-148d452a1c40"
+      ],
+      "settings": {
+        "heading": "This Season Collection",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": true,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-image-card--home"
+      }
+    },
+    "1626487173b943c108": {
+      "type": "product-tabs",
+      "blocks": {
+        "1626487173b943c108-0": {
+          "type": "tab",
+          "settings": {
+            "title": "Hot Items"
+          }
+        },
+        "1626487173b943c108-1": {
+          "type": "tab",
+          "settings": {
+            "title": "Best Sellers"
+          }
+        },
+        "1fcf9bc0-5d2b-410c-a6bd-fdafd2b25a0f": {
+          "type": "tab",
+          "settings": {
+            "title": "On Sale"
+          }
+        },
+        "21fbb268-20b4-49b4-b494-54acca9a4974": {
+          "type": "tab",
+          "settings": {
+            "title": "New Arrivals"
+          }
+        }
+      },
+      "block_order": [
+        "1626487173b943c108-0",
+        "1626487173b943c108-1",
+        "1fcf9bc0-5d2b-410c-a6bd-fdafd2b25a0f",
+        "21fbb268-20b4-49b4-b494-54acca9a4974"
+      ],
+      "settings": {
+        "heading": "This Week's Highlights",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "tab_header": "horizontal",
+        "limit": 8,
+        "show_button": true,
+        "button_type": "load",
+        "button_label": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": false,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-product-tabs--home",
+        "animations": "inherit"
+      }
+    },
+    "162648812285ec372a": {
+      "type": "custom-content",
+      "blocks": {
+        "8fd0e966-040f-4b4c-b3ca-f6b71427a69d": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "Black Mules",
+            "subtitle": "New Arrivals",
+            "button_label": "Shop Now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "37c80e87-ae0a-4395-addd-33cc4b387b6c": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "Chain Bucket",
+            "subtitle": "New Arrivals",
+            "button_label": "Shop Now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "8fd0e966-040f-4b4c-b3ca-f6b71427a69d",
+        "37c80e87-ae0a-4395-addd-33cc4b387b6c"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--image-card"
+      }
+    },
+    "1618459225636aa0a1": {
+      "type": "instagram",
+      "settings": {
+        "heading": "#minimog",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Tag <span class=\"m:text-black m:font-medium\">@minimog<\/span> in your Instagram photos for a chance to be featured here.<br>\nFind more inspiration on <span class=\"m:text-black m:underline m:font-medium\">our Instagram.<\/span>",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 10,
+        "mobile_gap": 16,
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "section__flush-bottom"
+      }
+    }
+  },
+  "order": [
+    "37468152-398e-48b5-be12-fc052c851ca4",
+    "16184552193b4706ec",
+    "16184838446680fa72",
+    "1626487173b943c108",
+    "162648812285ec372a",
+    "1618459225636aa0a1"
+  ]
+}

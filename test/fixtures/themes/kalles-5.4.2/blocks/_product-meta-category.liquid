@@ -1,0 +1,16 @@
+{%- liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+-%}
+{%- if product.collections.size > 0 -%}
+<div class="hdt-collections-wrapper hdt-s-text2">{{ 'products.product.category' | t }}
+  {% for collection in product.collections -%}{{ collection.title | link_to: collection.url, class: 'hdt-inline-block hdt-s-text' }} {% endfor -%}
+</div>
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.meta.settings.show_category.label",
+  "tag": null,
+  "presets": [{ "name": "t:sections.main-product.blocks.meta.settings.show_category.label" }]
+}
+{% endschema %}

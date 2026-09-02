@@ -1,0 +1,266 @@
+<!-- sections/featured-product.liquid -->
+{{ 'hdt-product-tabs.css' | asset_url | stylesheet_tag }}
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+{%- assign product = section.settings.product | default: product -%}
+<div class="hdt-section-inner hdt-s-gradient hdt-section-spacing hdt-section-spacing-{{ section.id }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" color-scheme="{{ section.settings.color_scheme }}" hdt-reveal="fade-in">
+  <div class="hdt-container {%- if section.settings.section_layout == "full_width" -%}-full{%- endif %}">
+    {%- if product != blank -%}
+      <div class="hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-2">
+        {% content_for 'block', type: '_product-medias',  id: 'featured-product-medias' %}
+        {% content_for 'blocks' %}
+      </div>
+    {%- else -%}
+    <div class="hdt-row-flex hdt-flex-cols-1 md:hdt-flex-cols-2">
+      <div class="hdt-col">
+        {{ 'product-1' | placeholder_svg_tag: 'hdt-placeholder-svg-pr1' }}
+        <style>.hdt-placeholder-svg-pr1{width: 320px;display: block; margin: 0 auto}</style>
+      </div>
+      <div class="hdt-col">
+        <div class="hdt-product-info__list">
+          <div class="hdt-product-info__item hdt-product__title hdt-s-text hdt-h6">{{ 'onboarding.product_title' | t }}</div>
+          <div class="hdt-product-info__item hdt-product__price hdt-text-lg hdt-s-text2" style="color: rgb(var(--color-pr-price));">{{ 1999 | money }}</div>
+          <div class="hdt-product__description hdt-s-text2"><p>{{ 'onboarding.product_excerpt' | t }}</p></div>
+        </div>
+      </div>
+    </div>
+    {%- endif -%}
+  </div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.featured_product.name",
+  "class": "hdt-section hdt-section--feature-product",
+  "disabled_on": {
+    "groups": [
+      "*"
+    ]
+  },
+  "blocks": [
+    {
+      "type": "_group-product"
+    },
+    {
+      "type": "_product-medias"
+    }
+  ],
+  "settings": [
+    {
+      "type": "product",
+      "id": "product",
+      "label": "t:sections.featured_product.settings.product"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0,
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "select",
+      "id": "section_layout",
+      "label": "t:sections.all.section_layout.width.label",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:sections.all.section_layout.width.container"
+        },
+        {
+          "value": "wrapper_container",
+          "label": "t:sections.all.section_layout.width.wrapper_container"
+        },
+        {
+          "value": "full_width",
+          "label": "t:sections.all.section_layout.width.full_width"
+        }
+      ],
+      "default": "container"
+    },
+    {
+      "type": "image_picker",
+      "id": "section_background",
+      "label": "t:sections.all.background.image"
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "presets": [
+    {
+      "name": "t:sections.featured_product.name",
+      "category": "t:sections_categories.04_products.name",
+      "blocks": [
+        {
+          "type": "_group-product",
+          "settings": {
+            "colors_by_block": false,
+            "color_scheme": ""
+          },
+          "blocks": [
+            {
+              "type": "_product-title",
+              "settings": {
+                "txt_tr_pr": "none",
+                "tag": "h2",
+                "heading_size": "h6",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0,
+              },
+              
+            },
+            {
+              "type": "_product-price",
+              "settings": {},
+              
+            },
+            {
+              "type": "_product-description",
+              "settings": {
+                "short_des": "<p>Go kalles this summer with this vintage navy and white striped v-neck t-shirt from the Nike. Perfect for pairing with denim and white kicks for a stylish kalles vibe.</p>",
+                "readm": false,
+                "length": 31,
+                "readm_txt": "Read more",
+                "readl_txt": "Read less"
+              },
+              
+            },
+            {
+              "type": "_product-variant-picker",
+              "settings": {
+                "color_picker_type": "color_rounded",
+                "color_size": "medium",
+                "picker_type": "circle",
+                "size_chart_source": "page",
+                "size_chart_page": ""
+              },
+              
+            },
+            /*{
+              "type": "_quantity-selector", 
+            },*/
+            {
+              "type": "_product-buy-button",
+              "settings": {
+                "show_dynamic_checkout": true,
+                "show_gift_card_recipient": true,
+                "show_wishlist": true,
+                "show_compare": true
+              },
+              
+            },   
+            {
+              "type": "_product_back_instock",
+              "settings": {
+                "only_show_soldout": true
+              }
+            },
+            {
+              "type": "_product-meta",
+              "settings": {},
+              "blocks": [
+                {
+                  "type": "_product-meta-sku",
+                  
+                },
+                {
+                  "type": "_product-meta-category",
+                  
+                },
+                {
+                  "type": "_product-meta-tags",
+                  
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "_product-medias",
+          "static": true,
+          "id": "featured-product-medias",
+          "settings": {
+            "desktop_media_layout": "thumbnail_left",
+            "media_size": "medium",
+            "mobile_media_layout": "thumbnails",
+            "show_first_media": false,
+            "use_select_varaint_change_media": true,
+            "enable_media_autoplay": false,
+            "enable_video_looping": false,
+            "enable_thumb_efect": true,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "image_zoom": "zoom",
+            "image_zoom_type": "external",
+            "zoom_level": 2,
+            "max_zoom_lightbox": 3,
+            "navUI": false,
+            "nav_style": "default",
+            "nav_shape": "default",
+            "nav_size": "small",
+            "nav_hide_mobile": false
+          },
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

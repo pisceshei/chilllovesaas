@@ -1,0 +1,1174 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slide1_816d39a3-0038-446f-8e8f-c41e50aff962.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-ab8fdb8f-17f3-49a3-a278-2e4d0491cac1",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_YrQhtV": {
+              "type": "text",
+              "settings": {
+                "text": "<p>BODY BEAUTY COMBO<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 24,
+                "font_size_text": 20,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_gnPapa": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 26,
+                "space_md": 26,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "heading_MzV9Ty": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>SALE UP TO 50% OFF<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 65,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_fFNyjC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 18,
+                "space_md": 18,
+                "space": 18
+              },
+              "blocks": {}
+            },
+            "button_3yEDmG": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify:\/\/collections\/skincare",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 48,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 130,
+                "min_height_btn": 32,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_YrQhtV",
+            "spacer_gnPapa",
+            "heading_MzV9Ty",
+            "spacer_fFNyjC",
+            "button_3yEDmG"
+          ]
+        },
+        "slide_item_QQPPj8": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slide2_b64fff6d-49b0-4ee3-920a-2636acede48a.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-ab8fdb8f-17f3-49a3-a278-2e4d0491cac1",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_YEWGJy": {
+              "type": "text",
+              "settings": {
+                "text": "<p>SKINCARE COMBO<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 24,
+                "font_size_text": 20,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_FkFVMh": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 26,
+                "space_md": 26,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "heading_YkRfhQ": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>SALE UP TO 70% OFF<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 65,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_6pXRLR": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 18,
+                "space_md": 18,
+                "space": 18
+              },
+              "blocks": {}
+            },
+            "button_dnEdrd": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify:\/\/collections\/skincare",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 48,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 130,
+                "min_height_btn": 32,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_YEWGJy",
+            "spacer_FkFVMh",
+            "heading_YkRfhQ",
+            "spacer_6pXRLR",
+            "button_dnEdrd"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM",
+        "slide_item_QQPPj8"
+      ],
+      "custom_css": [
+        "@media (width < 768px) {.hdt-button-block {--hdt-btn-padding-x: 28px !important; --hdt-btn-line-height: 16px !important; font-size: 14px; font-weight: 500; --minwdt-button: 130px; }}"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 950,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "elessi",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-bb059e71-2bf0-4993-9598-0d0da558531c",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,0px,",
+        "pd_mb": ",,0px,"
+      }
+    },
+    "marquee_Krgdg3": {
+      "type": "marquee",
+      "blocks": {
+        "item_xJxmrT": {
+          "type": "item",
+          "settings": {
+            "text": "<p>END YEAR SALE UP TO 50% OFF<\/p>",
+            "icon_svg": "none",
+            "custom_svg": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-dot\" viewbox=\"0 0 16 16\">\n  <path d=\"M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3\"><\/path>\n<\/svg>",
+            "icon_width": 40,
+            "icon_width_mb": 40
+          }
+        },
+        "item_gDMqep": {
+          "type": "item",
+          "settings": {
+            "text": "<p>SIGN UP AND GET 10% OFF YOUR FIRST ORDER<\/p>",
+            "icon_svg": "none",
+            "custom_svg": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-dot\" viewbox=\"0 0 16 16\">\n  <path d=\"M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3\"><\/path>\n<\/svg>",
+            "icon_width": 40,
+            "icon_width_mb": 40
+          }
+        },
+        "item_qHcjcY": {
+          "type": "item",
+          "settings": {
+            "text": "<p>FREE DELIVERY FOR ORDER OVER $120<\/p>",
+            "icon_svg": "none",
+            "custom_svg": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-dot\" viewbox=\"0 0 16 16\">\n  <path d=\"M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3\"><\/path>\n<\/svg>",
+            "icon_width": 40,
+            "icon_width_mb": 40
+          }
+        }
+      },
+      "block_order": [
+        "item_xJxmrT",
+        "item_gDMqep",
+        "item_qHcjcY"
+      ],
+      "custom_css": [
+        "@media (width >= 1150px) {.hdt-marquee-item {line-height: 2.8rem; } .hdt-marquee-inner {--space-item: 0; }}"
+      ],
+      "name": "t:sections.marquee.name",
+      "settings": {
+        "space_item": 20,
+        "speed": 0.3,
+        "direction": "rtl",
+        "marquee_pause_when_hover": false,
+        "text_fs": "h_custom",
+        "font_size_heading_lg": 14,
+        "font_size_heading": 14,
+        "font_weight_heading": 400,
+        "letter_spacing_heading": 0,
+        "text_uppercase": true,
+        "adding_border": true,
+        "border_bottom": false,
+        "icon_position_between": true,
+        "color_scheme": "scheme-996b7f31-dcb2-4131-a9cc-69b6bce8669e",
+        "mg": ",,150px,",
+        "mg_mb": ",,50px,",
+        "pd": "10px,0,10px,0",
+        "pd_mb": ""
+      }
+    },
+    "collections_list_bc7XhP": {
+      "type": "collections-list",
+      "blocks": {
+        "collection_item_AGtdHg": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "skincare",
+            "image": "shopify:\/\/shop_images\/Ellipse_13_1.png",
+            "title": "Cleanser",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_7UBEMB": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "body-beauty",
+            "image": "shopify:\/\/shop_images\/Ellipse_13_2.png",
+            "title": "Lotions",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_KiWBza": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "skincare",
+            "image": "shopify:\/\/shop_images\/Ellipse_13_3.png",
+            "title": "Lipstick",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_6nXNCa": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "body-beauty",
+            "image": "shopify:\/\/shop_images\/Ellipse_13_4.png",
+            "title": "Serum",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_pcfcVy": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "skincare",
+            "image": "shopify:\/\/shop_images\/Ellipse_13_5.png",
+            "title": "Cream",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "section-heading-collections-list": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 20,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_ATbiGn": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Shop By Categories",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_QHa3YY": {
+              "type": "_sub_heading_section",
+              "name": "t:blocks.section_heading.sub_heading",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_ATbiGn",
+            "sub_heading_section_QHa3YY"
+          ]
+        }
+      },
+      "block_order": [
+        "collection_item_AGtdHg",
+        "collection_item_7UBEMB",
+        "collection_item_KiWBza",
+        "collection_item_6nXNCa",
+        "collection_item_pcfcVy"
+      ],
+      "custom_css": [
+        ".hdt-collection-title-text {font-family: var(--font-heading-family);}",
+        "@media (width >= 1350px) {.hdt-slider__dots {display: none; }}",
+        "@media (width < 768px) {hdt-slider {--slide-spacing: 10px; } .hdt-slider__dots {display: flex; }}"
+      ],
+      "name": "t:sections.collections-list.name",
+      "settings": {
+        "collection_list": [],
+        "collection_des": "5",
+        "content_size": "xl",
+        "content_weight": "medium",
+        "content_position": "center",
+        "content_space": 20,
+        "show_count": true,
+        "count_label": "Products",
+        "image_rounded": true,
+        "enable_border": false,
+        "image_padding": 30,
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "img_effect": "zoom",
+        "b_effect": "none",
+        "col_dk": "5",
+        "col_tb": "4",
+        "col_mb": "2",
+        "space_items": "x",
+        "layout_mode": "carousel",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "mg": ",,150px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_PTq36A": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_JJ7DRU": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "skincare",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "Load more",
+            "btn_style": "hdt-btn-outline-hover-accent",
+            "endable_btn_icon": false,
+            "size": "xl",
+            "btn_fw": "semibold"
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 20,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_rgjWE7": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "New In Products",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_URb48x": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_rgjWE7",
+            "sub_heading_section_URb48x"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_JJ7DRU"
+      ],
+      "custom_css": [
+        ".hdt-card-product__title {font-family: var(--font-heading-family);}"
+      ],
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "mg": ",,150px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ",,67px,"
+      }
+    },
+    "banner_VyWanM": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_8P4VCT": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "shopify:\/\/collections\/skincare",
+            "banner_target": false,
+            "img_effect": "none",
+            "b_effect": "none",
+            "colors_by_block": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "auto",
+            "position_x": 75,
+            "position_y": 43,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 100,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_qct3Q9": {
+              "type": "text",
+              "settings": {
+                "text": "<p>DISCOUNT 50% FOR ALL ITEMS<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_MxJbmB": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 8,
+                "space_md": 8,
+                "space": 8
+              },
+              "blocks": {}
+            },
+            "heading_yDKf6F": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>MAKE YOUR SKIN HEALTHIER<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 60,
+                "font_size_heading": 40,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_X7fTd8": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 12,
+                "space_md": 12,
+                "space": 12
+              },
+              "blocks": {}
+            },
+            "text_L4cKz8": {
+              "type": "text",
+              "settings": {
+                "text": "<p> Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla <br\/>pariatur. Excepteur sint occaecat cupidatat non proident<\/p>",
+                "hidden_br_mobile": true,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_tDmzKQ": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "button_Rmzxci": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "DISCOVERY MORE",
+                "link": "shopify:\/\/collections\/skincare",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 37,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 110,
+                "min_height_btn": 33,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/803e3cd3c1410f61ee939257a7c88173.jpg",
+                "image_mb": "shopify:\/\/shop_images\/803e3cd3c1410f61ee939257a7c88173.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_qct3Q9",
+            "spacer_MxJbmB",
+            "heading_yDKf6F",
+            "spacer_X7fTd8",
+            "text_L4cKz8",
+            "spacer_tDmzKQ",
+            "button_Rmzxci"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "disabled": true,
+          "static": true,
+          "settings": {
+            "design_heading": "2",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 18,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_8P4VCT"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--font-heading-family);}",
+        "@media (width < 768px) {.hdt-button-block {--hdt-btn-padding-x: 29px !important; --hdt-btn-line-height: 26px !important; font-size: 14px; font-weight: 500; white-space: nowrap; --minwdt-button: 130px; }}"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 900,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 500,
+        "space_items": "var(--spacing-x)",
+        "space_items_tb": "var(--spacing-x)",
+        "space_items_mb": "var(--spacing-x)",
+        "col_dk": "1",
+        "col_tb": "1",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "mg": ",,142px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_tBFWAR": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_qK94Vd": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "body-beauty",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "Load more",
+            "btn_style": "hdt-btn-outline-hover-accent",
+            "endable_btn_icon": false,
+            "size": "xl",
+            "btn_fw": "semibold"
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 20,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_MJJNjD": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Hot Products",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_CjjpPq": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_MJJNjD",
+            "sub_heading_section_CjjpPq"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_qK94Vd"
+      ],
+      "custom_css": [
+        ".hdt-card-product__title {font-family: var(--font-heading-family);}"
+      ],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "mg": ",,150px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ",,67px,"
+      }
+    },
+    "blog_post_DcUjga": {
+      "type": "blog-post",
+      "blocks": {
+        "article_carousel_wnf68V": {
+          "type": "_article-carousel",
+          "settings": {
+            "blog": "skincare",
+            "limit": 8,
+            "col_dk": "3",
+            "col_tb": "2",
+            "col_mb": "1",
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "hover",
+            "nav_style": "outline",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": false,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "pag_hide_mobile": false
+          },
+          "blocks": {
+            "article-carousel": {
+              "type": "_article-card",
+              "static": true,
+              "settings": {
+                "article_des": "1",
+                "show_cate": false,
+                "show_content": true,
+                "show_tags": false,
+                "show_author": false,
+                "show_comment": false,
+                "show_readmore": false,
+                "show_date": false,
+                "date": "%b %d",
+                "content_align": "start",
+                "image_ratio": "-landscape",
+                "image_size": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        },
+        "feature-blog-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 20,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_UMR9jJ": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Latest News",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_W6n6Q4": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>The freshest and most exciting news about fashion trending.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_UMR9jJ",
+            "sub_heading_section_W6n6Q4"
+          ]
+        }
+      },
+      "block_order": [
+        "article_carousel_wnf68V"
+      ],
+      "custom_css": [
+        "@media (width >= 1150px) {.hdt-article-content {font-size: 16px; } .hdt-article-title {font-size: 1.8rem; line-height: 25px; } .hdt-article-metas {line-height: 0; } .hdt-article-thumb {margin-bottom: 25px; } .hdt-container {--container-max-width-padding-lg: 1700px; }}",
+        ".hdt-article-title {font-family: var(--font-heading-family);}"
+      ],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-bb059e71-2bf0-4993-9598-0d0da558531c",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,95px,",
+        "pd_mb": ",,75px,"
+      }
+    },
+    "custom_section_77FkJz": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_nEMBAB": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_width": "auto",
+            "content_position": "center",
+            "content_position_mb": "center",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_bAMiAm": {
+              "type": "heading",
+              "settings": {
+                "heading": "<h5>Sign up to be the first to hear about exclusive deals<\/h5>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_HnzdtC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 60,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "newsletter_kkJqBE": {
+              "type": "_newsletter",
+              "settings": {
+                "color_scheme": "",
+                "des_newsletter": "5",
+                "alignment": "center",
+                "button_lb": "Subscribe",
+                "size": "m",
+                "btn_fw": "normal",
+                "agree_form": false,
+                "content": "I agree with the terms and conditions",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_bAMiAm",
+            "spacer_HnzdtC",
+            "newsletter_kkJqBE"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_nEMBAB"
+      ],
+      "custom_css": [
+        ".hdt-s-gradient {background-color: rgb(var(--color-background));}",
+        ".hdt-h_custom h5 {font-weight: 400;}",
+        ".hdt-newsletter__email {text-align: start; margin-inline-end: 2rem; border-right: 0; border-color: #cdd0dd;}",
+        ".hdt-newsletter-main {padding-inline: 40px;}",
+        ".hdt-newsletter__text,.hdt-newsletter__email {font-size: 1.5rem;}",
+        ".hdt-btn--size-m {--hdt-btn-padding-x: 2.6rem;}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-e84594d1-30f0-4e1e-a1a2-16fb35d9cd7d",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "mg": "0px,,0px,",
+        "mg_mb": ",,0px,",
+        "pd": "130px,0,150px,0",
+        "pd_mb": "65px,0,75px,0"
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "marquee_Krgdg3",
+    "collections_list_bc7XhP",
+    "featured_collection_PTq36A",
+    "banner_VyWanM",
+    "featured_collection_tBFWAR",
+    "blog_post_DcUjga",
+    "custom_section_77FkJz"
+  ]
+}

@@ -1,0 +1,293 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "top_bar_3qfcq8": {
+      "type": "top-bar",
+      "blocks": {
+        "info_FXxzPi": {
+          "type": "info",
+          "settings": {
+            "show_email": true,
+            "email": "kalles@domain.com",
+            "show_phone": true,
+            "phone": "+0123456789",
+            "hide": true
+          }
+        },
+        "text_yBAEgJ": {
+          "type": "text",
+          "settings": {
+            "text1": "Free Express Shipping on orders<strong> 100%<\/strong>.  <a href=\"\/collections\/tote-bags\" title=\"Tote bags\">Shop Now !<\/a>",
+            "text2": "",
+            "text3": "",
+            "adding_border": false,
+            "countdown": "2024-12-30 15:00:00",
+            "txt_day": "days",
+            "effect": "carousel",
+            "au_time": 3,
+            "pause_when_hover": false,
+            "hide": false
+          }
+        },
+        "cur_4KAVdD": {
+          "type": "cur",
+          "settings": {
+            "show_currency": true,
+            "show_language": false,
+            "use_location": true,
+            "txt_location": "Location",
+            "url_location": "shopify:\/\/pages\/store-locator",
+            "open_link": "_self",
+            "hide": true
+          }
+        }
+      },
+      "block_order": [
+        "info_FXxzPi",
+        "text_yBAEgJ",
+        "cur_4KAVdD"
+      ],
+      "custom_css": [
+        "strong {color: #ec0101; font-weight: 400;}",
+        ".hdt-top-bar__cur > div {vertical-align: middle;}",
+        "@media (width > 1150px){.hdt-top-bar__info {display: flex;}}"
+      ],
+      "settings": {
+        "height": 41,
+        "fontsize": 12,
+        "show_line_separator": false,
+        "full_width": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1
+      }
+    },
+    "header_inline_blocks_xePFbC": {
+      "type": "header-inline-blocks",
+      "blocks": {
+        "mega_block_7DJYPE": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_PKdDaN": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "mugs",
+              "canvas"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "scheme-1",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_ntakNQ": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_7qDM6U": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "wavy-twist-checkerboard",
+              "tour-crew-neck-sweatshirt",
+              "womens-baggu-hats",
+              "london-tour-t-shirt-dress",
+              "new-era-boston-blue",
+              "wide-wale-corduroy-beach-pant",
+              "cool-hats-for-men",
+              "standard-reusable-tote-bag"
+            ],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_MtwFkx": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_Jbe4K9": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Blog",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_blog",
+            "html": "",
+            "page": "",
+            "blog": "hiking",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "square",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? <\/span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com<\/b><\/span><span>Phone: <b>(212) 555-1234<\/b><\/span><\/span>"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_7DJYPE",
+        "mega_block_PKdDaN",
+        "mega_block_ntakNQ",
+        "mega_block_7qDM6U",
+        "mega_block_MtwFkx",
+        "mega_block_Jbe4K9"
+      ],
+      "custom_css": [
+        "@media (width > 1150px) {.lg\\:hdt-custom-col-5.md\\:hdt-custom-col-4.hdt-custom-col-3 {padding-inline-end: 10px; }}"
+      ],
+      "settings": {
+        "header_layout": "logo_center",
+        "header_fullwidth": true,
+        "header_height": 70,
+        "logo": "shopify:\/\/shop_images\/kalles.svg",
+        "logo_width": 95,
+        "header_colors": "scheme-23cf8966-8e57-4acd-9bb3-bb85f222fbb9",
+        "main_menu": "main-menu",
+        "lazy_mn": false,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "medium",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "menu_type": "default",
+        "header_menu_colors": "",
+        "h_icon": "kalles",
+        "hover_icon": "2",
+        "search_type": "icon",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_socials": false,
+        "header_height_mb": 60,
+        "logo_width_mb": 95,
+        "header_transparent": false,
+        "header_transparent_colors": "",
+        "background_opacity_transparent": 0,
+        "header_space_top": 0,
+        "header_space_top_mobile": 0,
+        "sticky_type": "on_scroll_up",
+        "header_sticky_colors": "",
+        "background_opacity_sticky": 1,
+        "sticky_glass": false
+      }
+    }
+  },
+  "order": [
+    "top_bar_3qfcq8",
+    "header_inline_blocks_xePFbC"
+  ]
+}

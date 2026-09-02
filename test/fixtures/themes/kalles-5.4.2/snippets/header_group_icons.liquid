@@ -1,0 +1,211 @@
+{% assign icons_position = icons_position | default: "end" %}
+
+{%- case section.settings.h_icon -%}
+
+{%- when 'kalles' -%}
+  <svg xmlns="http://www.w3.org/2000/svg" class="hdt-d-none">
+    <symbol id="icon-h-search" viewBox="0 0 32 32" fill="currentColor">
+      <path d="M31.707 30.282l-9.716-9.776c1.811-2.169 2.902-4.96 2.902-8.007 0-6.904-5.596-12.5-12.5-12.5s-12.5 5.596-12.5 12.5c0 6.903 5.596 12.5 12.5 12.5 3.136 0 6.002-1.158 8.197-3.067l9.703 9.764c0.39 0.39 1.024 0.39 1.415 0s0.39-1.023 0-1.415zM12.393 23.017c-5.808 0-10.517-4.709-10.517-10.517s4.708-10.517 10.517-10.517 10.517 4.708 10.517 10.517-4.709 10.517-10.517 10.517z"></path>
+    </symbol>
+    <symbol id="icon-h-account" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+    </symbol>
+    <symbol id="icon-h-heart" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+    </symbol>
+    <symbol id="icon-h-cart" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+    </symbol>
+  </svg>
+
+{%- when 'pe' -%}
+  <svg xmlns="http://www.w3.org/2000/svg" class="hdt-d-none">
+    <symbol id="icon-h-search" viewBox="0 0 32 32">
+      <path d="M28.591 27.273l-7.263-7.264c1.46-1.756 2.339-4.010 2.339-6.471 0-5.595-4.535-10.129-10.129-10.129-5.594 0-10.129 4.535-10.129 10.129 0 5.594 4.536 10.129 10.129 10.129 2.462 0 4.716-0.879 6.471-2.339l7.263 7.264 1.319-1.319zM4.475 13.538c0-4.997 4.065-9.063 9.063-9.063 4.997 0 9.063 4.066 9.063 9.063s-4.066 9.063-9.063 9.063c-4.998 0-9.063-4.066-9.063-9.063z" fill="currentColor"></path>
+    </symbol>
+    <symbol id="icon-h-account" viewBox="0 0 32 32">
+      <path d="M16 3.205c-7.067 0-12.795 5.728-12.795 12.795s5.728 12.795 12.795 12.795 12.795-5.728 12.795-12.795c0-7.067-5.728-12.795-12.795-12.795zM16 4.271c6.467 0 11.729 5.261 11.729 11.729 0 2.845-1.019 5.457-2.711 7.49-1.169-0.488-3.93-1.446-5.638-1.951-0.146-0.046-0.169-0.053-0.169-0.66 0-0.501 0.206-1.005 0.407-1.432 0.218-0.464 0.476-1.244 0.569-1.944 0.259-0.301 0.612-0.895 0.839-2.026 0.199-0.997 0.106-1.36-0.026-1.7-0.014-0.036-0.028-0.071-0.039-0.107-0.050-0.234 0.019-1.448 0.189-2.391 0.118-0.647-0.030-2.022-0.921-3.159-0.562-0.719-1.638-1.601-3.603-1.724l-1.078 0.001c-1.932 0.122-3.008 1.004-3.57 1.723-0.89 1.137-1.038 2.513-0.92 3.159 0.172 0.943 0.239 2.157 0.191 2.387-0.010 0.040-0.025 0.075-0.040 0.111-0.131 0.341-0.225 0.703-0.025 1.7 0.226 1.131 0.579 1.725 0.839 2.026 0.092 0.7 0.35 1.48 0.569 1.944 0.159 0.339 0.234 0.801 0.234 1.454 0 0.607-0.023 0.614-0.159 0.657-1.767 0.522-4.579 1.538-5.628 1.997-1.725-2.042-2.768-4.679-2.768-7.555 0-6.467 5.261-11.729 11.729-11.729zM7.811 24.386c1.201-0.49 3.594-1.344 5.167-1.808 0.914-0.288 0.914-1.058 0.914-1.677 0-0.513-0.035-1.269-0.335-1.908-0.206-0.438-0.442-1.189-0.494-1.776-0.011-0.137-0.076-0.265-0.18-0.355-0.151-0.132-0.458-0.616-0.654-1.593-0.155-0.773-0.089-0.942-0.026-1.106 0.027-0.070 0.053-0.139 0.074-0.216 0.128-0.468-0.015-2.005-0.17-2.858-0.068-0.371 0.018-1.424 0.711-2.311 0.622-0.795 1.563-1.238 2.764-1.315l1.011-0.001c1.233 0.078 2.174 0.521 2.797 1.316 0.694 0.887 0.778 1.94 0.71 2.312-0.154 0.852-0.298 2.39-0.17 2.857 0.022 0.078 0.047 0.147 0.074 0.217 0.064 0.163 0.129 0.333-0.025 1.106-0.196 0.977-0.504 1.461-0.655 1.593-0.103 0.091-0.168 0.218-0.18 0.355-0.051 0.588-0.286 1.338-0.492 1.776-0.236 0.502-0.508 1.171-0.508 1.886 0 0.619 0 1.389 0.924 1.68 1.505 0.445 3.91 1.271 5.18 1.77-2.121 2.1-5.035 3.4-8.248 3.4-3.183 0-6.073-1.277-8.188-3.342z" fill="currentColor"></path>
+    </symbol>
+    <symbol id="icon-h-heart" viewBox="0 0 32 32">
+      <path d="M21.886 5.115c3.521 0 6.376 2.855 6.376 6.376 0 1.809-0.754 3.439-1.964 4.6l-10.297 10.349-10.484-10.536c-1.1-1.146-1.778-2.699-1.778-4.413 0-3.522 2.855-6.376 6.376-6.376 2.652 0 4.925 1.62 5.886 3.924 0.961-2.304 3.234-3.924 5.886-3.924zM21.886 4.049c-2.345 0-4.499 1.089-5.886 2.884-1.386-1.795-3.54-2.884-5.886-2.884-4.104 0-7.442 3.339-7.442 7.442 0 1.928 0.737 3.758 2.075 5.152l11.253 11.309 11.053-11.108c1.46-1.402 2.275-3.308 2.275-5.352 0-4.104-3.339-7.442-7.442-7.442v0z" fill="currentColor"></path>
+    </symbol>
+    <symbol id="icon-h-cart" viewBox="0 0 32 32">
+      <path d="M3.205 3.205v25.59h25.59v-25.59h-25.59zM27.729 27.729h-23.457v-23.457h23.457v23.457z" fill="currentColor"></path>
+      <path d="M9.068 13.334c0 3.828 3.104 6.931 6.931 6.931s6.93-3.102 6.93-6.931v-3.732h1.067v-1.066h-3.199v1.066h1.065v3.732c0 3.234-2.631 5.864-5.864 5.864-3.234 0-5.865-2.631-5.865-5.864v-3.732h1.067v-1.066h-3.199v1.066h1.065v3.732z" fill="currentColor"></path>
+    </symbol>
+  </svg> 
+  
+{%- when 'drawn' -%}
+  <svg xmlns="http://www.w3.org/2000/svg" class="hdt-d-none">
+    <symbol id="icon-h-search" viewBox="0 0 20 20" stroke="currentColor">
+      <circle fill="none" stroke-width="2" stroke-miterlimit="10" cx="8.35" cy="8.35" r="6.5"></circle><path fill="none" stroke-width="2" stroke-miterlimit="10" d="M12.945 12.945l5.205 5.205"></path>
+    </symbol>
+    <symbol id="icon-h-account" viewBox="0 0 20 20" stroke="currentColor">
+      <path fill="none" stroke-width="2" stroke-miterlimit="10" d="M6 5.444C6 3.481 7.377 2 10 2c2.557 0 4 1.481 4 3.444S12.613 10 10 10c-2.512 0-4-2.592-4-4.556z"></path><path fill="none" stroke-width="2" stroke-linecap="round" stroke-miterlimit="10" d="M17.049 13.366s-1.22-.395-2.787-.761A7.056 7.056 0 0110 14c-1.623 0-3.028-.546-4.192-1.411-1.601.37-2.857.777-2.857.777-.523.17-.951.759-.951 1.309V17c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-2.325c0-.55-.428-1.139-.951-1.309z"></path>
+    </symbol>
+    <symbol id="icon-h-heart" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M14.001 4c.802 0 1.556.311 2.122.876.565.564.877 1.315.877 2.113s-.311 1.548-.87 2.105l-6.158 6.087L3.876 9.1A2.964 2.964 0 013 6.989c0-.798.312-1.548.878-2.112A2.98 2.98 0 016 4c.802 0 1.556.311 2.122.876.142.142.382.411.388.417l1.491 1.665 1.49-1.666c.006-.007.245-.275.387-.417A2.988 2.988 0 0114.001 4m0-2a4.99 4.99 0 00-3.536 1.461c-.172.171-.465.499-.465.499s-.293-.328-.466-.5A4.987 4.987 0 006.001 2a4.99 4.99 0 00-3.536 1.461 4.98 4.98 0 00-.001 7.055L9.965 18l7.571-7.483a4.982 4.982 0 000-7.057A4.993 4.993 0 0014.001 2z"></path>
+    </symbol>
+    <symbol id="icon-h-cart" viewBox="0 0 329.998 329.998" stroke="currentColor" fill="currentColor">
+      <path d="M322.03 56.042A15 15 0 00309.999 50H78.98l-4.073-36.656C74.063 5.747 67.642 0 59.999 0h-40c-8.284 0-15 6.716-15 15s6.716 15 15 15h26.574l4.054 36.485c.012.127.026.253.042.379L65.09 196.656C65.934 204.253 72.356 210 79.999 210h191.104a15 15 0 0014.37-10.7l38.897-130a15.004 15.004 0 00-2.34-13.258zM259.934 180H93.425L82.313 80h207.54l-29.919 100zM109.999 239.998c-24.813 0-45 20.187-45 45 0 24.814 20.187 45 45 45s45-20.186 45-45c0-24.813-20.187-45-45-45zm0 60c-8.271 0-15-6.728-15-15 0-8.271 6.729-15 15-15s15 6.729 15 15c0 8.272-6.729 15-15 15zM228.999 239.998c-24.814 0-45 20.187-45 45 0 24.814 20.186 45 45 45s45-20.186 45-45c0-24.813-20.187-45-45-45zm0 60c-8.271 0-15-6.728-15-15 0-8.271 6.729-15 15-15s15 6.729 15 15c0 8.272-6.729 15-15 15z"></path>
+    </symbol>
+  </svg>
+  
+{%- else -%}
+  <svg xmlns="http://www.w3.org/2000/svg" class="hdt-d-none">
+    <symbol id="icon-h-search" viewBox="0 0 32 32" fill="currentColor">
+      <path d="M 19 3 C 13.488281 3 9 7.488281 9 13 C 9 15.394531 9.839844 17.589844 11.25 19.3125 L 3.28125 27.28125 L 4.71875 28.71875 L 12.6875 20.75 C 14.410156 22.160156 16.605469 23 19 23 C 24.511719 23 29 18.511719 29 13 C 29 7.488281 24.511719 3 19 3 Z M 19 5 C 23.429688 5 27 8.570313 27 13 C 27 17.429688 23.429688 21 19 21 C 14.570313 21 11 17.429688 11 13 C 11 8.570313 14.570313 5 19 5 Z"/>
+    </symbol>
+    <symbol id="icon-h-account" viewBox="0 0 32 32" fill="currentColor">
+      <path xmlns="http://www.w3.org/2000/svg" d="M 16 5 C 12.144531 5 9 8.144531 9 12 C 9 14.410156 10.230469 16.550781 12.09375 17.8125 C 8.527344 19.34375 6 22.882813 6 27 L 8 27 C 8 22.570313 11.570313 19 16 19 C 20.429688 19 24 22.570313 24 27 L 26 27 C 26 22.882813 23.472656 19.34375 19.90625 17.8125 C 21.769531 16.550781 23 14.410156 23 12 C 23 8.144531 19.855469 5 16 5 Z M 16 7 C 18.773438 7 21 9.226563 21 12 C 21 14.773438 18.773438 17 16 17 C 13.226563 17 11 14.773438 11 12 C 11 9.226563 13.226563 7 16 7 Z"/>
+    </symbol>
+    <symbol id="icon-h-heart" viewBox="0 0 32 32" fill="currentColor">
+      <path xmlns="http://www.w3.org/2000/svg" d="M 9.5 5 C 5.363281 5 2 8.402344 2 12.5 C 2 13.929688 2.648438 15.167969 3.25 16.0625 C 3.851563 16.957031 4.46875 17.53125 4.46875 17.53125 L 15.28125 28.375 L 16 29.09375 L 16.71875 28.375 L 27.53125 17.53125 C 27.53125 17.53125 30 15.355469 30 12.5 C 30 8.402344 26.636719 5 22.5 5 C 19.066406 5 16.855469 7.066406 16 7.9375 C 15.144531 7.066406 12.933594 5 9.5 5 Z M 9.5 7 C 12.488281 7 15.25 9.90625 15.25 9.90625 L 16 10.75 L 16.75 9.90625 C 16.75 9.90625 19.511719 7 22.5 7 C 25.542969 7 28 9.496094 28 12.5 C 28 14.042969 26.125 16.125 26.125 16.125 L 16 26.25 L 5.875 16.125 C 5.875 16.125 5.390625 15.660156 4.90625 14.9375 C 4.421875 14.214844 4 13.273438 4 12.5 C 4 9.496094 6.457031 7 9.5 7 Z"/>
+    </symbol>
+    <symbol id="icon-h-cart" viewBox="0 0 32 32" fill="currentColor">
+      <path xmlns="http://www.w3.org/2000/svg" d="M 16 3 C 13.253906 3 11 5.253906 11 8 L 11 9 L 6.0625 9 L 6 9.9375 L 5 27.9375 L 4.9375 29 L 27.0625 29 L 27 27.9375 L 26 9.9375 L 25.9375 9 L 21 9 L 21 8 C 21 5.253906 18.746094 3 16 3 Z M 16 5 C 17.65625 5 19 6.34375 19 8 L 19 9 L 13 9 L 13 8 C 13 6.34375 14.34375 5 16 5 Z M 7.9375 11 L 11 11 L 11 14 L 13 14 L 13 11 L 19 11 L 19 14 L 21 14 L 21 11 L 24.0625 11 L 24.9375 27 L 7.0625 27 Z"/>
+    </symbol>
+  </svg>
+  
+{%- endcase -%}
+
+<div class="hdt-site-top_nav hdt-flex hdt-align-center hdt-justify-{{ icons_position }} hdt-header-icons-hover-{{ section.settings.hover_icon }} hdt-cart-design{{ section.settings.cart_des }}">
+  {%- if section.settings.show_currency -%}
+    <div class="hdt-hidden lg:hdt-inline-flex">
+      {%- unless localization.available_countries.size <= 1 and settings.currency_type == "1" -%}
+        {%- render 'hdt_currency' -%}
+      {%- endunless -%}
+    </div>
+  {%- endif -%}
+  {%- if section.settings.show_language and localization.available_languages.size > 1 -%}
+    <div class="hdt-hidden lg:hdt-inline-flex">
+      {%- render 'hdt_language' -%}
+    </div>
+  {%- endif -%}
+  {%- if section.settings.search_type != "none" -%}
+	<div class="hdt-site-nav_icon hdt-site-nav_search hdt-inline-flex hdt-align-center">
+		{%- if section.settings.search_type == "short_form" -%}
+      {{ 'hdt-search-form.css' | asset_url | stylesheet_tag }}
+      {%- assign products_suggests = page.metafields.theme.brand.value.search.value | default: settings.products_suggest -%}
+      <div class="hdt-header-search_form_short lg:hdt-block hdt-hidden">
+        <hdt-predictive-search {% if settings.predictive_search_enabled %} enabled{% endif %} data-section-id-results="hdt_predictive-search" class="hdt_predictive-search hdt-block hdt-relative">
+          <hdt-drawer><dialog></dialog></hdt-drawer>
+          <form data-frm-search action="{{ routes.search_url }}" method="get" class="hdt-search_form hdt-relative" role="search">
+            <input type="hidden" name="resources[limit_scope]" value="each">
+            <input type="hidden" name="resources[options][fields]" value="title,body,tag,product_type,variants.title,vendor,variants.sku">
+            <div class="hdt-search_inner hdt-flex hdt-justify-between hdt-align-center hdt-relative">
+              <input data-input-search class="hdt-search_input hdt-input hdt-text-start hdt-text-base hdt-font-normal hdt-truncate" autocomplete="off" type="search" name="q" placeholder="{{ 'general.search.placeholder_products' | t }}">
+              <button class="hdt-search_submit hdt-btn hdt-inline-flex hdt-align-center hdt-justify-center" type="submit">
+                <svg width="22" height="23" aria-hidden="true" focusable="false" role="presentation"><use href="#icon-h-search"></use></svg>
+              </button>
+            </div>
+            <div class="hdt-cart-show-has-results hdt-absolute hdt-right-0 hdt-left-0 hdt-hidden hdt-current-scrollbar">
+              <div data-results-search class="hdt-mini-search__content hdt-ratio--asos hdt-object-cover"></div>
+              <div data-skeleton-search class="hdt-skeleton_wrap hdt-hidden">
+                <div class="hdt-row-grid hdt-row-products hdt-grid-cols-1 hdt-text-start">
+                  {%- for i in (1..3) -%}
+                    <div class="hdt-product hdt-pr-loop">
+                      <div class="hdt-card-product__wrapper hdt-flex ">
+                        <div class="hdt-skeleton_img"></div>
+                        <div class="hdt-card-product__info">
+                          <div class="hdt-skeleton_txt1"></div>
+                          <div class="hdt-skeleton_txt2"></div>
+                        </div>
+                      </div>
+                    </div>
+                  {%- endfor -%}
+                </div>
+              </div>
+            </div>
+          </form>
+          <div class="hdt-search-suggests-results hdt-absolute hdt-cart-hide-has-results hdt-current-scrollbar">
+            {%- if products_suggests != blank -%}
+              <div class="hdt-search-suggests-content hdt-current-scrollbar">
+                <div class="hdt-cart-hide-has-results">
+                  <div class="hdt-search-hidden-inner">
+                    {%- if products_suggests != blank -%}
+                      <div data-products_suggest class="hdt-mini-search__content hdt-ratio--asos hdt-object-cover hdt-text-center">
+                        <div class="hdt-row-grid hdt-row-products hdt-show-pr-price-{{ settings.predictive_search_show_price }} hdt-grid-cols-1 hdt-text-start">
+                          {%- for product in products_suggests limit: 6 -%}
+                            {%- render 'pr_loop_item', section_id: section.id, product: product, sizes: "68px", widths: "68, 136, 150, 174, 240, 300" -%}
+                          {%- endfor -%}
+                        </div>
+                      </div>
+                    {%- endif -%}
+                  </div>
+                </div>
+              </div>
+            {%- endif -%}
+          </div>
+        </hdt-predictive-search>
+      </div>
+      <a href="{{ routes.search_url }}" class="lg:hdt-hidden hdt-inline-flex hdt-align-center hdt-relative" aria-controls="drawer-search-form{% if settings.search_fullwidth %}-full{% endif %}" aria-label="drawer-search">
+        <svg width="22" height="23" aria-hidden="true" focusable="false" role="presentation"><use href="#icon-h-search"></use></svg>
+      </a>
+		{%- else -%}
+  		<a href="{{ routes.search_url }}" class="hdt-inline-flex hdt-align-center hdt-relative" aria-controls="drawer-search-form{% if settings.search_fullwidth %}-full{% endif %}" aria-label="drawer-search">
+        <svg width="22" height="23" aria-hidden="true" focusable="false" role="presentation"><use href="#icon-h-search"></use></svg>
+  		</a>
+		{%- endif -%}
+	</div>
+  {%- endif -%}
+	{%- if section.settings.enabled_user -%}
+		<div class="hdt-site-nav_icon hdt-site-nav_user lg:hdt-inline-flex md:hdt-inline-flex hdt-align-center hdt-hidden">
+      <shopify-account {% if settings.customer_account_menu != blank %} menu="{{ settings.customer_account_menu }}" {% endif %}>
+        <div slot="signed-out-avatar">
+          <svg width="24" height="24" aria-hidden="true" focusable="false" role="presentation"><use href="#icon-h-account"></use></svg>
+        </div>
+      </shopify-account>
+		</div>
+	{%- endif -%}
+	{%- if settings.wishlist_mode != '0' -%}
+		{%- if section.settings.enabled_wishlist -%}
+			<div class="hdt-site-nav_icon hdt-site-nav_wishlist lg:hdt-inline-flex md:hdt-inline-flex hdt-align-center hdt-hidden">
+        <hdt-wishlist-a class="hdt-contents">
+  				<a href="{{ routes.search_url }}/?view=wishlist" class="hdt-inline-flex hdt-align-center hdt-relative hdt-has-count-box">
+            <svg width="24" height="24" aria-hidden="true" focusable="false" role="presentation"><use href="#icon-h-heart"></use></svg>
+  					<hdt-wishlist-count class="hdt-count-box hdt-absolute">0</hdt-wishlist-count>
+  				</a>
+        </hdt-wishlist-a>
+			</div>
+		{%- endif -%}
+	{%- endif -%}
+	{%- if section.settings.enabled_cart -%}
+    {% liquid 
+      assign protect_product = settings.protect_product
+      assign protect_product_id = protect_product.selected_or_first_available_variant.id | default: protect_product.variants.first.id | default: protect_product.id | default: 'kalles-5'
+      assign has_protect_product = 0
+      if settings.enable_shipping_protection
+        assign has_protect_product = cart.items | where: 'variant_id', protect_product_id | size
+      endif
+    %}
+	<div class="hdt-site-nav_icon hdt-site-nav_cart hdt-inline-flex hdt-align-center">
+		<a class="hdt-inline-flex hdt-align-center" href="{{ routes.cart_url }}"{% if request.page_type != 'cart' %} aria-controls="CartDrawer"{% endif %}>
+      <div class="hdt-inline-flex hdt-align-center hdt-relative hdt-has-count-box">
+        <svg width="24" height="24" aria-hidden="true" focusable="false" role="presentation"><use href="#icon-h-cart"></use></svg>
+        <hdt-cart-count class="hdt-count-box hdt-absolute">{{ cart.item_count | minus: has_protect_product }}</hdt-cart-count>
+      </div>
+      <hdt-cart-total class="hdt-cart-total hdt-hidden"><span class="hdt-money">{{ cart.total_price | money }}</span></hdt-cart-total>
+		</a>
+	</div>
+	{%- endif -%}
+	{%- if section.settings.menu_type == "sidebar" and section.settings.menu_position == "end" -%}
+		<div class="hdt-site-nav_icon hdt-site-nav_menu_btn hdt-inline-flex hdt-align-center">
+			<button aria-controls="menu_mobile" class="hdt-push-menu-btn hdt-menu-bar hdt-flex hdt-justify-center hdt-align-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="16" viewBox="0 0 30 16" fill="currentColor"><rect width="30" height="1.5"></rect><rect y="7" width="20" height="1.5"></rect><rect y="14" width="30" height="1.5"></rect></svg>
+      </button>
+		</div>
+	{%- endif -%}
+  {%- if show_language_currency and section.settings.enabled_language_currency -%}
+    {%- if localization.available_countries.size > 1 or localization.available_languages.size > 1 -%}
+      <div class="hdt-site-nav_icon hdt-header-language_currencies hdt-hidden lg:hdt-flex">
+        {%- if localization.available_countries.size > 1 -%}
+          {%- render 'hdt_currency' -%}
+        {%- endif -%}
+        {%- if localization.available_languages.size > 1 -%}
+          {%- render 'hdt_language' -%}
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</div>

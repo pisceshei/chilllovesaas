@@ -1,0 +1,507 @@
+{
+  "sections": {
+    "custom_content_J8gTtL": {
+      "type": "custom-content",
+      "blocks": {
+        "text_zVqKrf": {
+          "type": "text",
+          "settings": {
+            "title": "Christmas <br>\ndrinks",
+            "subheading": "",
+            "text": "",
+            "width": "66%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "text_a3MHKF": {
+          "type": "text",
+          "settings": {
+            "title": "",
+            "subheading": "Make the season even brighter when you join Starbucks® Rewards.",
+            "text": "",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "button_label": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_zVqKrf",
+        "text_a3MHKF"
+      ],
+      "custom_css": [
+        ".m-richtext__title {font-size: 120px;}",
+        ".m-richtext__subtitle {margin-bottom: 24px; max-width: 328px;}",
+        "@media (max-width: 1279px) {.m-richtext__title {font-size: 90px; }}",
+        "@media (max-width: 767px) {.m-richtext__title {font-size: 50px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 10,
+        "gap_mobile": 20,
+        "use_scroll_mobile": false,
+        "padding_top": 80,
+        "padding_bottom": 0,
+        "custom_class": "m-first-section"
+      }
+    },
+    "custom_content_4VcFbV": {
+      "type": "custom-content",
+      "blocks": {
+        "text_card_with_image_6JEWEg": {
+          "type": "text_card_with_image",
+          "settings": {
+            "width": "66%",
+            "link": "",
+            "text_alignment": "left",
+            "image": "",
+            "title": "",
+            "text": "",
+            "text_size": "small",
+            "button_label": "Seasonal drink coffee",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "text_card_with_image_EC6J3f": {
+          "type": "text_card_with_image",
+          "settings": {
+            "width": "33%",
+            "link": "",
+            "text_alignment": "left",
+            "image": "",
+            "title": "",
+            "text": "",
+            "text_size": "small",
+            "button_label": "Christmas Blend 2023",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_card_with_image_6JEWEg",
+        "text_card_with_image_EC6J3f"
+      ],
+      "custom_css": [
+        ".text-card-with-image {height: 100%;}",
+        ".text-card-with-image__media {border-radius: 10px; overflow: hidden; flex: 1;}",
+        ".m-button--link {font-size: 18px; line-height: 28px; text-transform: unset;}",
+        ".text-card-with-image__content {margin-top: 20px;}",
+        "@media (max-width: 767px) {.text-card-with-image__content {margin-top: 12px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "default",
+        "content_color_scheme": "default",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 10,
+        "gap_mobile": 24,
+        "use_scroll_mobile": false,
+        "padding_top": 84,
+        "padding_bottom": 0,
+        "custom_class": "m-first-section"
+      }
+    },
+    "featured_collection_nPBMhX": {
+      "type": "featured-collection",
+      "custom_css": [
+        ".m-section__header-with-button .m-button {margin: 0;}"
+      ],
+      "settings": {
+        "heading": "Perfect Drinks",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "default",
+        "container": "container",
+        "collection": "",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 10,
+        "pcard_layout": "",
+        "pcard_image_ratio": "original",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": true,
+        "button_type": "link",
+        "button_text": "Shop all items",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 12,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_TAhjJw": {
+      "type": "custom-content",
+      "blocks": {
+        "image_with_text_3Pg7ti": {
+          "type": "image_with_text",
+          "settings": {
+            "width": "100%",
+            "image": "",
+            "link": "",
+            "layout": "left",
+            "image_column_size": "6",
+            "hover_effect": false,
+            "title": "Discover <br>\ntop flavors.",
+            "sub_title": "",
+            "text": "<p>This store is a demonstration of a luxury brand using the Stiletto Shopify theme. Products and imagery for this demo graciously provided by St. AgniOur</p>",
+            "text_size": "medium",
+            "content_alignment": "left",
+            "button_label": "learn more",
+            "button_link": "",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_with_text_3Pg7ti"
+      ],
+      "custom_css": [
+        ".m-color-badge-new {background: transparent;}",
+        ".m-richtext__title {font-size: 72px; text-transform: capitalize;}",
+        ".m-richtext__description {opacity: 50%; max-width: 500px;}",
+        "@media (max-width: 1279px) {.m-richtext__title {font-size: 56px; }}",
+        "@media (max-width: 767px) {.m-richtext__title {font-size: 40px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "content_color_scheme": "badge-new",
+        "background_image": "",
+        "background_image_mobile": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 100,
+        "gap_mobile": 32,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "icon_box_hYjTMk": {
+      "type": "icon-box",
+      "blocks": {
+        "iconbox_tdFX3e": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image": "",
+            "image_by_url": "",
+            "title": "Buy 1 cup get 2 cups",
+            "description": "<p>Only From December 24th <br/>to December 26th</p>",
+            "link": "",
+            "button_label": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "iconbox_wKcwHt": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image": "",
+            "image_by_url": "",
+            "title": "Gift Card from $20",
+            "description": "<p>Only From December 24th <br/>to December 26th</p>",
+            "link": "",
+            "button_label": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "iconbox_P9eHMQ": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image": "",
+            "image_by_url": "",
+            "title": "Upsize capuchino",
+            "description": "<p>Only From December 24th <br/>to December 26th</p>",
+            "link": "",
+            "button_label": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_tdFX3e",
+        "iconbox_wKcwHt",
+        "iconbox_P9eHMQ"
+      ],
+      "custom_css": [
+        ".m-icon-box__content,.m-icon-box .m-button {margin-top: 24px;}",
+        ".m-section__header {margin-bottom: 70px;}",
+        ".m-section__heading {font-size: 48px; line-height: 1;}",
+        "@media (max-width: 1279px) {.m-section__header {margin-bottom: 48px; } .m-section__heading {font-size: 36px; }}",
+        "@media (max-width: 767px) {.m-section__header {margin-bottom: 32px; } .m-section__heading {font-size: 26px; }}"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "heading": "Christmas Offers",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "item_per_row": 3,
+        "item_gap": 10,
+        "item_gap_mobile": 10,
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "center",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-promotion",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_dVfXk3": {
+      "type": "custom-content",
+      "blocks": {
+        "text_R7kVEw": {
+          "type": "text",
+          "settings": {
+            "title": "join our <br>\nchristmas <br>\nparty",
+            "subheading": "",
+            "text": "<p>This store is a demonstration of a luxury brand using the Stiletto Shopify theme. Products and imagery for this demo graciously provided by St. AgniOur</p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "button_label": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_9yiQNh": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_R7kVEw",
+        "image_9yiQNh"
+      ],
+      "custom_css": [
+        ".container-full,.m-custom-content__boxed {padding: 0;}",
+        ".m-richtext__title {font-size: 72px; line-height: 1;}",
+        ".m-richtext__description {max-width: 500px;}",
+        ".m-custom-content__block-text {padding: 48px 22.5px;}",
+        "@media (min-width: 1280px) {.m-custom-content__block-text {--offset-margin: calc((100vw - var(--container-width) + 15px) / 2); padding-left: max(15px, var(--offset-margin)); } .m-richtext__description {font-size: 18px; line-height: 28px; }}",
+        "@media (max-width: 767px) {.m-richtext__title {font-size: 40px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "w-full",
+        "color_scheme": "",
+        "content_color_scheme": "badge-hot",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "icon_box_nqBJRm": {
+      "type": "icon-box",
+      "blocks": {
+        "iconbox_9Wm96t": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image": "",
+            "image_by_url": "",
+            "title": "Store Pickup",
+            "description": "<p>Buy online and request gift wrap when you pick up. Gifting has never been easier!</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "iconbox_mFVkMh": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image": "",
+            "image_by_url": "",
+            "title": "Shop Now. Pay Later!",
+            "description": "<p>Our interest-free payment options will put a little love in your cart.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "iconbox_e6d7cY": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image": "",
+            "image_by_url": "",
+            "title": "Doorstep Delivery",
+            "description": "<p>We offer a number of flexible, reliable shipping options to fit your needs – and your timeline!</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "iconbox_tLfVBa": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "",
+            "image": "",
+            "image_by_url": "",
+            "title": "Free Gift & Style Services",
+            "description": "<p>Need a gift-list assist? We're here for you, and we happily do it all!</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_9Wm96t",
+        "iconbox_mFVkMh",
+        "iconbox_e6d7cY",
+        "iconbox_tLfVBa"
+      ],
+      "custom_css": [
+        ".m-section__header {margin-bottom: 60px;}",
+        ".m-section__heading {font-size: 48px; line-height: 1;}",
+        ".m-icon-box__content {margin-top: 12px;}",
+        ".m-icon-box__heading {margin-bottom: 12px; font-size: 20px; line-height: 1.185;}",
+        "@media (max-width: 1279px) {.m-section__header {margin-bottom: 48px; } .m-section__heading {font-size: 36px; }}",
+        "@media (max-width: 767px) {.m-section__header {margin-bottom: 32px; } .m-section__heading {font-size: 26px; }}"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "heading": "Gifting  Services",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "item_per_row": 4,
+        "item_gap": 50,
+        "item_gap_mobile": 10,
+        "card_style": "vertical",
+        "image_max_width": "52px",
+        "content_alignment": "start",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-promotion",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "custom_content_J8gTtL",
+    "custom_content_4VcFbV",
+    "featured_collection_nPBMhX",
+    "custom_content_TAhjJw",
+    "icon_box_hYjTMk",
+    "custom_content_dVfXk3",
+    "icon_box_nqBJRm"
+  ]
+}

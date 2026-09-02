@@ -1,0 +1,171 @@
+<div class="hdt-box-wrap" hdt-reveal="slide-in" timeline {{ block.shopify_attributes }}>
+  <div class="hdt-box-inner" style="--bg-color: {{ block.settings.bg_color }}; --bg-hover-color: {{ block.settings.bg_hover_color }}; --color-text-hover: {{ block.settings.color_text_hover }};">
+    <div class="hdt-box-content">
+      {% content_for 'blocks' %}
+    </div>
+    {%- if block.settings.image != blank -%}
+      {%- assign image = block.settings.image -%}
+      <div class="hdt-box-image hdt-ratio" style="--aspect-ratioapt: {{ image.aspect_ratio }}">
+        {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: 'hdt-object-cover hdt-object-center', widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy' }}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Card",
+    "tag": null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Image"
+      },
+      {
+        "type": "color",
+        "id": "bg_color",
+        "label": "Background color",
+        "default": "#809926"
+      },
+      {
+        "type": "color",
+        "id": "bg_hover_color",
+        "label": "Background hover color",
+        "default": "#B6EF36"
+      },
+      {
+        "type": "color",
+        "id": "color_text_hover",
+        "label": "Text color hover",
+        "default": "#1F222C"
+      },
+    ],
+    "blocks": [
+      {
+        "type": "text"
+      },
+      {
+        "type": "button"
+      },
+      {
+        "type": "text_custom"
+      },
+      {
+        "type": "button_custom"
+      },
+      {
+        "type": "spacer"
+      },
+      {
+        "type": "heading"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Card",
+        "blocks": [
+          {
+            "type": "text_custom",
+            "name": "t:blocks.text_custom.name",
+            "settings": {
+              "text": "Tennis –",
+              "remove_br_mobile": false,
+              "html_tag": "p",
+              "font_family": "",
+              "color_text": "#ffffff",
+              "font_size": 24,
+              "line_height": 29,
+              "font_weight": 600,
+              "letter_spacing": 0,
+              "enable_italic": false,
+              "enable_text_shadow": false,
+              "margin_bottom": 10,
+              "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+            },
+            {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Excellence in<br> Every Swing",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#ffffff",
+                "font_size": 40,
+                "line_height": 48,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 15,
+                "hide_on_mobile": false,
+                "font_size_mobile": 20,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 15
+              },
+            },
+            {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Figma ipsum component variant main layer. Follower bullet outline.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#ffffff",
+                "font_size": 16,
+                "line_height": 19,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 20,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 15
+              },
+            },
+            {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "See all",
+                "link": "shopify://collections",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-lg",
+                "font_weight": "normal",
+                "font_size_btn": 16,
+                "padding_btn": 20,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 20,
+                "rounded": "",
+                "icon": "arrow_simple",
+                "icon_position": "after",
+                "icon_height": 12,
+                "icon_spacing": 5
+              },
+            }
+        ]
+      }
+    ]
+  }
+{% endschema %}

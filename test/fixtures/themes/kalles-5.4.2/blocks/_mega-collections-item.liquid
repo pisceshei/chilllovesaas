@@ -1,0 +1,76 @@
+{%- liquid
+  assign collection = closest.collection
+  assign image = block.settings.image | default: collection.metafields.theme.featured_image_collection.value | default: collection.featured_image | default: collection.products.first.featured_image
+  assign title = block.settings.title | default: collection.title
+  assign collection_link = block.settings.collection_link | default: collection.url
+  
+  assign current_width = settings.page_width | append: 'px'
+  
+  capture name_img
+    cycle 'collection-apparel-1', 'collection-apparel-2', 'collection-apparel-3', 'collection-apparel-4'
+  endcapture
+-%}
+{%- capture sizes -%}
+  (min-width: 1150px) calc({{ current_width }} * {{ block.settings.column_width }} / 12),(min-width: 768px) calc({{ current_width }} * {{ block.settings.column_width_tb }} / 12),  calc({{ current_width }} * {{ block.settings.column_width_mb }} / 12)
+{%- endcapture -%}
+<div class="hdt-collection__item" hdt-reveal="slide-in" timeline {{ block.shopify_attributes }}> 
+  <div class="hdt-collection-item hdt-collection-manual-item hdt-collection-style{{ collection_des }}">
+    <div class="hdt-collection-inner hdt-relative hdt-oh hdt-grid">
+      <div class="hdt-collection-img hdt-relative hdt-oh hdt-grid hdt-eff-{{ b_effect }} hdt-eff-img-{{ img_effect }}">
+        <div class="hdt-ratio hdt-relative" style="--aspect-ratioapt: {{ image.aspect_ratio | default: 1.2 }};">
+          {% if collection_des == "9" %}
+            <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> 
+          {% endif %}
+          {%- if image != blank -%}
+            {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: 'hdt-obj-eff' , sizes: sizes, widths: "240,360,400,600" }}
+          {%- else -%}
+            {{ name_img | placeholder_svg_tag: 'hdt-placeholder-svg hdt-obj-eff' }}  
+          {%- endif -%}
+          <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ collection_link }}"></a>
+        </div>
+      </div>
+      {%- if title != blank and collection_des != '8' -%}
+        <div class="hdt-collection-content hdt-absolute hdt-place-self-{{ content_position }} {%- if show_count %} hdt-collection-has-count{%- endif -%}">
+          <div class="hdt-collection-wrapper hdt-flex hdt-flex-col hdt-justify-center hdt-align-center">
+            <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ collection_link }}"></a>
+            <a class="hdt-collection-title hdt-text-{{ content_size }} hdt-font-{{ content_weight }} hdt-truncate" href="{{ collection_link }}">
+              <span class="hdt-collection-title-text">{{ title }}</span>
+              {% if collection_des == "10" %} <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> {% endif %}
+            </a>
+            {%- if show_count -%}
+              <a class="hdt-collection-count {%- if content_size == "sm" %} hdt-text-sm{%- else %} hdt-text-base{% endif %} hdt-align-center hdt-truncate" href="{{ collection_link }}">
+                <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> <span class="hdt-text">{{ count_label }}</span>
+              </a>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endif -%}
+    </div> 
+  </div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.collections-list.blocks.collection_item",
+  "tag": null,
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.collections-list.blocks.image",
+      "info": "t:sections.collections-list.blocks.image_info"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.collections-list.blocks.title",
+      "info": "t:sections.collections-list.blocks.title_info"
+    },
+    {
+      "type": "url",
+      "id": "collection_link",
+      "label": "t:sections.collections-list.blocks.link",
+      "info": "t:sections.collections-list.blocks.link_info"
+    }
+  ]
+}
+{% endschema %}

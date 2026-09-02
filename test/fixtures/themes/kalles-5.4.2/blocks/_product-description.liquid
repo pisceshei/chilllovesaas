@@ -1,0 +1,319 @@
+{%- liquid
+  unless product 
+    assign product = section.settings.product
+  endunless
+  assign description_excerpt = product.metafields.theme.description_excerpt | default: block.settings.short_des | default: product.description
+  if description_excerpt == blank
+    continue 
+  endif 
+-%}
+{%- capture css -%}
+  {%- if block.settings.ffamily != '' -%}--ff:var({{ block.settings.ffamily }}); {%- endif -%}
+{%- endcapture -%}
+
+{%- if product.description != blank and block.settings.des == '1' -%}    
+  <div class="hdt-product-info__item hdt-product__description" {{ block.shopify_attributes }}>
+    <div class="hdt-rte {{ block.settings.heading_color }} {{ block.settings.text_color }} hdt-text-{{ block.settings.text_size }} hdt-font-{{ block.settings.font_weight }} {{ block.settings.line_height }}" {%- if css != blank %} style="{{ css }}"{% endif %}>
+      {{ product.description }}
+    </div>
+  </div>
+{%- elsif description_excerpt != blank -%}
+  {%- if block.settings.readm == false -%}
+    <div class="hdt-product-info__item hdt-product__description" {{ block.shopify_attributes }}>
+      <div class="hdt-rte {{ block.settings.heading_color }} {{ block.settings.text_color }} hdt-text-{{ block.settings.text_size }} hdt-font-{{ block.settings.font_weight }} {{ block.settings.line_height }}" {%- if css != blank %} style="{{ css }}"{% endif %}>
+        {{ description_excerpt }}
+      </div>
+    </div>
+  {%- else -%}
+    {%- assign height_limit = block.settings.length | abs -%}
+    <product-description class="hdt-block hdt-main-product-description" data-height-limit="{{ height_limit }}" data-type="{{ block.type }}" {{ block.shopify_attributes }}>
+      <div data-content class="hdt-product-info__item hdt-product__description hdt-relative hdt-oh {{ block.settings.heading_color }} {{ block.settings.text_color }} hdt-text-{{ block.settings.text_size }} hdt-font-{{ block.settings.font_weight }} {{ block.settings.line_height }}" {%- if css != blank %} style="{{ css }}"{% endif %}>
+        <div class="hdt-rte hdt-full-des">
+          {{ description_excerpt }}
+        </div>
+        <div class="hdt-description-overlay"></div>
+      </div>
+      <button data-button class="hdt-product__description_readm hdt-pr-des-rm hdt-btn hdt-btn-link">
+        <span class="hdt-rm-text">{{ block.settings.readm_txt }}</span>
+        <span class="hdt-rl-text hdt-hidden">{{ block.settings.readl_txt }}</span>
+      </button>
+    </product-description>
+  {%- endif -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.description.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "des",
+      "options": [
+        {
+          "value": "1",
+          "label": "t:sections.main-product.blocks.description.settings.des.options__1.label"
+        },
+        {
+          "value": "2",
+          "label": "t:sections.main-product.blocks.description.settings.des.options__2.label"
+        }
+      ],
+      "label": "t:sections.main-product.blocks.description.settings.des.label",
+      "info": "t:sections.main-product.blocks.description.settings.des.info",
+      "default": "2"
+    },
+    {
+      "type": "richtext",
+      "id": "short_des",
+      "label": "t:sections.main-product.blocks.description.settings.short_des.label",
+      "info": "t:sections.main-product.blocks.description.settings.short_des.info",
+      "visible_if": "{{ block.settings.des == '2' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "readm",
+      "label": "t:sections.main-product.blocks.description.settings.readm.label",
+      "default": false,
+      "visible_if": "{{ block.settings.des == '2' }}",
+    },
+    {
+      "type": "number",
+      "id": "length",
+      "label": "Short description height",
+      "info": "Number of height that will be displayed for product description (Only work when turned on [Use Read more])",
+      "default": 130,
+      "visible_if": "{{ block.settings.readm and block.settings.des == '2' }}"
+    },
+    {
+      "type": "text",
+      "id": "readm_txt",
+      "label": "t:sections.main-product.blocks.description.settings.readm_txt.label",
+      "default": "Read more",
+      "visible_if": "{{ block.settings.readm and block.settings.des == '2' }}"
+    },
+    {
+      "type": "text",
+      "id": "readl_txt",
+      "label": "t:sections.main-product.blocks.description.settings.readl_txt.label",
+      "default": "Read less",
+      "visible_if": "{{ block.settings.readm and block.settings.des == '2' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:settings_schema.typography.name"
+    },
+    {
+      "type": "select",
+      "id": "ffamily",
+      "options": [
+        {
+          "value": "",
+          "label": "t:settings_schema.typography.settings.font_family.default"
+        },
+        {
+          "value": "--f_family_1",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_1"
+        },
+        {
+          "value": "--f_family_2",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_2"
+        },
+        {
+          "value": "--f_family_3",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_3"
+        },
+        {
+          "value": "--f_family_4",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_4"
+        },
+        {
+          "value": "--f_family_5",
+          "label": "t:settings_schema.typography.settings.font_family.font_family_5"
+        }
+      ],
+      "label": "t:settings_schema.typography.settings.font_family.label",
+      "default": ""
+    },
+    {
+      "type": "select",
+      "id": "text_size",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "options": [
+        {
+          "value": "xs",
+          "label": "t:settings_schema.typography.settings.font_size.xs"
+        },
+        {
+          "value": "sm",
+          "label": "t:settings_schema.typography.settings.font_size.sm"
+        },
+        {
+          "value": "base",
+          "label": "t:settings_schema.typography.settings.font_size.base"
+        },
+        {
+          "value": "lg",
+          "label": "t:settings_schema.typography.settings.font_size.lg"
+        },
+        {
+          "value": "xl",
+          "label": "t:settings_schema.typography.settings.font_size.xl"
+        },
+        {
+          "value": "2xl",
+          "label": "t:settings_schema.typography.settings.font_size.2xl"
+        },
+        {
+          "value": "4xl",
+          "label": "t:settings_schema.typography.settings.font_size.4xl"
+        },  
+        {
+          "value": "custom",
+          "label": "t:settings_schema.typography.settings.font_size.custom"
+        }
+      ],
+      "default": "base"
+    },
+    {
+      "type": "select",
+      "id": "line_height",
+      "label": "t:settings_schema.typography.settings.line_height.label",
+      "options": [
+        {
+          "value": "",
+          "label": "t:settings_schema.typography.settings.line_height.default"
+        },
+        {
+          "value": "hdt-lh-1-2",
+          "label": "t:settings_schema.typography.settings.line_height.hdt-lh-1-2"
+        },
+        {
+          "value": "hdt-lh-1",
+          "label": "t:settings_schema.typography.settings.line_height.hdt-lh-1"
+        }
+      ],
+      "default": ""
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "t:settings_schema.typography.settings.font_weight.label",
+      "options": [
+        {
+          "value": "light",
+          "label": "t:settings_schema.typography.settings.font_weight.light"
+        },
+        {
+          "value": "normal",
+          "label": "t:settings_schema.typography.settings.font_weight.normal"
+        },
+        {
+          "value": "medium",
+          "label": "t:settings_schema.typography.settings.font_weight.medium"
+        },
+        {
+          "value": "semibold",
+          "label": "t:settings_schema.typography.settings.font_weight.semibold"
+        },
+        {
+          "value": "bold",
+          "label": "t:settings_schema.typography.settings.font_weight.bold"
+        },
+      ],
+      "default": "normal"
+    },
+    {
+      "type": "select",
+      "id": "heading_color",
+      "options": [
+        {
+          "value": "",
+          "label": "t:default"
+        },
+        {
+          "value": "hdt-heading-secondary",
+          "label": "t:settings_schema.colors.secondary"
+        },
+        {
+          "value": "hdt-heading-tertiary",
+          "label": "t:settings_schema.colors.tertiary"
+        },
+        {
+          "value": "hdt-heading-primary",
+          "label": "t:settings_schema.colors.accent"
+        }
+      ],
+      "label": "t:blocks.heading.settings.color",
+      "default": ""
+    },
+    {
+      "type": "select",
+      "id": "text_color",
+      "options": [
+        {
+          "value": "hdt-s-text",
+          "label": "t:default"
+        },
+        {
+          "value": "hdt-text-secondary",
+          "label": "t:settings_schema.colors.secondary"
+        },
+        {
+          "value": "hdt-text-tertiary",
+          "label": "t:settings_schema.colors.tertiary"
+        },
+        {
+          "value": "hdt-text-primary",
+          "label": "t:settings_schema.colors.accent"
+        }
+      ],
+      "label": "t:blocks.text.text_color.label",
+      "default": "hdt-text-secondary"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.text.custom_size_options.label",
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_text_lg",
+      "min": 10,
+      "max": 70,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "default": 16,
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_text",
+      "min": 10,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.mobile_font_size",
+      "default": 14,
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing_text",
+      "min": -10,
+      "max": 10,
+      "step": 0.2,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.letter_spacing",
+      "default": 0,
+      "visible_if": "{{ block.settings.text_size == 'custom' }}"
+    },
+  ],
+  "presets": [
+    { 
+      "name": "t:sections.main-product.blocks.description.name",
+    }
+  ]
+}
+{% endschema %}

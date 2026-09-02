@@ -1,0 +1,102 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main_heading_typtaz": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_brc_9dpFzq": {
+          "type": "_heading_brc",
+          "name": "Breadcrumb",
+          "settings": {},
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_brc_9dpFzq"
+      ],
+      "name": "Heading Page",
+      "settings": {
+        "use_dynamic_source": true,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 54,
+        "space_item": 0,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "50px,,50px,",
+        "pd_mb": "50px,,50px,"
+      }
+    },
+    "main-compare": {
+      "type": "main-compare",
+      "blocks": {
+        "basic_8iTdfT": {
+          "type": "basic",
+          "settings": {}
+        },
+        "availability_X8E9Dk": {
+          "type": "availability",
+          "settings": {
+            "title": "Availability"
+          }
+        },
+        "vendor_7WaPn7": {
+          "type": "vendor",
+          "settings": {
+            "title": "Vendor"
+          }
+        },
+        "variants_jN9Wh4": {
+          "type": "variants",
+          "settings": {
+            "title": "Color"
+          }
+        },
+        "btn_CNDj8a": {
+          "type": "btn",
+          "settings": {
+            "title": "Return to shop",
+            "url": "shopify://collections/all",
+            "btn_style": "outline",
+            "btn_fw": "bold"
+          }
+        }
+      },
+      "block_order": [
+        "basic_8iTdfT",
+        "availability_X8E9Dk",
+        "vendor_7WaPn7",
+        "variants_jN9Wh4",
+        "btn_CNDj8a"
+      ],
+      "settings": {
+        "product_list": [
+          "copy-of-caravus-classic-stethoscope",
+          "3-seater-sofa-w-chaiselong",
+          "3ce-body-whitening-shampoo",
+          "55-ku6470-6-series-uhd-crystal-colour-hdr-smart-tv",
+          "55up130-55-inch-4k-ultra-hd-roku-smart-led-tv",
+          "copy-of-12-ply-gauze-sponges-3"
+        ],
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "color_scheme": "",
+        "mg": "",
+        "mg_mb": "",
+        "pd": "80px,,80px,",
+        "pd_mb": "40px,,40px,"
+      }
+    }
+  },
+  "order": [
+    "main_heading_typtaz",
+    "main-compare"
+  ]
+}

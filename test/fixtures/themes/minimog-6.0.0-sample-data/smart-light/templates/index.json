@@ -1,0 +1,426 @@
+{
+  "sections": {
+    "1659926191a36ed220": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-richtext__description {\n  font-family: var(--font-stack-body);\n  font-weight: var(--font-weight-body);\n  color: var(--color-body-text);\n}\n\n.sf-custom--01 .m-richtext__subtitle,\n.sf-custom--01 .m-richtext__title,\n.sf-custom--02 .m-richtext__title  {\n  color: var(--color-heading-text);\n}\n\n.sf-custom--01 .m-richtext__subtitle {\n  font-size: 20px;\n}\n\n.sf-icon-box--01 .m-icon-box__description {\n  color: var( --color-body-text );\n}\n.sf-icon-box--02 .m-icon-box__heading {\n\tfont-size: 20px;\n}\n\n.m-collection-list--home .m-collection-card__image {\n  border-radius: 8px;\n}\n\n@media (min-width: 1536px) {\n  .m-collection-list--home .m-collection-card__image {\n    border-radius: 20px;\n  }\n}\n\n@media (max-width: 767px) {\n  .sf-custom--01 .m-custom-content__wrapper {\n    flex-direction: column-reverse;\n  }\n}"
+      }
+    },
+    "16595990778ee1a54a": {
+      "type": "custom-content",
+      "blocks": {
+        "3b091fd1-af47-49b9-8056-bfbc97e24ad4": {
+          "type": "text",
+          "settings": {
+            "title": "Dreamier nights.\nBrighter mornings.",
+            "subheading": "From sunset to sunrise",
+            "text": "",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "Shop Now",
+            "button_link": "#",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "513b1901-790a-4b3a-bbfb-60d34e6c86ad": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "66%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "3b091fd1-af47-49b9-8056-bfbc97e24ad4",
+        "513b1901-790a-4b3a-bbfb-60d34e6c86ad"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 40,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom--01 section__flush-bottom section__flush-top"
+      }
+    },
+    "16595850289c0b4c41": {
+      "type": "collection-list",
+      "blocks": {
+        "16595850286b090433-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Adults"
+          }
+        },
+        "16595850286b090433-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Babies"
+          }
+        },
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Accessories"
+          }
+        }
+      },
+      "block_order": [
+        "16595850286b090433-0",
+        "16595850286b090433-1",
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": false,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 42,
+        "padding_bottom": 100,
+        "custom_class": "section__flush-top m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "16599559676a0fd28c": {
+      "type": "icon-box",
+      "blocks": {
+        "1659955967ea63626d-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Restore device",
+            "description": "<p>Routines for wind down, sleep, and wake <br\/>up to leave you feeling refreshed<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659955967ea63626d-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Sunrise alarm",
+            "description": "<p>Wake gently with a sunrise alarm light that <br\/>can double as a nighttime reading light<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659955967ea63626d-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Soothing sleep sounds",
+            "description": "<p>Mask sounds and disruptions with music, <br\/>white noise, and more<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1659955967ea63626d-0",
+        "1659955967ea63626d-1",
+        "1659955967ea63626d-2"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "What's included",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "57px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 70,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-background-box sf-icon-box--01",
+        "animations": "inherit"
+      }
+    },
+    "166011993335184030": {
+      "type": "product-tabs",
+      "blocks": {
+        "16601199332e18be65-0": {
+          "type": "tab",
+          "settings": {
+            "title": "BEST SELLER"
+          }
+        },
+        "16601199332e18be65-1": {
+          "type": "tab",
+          "settings": {
+            "title": "NEW ARRIVALS"
+          }
+        }
+      },
+      "block_order": [
+        "16601199332e18be65-0",
+        "16601199332e18be65-1"
+      ],
+      "settings": {
+        "heading": "Shop smart sleep devices",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "tab_header": "horizontal",
+        "limit": 8,
+        "show_button": false,
+        "button_type": "link",
+        "button_label": "View all",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16599564648cf272b8": {
+      "type": "custom-content",
+      "blocks": {
+        "16599564645c09fdaa-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "16599564645c09fdaa-0": {
+          "type": "text",
+          "settings": {
+            "title": "Teach them sleep <br>independence",
+            "subheading": "",
+            "text": "<p>With music, meditations, and more, Rest makes bedtime their <br\/>favorite time.Help them ease anxiety with expert-approved<br\/> meditations and exercises made just for them<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "button_label": "Learn More",
+            "button_link": "#",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16599564645c09fdaa-1",
+        "16599564645c09fdaa-0"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 100,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-custom--02"
+      }
+    },
+    "166012091061094a7d": {
+      "type": "icon-box",
+      "blocks": {
+        "1660120910c7b8da58-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "\"It's a total game-changer for restless nights and early morning anxiety.\"",
+            "description": "",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1660120910c7b8da58-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "\"Helps you doze off and rise justtttt the way you want.\"",
+            "description": "",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1660120910c7b8da58-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "\"...for parents who could really use a night of uninterrupted sleep sometime.”",
+            "description": "",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1660120910c7b8da58-0",
+        "1660120910c7b8da58-1",
+        "1660120910c7b8da58-2"
+      ],
+      "settings": {
+        "heading": "As Seen in",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 50,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "150px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 70,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-background-box sf-icon-box--02",
+        "animations": "inherit"
+      }
+    },
+    "166012019616730755": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "The slumber party",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "blog": "smart-light",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 16,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-center",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1659926191a36ed220",
+    "16595990778ee1a54a",
+    "16595850289c0b4c41",
+    "16599559676a0fd28c",
+    "166011993335184030",
+    "16599564648cf272b8",
+    "166012091061094a7d",
+    "166012019616730755"
+  ]
+}

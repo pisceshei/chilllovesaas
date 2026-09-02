@@ -1,0 +1,267 @@
+{
+  "sections": {
+    "ef91a616-ab63-45b8-a15c-9eeea84d1acc": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__slideshow .m-slide__title,\n.sf-home__slideshow .m-slide__subtitle {\n  font-weight: 500;\n}\n.m-footer {\n  border-top: 0;\n}\n@media (min-width: 1280px) {\n  .sf-home__slideshow .m-slide__subtitle {\n    font-size: 20px;\n  }\n}\n\n@media (min-width: 1536px) {\n  .sf-home__slideshow .m-slide__title {\n    font-size: 60px;\n    line-height: 72px;\n    margin-bottom: 45px;\n  }\n}\n@media (max-width: 767px) {\n  .sf-home__countdown-timer .m-section-py {\n    padding-top: 48px;\n    padding-bottom: 48px;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "<span class=\"font-medium\">New Arrivals<\/span>",
+            "title": "Venice Haute <br>\nCouture",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Collection",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "<span class=\"font-medium\">New Arrivals<\/span>",
+            "title": "Ultimate Winter<br>\nWarmer",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Collection",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "<span class=\"font-medium\">New Collection<\/span>",
+            "title": "Responsible<br>\nDenim Lab",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Collection",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1626365858fd9bd41d": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "This Week's Highlights",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "1626366077b1048cd5": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 72,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "<span class=\"leading-snug\">Quality never<br> goes out of style.<\/span>",
+        "sub_title": "",
+        "text": "<p>Minimog has added a new brand to their fashion roster, and I'm loving the new fall pieces that just dropped online. Can't wait to order a few items to see how these look and feel in person!<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1626366206dd6e4f93": {
+      "type": "collection-list",
+      "blocks": {
+        "1626366206dd6e4f93-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Jackets"
+          }
+        },
+        "1626366206dd6e4f93-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Glasses"
+          }
+        },
+        "1626366206dd6e4f93-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Tops"
+          }
+        },
+        "aad13c35-f44c-4bd0-a68b-a598081ed211": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Handbags"
+          }
+        },
+        "fe6d91af-40dc-4e11-b702-6c131cc9f863": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sneakers"
+          }
+        }
+      },
+      "block_order": [
+        "1626366206dd6e4f93-0",
+        "1626366206dd6e4f93-1",
+        "1626366206dd6e4f93-2",
+        "aad13c35-f44c-4bd0-a68b-a598081ed211",
+        "fe6d91af-40dc-4e11-b702-6c131cc9f863"
+      ],
+      "settings": {
+        "heading": "Featured Categories",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 5,
+        "item_gap": 10,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16263511280e566f2c": {
+      "type": "countdown-timer",
+      "settings": {
+        "container": "container",
+        "section_height": "small",
+        "align": "end",
+        "color_scheme": "",
+        "heading": "Pay less, stay in fashion!",
+        "time": "2024-10-25 23:00:00",
+        "button_label": "Get At Only $20",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__countdown-timer section__flush-bottom",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "ef91a616-ab63-45b8-a15c-9eeea84d1acc",
+    "1621243260e1af0c20",
+    "1626365858fd9bd41d",
+    "1626366077b1048cd5",
+    "1626366206dd6e4f93",
+    "16263511280e566f2c"
+  ]
+}

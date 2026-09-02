@@ -1,0 +1,545 @@
+<!-- section/product-video.liquid -->
+{% style %}
+  @media (min-width: 768px) and (max-width: 1149px){
+    #{{ section.id }} .md\:hdt-height--fixed{
+      --media-overlap-content-h: calc(var(--aspect-ratioapt-md, auto) * 0.75);
+    }
+  }
+  @media(min-width:768px){
+    #shopify-section-{{section.id}} .hdt-dots-outline .hdt-slider__dots {
+    margin-top: var(--dots-distance) !important;
+  }
+  }
+  @media(max-width:767px){
+    #shopify-section-{{section.id}} .hdt-dots-outline .hdt-slider__dots {
+    margin-top: calc(var(--dots-distance)/2.0) !important;
+  }
+  }
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+<div
+  id="{{ section.id }}"
+  class="hdt-s-inner hdt-section-spacing hdt-section-spacing-{{ section.id }} hdt-s-gradient{%- if section.settings.image_height == 'full' -%} hdt-fullscreen-desktop{%- endif %} hdt-style-{{ section.settings.style }}"
+  color-scheme="{{ section.settings.color_scheme }}"
+>
+  <div class="hdt-container{%- if section.settings.full_width -%}-full{%- endif -%}" id="Video-{{ section.id }}">
+    <div class="hdt-product-video__heading hdt-slider">
+      {% content_for 'block', type: 'section-heading', id: 'product-video' %}
+      {%- if section.settings.navUI and section.settings.nav_position == 'heading' -%}
+        <div class="hdt-navigation hdt-navigation-heading hdt-position-{{ section.settings.nav_position }} hdt-visible-{{ section.settings.nav_visible }} hdt-style-{{ section.settings.nav_style }} hdt-shape-{{ section.settings.nav_shape }} hdt-size-{{ section.settings.nav_size }} hdt-hide-mobile-{{ section.settings.nav_hide_mobile }}">
+          <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.57 5.92993L3.5 11.9999L9.57 18.0699" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20.4999 12H3.66992" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>              
+          </button>
+          <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14.4299 5.92993L20.4999 11.9999L14.4299 18.0699" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.5 12H20.33" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              
+          </button>
+        </div>
+      {%- endif -%}
+    </div>
+    <hdt-slider id="Slider-{{ section.id }}" class="hdt-slider hdt-relative lg:hdt-slides-{{ section.settings.col_dk }} md:hdt-slides-{{ section.settings.col_tb }} hdt-slides-{{ section.settings.col_mb }} hdt-slide-spacing-{{ section.settings.space_items }}" config='{ "id": "Slider-{{ section.id }}", "navUI": "{{ section.settings.navUI }}", "dotUI": true, "loop": {{ section.settings.loop }}, "autoPlay": {{ section.settings.autoplay | times: 1000 }}, "pauseOnHover": {{ section.settings.pauseOnHover }} }'>
+      <div class="hdt-slider__viewport hdt-relative">
+        <div class="hdt-slider__container">
+          {% content_for 'blocks' %}
+        </div>
+      </div>
+      {%- if section.settings.navUI and section.settings.nav_position != 'heading' -%}
+        <div class="hdt-navigation hdt-position-{{ section.settings.nav_position }} hdt-visible-{{ section.settings.nav_visible }} hdt-style-{{ section.settings.nav_style }} hdt-shape-{{ section.settings.nav_shape }} hdt-size-{{ section.settings.nav_size }} hdt-hide-mobile-{{ section.settings.nav_hide_mobile }}">
+          <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+            <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+          </button>
+          <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+            <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+          </button>
+        </div>
+      {%- endif -%}
+      {%- if section.settings.dotUI -%}
+        <div hdt-slider-dots aria-controls="Slider-{{ section.id }}" class="hdt-slider__dots hdt-pagination hdt-style-{{ section.settings.pag_style }} hdt-radius-{{ section.settings.pag_rounded }}{% if section.settings.only_show_mobile %} hdt-only-show-mobile{% else %} hdt-hide-mobile-{{ section.settings.pag_hide_mobile }}{% endif %}" style="--space-between: {{ section.settings.pag_space }}px; --margin-top: {{ section.settings.pag_mgt }}px;" hdt-reveal="slide-in" timeline></div>
+      {%- endif -%}
+    </hdt-slider>
+  </div>
+</div>
+{% schema %}
+{
+  "name": "Shoppable Video",
+  "class": "hdt-product-video hdt-section",
+  "disabled_on": {
+    "groups": ["*"]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.section_fullwidth"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Style",
+      "options": [
+        {
+          "value": "1",
+          "label": "Style 1"
+        },
+        {
+          "value": "2",
+          "label": "Style 2"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        
+        {
+          "value": "adapt_image_first",
+          "label": "t:sections.video.settings.video_height.adapt_video"
+        },
+        {
+          "value": "fixed",
+          "label": "t:sections.video.settings.video_height.fixed"
+        },
+        {
+          "value": "full",
+          "label": "t:sections.video.settings.video_height.full_screen"
+        }
+      ],
+      "default": "adapt_image_first",
+      "label": "t:sections.video.settings.video_height.label",
+      "info": "t:sections.video.settings.video_height.info"
+    },
+    {
+      "type": "range",
+      "id": "fixed_height",
+      "min": 200,
+      "max": 1000,
+      "step": 10,
+      "unit": "px",
+      "label": "t:sections.video.settings.video_height.fixed",
+      "default": 500
+    },
+    {
+      "type": "select",
+      "id": "image_height_mb",
+      "options": [
+        {
+          "value": "adapt_image_first",
+          "label": "t:sections.video.settings.video_height.adapt_video"
+        },
+        {
+          "value": "full",
+          "label": "t:sections.video.settings.video_height.full_screen"
+        },
+        {
+          "value": "fixed",
+          "label": "t:sections.video.settings.video_height.fixed"
+        }
+      ],
+      "default": "adapt_image_first",
+      "label": "t:sections.video.settings.video_height.label_2"
+    },
+    {
+      "type": "range",
+      "id": "fixed_height_mb",
+      "min": 100,
+      "max": 1000,
+      "step": 10,
+      "unit": "px",
+      "label": "t:sections.video.settings.video_height.fixed_2",
+      "default": 300
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "t:sections.all.items_row.desktop",
+      "default": "3",
+      "options": [
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "t:sections.all.items_row.tablet",
+      "default": "3",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "t:sections.all.items_row.mobile",
+      "default": "1",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "space_items",
+      "label": "t:sections.all.space_items.desktop",
+      "default": "x",
+      "options": [
+        {
+          "label": "t:sections.all.space_items.default",
+          "value": "x"
+        },
+        {
+          "label": "0",
+          "value": "0"
+        },
+        {
+          "label": "5px",
+          "value": "5"
+        },
+        {
+          "label": "10px",
+          "value": "10"
+        },
+        {
+          "label": "20px",
+          "value": "20"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.slider.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "t:blocks.carousel.settings.loop",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay",
+      "min": 0,
+      "max": 7,
+      "step": 0.5,
+      "unit": "s",
+      "label": "t:blocks.carousel.settings.autoplay.label",
+      "default": 0,
+      "info": "t:blocks.carousel.settings.autoplay.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "pauseOnHover",
+      "label": "t:blocks.carousel.settings.autoplay.pause_on_hover",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.carousel.settings.navigation.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "navUI",
+      "label": "t:blocks.carousel.settings.navigation.use_navigation",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "nav_position",
+      "label": "t:blocks.carousel.settings.navigation.position.label",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:default"
+        },
+        {
+          "value": "on_border",
+          "label": "t:blocks.carousel.settings.navigation.position.options.on_border"
+        },
+        {
+          "value": "out_side",
+          "label": "t:blocks.carousel.settings.navigation.position.options.out_side"
+        },
+        {
+          "value": "heading",
+          "label": "Heading"
+        }
+      ],
+      "default": "default",
+      "visible_if": "{{ section.settings.navUI }}"
+    },
+    {
+      "type": "select",
+      "id": "nav_visible",
+      "label": "t:blocks.carousel.settings.navigation.nav_visible.label",
+      "options": [
+        {
+          "value": "always",
+          "label": "t:blocks.carousel.settings.navigation.nav_visible.options.always"
+        },
+        {
+          "value": "hover",
+          "label": "t:blocks.carousel.settings.navigation.nav_visible.options.hover"
+        }
+      ],
+      "default": "always",
+      "visible_if": "{{ section.settings.navUI }}"
+    },
+    {
+      "type": "select",
+      "id": "nav_style",
+      "label": "t:blocks.carousel.settings.navigation.nav_style.label",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:default"
+        },
+        {
+          "value": "outline",
+          "label": "t:blocks.carousel.settings.navigation.nav_style.options.outline"
+        },
+        {
+          "value": "simple",
+          "label": "t:blocks.carousel.settings.navigation.nav_style.options.simple"
+        }
+      ],
+      "default": "default",
+      "visible_if": "{{ section.settings.navUI }}"
+    },
+    {
+      "type": "select",
+      "id": "nav_shape",
+      "label": "t:blocks.carousel.settings.navigation.nav_shape.label",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:default"
+        },
+        {
+          "value": "rounded",
+          "label": "t:blocks.carousel.settings.navigation.nav_shape.options.rounded"
+        },
+        {
+          "value": "rotate",
+          "label": "t:blocks.carousel.settings.navigation.nav_shape.options.rotate"
+        }
+      ],
+      "default": "default",
+      "info": "t:blocks.carousel.settings.navigation.nav_shape.info",
+      "visible_if": "{{ section.settings.navUI }}"
+    },
+    {
+      "type": "select",
+      "id": "nav_size",
+      "label": "t:blocks.carousel.settings.navigation.nav_size.label",
+      "options": [
+        {
+          "value": "small",
+          "label": "t:blocks.carousel.settings.navigation.nav_size.options.small"
+        },
+        {
+          "value": "medium",
+          "label": "t:blocks.carousel.settings.navigation.nav_size.options.medium"
+        },
+        {
+          "value": "large",
+          "label": "t:blocks.carousel.settings.navigation.nav_size.options.large"
+        }
+      ],
+      "default": "small",
+      "visible_if": "{{ section.settings.navUI }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "nav_hide_mobile",
+      "label": "t:blocks.carousel.settings.pagination.pag_hide_mobile",
+      "default": false,
+      "visible_if": "{{ section.settings.navUI }}"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.carousel.settings.pagination.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "dotUI",
+      "label": "t:blocks.carousel.settings.pagination.use_pagination",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "pag_style",
+      "label": "t:blocks.carousel.settings.pagination.style.label",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:default"
+        },
+        {
+          "value": "outline",
+          "label": "t:blocks.carousel.settings.pagination.style.options.outline"
+        },
+        {
+          "value": "elessi",
+          "label": "t:blocks.carousel.settings.pagination.style.options.elessi"
+        },
+        {
+          "value": "full",
+          "label": "t:blocks.carousel.settings.pagination.style.options.full"
+        },
+        {
+          "value": "number",
+          "label": "t:blocks.carousel.settings.pagination.style.options.number"
+        }
+      ],
+      "default": "default",
+      "visible_if": "{{ section.settings.dotUI }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "pag_rounded",
+      "label": "t:blocks.carousel.settings.pagination.rounded",
+      "default": false,
+      "visible_if": "{{ section.settings.dotUI }}"
+    },
+    {
+      "type": "range",
+      "id": "pag_space",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "t:blocks.carousel.settings.pagination.space",
+      "default": 10,
+      "visible_if": "{{ section.settings.dotUI }}"
+    },
+    {
+      "type": "range",
+      "id": "pag_mgt",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:blocks.carousel.settings.pagination.space_between_pagination",
+      "default": 10,
+      "visible_if": "{{ section.settings.dotUI }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "only_show_mobile",
+      "label": "t:blocks.carousel.settings.pagination.only_show_mobile",
+      "default": false,
+      "visible_if": "{{ section.settings.dotUI }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "pag_hide_mobile",
+      "label": "t:blocks.carousel.settings.pagination.pag_hide_mobile",
+      "default": false,
+      "visible_if": "{{ section.settings.dotUI and section.settings.only_show_mobile == false }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "_product-video"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shoppable Video",
+      "category": "04. Product(s)",
+      "blocks": [
+        {
+          "type": "_product-video"
+        },
+        {
+          "type": "_product-video"
+        },
+        {
+          "type": "_product-video"
+        },
+        {
+          "type": "_product-video"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

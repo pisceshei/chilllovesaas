@@ -1,0 +1,527 @@
+<!-- sections/main-product-tabs.liquid -->
+{{ 'hdt-product-tabs.css' | asset_url | stylesheet_tag }}
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+<div class="hdt-product-tab hdt-s-gradient hdt-section-spacing hdt-section-spacing-{{ section.id }}" {% if section.settings.colors_by_section %}color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{% endif %}>
+  <div class="hdt-container{% if section.settings.section_layout == "full_width" %}-full hdt-px-15{% endif %}">
+    {%- if section.settings.tabs_design == 'tab' -%}
+      {%- assign forloop_first_title = true -%}
+      {%- assign forloop_first_content = true -%}
+      <div class="hdt-type-tab">
+        <div class="hdt-product-tab__wrap hdt-product-tab--default">
+          <hdt-tab class="hdt-product-tab__main hdt-flex hdt-justify-center hdt-scroll-snap hdt-snap-x" aria-controls="product-tabs-{{ section.settings.tabs_design }}-{{ section.id }}">
+            {%- for block in section.blocks -%}
+              {%-liquid
+                  case block.type
+                  when 'tab_des' 
+                    if block.settings.title == blank or product.description == blank
+                      continue
+                    endif
+                  when 'tab_review'
+                    if block.settings.title == blank 
+                      continue
+                    endif
+                  when 'tab_add'
+                    if block.settings.title == blank or product.has_only_default_variant
+                      continue
+                    endif
+                  when 'tab_html'
+                    assign bk_title = block.settings.title | default: block.settings.page.title
+                    if bk_title == blank or block.settings.content == blank and block.settings.page.content == blank
+                      continue
+                    endif
+                  when 'tab_liquid'
+                    if block.settings.title == blank or block.settings.custom_liquid == blank
+                      continue
+                    endif
+                endcase
+              -%}
+              <button aria-current="{{ forloop_first_title }}" {{ block.shopify_attributes }} class="hdt-relative hdt-font-semibold">{{ block.settings.title | escape }}</button>
+              {%- assign forloop_first_title = false -%}
+            {%- endfor -%}
+          </hdt-tab> 
+          <div class="hdt-product-tab__content hdt-s-text" id="product-tabs-{{ section.settings.tabs_design }}-{{ section.id }}">
+            {%- for block in section.blocks -%}
+              {%- case block.type -%}
+                {%- when 'tab_des' -%}
+                  {{ 'product_description.min.css' | asset_url | stylesheet_tag }}
+                  {%- if block.settings.title == blank or product.description == blank -%}{% continue %}{%- endif -%}
+                  <div id="{{ block.id }}-tab-description" class="hdt-tab-item hdt-rte hdt-product-description" tab-item{% if forloop_first_content %} tab-selected{% endif %}>{{- product.description -}}</div>
+                  {%- assign forloop_first_content = false -%}
+                  
+                {%- when 'tab_review' %}
+                  {%- if block.settings.title == blank -%}{% continue %}{%- endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>{%- render 'hdt-pr-single-review' -%}</div>
+                  {%- assign forloop_first_content = false -%}
+                {%- when 'tab_add' -%}
+                  {% if block.settings.title == blank or product.has_only_default_variant %}{% continue %}{% endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>
+                      <table>
+                        <tbody>
+                          {%- for product_option in product.options_with_values -%}
+                          <tr class="hdt-attr_pa_{{ product_option.name | handle }}">
+                            <th class="hdt-attr__label">{{ product_option.name }}</th>
+                            <td class="hdt-attr__value">
+                              <p>{% for value in product_option.values %}{{ value }}{% unless forloop.last == true %}, {% endunless %}{% endfor %}</p>
+                            </td>
+                          </tr>
+                          {%- endfor -%}
+                        </tbody>
+                      </table>
+                  </div>
+                  {%- assign forloop_first_content = false -%}
+                {%- when 'tab_html' -%}
+                  {%- assign bk_title = block.settings.title | default: block.settings.page.title -%}
+                  {%- if bk_title == blank or block.settings.content == blank and block.settings.page.content == blank -%} {% continue %} {%- endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>
+                    <div class="hdt-rte hdt-s-text2">{{ block.settings.content }}
+                      {{ block.settings.page.content }}
+                    </div>
+                  </div>
+                  {%- assign forloop_first_content = false -%}
+                {%- when 'tab_liquid' -%}
+                  {%- if block.settings.title == blank or block.settings.custom_liquid == blank -%}{% continue %}{%- endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>{{ block.settings.custom_liquid }}</div>
+                  {%- assign forloop_first_content = false -%}
+              {%- endcase -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      </div>
+    {%- elsif section.settings.tabs_design == 'accordion' -%}
+      <hdt-accordion-group single-open class="hdt-type-accordion">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            if forloop.first and section.settings.enable_first_tab
+              assign open = true
+            else
+              assign open = false
+            endif
+          -%}
+          {%- case block.type -%}
+            {%- when 'tab_des'-%}
+              {{ 'product_description.min.css' | asset_url | stylesheet_tag }}
+              {%- if block.settings.title == blank or product.description == blank -%}{% continue %}{%- endif -%}
+              <hdt-accordion class="hdt-contents">
+                <details class="hdt-product-accordion__item" {% if forloop.first and section.settings.enable_first_tab %}open {% endif %} {{ block.shopify_attributes }}>
+                  <summary aria-expanded="{{ open }}">
+                    <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                    <span class="hdt-product-accordion__icon"></span>
+                  </summary>
+                  <div class="hdt-product-accordion__content hdt-rte hdt-product-description">{{- product.description -}}</div>
+                </details>
+              </hdt-accordion>
+            {%- when 'tab_review'-%}
+              {%- if block.settings.title == blank -%}{% continue %}{%- endif -%}
+              <hdt-accordion class="hdt-contents">
+                <details class="hdt-product-accordion__item" {% if forloop.first and section.settings.enable_first_tab %}open {% endif %} {{ block.shopify_attributes }}>
+                  <summary aria-expanded="{{ open }}">
+                    <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                    <span class="hdt-product-accordion__icon"></span>
+                  </summary>
+                  <div class="hdt-product-accordion__content">{%- render 'hdt-pr-single-review' -%}</div>
+                </details>
+              </hdt-accordion>
+            {%- when 'tab_add' -%}
+              {% if block.settings.title == blank or product.has_only_default_variant %}{% continue %}{% endif -%}
+              <hdt-accordion class="hdt-contents">
+                <details class="hdt-product-accordion__item" {% if forloop.first and section.settings.enable_first_tab %}open {% endif %} {{ block.shopify_attributes }}>
+                  <summary aria-expanded="{{ open }}">
+                    <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                    <span class="hdt-product-accordion__icon"></span>
+                  </summary>
+                  <div class="hdt-product-accordion__content">
+                    <table>
+                      <tbody>
+                        {%- for product_option in product.options_with_values -%}
+                        <tr class="hdt-attr_pa_{{ product_option.name | handle }}">
+                          <th class="hdt-attr__label">{{ product_option.name }}</th>
+                          <td class="hdt-attr__value">
+                            <p>{% for value in product_option.values %}{{ value }}{% unless forloop.last == true %}, {% endunless %}{% endfor %}</p>
+                          </td>
+                        </tr>
+                        {%- endfor -%}
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              </hdt-accordion>
+            {%- when 'tab_html' -%}
+              {%- assign bk_title = block.settings.title | default: block.settings.page.title -%}
+              {%- if bk_title == blank or block.settings.content == blank and block.settings.page.content == blank -%} {% continue %} {%- endif -%}
+              <hdt-accordion class="hdt-contents">
+                <details class="hdt-product-accordion__item" {% if forloop.first and section.settings.enable_first_tab %}open {% endif %} {{ block.shopify_attributes }}>
+                  <summary aria-expanded="{{ open }}">
+                    <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                    <span class="hdt-product-accordion__icon"></span>
+                  </summary>
+                  <div class="hdt-product-accordion__content">
+                    <div class="hdt-rte hdt-s-text2">{{ block.settings.content }}
+                      {{ block.settings.page.content }}
+                    </div>
+                  </div>
+                </details>
+              </hdt-accordion>
+            {%- when 'tab_liquid' -%}
+              {%- if block.settings.title == blank or block.settings.custom_liquid == blank -%}{% continue %}{%- endif -%}
+              <hdt-accordion class="hdt-contents">
+                <details class="hdt-product-accordion__item" {% if forloop.first and section.settings.enable_first_tab %}open {% endif %} {{ block.shopify_attributes }}>
+                  <summary>
+                    <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                    <span class="hdt-product-accordion__icon"></span>
+                  </summary>
+                  <div class="hdt-product-accordion__content">{{ block.settings.custom_liquid }}</div>
+                </details>
+              </hdt-accordion>
+          {%- endcase -%}
+        {%- endfor -%}
+      </hdt-accordion-group>
+    {%- else -%}
+      {%- assign forloop_first_title = true -%}
+      {%- assign forloop_first_content = true -%}
+      <style>
+        .hdt-type-tab-accordion .hdt-product-tab__main {
+          display: none;
+        }
+        .hdt-product-accordion__item summary {
+          display: flex;
+        }
+        @media (max-width: 767px) {
+          .hdt-product-tab [tab-item]:not([tab-selected],[tab-hidden]){
+            display: block;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        }
+        @media (min-width: 768px) {
+          .hdt-type-tab-accordion .hdt-product-tab__main {
+            display: flex;
+          }
+          .hdt-type-tab-accordion hdt-accordion {
+            display: block;
+          }
+          .hdt-product-accordion__item summary {
+            display: none;
+          }
+          .hdt-product-accordion__content {
+            border: none;
+            padding: 0;
+            border-radius: 0;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        }
+      </style>
+      <div class="hdt-type-tab hdt-type-tab-accordion">
+        <div class="hdt-product-tab__wrap hdt-product-tab--default">
+          <hdt-tab class="hdt-product-tab__main hdt-flex hdt-justify-center hdt-scroll-snap hdt-snap-x" aria-controls="product-tabs-{{ section.settings.tabs_design }}-{{ section.id }}">
+            {%- for block in section.blocks -%}
+              {%-liquid
+                  case block.type
+                  when 'tab_des' 
+                    if block.settings.title == blank or product.description == blank
+                      continue
+                    endif
+                  when 'tab_review'
+                    if block.settings.title == blank 
+                      continue
+                    endif
+                  when 'tab_add'
+                    if block.settings.title == blank or product.has_only_default_variant
+                      continue
+                    endif
+                  when 'tab_html'
+                    assign bk_title = block.settings.title | default: block.settings.page.title
+                    if bk_title == blank or block.settings.content == blank and block.settings.page.content == blank
+                      continue
+                    endif
+                  when 'tab_liquid'
+                    if block.settings.title == blank or block.settings.custom_liquid == blank
+                      continue
+                    endif
+                endcase
+              -%}
+              <button aria-current="{{ forloop_first_title }}" {{ block.shopify_attributes }} class="hdt-relative hdt-font-semibold">{{ block.settings.title | escape }}</button>
+              {%- assign forloop_first_title = false -%}
+            {%- endfor -%}
+          </hdt-tab> 
+          <div class="hdt-product-tab__content hdt-s-text" id="product-tabs-{{ section.settings.tabs_design }}-{{ section.id }}">
+            <hdt-accordion-group single-open class="hdt-type-accordion hdt-type-tab-accordion_">
+            {%- for block in section.blocks -%}
+              {%- case block.type -%}
+                {%- when 'tab_des' -%}
+                  {{ 'product_description.min.css' | asset_url | stylesheet_tag }}
+                  {%- if block.settings.title == blank or product.description == blank -%}{% continue %}{%- endif -%}
+                  <div id="{{ block.id }}-tab-description" class="hdt-tab-item hdt-rte hdt-product-description" tab-item{% if forloop_first_content %} tab-selected{% endif %}>
+                    <hdt-accordion class="hdt-contents">
+                      <details class="hdt-product-accordion__item" open>
+                        <summary aria-expanded="true">
+                          <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                          <span class="hdt-product-accordion__icon"></span>
+                        </summary>
+                        <div class="hdt-product-accordion__content hdt-rte hdt-product-description">{{- product.description -}}</div>
+                      </details>
+                    </hdt-accordion>
+                  </div>
+                  {%- assign forloop_first_content = false -%}
+                  
+                {%- when 'tab_review' %}
+                  {%- if block.settings.title == blank -%}{% continue %}{%- endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>
+                    <hdt-accordion class="hdt-contents">
+                      <details class="hdt-product-accordion__item" open>
+                        <summary aria-expanded="true">
+                          <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                          <span class="hdt-product-accordion__icon"></span>
+                        </summary>
+                        <div class="hdt-product-accordion__content">{%- render 'hdt-pr-single-review' -%}</div>
+                      </details>
+                    </hdt-accordion>
+                  </div>
+                  {%- assign forloop_first_content = false -%}
+                {%- when 'tab_add' -%}
+                  {% if block.settings.title == blank or product.has_only_default_variant %}{% continue %}{% endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>
+                    <hdt-accordion class="hdt-contents">
+                      <details class="hdt-product-accordion__item" open>
+                        <summary aria-expanded="true">
+                          <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                          <span class="hdt-product-accordion__icon"></span>
+                        </summary>
+                        <div class="hdt-product-accordion__content">
+                          <table>
+                            <tbody>
+                              {%- for product_option in product.options_with_values -%}
+                              <tr class="hdt-attr_pa_{{ product_option.name | handle }}">
+                                <th class="hdt-attr__label">{{ product_option.name }}</th>
+                                <td class="hdt-attr__value">
+                                  <p>{% for value in product_option.values %}{{ value }}{% unless forloop.last == true %}, {% endunless %}{% endfor %}</p>
+                                </td>
+                              </tr>
+                              {%- endfor -%}
+                            </tbody>
+                          </table>
+                        </div>
+                      </details>
+                    </hdt-accordion>
+                  </div>
+                  {%- assign forloop_first_content = false -%}
+                {%- when 'tab_html' -%}
+                  {%- assign bk_title = block.settings.title | default: block.settings.page.title -%}
+                  {%- if bk_title == blank or block.settings.content == blank and block.settings.page.content == blank -%} {% continue %} {%- endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>
+                    <hdt-accordion class="hdt-contents">
+                      <details class="hdt-product-accordion__item" open>
+                        <summary aria-expanded="true">
+                          <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                          <span class="hdt-product-accordion__icon"></span>
+                        </summary>
+                        <div class="hdt-product-accordion__content">
+                          <div class="hdt-rte hdt-s-text2">{{ block.settings.content }}
+                            {{ block.settings.page.content }}
+                          </div>
+                        </div>
+                      </details>
+                    </hdt-accordion>
+                  </div>
+                  {%- assign forloop_first_content = false -%}
+                {%- when 'tab_liquid' -%}
+                  {%- if block.settings.title == blank or block.settings.custom_liquid == blank -%}{% continue %}{%- endif -%}
+                  <div class="hdt-tab-item" tab-item{% if forloop_first_content %} tab-selected{% endif %}>
+                    <hdt-accordion class="hdt-contents">
+                      <details class="hdt-product-accordion__item" open>
+                        <summary aria-expanded="true">
+                          <span class="hdt-product-accordion__text hdt-s-text hdt-font-medium">{{ block.settings.title }}</span>
+                          <span class="hdt-product-accordion__icon"></span>
+                        </summary>
+                        <div class="hdt-product-accordion__content">{{ block.settings.custom_liquid }}</div>
+                      </details>
+                    </hdt-accordion>
+                  </div>
+                  {%- assign forloop_first_content = false -%}
+              {%- endcase -%}
+            {%- endfor -%}
+            </hdt-accordion-group>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.main-product-tabs.name",
+  "class": "hdt-section hdt-section-main-product-tabs",
+  "settings": [
+    {
+      "type": "select",
+      "id": "tabs_design",
+      "label": "t:sections.main-product-tabs.settings.tabs_design.label",
+      "default": "tab",
+      "options": [
+        {
+          "value": "tab",
+          "label": "t:sections.main-product-tabs.settings.tabs_design.options__1.label"
+        },
+        {
+          "value": "accordion",
+          "label": "t:sections.main-product-tabs.settings.tabs_design.options__2.label"
+        },
+        {
+          "value": "tab_accordion",
+          "label": "t:sections.main-product-tabs.settings.tabs_design.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_first_tab",
+      "label": "t:sections.main-product-tabs.settings.enable_first_tab.label",
+      "info": "t:sections.main-product-tabs.settings.enable_first_tab.info",
+      "default": false,
+      "visible_if": "{{ section.settings.tabs_design != 'tab_accordion' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "blocks": [
+    {
+      "type": "tab_des",
+      "name": "t:sections.main-product-tabs.blocks.tab_des.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.main-product-tabs.blocks.title.label",
+          "default": "Description"
+        }
+      ]
+    },
+    {
+      "type": "tab_add",
+      "name": "t:sections.main-product-tabs.blocks.tab_add.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.main-product-tabs.blocks.title.label",
+          "default": "Additional Information"
+        }
+      ]
+    },
+    {
+      "type": "tab_review",
+      "name": "t:sections.main-product-tabs.blocks.tab_review.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.main-product-tabs.blocks.title.label",
+          "default": "Reviews"
+        }
+      ]
+    },
+    {
+      "type": "tab_html",
+      "name": "t:sections.main-product-tabs.blocks.tab_htmls.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.main-product-tabs.blocks.title.label",
+          "default": "Tab Custom HTML"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "t:sections.main-product-tabs.blocks.tab_htmls.settings.content.label"
+        },
+        {
+          "type": "page",
+          "id": "page",
+          "label": "t:sections.main-product-tabs.blocks.tab_htmls.settings.page.label"
+        }
+      ]
+    },
+    {
+      "type": "tab_liquid",
+      "name": "t:sections.main-product-tabs.blocks.tab_liquid.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.main-product-tabs.blocks.title.label",
+          "default": "Tab Custom Liquid"
+        },
+        {
+          "type": "liquid",
+          "id": "custom_liquid",
+          "label": "t:sections.main-product-tabs.blocks.tab_liquid.settings.custom_liquid.label",
+          "info": "t:sections.main-product-tabs.blocks.tab_liquid.settings.custom_liquid.info"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

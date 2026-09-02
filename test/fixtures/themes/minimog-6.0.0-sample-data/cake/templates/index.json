@@ -1,0 +1,417 @@
+{
+  "sections": {
+    "1659926191a36ed220": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__slideshow .m-slide__title,\n.m-custom--home .m-richtext__title {\n  color: var( --color-heading-text ) !important;\n}\n.sf-home__slideshow .m-slide__description,\n.m-custom--home .m-richtext__description {\n  color: var( --color-body-text ) !important;\n}\n.sf-home__slideshow .m-slide__content {\n  background-color: #FFFBF3;\n}\n.sf-home__slideshow .m-slider-controls {\n  --swiper-controls-color: #6D4F4F !important;\n}\n  \n.m-icon-box--home .m-icon-box__heading {\n  font-size: 20px;\n  margin-bottom: 12px;\n}\n.m-icon-box--home .m-icon-box__description {\n  color: var(--color-body-text);\n}\n  \n@media ( min-width: 768px ) {\n  .sf-home__slideshow .m-slide__content {\n    padding: 40px;\n  }\n}"
+      }
+    },
+    "1659522563f86b9b11": {
+      "type": "slider",
+      "blocks": {
+        "1659522562509a09c0-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Longer day,<br>\nMore treat.",
+            "description": "<p>Snag some cool treats now! And we’ll deliver them<br\/> straight to you in temperature controlled packaging,<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1659522562509a09c0-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "Little bliss in <br>\nEvery bite",
+            "description": "<p>Special fluffiness for your loved one! A thoughtful <br\/>expression through good food and warm experiences.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1659522562509a09c0-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "Can’t Eat <br>\nJust One!",
+            "description": "<p>Snag some cool treats now! It’s sweet. It’s light. <br\/>Flaky and buttery, from first glance to the last bite.<\/p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1659522562509a09c0-0",
+        "1659522562509a09c0-1",
+        "1659522562509a09c0-2"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1659587158ce41b7ac": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "More cake, cookies, pie",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16595990778ee1a54a": {
+      "type": "custom-content",
+      "blocks": {
+        "513b1901-790a-4b3a-bbfb-60d34e6c86ad": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "66%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "3b091fd1-af47-49b9-8056-bfbc97e24ad4": {
+          "type": "text",
+          "settings": {
+            "title": "Don’t let summer\nfloat away",
+            "subheading": "",
+            "text": "<p>Snag some cool treats now! And we’ll deliver them straight to you in temperature controlled packaging, so they’re cold and ready to eat.You don’t ehave to get out of the pool ;)<\/p>",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "Shop Now",
+            "button_link": "#",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "513b1901-790a-4b3a-bbfb-60d34e6c86ad",
+        "3b091fd1-af47-49b9-8056-bfbc97e24ad4"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 100,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom--home"
+      }
+    },
+    "16595850289c0b4c41": {
+      "type": "collection-list",
+      "blocks": {
+        "16595850286b090433-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Cake"
+          }
+        },
+        "16595850286b090433-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Pies"
+          }
+        },
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Cookies"
+          }
+        },
+        "16595850286b090433-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Truffle"
+          }
+        },
+        "394483ef-8b9c-4d0d-b391-2036ef7e79d0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Ice Cream"
+          }
+        },
+        "de610c29-1ac4-4305-bbfb-8b91709228a3": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Bundle"
+          }
+        }
+      },
+      "block_order": [
+        "16595850286b090433-0",
+        "16595850286b090433-1",
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd",
+        "16595850286b090433-2",
+        "394483ef-8b9c-4d0d-b391-2036ef7e79d0",
+        "de610c29-1ac4-4305-bbfb-8b91709228a3"
+      ],
+      "settings": {
+        "heading": "Summer shop",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "footer",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": false,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 6,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16599559676a0fd28c": {
+      "type": "icon-box",
+      "blocks": {
+        "1659955967ea63626d-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "One Of A Kind Treats",
+            "description": "<p>Try our award-winning classic Birthday Cake <br\/>and our fan-favorite B’Day Cake Truffles!<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659955967ea63626d-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Thoughtfully Packaging",
+            "description": "<p>We make your treats fresh and flash-freeze<br\/> ‘em for peak quality.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659955967ea63626d-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Nationwide Dilivery",
+            "description": "<p>If you're a last-minute gifter, we've <br\/>got you covered with next-day delivery, <br\/>anywhere in the USA.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1659955967ea63626d-0",
+        "1659955967ea63626d-1",
+        "1659955967ea63626d-2"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "Why choose sweeties",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "40px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-icon-box--home",
+        "animations": "inherit"
+      }
+    },
+    "16599564648cf272b8": {
+      "type": "custom-content",
+      "blocks": {
+        "16599564645c09fdaa-0": {
+          "type": "text",
+          "settings": {
+            "title": "Hey, nice to <br>\ntreat you",
+            "subheading": "",
+            "text": "<p>Snag some cool treats now! And we’ll deliver them straight to you in temperature controlled packaging, so they’re cold and ready to eat.You don’t ehave to get out of the pool ;)<\/p>",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "Learn More",
+            "button_link": "#",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "16599564645c09fdaa-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "66%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16599564645c09fdaa-0",
+        "16599564645c09fdaa-1"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 100,
+        "use_scroll_mobile": false,
+        "gap_mobile": 30,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "m-custom--home"
+      }
+    }
+  },
+  "order": [
+    "1659926191a36ed220",
+    "1659522563f86b9b11",
+    "1659587158ce41b7ac",
+    "16595990778ee1a54a",
+    "16595850289c0b4c41",
+    "16599559676a0fd28c",
+    "16599564648cf272b8"
+  ]
+}

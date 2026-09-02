@@ -1,0 +1,1145 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+ {
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify://shop_images/pexels-david-fagundes-14742-1894263.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-6707cc8e-6558-49d9-8759-f7d934d9fe4f",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "background_content": false,
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_YrQhtV": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Special Offers You Can't Miss</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 24,
+                "font_size_text": 18,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_gnPapa": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "heading_MzV9Ty": {
+              "type": "heading",
+              "settings": {
+                "heading": "<h4>SALE OFF UP TO 50%</h4>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 65,
+                "font_size_heading": 32,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_gHRBdN": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_3yEDmG": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify://collections",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-outline",
+                "size": "xl",
+                "font_weight": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_YrQhtV",
+            "spacer_gnPapa",
+            "heading_MzV9Ty",
+            "spacer_gHRBdN",
+            "button_3yEDmG"
+          ]
+        },
+        "slide_item_P3kNLr": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify://shop_images/pexels-marcelochagas-2229490.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-6707cc8e-6558-49d9-8759-f7d934d9fe4f",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "background_content": false,
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_mM4GAQ": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Special Offers You Can't Miss</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 24,
+                "font_size_text": 18,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_AdzQ8B": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "heading_6cPt7D": {
+              "type": "heading",
+              "settings": {
+                "heading": "<h4>SALE OFF UP TO 50%</h4>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 65,
+                "font_size_heading": 32,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_EXbH8i": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_CqRj3U": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify://collections",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-outline",
+                "size": "xl",
+                "font_weight": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_mM4GAQ",
+            "spacer_AdzQ8B",
+            "heading_6cPt7D",
+            "spacer_EXbH8i",
+            "button_CqRj3U"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM",
+        "slide_item_P3kNLr"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 950,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 450,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "elessi",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 23,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-6707cc8e-6558-49d9-8759-f7d934d9fe4f",
+        "background_opacity": 0,
+        "full_width": true,
+        "pd": ",,30px,",
+        "pd_mb": ",,15px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "collections_list_manual_eErqxt": {
+      "type": "collections-list-manual",
+      "blocks": {
+        "collection_manual_item_tXNANF": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "new-arrival",
+            "image": "shopify://shop_images/pexels-miami302-16191943.jpg",
+            "title": "New Arrivals",
+            "collection_link": "",
+            "column_width": "4",
+            "row_count": 2,
+            "tb_column_width": "6",
+            "tb_row_count": 2,
+            "mb_column_width": "1",
+            "mb_row_count": 2
+          },
+          "blocks": {}
+        },
+        "collection_manual_item_7XVGUR": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "multi-brand-women",
+            "image": "shopify://shop_images/top-view-cream-container-serum-plants.jpg",
+            "title": "Body Care",
+            "collection_link": "",
+            "column_width": "4",
+            "row_count": 1,
+            "tb_column_width": "6",
+            "tb_row_count": 1,
+            "mb_column_width": "1",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collection_manual_item_NRnKD9": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "accessories",
+            "image": "shopify://shop_images/office-breakfast.jpg",
+            "title": "Accessories",
+            "collection_link": "",
+            "column_width": "4",
+            "row_count": 2,
+            "tb_column_width": "6",
+            "tb_row_count": 2,
+            "mb_column_width": "2",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collection_manual_item_mKB48B": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "multi-brand-women",
+            "image": "shopify://shop_images/close-up-city-fashion-details-stylish-elegant-woman-wearing-silver-sweater-silk-skirt-luxury-leather-bag-sunglasses-posing-new-york-street-near-business-centers-autumn-spring-season.jpg",
+            "title": "Dresses",
+            "collection_link": "",
+            "column_width": "4",
+            "row_count": 1,
+            "tb_column_width": "6",
+            "tb_row_count": 1,
+            "mb_column_width": "1",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collections-list-manual-heading": {
+          "type": "section-heading",
+          "disabled": true,
+          "static": true,
+          "settings": {
+            "design_heading": "2",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "collection_manual_item_tXNANF",
+        "collection_manual_item_7XVGUR",
+        "collection_manual_item_NRnKD9",
+        "collection_manual_item_mKB48B"
+      ],
+      "settings": {
+        "collection_des": "1",
+        "content_size": "base",
+        "font_size_text_lg": 22,
+        "font_size_text_md": 14,
+        "font_size_text": 14,
+        "font_weight_text": 400,
+        "letter_spacing_text": 0,
+        "content_weight": "medium",
+        "content_position": "end-center",
+        "content_space": 20,
+        "show_count": false,
+        "count_label": "Products",
+        "image_rounded": false,
+        "enable_border": false,
+        "image_padding": 30,
+        "img_effect": "zoom",
+        "b_effect": "none",
+        "row_height": 260,
+        "row_height_tb": 260,
+        "row_height_mb": 200,
+        "space_items": "var(--spacing-x)",
+        "space_items_tb": "var(--spacing-x)",
+        "space_items_mb": "var(--spacing-x)",
+        "colors_by_section": true,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "pd": ",,100px,",
+        "pd_mb": ",,100px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "featured_collection_PTq36A": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_JJ7DRU": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "multi-brand-women",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "asos",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": true,
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 60,
+            "btn_label": "Load more",
+            "btn_style": "hdt-btn-outline-hover-accent",
+            "endable_btn_icon": false,
+            "size": "m",
+            "btn_fw": "medium"
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 45
+          },
+          "blocks": {
+            "heading_section_rgjWE7": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "New In Products",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_URb48x": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "base",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_rgjWE7",
+            "sub_heading_section_URb48x"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_JJ7DRU"
+      ],
+      "custom_css": [],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "pd": "50px,,50px,",
+        "pd_mb": "40px,,40px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "lookbook_grid_LCVm47": {
+      "type": "lookbook-grid",
+      "blocks": {
+        "lookbook_q6cAag": {
+          "type": "_lookbook",
+          "settings": {
+            "image": "shopify://shop_images/two-best-friends-walking-talking-outdoor-street-city-center.jpg",
+            "img_effect": "none",
+            "b_effect": "none"
+          },
+          "blocks": {
+            "pin_product_3Q37Wc": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#fa3044",
+                "pin_text": "#ffffff",
+                "left": 72,
+                "top": 23,
+                "pin_size": "medium",
+                "pin_type": "1",
+                "text": "1",
+                "product": "9thirty-corduroy-blue-cap",
+                "product_des": "1",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_Xh4YAx": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#fa3044",
+                "pin_text": "#ffffff",
+                "left": 40,
+                "top": 60,
+                "pin_size": "medium",
+                "pin_type": "1",
+                "text": "1",
+                "product": "solid-ripped-jeans",
+                "product_des": "1",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_zRyRA6": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#fa3044",
+                "pin_text": "#ffffff",
+                "left": 58,
+                "top": 64,
+                "pin_size": "medium",
+                "pin_type": "1",
+                "text": "1",
+                "product": "city-backpack-black",
+                "product_des": "1",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "pin_product_3Q37Wc",
+            "pin_product_Xh4YAx",
+            "pin_product_zRyRA6"
+          ]
+        },
+        "lookbook-heading": {
+          "type": "section-heading",
+          "disabled": true,
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "lookbook_q6cAag"
+      ],
+      "name": "t:sections.lookbook.name_2",
+      "settings": {
+        "col_dk": "1",
+        "col_tb": "1",
+        "col_mb": "1",
+        "space_items": "x",
+        "space_items_mb": "0",
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "pd": "50px,,100px,",
+        "pd_mb": "50px,,100px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "featured_collection_3U8YqX": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_B3dy6D": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "multi-brand-women",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "asos",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "pagination_type": "view_all",
+            "paginate_pos": "center",
+            "dis_pagination": 60,
+            "btn_label": "Load more",
+            "btn_style": "hdt-btn-outline-hover-accent",
+            "endable_btn_icon": false,
+            "size": "m",
+            "btn_fw": "medium"
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 65
+          },
+          "blocks": {
+            "heading_section_zWp9Uc": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Hot Products",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_ibMyYW": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<h6>Here’s some of our most popular products people are in love with.</h6>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "lg",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_zWp9Uc",
+            "sub_heading_section_ibMyYW"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_B3dy6D"
+      ],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "pd": "50px,,50px,",
+        "pd_mb": "40px,,40px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "image_gallery_EzUUKn": {
+      "type": "image-gallery",
+      "blocks": {
+        "image_TjNBCE": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/Pic.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "pervasive-circle",
+            "custom_width": "full",
+            "image_w": 100,
+            "image_w_mb": 100
+          },
+          "blocks": {}
+        },
+        "image_ERyGrV": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/pic_2.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "pervasive-circle",
+            "custom_width": "full",
+            "image_w": 100,
+            "image_w_mb": 100
+          },
+          "blocks": {}
+        },
+        "image_hhRNkf": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/Pic_3.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "pervasive-circle",
+            "custom_width": "full",
+            "image_w": 100,
+            "image_w_mb": 100
+          },
+          "blocks": {}
+        },
+        "image_tWVFdd": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/pic_4.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "pervasive-circle",
+            "custom_width": "full",
+            "image_w": 100,
+            "image_w_mb": 100
+          },
+          "blocks": {}
+        },
+        "image_QyGEDz": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/pic_5.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "pervasive-circle",
+            "custom_width": "full",
+            "image_w": 100,
+            "image_w_mb": 100
+          },
+          "blocks": {}
+        },
+        "image_cTB4JG": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/Pic_6.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "pervasive-circle",
+            "custom_width": "full",
+            "image_w": 100,
+            "image_w_mb": 100
+          },
+          "blocks": {}
+        },
+        "image-gallery-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 10,
+            "margin_bottom": 45
+          },
+          "blocks": {
+            "heading_section_8qj9Bj": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Shop Instagram",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_JggPKq": {
+              "type": "_sub_heading_section",
+              "name": "t:blocks.section_heading.sub_heading",
+              "settings": {
+                "text": "<h6>Inspire and let yourself be inspired, from one unique fashion to another.</h6>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_8qj9Bj",
+            "sub_heading_section_JggPKq"
+          ]
+        }
+      },
+      "block_order": [
+        "image_TjNBCE",
+        "image_ERyGrV",
+        "image_hhRNkf",
+        "image_tWVFdd",
+        "image_QyGEDz",
+        "image_cTB4JG"
+      ],
+      "custom_css": [],
+      "name": "t:sections.image_gallery.name",
+      "settings": {
+        "col_dk": "6",
+        "col_tb": "2",
+        "col_mb": "2",
+        "space_items": "20",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "pd": "",
+        "pd_mb": "",
+        "mg": "",
+        "mg_mb": "",
+        "border_radius": 0
+      }
+    },
+    "shipping_9pXycT": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_hRKwnn": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M17.3332 19.6667H2.6665C2.11984 19.6667 1.6665 19.2134 1.6665 18.6667V8.00008C1.6665 4.50675 4.5065 1.66675 7.99984 1.66675H19.9998C20.5465 1.66675 20.9998 2.12008 20.9998 2.66675V16.0001C20.9998 18.0267 19.3598 19.6667 17.3332 19.6667ZM3.6665 17.6667H17.3332C18.2532 17.6667 18.9998 16.9201 18.9998 16.0001V3.66675H7.99984C5.61317 3.66675 3.6665 5.61341 3.6665 8.00008V17.6667Z\" fill=\"#292D32\"></path>\n<path d=\"M25.3332 27.6667H23.9998C23.4532 27.6667 22.9998 27.2134 22.9998 26.6667C22.9998 25.7467 22.2532 25.0001 21.3332 25.0001C20.4132 25.0001 19.6665 25.7467 19.6665 26.6667C19.6665 27.2134 19.2132 27.6667 18.6665 27.6667H13.3332C12.7865 27.6667 12.3332 27.2134 12.3332 26.6667C12.3332 25.7467 11.5865 25.0001 10.6665 25.0001C9.7465 25.0001 8.99984 25.7467 8.99984 26.6667C8.99984 27.2134 8.5465 27.6667 7.99984 27.6667H6.6665C3.9065 27.6667 1.6665 25.4267 1.6665 22.6667V18.6667C1.6665 18.1201 2.11984 17.6667 2.6665 17.6667H17.3332C18.2532 17.6667 18.9998 16.9201 18.9998 16.0001V6.66675C18.9998 6.12008 19.4532 5.66675 19.9998 5.66675H22.4532C23.7732 5.66675 24.9865 6.37343 25.6399 7.5201L27.9198 11.5068C28.0932 11.8134 28.0932 12.2001 27.9198 12.5068C27.7465 12.8134 27.4132 13.0001 27.0532 13.0001H25.3332C25.1465 13.0001 24.9998 13.1467 24.9998 13.3334V17.3334C24.9998 17.5201 25.1465 17.6667 25.3332 17.6667H29.3332C29.8798 17.6667 30.3332 18.1201 30.3332 18.6667V22.6667C30.3332 25.4267 28.0932 27.6667 25.3332 27.6667ZM24.8665 25.6667H25.3332C26.9865 25.6667 28.3332 24.3201 28.3332 22.6667V19.6667H25.3332C24.0532 19.6667 22.9998 18.6134 22.9998 17.3334V13.3334C22.9998 12.0534 24.0398 11.0001 25.3332 11.0001L23.9065 8.50675C23.6132 7.98675 23.0532 7.66675 22.4532 7.66675H20.9998V16.0001C20.9998 18.0267 19.3598 19.6667 17.3332 19.6667H3.6665V22.6667C3.6665 24.3201 5.01317 25.6667 6.6665 25.6667H7.13318C7.57318 24.1334 8.9865 23.0001 10.6665 23.0001C12.3465 23.0001 13.7598 24.1334 14.1998 25.6667H17.8132C18.2532 24.1334 19.6665 23.0001 21.3465 23.0001C23.0265 23.0001 24.4265 24.1334 24.8665 25.6667Z\" fill=\"#292D32\"></path>\n<path d=\"M10.6667 30.3333C8.64 30.3333 7 28.6933 7 26.6667C7 24.64 8.64 23 10.6667 23C12.6933 23 14.3333 24.64 14.3333 26.6667C14.3333 28.6933 12.6933 30.3333 10.6667 30.3333ZM10.6667 25C9.74667 25 9 25.7467 9 26.6667C9 27.5867 9.74667 28.3333 10.6667 28.3333C11.5867 28.3333 12.3333 27.5867 12.3333 26.6667C12.3333 25.7467 11.5867 25 10.6667 25Z\" fill=\"#292D32\"></path>\n<path d=\"M21.3332 30.3333C19.3065 30.3333 17.6665 28.6933 17.6665 26.6667C17.6665 24.64 19.3065 23 21.3332 23C23.3598 23 24.9998 24.64 24.9998 26.6667C24.9998 28.6933 23.3598 30.3333 21.3332 30.3333ZM21.3332 25C20.4132 25 19.6665 25.7467 19.6665 26.6667C19.6665 27.5867 20.4132 28.3333 21.3332 28.3333C22.2532 28.3333 22.9998 27.5867 22.9998 26.6667C22.9998 25.7467 22.2532 25 21.3332 25Z\" fill=\"#292D32\"></path>\n<path d=\"M29.3333 19.6667H25.3333C24.0533 19.6667 23 18.6133 23 17.3333V13.3333C23 12.0533 24.0533 11 25.3333 11H27.0533C27.4133 11 27.7467 11.1867 27.92 11.5067L30.2 15.5067C30.28 15.6533 30.3333 15.8267 30.3333 16V18.6667C30.3333 19.2133 29.88 19.6667 29.3333 19.6667ZM25.3333 13C25.1467 13 25 13.1467 25 13.3333V17.3333C25 17.52 25.1467 17.6667 25.3333 17.6667H28.3333V16.2667L26.4667 13H25.3333Z\" fill=\"#292D32\"></path>\n</svg>"
+          },
+          "blocks": {
+            "heading_GVDr7i": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Fast Delivery</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_NEFf8W": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_dMrMq7": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Free shipping on all US order</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_GVDr7i",
+            "spacer_NEFf8W",
+            "text_dMrMq7"
+          ]
+        },
+        "shipping_NC3MhE": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M5.23983 22.1734C4.9865 22.1734 4.73316 22.0801 4.53316 21.8801C4.1465 21.4934 4.1465 20.8534 4.53316 20.4667L20.4665 4.53341C20.8532 4.14674 21.4932 4.14674 21.8798 4.53341C22.2665 4.92007 22.2665 5.56007 21.8798 5.94674L5.9465 21.8934C5.75983 22.0801 5.49316 22.1734 5.23983 22.1734Z\" fill=\"#292D32\"></path>\n<path d=\"M14.7999 25.3733C14.5466 25.3733 14.2932 25.2799 14.0932 25.0799C13.7066 24.6933 13.7066 24.0533 14.0932 23.6666L15.6932 22.0666C16.0799 21.6799 16.7199 21.6799 17.1066 22.0666C17.4932 22.4533 17.4932 23.0933 17.1066 23.4799L15.5066 25.0799C15.3199 25.2666 15.0666 25.3733 14.7999 25.3733Z\" fill=\"#292D32\"></path>\n<path d=\"M18.3868 21.7866C18.1335 21.7866 17.8801 21.6933 17.6801 21.4933C17.2935 21.1066 17.2935 20.4666 17.6801 20.0799L20.8668 16.8933C21.2535 16.5066 21.8935 16.5066 22.2801 16.8933C22.6668 17.2799 22.6668 17.9199 22.2801 18.3066L19.0935 21.4933C18.9068 21.6799 18.6401 21.7866 18.3868 21.7866Z\" fill=\"#292D32\"></path>\n<path d=\"M14.8 30.3334C13.4934 30.3334 12.1867 29.5334 10.6 27.9467L4.05338 21.4C0.866715 18.2134 0.880048 16.16 4.09338 12.9467L12.9467 4.09338C16.16 0.880048 18.2134 0.866715 21.4 4.05338L27.9467 10.6C31.1334 13.7867 31.1201 15.84 27.9067 19.0534L19.0534 27.9067C17.44 29.5201 16.12 30.3334 14.8 30.3334ZM17.2 3.66672C16.5067 3.66672 15.6267 4.24005 14.36 5.50672L5.50672 14.36C4.24005 15.6267 3.66672 16.5067 3.66672 17.1867C3.66672 17.88 4.20005 18.72 5.46671 19.9867L12.0134 26.5334C13.28 27.8 14.1067 28.3334 14.8 28.3334C14.8 28.3334 14.8 28.3334 14.8134 28.3334C15.5067 28.3334 16.3734 27.76 17.64 26.4934L26.4934 17.64C27.76 16.3734 28.3334 15.4934 28.3334 14.8134C28.3334 14.12 27.8 13.28 26.5334 12.0134L19.9867 5.46671C18.7334 4.20005 17.8934 3.66672 17.2 3.66672Z\" fill=\"#292D32\"></path>\n<path d=\"M29.3332 30.3333H2.6665C2.11984 30.3333 1.6665 29.8799 1.6665 29.3333C1.6665 28.7866 2.11984 28.3333 2.6665 28.3333H29.3332C29.8798 28.3333 30.3332 28.7866 30.3332 29.3333C30.3332 29.8799 29.8798 30.3333 29.3332 30.3333Z\" fill=\"#292D32\"></path>\n</svg>"
+          },
+          "blocks": {
+            "heading_H3FKWg": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Safe Payment</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_NAYPKL": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_NyUCxa": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We ensure secure payment with PEV</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_H3FKWg",
+            "spacer_NAYPKL",
+            "text_NyUCxa"
+          ]
+        },
+        "shipping_PYgB6e": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M22.5332 25.3466C22.1198 25.3466 21.7065 25.2266 21.3465 24.9866L20.0665 24.1466C19.7065 23.9066 19.5332 23.4533 19.6532 23.04C19.7465 22.7333 19.7865 22.3732 19.7865 21.9732V16.5465C19.7865 14.3732 18.4265 13.0133 16.2532 13.0133H7.19983C7.03983 13.0133 6.89317 13.0266 6.7465 13.04C6.4665 13.0533 6.19984 12.9599 5.98651 12.7733C5.77318 12.5866 5.6665 12.32 5.6665 12.04V8.3466C5.6665 4.4266 8.41317 1.67993 12.3332 1.67993H23.6665C27.5865 1.67993 30.3332 4.4266 30.3332 8.3466V15.1466C30.3332 17.0799 29.6798 18.7865 28.4798 19.9599C27.5198 20.9332 26.1865 21.5599 24.6665 21.7466V23.2266C24.6665 24.0266 24.2265 24.7466 23.5332 25.12C23.2132 25.2666 22.8665 25.3466 22.5332 25.3466ZM21.7332 22.8399L22.5998 23.3333C22.6798 23.2933 22.6798 23.2265 22.6798 23.2132V20.7999C22.6798 20.2532 23.1332 19.7999 23.6798 19.7999C25.0798 19.7999 26.2665 19.36 27.0798 18.5333C27.9198 17.7066 28.3465 16.5332 28.3465 15.1332V8.33325C28.3465 5.49325 26.5198 3.66659 23.6798 3.66659H12.3465C9.5065 3.66659 7.67983 5.49325 7.67983 8.33325V10.9999H16.2665C19.5198 10.9999 21.7998 13.28 21.7998 16.5333V21.9599C21.7865 22.2665 21.7732 22.5599 21.7332 22.8399Z\" fill=\"#292D32\"></path>\n<path d=\"M8.09318 30.3333C7.79985 30.3333 7.49318 30.2667 7.21318 30.12C6.58651 29.7867 6.19983 29.1467 6.19983 28.4267V27.4133C5.0265 27.2267 3.98651 26.7333 3.21318 25.96C2.19984 24.9466 1.6665 23.56 1.6665 21.96V16.5334C1.6665 13.52 3.63983 11.3067 6.57316 11.0267C6.78649 11.0134 6.9865 11 7.19983 11H16.2532C19.5065 11 21.7865 13.28 21.7865 16.5334V21.96C21.7865 22.5466 21.7198 23.0933 21.5732 23.5867C20.9732 25.9867 18.9332 27.4933 16.2532 27.4933H12.9332L9.15983 30C8.83983 30.2267 8.46651 30.3333 8.09318 30.3333ZM7.19983 13C7.03983 13 6.89317 13.0134 6.7465 13.0267C4.8265 13.2 3.6665 14.52 3.6665 16.5334V21.96C3.6665 23.0266 3.99984 23.92 4.62651 24.5466C5.23984 25.16 6.13316 25.4933 7.19983 25.4933C7.7465 25.4933 8.19983 25.9467 8.19983 26.4933V28.24L12.0665 25.6667C12.2265 25.56 12.4265 25.4933 12.6265 25.4933H16.2532C18.0132 25.4933 19.2532 24.6133 19.6398 23.0667C19.7332 22.7333 19.7865 22.36 19.7865 21.96V16.5334C19.7865 14.36 18.4265 13 16.2532 13H7.19983Z\" fill=\"#292D32\"></path>\n</svg>"
+          },
+          "blocks": {
+            "heading_zdRJnN": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>24/7 Online Support</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_reExqH": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_UC3ixh": {
+              "type": "text",
+              "settings": {
+                "text": "<p>24 hours a day, 7 days a week</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_zdRJnN",
+            "spacer_reExqH",
+            "text_UC3ixh"
+          ]
+        },
+        "shipping_pCiYi7": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M15.9999 24.0134C11.7733 24.0134 8.33325 20.5734 8.33325 16.3468C8.33325 14.8268 8.77325 13.3467 9.62659 12.0934C9.93325 11.6401 10.5599 11.5067 11.0132 11.8134C11.4666 12.1201 11.5999 12.7467 11.2933 13.2001C10.6666 14.1334 10.3466 15.2268 10.3466 16.3468C10.3466 19.4668 12.8932 22.0134 16.0132 22.0134C19.1332 22.0134 21.6799 19.4668 21.6799 16.3468C21.6799 13.2268 19.1332 10.6801 16.0132 10.6801C15.3466 10.6801 14.7066 10.7734 14.0799 10.9601C13.5599 11.1201 12.9999 10.8267 12.8266 10.2934C12.6666 9.76008 12.9599 9.20008 13.4932 9.04008C14.3066 8.78675 15.1466 8.66675 16.0132 8.66675C20.2399 8.66675 23.6799 12.1067 23.6799 16.3334C23.6799 20.5601 20.2266 24.0134 15.9999 24.0134Z\" fill=\"#292D32\"></path>\n<path d=\"M12.8269 11.2C12.6002 11.2 12.3602 11.12 12.1735 10.96C11.7602 10.6 11.7202 9.95999 12.0802 9.54666L14.3069 6.99999C14.6669 6.58665 15.3069 6.53332 15.7202 6.90665C16.1335 7.26665 16.1735 7.90665 15.8135 8.31998L13.5869 10.8667C13.3735 11.08 13.1069 11.2 12.8269 11.2Z\" fill=\"#292D32\"></path>\n<path d=\"M15.4131 13.0933C15.2131 13.0933 14.9998 13.0266 14.8264 12.9066L12.2398 11.0133C11.7998 10.6933 11.6931 10.0666 12.0264 9.61331C12.3464 9.17331 12.9731 9.06665 13.4265 9.39998L16.0131 11.2933C16.4531 11.6133 16.5598 12.24 16.2264 12.6933C16.0264 12.9466 15.7198 13.0933 15.4131 13.0933Z\" fill=\"#292D32\"></path>\n<path d=\"M20.0001 30.3334H12.0001C4.76008 30.3334 1.66675 27.2401 1.66675 20.0001V12.0001C1.66675 4.76008 4.76008 1.66675 12.0001 1.66675H20.0001C27.2401 1.66675 30.3334 4.76008 30.3334 12.0001V20.0001C30.3334 27.2401 27.2401 30.3334 20.0001 30.3334ZM12.0001 3.66675C5.85341 3.66675 3.66675 5.85341 3.66675 12.0001V20.0001C3.66675 26.1467 5.85341 28.3334 12.0001 28.3334H20.0001C26.1467 28.3334 28.3334 26.1467 28.3334 20.0001V12.0001C28.3334 5.85341 26.1467 3.66675 20.0001 3.66675H12.0001Z\" fill=\"#292D32\"></path>\n</svg>"
+          },
+          "blocks": {
+            "heading_YWcENc": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Free Returns</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_xzC6ez": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_eHPUYg": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Simply return it within 30 days</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "medium",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_YWcENc",
+            "spacer_xzC6ez",
+            "text_eHPUYg"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_hRKwnn",
+        "shipping_NC3MhE",
+        "shipping_PYgB6e",
+        "shipping_pCiYi7"
+      ],
+      "disabled": true,
+      "custom_css": [
+        ".hdt-shipping .hdt-ship-item-wrap {background: transparent; border: none;}"
+      ],
+      "settings": {
+        "content_align": "center",
+        "align_center": true,
+        "icon_design": "default",
+        "use_border": true,
+        "space_padding": false,
+        "icon_size": "small",
+        "icon_color": "",
+        "col_dk": "4",
+        "col_tb": "2",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "pd": "100px,,100px,",
+        "pd_mb": "30px,,30px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "collections_list_manual_eErqxt",
+    "featured_collection_PTq36A",
+    "lookbook_grid_LCVm47",
+    "featured_collection_3U8YqX",
+    "image_gallery_EzUUKn",
+    "shipping_9pXycT"
+  ]
+}

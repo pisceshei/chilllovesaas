@@ -1,0 +1,1171 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrO": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/b-s12.jpg",
+            "image_mb": "shopify:\/\/shop_images\/Main-Bannermobile.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-d1ad1259-8c1d-4fdf-97f7-172532123f68",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_jQgCTT": {
+              "type": "text",
+              "settings": {
+                "text": "<p>SINCE 1955<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 18,
+                "font_size_text": 14,
+                "letter_spacing_text": 4
+              },
+              "blocks": {}
+            },
+            "spacer_FM4ny2": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "heading_MzV9T2": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Quality Bread<br\/>& Pastries<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 70,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_H6Qjd1": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "media_byyaWz": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/pattenr_ca7b0479-d28c-4699-96b8-b6f403a7cb76.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            },
+            "spacer_WagkrQ": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 40,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_QwfebG": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>Kalles is contributing to campaign zero & black visions...<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_UNK3CK": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 26,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_3yEDm2": {
+              "type": "button",
+              "settings": {
+                "label": "EXPLORE MORE",
+                "link": "shopify:\/\/collections",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 186,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_jQgCTT",
+            "spacer_FM4ny2",
+            "heading_MzV9T2",
+            "spacer_H6Qjd1",
+            "media_byyaWz",
+            "spacer_WagkrQ",
+            "text_QwfebG",
+            "spacer_UNK3CK",
+            "button_3yEDm2"
+          ]
+        },
+        "slide_item_zhVrD7": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/b-s2.jpg",
+            "image_mb": "shopify:\/\/shop_images\/b-s2_d0cc7b68-1ad5-49de-b446-e69ad082abd7.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-d1ad1259-8c1d-4fdf-97f7-172532123f68",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_ihqKmh": {
+              "type": "text",
+              "settings": {
+                "text": "<p>SALE 50% OFF<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 18,
+                "font_size_text": 14,
+                "letter_spacing_text": 4
+              },
+              "blocks": {}
+            },
+            "spacer_Y3Fma3": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "heading_8CNkVW": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Tiny Cupcakes<br\/>& Cookies<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 70,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_bAwKx4": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "media_4ACBU8": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/pattenr_ca7b0479-d28c-4699-96b8-b6f403a7cb76.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            },
+            "spacer_F43Kwx": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 40,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_rJjcjX": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>Kalles is contributing to campaign zero & black visions...<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_LFcdfq": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 26,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_tawYiW": {
+              "type": "button",
+              "settings": {
+                "label": "EXPLORE MORE",
+                "link": "shopify:\/\/collections",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 186,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_ihqKmh",
+            "spacer_Y3Fma3",
+            "heading_8CNkVW",
+            "spacer_bAwKx4",
+            "media_4ACBU8",
+            "spacer_F43Kwx",
+            "text_rJjcjX",
+            "spacer_LFcdfq",
+            "button_tawYiW"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrO",
+        "slide_item_zhVrD7"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--font-heading-family);}"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 950,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 600,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "elessi",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,0px,",
+        "pd_mb": ",,0px,"
+      }
+    },
+    "testimonial_section_x8tPbp": {
+      "type": "testimonial_section",
+      "blocks": {
+        "testimonial_item_7FBccJ": {
+          "type": "_testimonial_item",
+          "settings": {
+            "heading": "",
+            "content": "<p>I love this bread! I have been a fan for 7 years <\/p><p>and recommend your products to customers at the co-op where I work!<\/p>",
+            "title": "Mr. Hoang Duc",
+            "pos": "",
+            "rating": 5
+          },
+          "blocks": {}
+        },
+        "testimonial_item_HPza4D": {
+          "type": "_testimonial_item",
+          "settings": {
+            "heading": "",
+            "content": "<p>Quality breads and pastries made to order. Beautiful Cakes <\/p><p>for Beautiful Occasions.<\/p>",
+            "title": "Randy Orlando",
+            "pos": "",
+            "rating": 5
+          },
+          "blocks": {}
+        },
+        "testimonial_item_w8tPf6": {
+          "type": "_testimonial_item",
+          "settings": {
+            "heading": "",
+            "content": "<p>Thank you for the love in your food and I love your spiritual approach too!<\/p>",
+            "title": "Liam Neeson",
+            "pos": "",
+            "rating": 5
+          },
+          "blocks": {}
+        },
+        "our-team": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "testimonial_item_7FBccJ",
+        "testimonial_item_HPza4D",
+        "testimonial_item_w8tPf6"
+      ],
+      "name": "t:sections.testimonials_section.name",
+      "settings": {
+        "ter_des": "7",
+        "cl_name": "#dddddd",
+        "cl_content": "#ffffff",
+        "cl_bd": "",
+        "cl_bg_item": "",
+        "bdr": 0,
+        "content_align": "center",
+        "col_dk": "1",
+        "col_tb": "2",
+        "col_mb": "1",
+        "space_horizontal": "30",
+        "space_vertical": "30",
+        "space_horizontal_mb": "30",
+        "space_vertical_mb": "30",
+        "layout": "carousel",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "only_show_mobile": false,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "section_background": "shopify:\/\/shop_images\/background-Testimonial.jpg",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,50px,",
+        "pd": "100px,0,100px",
+        "pd_mb": "50px,0,50px,"
+      }
+    },
+    "custom_section_faTjb9": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_qjD68z": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "4",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "3",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "center",
+            "alignment": "left",
+            "alignment_mb": "center",
+            "background_color": "#ffffff",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_zJg4TR": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Welcome to Kalles<br\/>Baked Fresh for You!<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 30,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_77ehXC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "media_QPUpEw": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/pattenr_ca7b0479-d28c-4699-96b8-b6f403a7cb76.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            },
+            "spacer_EYhHM4": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 40,
+                "space_md": 20,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_xitVAe": {
+              "type": "text",
+              "settings": {
+                "text": "<p>High-quality French bread is the specialty of Eric Kayser. We also produce viennoiseries, pastries and other food around which bread is a centerpiece.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_WWfGaa": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "button_PR6mk9": {
+              "type": "button",
+              "settings": {
+                "label": "START TO SHOP",
+                "link": "shopify:\/\/collections\/bakery",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 178,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_zJg4TR",
+            "spacer_77ehXC",
+            "media_QPUpEw",
+            "spacer_EYhHM4",
+            "text_xitVAe",
+            "spacer_WWfGaa",
+            "button_PR6mk9"
+          ]
+        },
+        "multi_column_QAHh94": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "8",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "7",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "center-start",
+            "align_content": false,
+            "content_position_mb": "center",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "#ffffff",
+            "rounded": "none"
+          },
+          "blocks": {
+            "media_ddj4Wg": {
+              "type": "_media",
+              "name": "t:blocks.media.name",
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/About-Image.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "media_ddj4Wg"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_qjD68z",
+        "multi_column_QAHh94"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--font-heading-family);}",
+        ".hdt-column:first-of-type {padding-inline-end: 0;}",
+        ".hdt-media-wrapper .hdt-object-pos-mb {justify-self: center;}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "12",
+        "item_spacing": 0,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_9JwQA6": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_nyGLFk": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "bakery",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "1",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": true,
+            "pagination_color_scheme": "",
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 40,
+            "btn_label": "Load More",
+            "btn_style": "",
+            "endable_btn_icon": false,
+            "size": "m",
+            "btn_fw": "medium",
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_bCGBrR": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Featured Products",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 34,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_bCGBrR"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_nyGLFk"
+      ],
+      "custom_css": [
+        ".hdt-loamore-btn {letter-spacing: 0.1rem; font-weight: 600;}",
+        "@media (width >= 1150px) {.hdt-btn--size-m {--hdt-btn-padding-y: 12px; --hdt-btn-padding-x: 45px; }}"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-d1ad1259-8c1d-4fdf-97f7-172532123f68",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "section_background": "shopify:\/\/shop_images\/background-collection.png",
+        "hdt_background_parallax": false,
+        "mg": ",,0px,",
+        "mg_mb": ",,0px,",
+        "pd": "80px,0,80px",
+        "pd_mb": "50px,0,50px"
+      }
+    },
+    "lookbook_grid_inV4dq": {
+      "type": "lookbook-grid",
+      "blocks": {
+        "lookbook_QwxyDw": {
+          "type": "_lookbook",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/pin-bn.jpg",
+            "img_effect": "none",
+            "b_effect": "none"
+          },
+          "blocks": {
+            "pin_product_HGPqRd": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#bb9230",
+                "pin_text": "#ffffff",
+                "left": 26,
+                "top": 26,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "",
+                "product": "anadaman-cookies",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_FJChe7": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#bb9230",
+                "pin_text": "#ffffff",
+                "left": 38,
+                "top": 40,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "",
+                "product": "sesame-de-outlets-breads",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_wPYyNq": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#bb9230",
+                "pin_text": "#ffffff",
+                "left": 74,
+                "top": 48,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "",
+                "product": "chocolate-cookies",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_mDY3Mx": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#bb9230",
+                "pin_text": "#ffffff",
+                "left": 26,
+                "top": 69,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "",
+                "product": "pistachio-financiers",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "pin_product_HGPqRd",
+            "pin_product_FJChe7",
+            "pin_product_wPYyNq",
+            "pin_product_mDY3Mx"
+          ]
+        },
+        "lookbook-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "lookbook_QwxyDw"
+      ],
+      "name": "t:sections.lookbook.name_2",
+      "settings": {
+        "col_dk": "1",
+        "col_tb": "1",
+        "col_mb": "1",
+        "space_items": "x",
+        "space_items_mb": "0",
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-d1ad1259-8c1d-4fdf-97f7-172532123f68",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": "0px,,0px,",
+        "mg_mb": "0px,,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "blog_post_G4h3dY": {
+      "type": "blog-post",
+      "blocks": {
+        "article_carousel_HeftEr": {
+          "type": "_article-carousel",
+          "settings": {
+            "blog": "bakery",
+            "limit": 8,
+            "col_dk": "3",
+            "col_tb": "3",
+            "col_mb": "1",
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": false,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "default",
+            "nav_shape": "default",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": true,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 10,
+            "pag_mgt": 15,
+            "pag_hide_mobile": false
+          },
+          "blocks": {
+            "article-carousel": {
+              "type": "_article-card",
+              "static": true,
+              "settings": {
+                "article_des": "1",
+                "show_cate": false,
+                "show_content": true,
+                "show_tags": false,
+                "show_author": true,
+                "show_comment": false,
+                "show_readmore": false,
+                "show_date": true,
+                "date": "%b %d",
+                "content_align": "start",
+                "image_ratio": "-square",
+                "image_size": true,
+                "img_effect": "none",
+                "b_effect": "none"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        },
+        "feature-blog-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_PHkJcQ": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Bakehouse Articals",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 34,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_PHkJcQ"
+          ]
+        }
+      },
+      "block_order": [
+        "article_carousel_HeftEr"
+      ],
+      "custom_css": [
+        ".hdt-article-title {font-size: 2.2rem; font-weight: 700; font-family: var(--font-heading-family);}"
+      ],
+      "name": "t:sections.feature-blog.name",
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": "80px,0,80px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "image_gallery_RjDHaJ": {
+      "type": "image-gallery",
+      "blocks": {
+        "image_cftGwK": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/4_180x_f504ef00-a475-4e36-bb42-05f779d82e41.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_hPtfFD": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/5_180x_8683a4d2-2ea2-453c-85a7-4e765dd1a364.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 55,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_FUjJgz": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/3_180x_7390a375-5550-4dd0-ab9b-9b49657ff6a7.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 65,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_pPCUHc": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/2_360x_816190f4-079a-4c33-b191-04c27a18f434.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 75,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_wKz9Dm": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/1_180x_188f54a6-f91b-4441-a3f0-2deb1cb3d2df.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image-gallery-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "image_cftGwK",
+        "image_hPtfFD",
+        "image_FUjJgz",
+        "image_pPCUHc",
+        "image_wKz9Dm"
+      ],
+      "custom_css": [
+        "[class^=\"hdt-block-image_\"] {justify-self: center;}"
+      ],
+      "name": "t:sections.image_gallery.name",
+      "settings": {
+        "col_dk": "5",
+        "col_tb": "2",
+        "col_mb": "2",
+        "space_items": "x",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "section_background": "shopify:\/\/shop_images\/Brandlist-background.jpg",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "70px,0,70px,",
+        "pd_mb": "50px,0,50px,",
+        "border_radius": 0
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "testimonial_section_x8tPbp",
+    "custom_section_faTjb9",
+    "featured_collection_9JwQA6",
+    "lookbook_grid_inV4dq",
+    "blog_post_G4h3dY",
+    "image_gallery_RjDHaJ"
+  ]
+}

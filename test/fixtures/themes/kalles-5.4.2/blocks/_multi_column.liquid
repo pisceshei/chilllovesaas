@@ -1,0 +1,684 @@
+{% style %}
+  #{{ block.id }}{
+    --background-color: {{ block.settings.background_color }};
+    --column-padding-mb: {{ block.settings.spacing_v_mb }}px {{ block.settings.spacing_h_mb }}px;
+    --column-padding-tb: {{ block.settings.spacing_v_tb }}px {{ block.settings.spacing_h_tb }}px;
+    --column-padding-dk: {{ block.settings.spacing_v_dk }}px {{ block.settings.spacing_h_dk }}px;
+  }
+{% endstyle %}
+{%-
+  liquid
+  assign col_dk = block.settings.column_dk
+  assign col_tb = block.settings.column_tb
+  assign col_mb = block.settings.column_mb
+  if section.settings.layout == '10'
+    assign col_dk = block.settings.column_dk_10
+    assign col_tb = block.settings.column_tb_10
+    assign col_mb = block.settings.column_mb_10
+  endif
+  assign display_dk = ' '
+  assign display_mb = ' '
+  if block.settings.content_position != 'auto'
+    assign display_dk = ' hdt-grid'
+  endif
+  if block.settings.content_position_mb != 'auto'
+    assign display_mb = ' hdt-grid'
+  endif
+-%}
+<div id="{{ block.id }}" class="hdt-column hdt-g-col hdt-g-col-{{ col_mb }} md:hdt-g-col-{{ col_tb }} lg:hdt-g-col-{{ col_dk }} {{ block.settings.rounded }} hdt-text-{{ block.settings.alignment_mb }} md:hdt-text-{{ block.settings.alignment }} hdt-relative {{ display_dk }} {{ display_mb }} {% if block.settings.content_position == 'auto' and block.settings.align_content %} hdt-align-content-center{% endif %}" {{ block.shopify_attributes }}>
+  {%- liquid
+    assign image_background = block.settings.background_image
+    if image_background != blank
+      echo image_background | image_url: width: image_background.width | image_tag: width: image_background.width, height: image_background.height, alt: image_background.alt, class: 'hdt-full-width-link hdt-w-full hdt-h-full hdt-object-cover hdt-pe-none', loading: 'lazy'
+    endif
+  -%}
+  <div class="hdt-column_inner hdt-place-self-{{ block.settings.content_position_mb }} md:hdt-place-self-{{ block.settings.content_position }} hdt-text-{{ block.settings.alignment_mb }} md:hdt-text-{{ block.settings.alignment }}" style="position: relative;z-index:2;">
+    {% content_for 'blocks' %}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:blocks.column.name",
+    "tag": null,
+    "blocks": [
+      {
+        "type": "@theme",
+      },
+      {
+        "type": "@app",
+      },
+      {
+        "type": "heading"
+      },
+      {
+        "type": "text"
+      },
+      {
+        "type": "button"
+      },
+      {
+        "type": "spacer"
+      },
+      {
+        "type": "_newsletter"
+      },
+      {
+        "type": "_liquid"
+      },
+      {
+        "type": "blockquote"
+      },
+      {
+        "type": "_media"
+      },
+      {
+        "type": "_counter"
+      },
+      { 
+        "type":"_lookbook"
+      },
+      {
+        "type": "_countdown_2"
+      },
+      {
+        "type": "_space_html"
+      },
+      {
+        "type": "_banner_with_product"
+      },
+      {
+        "type": "_before_after_image"
+      },
+      {
+        "type": "_testimonials"
+      }
+    ],
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:blocks.column.layout"
+      },
+      {
+        "type": "select",
+        "id": "column_dk",
+        "label": "t:blocks.column.settings.column_dk",
+        "visible_if": "{{ section.settings.layout == '12' }}",
+        "options": [
+          {
+            "value": "0",
+            "label": "Hidden"
+          },
+          {
+            "value": "1",
+            "label": "1/12 - 8.33%"
+          },
+          {
+            "value": "2",
+            "label": "2/12 - 16.66%"
+          },
+          {
+            "value": "3",
+            "label": "3/12 - 25%"
+          },
+          {
+            "value": "4",
+            "label": "4/12 - 33.33%" 
+          },
+          {
+            "value": "5",
+            "label": "5/12 - 41.66%"
+          },
+          {
+            "value": "6",
+            "label": "6/12 - 50%"
+          },
+          {
+            "value": "7",
+            "label": "7/12 - 58.33%"
+          },
+          {
+            "value": "8",
+            "label": "8/12 - 66.66%"
+          },
+          {
+            "value": "9",
+            "label": "9/12 - 75%"
+          },
+          {
+            "value": "10",
+            "label": "10/12 - 83.33%"
+          },
+          {
+            "value": "11",
+            "label": "11/12 - 92%"
+          },
+          {
+            "value": "12",
+            "label": "12/12 - 100%"
+          },
+          
+        ],
+        "default": "6"
+      },
+      {
+        "type": "select",
+        "id": "column_tb",
+        "label": "t:blocks.column.settings.column_tb",
+        "visible_if": "{{ section.settings.layout == '12' }}",
+        "options": [
+          {
+            "value": "0",
+            "label": "Hidden"
+          },
+          {
+            "value": "1",
+            "label": "1/12 - 8.33%"
+          },
+          {
+            "value": "2",
+            "label": "2/12 - 16.66%"
+          },
+          {
+            "value": "3",
+            "label": "3/12 - 25%"
+          },
+          {
+            "value": "4",
+            "label": "4/12 - 33.33%" 
+          },
+          {
+            "value": "5",
+            "label": "5/12 - 41.66%"
+          },
+          {
+            "value": "6",
+            "label": "6/12 - 50%"
+          },
+          {
+            "value": "7",
+            "label": "7/12 - 58.33%"
+          },
+          {
+            "value": "8",
+            "label": "8/12 - 66.66%"
+          },
+          {
+            "value": "9",
+            "label": "9/12 - 75%"
+          },
+          {
+            "value": "10",
+            "label": "10/12 - 83.33%"
+          },
+          {
+            "value": "11",
+            "label": "11/12 - 92%"
+          },
+          {
+            "value": "12",
+            "label": "12/12 - 100%"
+          },
+        ],
+        "default": "6"
+      },
+      {
+        "type": "select",
+        "id": "column_mb",
+        "label": "t:blocks.column.settings.column_mb",
+        "visible_if": "{{ section.settings.layout == '12' }}",
+        "options": [
+          {
+            "value": "0",
+            "label": "Hidden"
+          },
+          /*
+          {
+            "value": "1",
+            "label": "1/12 - 8.33%"
+          },
+          {
+            "value": "2",
+            "label": "2/12 - 16.66%"
+          },
+          {
+            "value": "3",
+            "label": "3/12 - 25%"
+          },
+          {
+            "value": "4",
+            "label": "4/12 - 33.33%" 
+          },
+          {
+            "value": "5",
+            "label": "5/12 - 41.66%"
+          },*/
+          {
+            "value": "6",
+            "label": "6/12 - 50%"
+          },
+          /*{
+            "value": "7",
+            "label": "7/12 - 58.33%"
+          },
+          {
+            "value": "8",
+            "label": "8/12 - 66.66%"
+          },
+          {
+            "value": "9",
+            "label": "9/12 - 75%"
+          },
+          {
+            "value": "10",
+            "label": "10/12 - 83.33%"
+          },
+          {
+            "value": "11",
+            "label": "11/12 - 92%"
+          },*/
+          {
+            "value": "12",
+            "label": "12/12 - 100%"
+          },
+        ],
+        "default": "12"
+      },
+      {
+        "type": "select",
+        "id": "column_dk_10",
+        "label": "t:blocks.column.settings.column_dk",
+        "visible_if": "{{ section.settings.layout == '10' }}",
+        "options": [
+          {
+            "value": "0",
+            "label": "Hidden"
+          },
+          {
+            "value": "1",
+            "label": "1/10 - 10%"
+          },
+          {
+            "value": "2",
+            "label": "2/10 - 20%"
+          },
+          {
+            "value": "3",
+            "label": "3/10 - 30%"
+          },
+          {
+            "value": "4",
+            "label": "4/10 - 40%" 
+          },
+          {
+            "value": "5",
+            "label": "5/10 - 50%"
+          },
+          {
+            "value": "6",
+            "label": "6/10 - 60%"
+          },
+          {
+            "value": "7",
+            "label": "7/10 - 70%"
+          },
+          {
+            "value": "8",
+            "label": "8/10 - 80%"
+          },
+          {
+            "value": "9",
+            "label": "9/10 - 90%"
+          },
+          {
+            "value": "10",
+            "label": "10/10 - 100%"
+          },
+        ],
+        "default": "5"
+      },
+      {
+        "type": "select",
+        "id": "column_tb_10",
+        "label": "t:blocks.column.settings.column_tb",
+        "visible_if": "{{ section.settings.layout == '10' }}",
+        "options": [
+          {
+            "value": "0",
+            "label": "Hidden"
+          },
+          {
+            "value": "1",
+            "label": "1/10 - 10%"
+          },
+          {
+            "value": "2",
+            "label": "2/10 - 20%"
+          },
+          {
+            "value": "3",
+            "label": "3/10 - 30%"
+          },
+          {
+            "value": "4",
+            "label": "4/10 - 40%" 
+          },
+          {
+            "value": "5",
+            "label": "5/10 - 50%"
+          },
+          {
+            "value": "6",
+            "label": "6/10 - 60%"
+          },
+          {
+            "value": "7",
+            "label": "7/10 - 70%"
+          },
+          {
+            "value": "8",
+            "label": "8/10 - 80%"
+          },
+          {
+            "value": "9",
+            "label": "9/10 - 90%"
+          },
+          {
+            "value": "10",
+            "label": "10/10 - 100%"
+          },
+        ],
+        "default": "5"
+      },
+      {
+        "type": "select",
+        "id": "column_mb_10",
+        "label": "t:blocks.column.settings.column_mb",
+        "visible_if": "{{ section.settings.layout == '10' }}",
+        "options": [
+          {
+            "value": "0",
+            "label": "Hidden"
+          },
+          /*{
+            "value": "1",
+            "label": "1/10 - 10%"
+          },
+          {
+            "value": "2",
+            "label": "2/10 - 20%"
+          },
+          {
+            "value": "3",
+            "label": "3/10 - 30%"
+          },
+          {
+            "value": "4",
+            "label": "4/10 - 40%" 
+          },*/
+          {
+            "value": "5",
+            "label": "5/10 - 50%"
+          },
+          /*{
+            "value": "6",
+            "label": "6/10 - 60%"
+          },
+          {
+            "value": "7",
+            "label": "7/10 - 70%"
+          },
+          {
+            "value": "8",
+            "label": "8/10 - 80%"
+          },
+          {
+            "value": "9",
+            "label": "9/10 - 90%"
+          },*/
+          {
+            "value": "10",
+            "label": "10/10 - 100%"
+          },
+        ],
+        "default": "10"
+      },
+      {
+        "type": "header",
+        "content": "t:blocks.column.spacing"
+      },
+      {
+        "type": "range",
+        "id": "spacing_h_dk",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.column.settings.padding.left_right",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "spacing_v_dk",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.column.settings.padding.top_bottom",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "spacing_h_tb",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.column.settings.padding.left_right_tb",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "spacing_v_tb",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.column.settings.padding.top_bottom_tb",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "spacing_h_mb",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.column.settings.padding.left_right_mb",
+        "default": 15
+      },
+      {
+        "type": "range",
+        "id": "spacing_v_mb",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.column.settings.padding.top_bottom_mb",
+        "default": 15
+      },
+      {
+        "type": "header",
+        "content": "t:blocks.column.general"
+      },
+      {
+        "type": "select",
+        "id": "content_position",
+        "label": "t:blocks.column.settings.content_position.label",
+        "options": [
+          {
+            "value": "auto",
+            "label": "t:default"
+          },
+          {
+            "value": "start",
+            "label": "t:sections.all.content_position.options.start"
+          },
+          {
+            "value": "start-center",
+            "label": "t:sections.all.content_position.options.start_center"
+          },
+          {
+            "value": "start-end",
+            "label": "t:sections.all.content_position.options.start_end"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.content_position.options.center"
+          },
+          {
+            "value": "center-start",
+            "label": "t:sections.all.content_position.options.center_start"
+          },
+          {
+            "value": "center-end",
+            "label": "t:sections.all.content_position.options.center_end"
+          },
+          {
+            "value": "end",
+            "label": "t:sections.all.content_position.options.end"
+          },
+          {
+            "value": "end-start",
+            "label": "t:sections.all.content_position.options.end_start"
+          },
+          {
+            "value": "end-center",
+            "label": "t:sections.all.content_position.options.end_center"
+          }
+        ],
+        "default": "auto"
+      },
+      {
+        "type": "checkbox",
+        "id": "align_content",
+        "label": "Align content",
+        "default": false,
+        "visible_if": "{{ block.settings.content_position == 'auto' }}"
+      },
+      {
+        "type": "select",
+        "id": "content_position_mb",
+        "label": "t:blocks.column.settings.content_position.label_mb",
+        "options": [
+          {
+            "value": "auto",
+            "label": "t:default"
+          },
+          {
+            "value": "start",
+            "label": "t:sections.all.content_position.options.start"
+          },
+          {
+            "value": "start-center",
+            "label": "t:sections.all.content_position.options.start_center"
+          },
+          {
+            "value": "start-end",
+            "label": "t:sections.all.content_position.options.start_end"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.content_position.options.center"
+          },
+          {
+            "value": "center-start",
+            "label": "t:sections.all.content_position.options.center_start"
+          },
+          {
+            "value": "center-end",
+            "label": "t:sections.all.content_position.options.center_end"
+          },
+          {
+            "value": "end",
+            "label": "t:sections.all.content_position.options.end"
+          },
+          {
+            "value": "end-start",
+            "label": "t:sections.all.content_position.options.end_start"
+          },
+          {
+            "value": "end-center",
+            "label": "t:sections.all.content_position.options.end_center"
+          }
+        ],
+        "default": "auto"
+      },
+      {
+        "type": "text_alignment",
+        "id": "alignment",
+        "label": "t:blocks.column.settings.alignment.label",
+        "default": "center"
+      },
+      {
+        "type": "text_alignment",
+        "id": "alignment_mb",
+        "label": "t:blocks.column.settings.alignment.label_mb",
+        "default": "center"
+      },
+      {
+        "type": "image_picker",
+        "id": "background_image",
+        "label": "t:blocks.column.settings.background.background_image"
+      },
+      {
+        "type": "color",
+        "id": "background_color",
+        "label": "t:blocks.column.settings.background.background_color",
+        "default": "#fff"
+      },
+      {
+        "type": "select",
+        "id": "rounded",
+        "label": "t:blocks.column.settings.rounded.label",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:none"
+          },
+          {
+            "value": "hdt-radius-xs",
+            "label": "t:blocks.column.settings.rounded.options.xs"
+          },
+          {
+            "value": "hdt-radius-sm",
+            "label": "t:blocks.column.settings.rounded.options.sm"
+          },
+          {
+            "value": "hdt-radius",
+            "label": "t:blocks.column.settings.rounded.options.medium"
+          },
+          {
+            "value": "hdt-radius-lg",
+            "label": "t:blocks.column.settings.rounded.options.large"
+          },
+          {
+            "value": "hdt-radius-full",
+            "label": "t:blocks.column.settings.rounded.options.full"
+          }
+        ],
+        "default": "none"
+      },
+      
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.column.name",
+        "blocks": [
+          {
+            "type": "heading"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

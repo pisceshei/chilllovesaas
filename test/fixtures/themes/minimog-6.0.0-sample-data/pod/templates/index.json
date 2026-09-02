@@ -1,0 +1,494 @@
+{
+  "sections": {
+    "20c2191c-6fb4-4450-8348-0609c4a1f84b": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-section__heading,\n.m-hero__title {\n  --heading-letter-spacing: 1px;\n}\n.m-custom-content-section .m-image-card {\n  height: 100%;\n}\n.m-custom-content-section .m-image-card__heading-group {\n  display: flex;\n  flex-direction: column;\n}\n.m-custom-content-section .m-image-card__heading-group .m-richtext__subtitle {\n  order: 2;\n}\n.sf__index-collection-list .m-collection-card__link {\n  font-size: 15px;\n}\n.sf__index-icon-box-2 .m-icon-box__heading {\n  font-size: 19px;\n  font-family: 'M-Body-Font';\n}\n@media (min-width: 768px) {\n  .m-custom--image-card .m-image-card__content {\n    padding: 25px;\n  }\n  .m-custom--image-card .m-image-card__content .m-richtext__title {\n    font-size: 26px;\n  }\n}\n@media (min-width: 1280px) {\n  .m-hero--custom .m-hero__text {\n    font-size: 18px;\n  }\n}\n@media (min-width: 1536px) {\n  .m-hero--custom .m-hero__title {\n    font-size: 80px;\n  }\n}"
+      }
+    },
+    "163833361326c339af": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "OVERSIZED <br>PRINTED T-SHIRT",
+        "subtitle": "",
+        "text": "<p>From millions of things designed and sold by artists.</p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--custom",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "162252047554676bc9": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "TRENDING THIS WEEK",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "16383466678c178f06": {
+      "type": "custom-content",
+      "blocks": {
+        "1c2ca51d-652f-4113-bf2c-6c59c9ea2e55": {
+          "type": "image_card",
+          "settings": {
+            "width": "66%",
+            "color_scheme": "",
+            "content_position": "bottom_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "link": "",
+            "title": "PRINT ON <br> DEMAND",
+            "subtitle": "From millions of things designed<br> and sold by artists.",
+            "button_label": "Shop now",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "custom__img-card",
+            "animations": "inherit"
+          }
+        },
+        "ba4553d7-0890-493d-9b94-8011efc31601": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "link": "",
+            "title": "CROSSFIT",
+            "subtitle": "Affiliate Gear",
+            "button_label": "Shop now",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1c2ca51d-652f-4113-bf2c-6c59c9ea2e55",
+        "ba4553d7-0890-493d-9b94-8011efc31601"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 31,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-content-section"
+      }
+    },
+    "16225302875c09dac4": {
+      "type": "collection-list",
+      "blocks": {
+        "16225302875c09dac4-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "MUGS"
+          }
+        },
+        "16225302875c09dac4-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "PHONE CASES"
+          }
+        },
+        "16225302875c09dac4-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "APPAREL"
+          }
+        },
+        "c486e46e-7a60-4450-8d25-09194486e240": {
+          "type": "collection_block",
+          "settings": {
+            "title": "DOORMAT"
+          }
+        },
+        "1107f7e4-f4fd-447c-b1a3-1c882136b8e8": {
+          "type": "collection_block",
+          "settings": {
+            "title": "BLANKET"
+          }
+        },
+        "3a7ca9a7-6b09-4904-a4a8-bd289570b7e4": {
+          "type": "collection_block",
+          "settings": {
+            "title": "MASKS"
+          }
+        }
+      },
+      "block_order": [
+        "16225302875c09dac4-0",
+        "16225302875c09dac4-1",
+        "16225302875c09dac4-2",
+        "c486e46e-7a60-4450-8d25-09194486e240",
+        "1107f7e4-f4fd-447c-b1a3-1c882136b8e8",
+        "3a7ca9a7-6b09-4904-a4a8-bd289570b7e4"
+      ],
+      "settings": {
+        "heading": "SHOP BY CATEGORIES",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": false,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 6,
+        "item_gap": 10,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16225208417f633bd7": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "PET LOVERS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 12,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "1638351737927e57e1": {
+      "type": "custom-content",
+      "blocks": {
+        "2bee58b9-7e6c-40c5-b8e3-076752409535": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "link": "",
+            "title": "THE ROLLING<br>  STONES",
+            "subtitle": "",
+            "button_label": "Shop now",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "custom__img-card-1",
+            "animations": "inherit"
+          }
+        },
+        "3c786f49-6ba7-4aa2-8d5c-a83d9a7f9313": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "white",
+            "link": "",
+            "title": "BOSS LADY<br> COLLECTION",
+            "subtitle": "",
+            "button_label": "Shop now",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "custom__img-card-1",
+            "animations": "inherit"
+          }
+        },
+        "c9b2127c-fa1a-4bba-9874-51e4a255b8d9": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "link": "",
+            "title": "WOUF LADIES <br> LAPTOP CASE",
+            "subtitle": "",
+            "button_label": "shop now",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "custom__img-card-1",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "2bee58b9-7e6c-40c5-b8e3-076752409535",
+        "3c786f49-6ba7-4aa2-8d5c-a83d9a7f9313",
+        "c9b2127c-fa1a-4bba-9874-51e4a255b8d9"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 30,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--image-card"
+      }
+    },
+    "16225213135c75c05e": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "BESTIES GIFTS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "collection": "pod-apparel",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 12,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "1622521896cc75a02a": {
+      "type": "icon-box",
+      "blocks": {
+        "1622521896cc75a02a-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Shipping",
+            "description": "<p>Get complimentary ground shipping on every<br/> order.Don’t love it? Send it back, on us.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1622521896cc75a02a-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Locally Owned",
+            "description": "<p>Join Minimog Rewards to earn gift cards <br/>and enjoy exclusive member benefits.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1622521896cc75a02a-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Money Back Gurantee",
+            "description": "<p>We believe getting dressed should be the <br/>easiest part of your day.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1622521896cc75a02a-0",
+        "1622521896cc75a02a-1",
+        "1622521896cc75a02a-2"
+      ],
+      "settings": {
+        "heading": "PRODUCT ARTWORK IS CREATED BY TALENTED<br> ARTISTS FROM ALL AROUND THE WORLD.",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 16,
+        "card_color_scheme": "default",
+        "card_style": "vertical",
+        "image_max_width": "70px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-icon-box-2",
+        "animations": "inherit"
+      }
+    },
+    "16383547848ca801a9": {
+      "type": "instagram",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 6,
+        "grid_columns": 6,
+        "gap": 0,
+        "mobile_gap": 0,
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-instagram"
+      }
+    }
+  },
+  "order": [
+    "20c2191c-6fb4-4450-8348-0609c4a1f84b",
+    "163833361326c339af",
+    "162252047554676bc9",
+    "16383466678c178f06",
+    "16225302875c09dac4",
+    "16225208417f633bd7",
+    "1638351737927e57e1",
+    "16225213135c75c05e",
+    "1622521896cc75a02a",
+    "16383547848ca801a9"
+  ]
+}

@@ -1,0 +1,105 @@
+{%- if template == 'product.only_config' and request.design_mode == false -%}
+  <hdt-lazy-modal color-scheme="{{ section.settings.color_scheme }}" section-id="{{ section.id }}" class="hdt-modal hdt-contents" effect="slide" style="--background-opacity: 100">
+    <dialog id="hdt-quick-view-modal" class="hdt-dialog hdt-dialog-modal hdt-quick-view-modal hdt-s-gradient" scroll-lock>
+      <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="hdt-quick-view-modal" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+      <div class="hdt-dialog-modal__inner hdt-current-scrollbar"></div>
+    </dialog>
+  </hdt-lazy-modal>
+{%- else -%}
+  {%- if template == 'product.only_config' -%}
+  <hdt-modal un-detect color-scheme="{{ section.settings.color_scheme }}" section-id="{{ section.id }}" class="hdt-modal hdt-contents" effect="slide" style="--background-opacity: 100">
+    <dialog id="hdt-quick-view-modal" class="hdt-dialog hdt-dialog-modal hdt-quick-view-modal hdt-s-gradient" scroll-lock>
+      <div class="hdt-dialog-modal__inner hdt-current-scrollbar">
+  {%- endif -%}
+  {%- liquid
+    assign un_no_pick = true
+    if settings.pick_mode == 'no' and product.variants.size > 1
+      assign selected_variant = product.selected_variant
+      unless selected_variant
+        assign un_no_pick = false
+      endunless
+    elsif settings.pick_mode == 'first' and settings.hide_sold_out == false
+      assign selected_variant = product.selected_variant | default: product.variants.first
+    else
+      assign selected_variant = product.selected_or_first_available_variant
+    endif
+    assign product_form_id = 'product-form-'| append: section.id | append: product.id
+    assign selected_variant_featured_media = selected_variant.featured_media
+    assign group_media_obj = product.metafields.theme.group_media_obj.value
+    assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src'
+    assign media_layout = section.settings.media_layout | default: 'without_thumbnails'
+    assign media_layout = 'slider'
+    if product.media.size < 1
+      assign media_layout = 'no_media_size'
+    elsif product.media.size == 1
+      assign media_layout = 'one_media_size'
+    endif
+    if section.settings.image != blank
+      assign media_layout = 'no_media_size'
+    endif
+    assign media_types = product.media | map: 'media_type' | uniq
+    if media_types.size > 1
+      assign has_video_or_model = true
+    else
+      assign has_video_or_model = false
+    endif
+    if media_types contains 'model'
+      assign has_3d_model = true
+    else
+      assign has_3d_model = false
+    endif
+  -%}
+  {%- if has_3d_model -%}
+    <link rel="stylesheet" href="https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css" media="print" onload="this.media='all'; this.onload = null">
+    <script type="application/json" id="ModelJson-{{ section.id }}">{{ product.media | where: 'media_type', 'model' | json }}</script>
+  {%- endif -%}
+  {%- style -%}.hdt-quick-view-modal{--pr-media-width:{{section.settings.media_width}}%}{%- endstyle -%}
+
+    <div class="hdt-main-product-quick-view hdt-s-gradient">
+      <div class="hdt-desktop-media hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-2">
+        {% content_for 'block', type: '_qv-medias', id: 'quick-view' %}
+        {% content_for "blocks" %}
+      </div>
+    </div>
+  {%- if template == 'product.only_config' -%}
+      </div>
+    </dialog>
+  </hdt-modal>
+  <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+      if (!Shopify.designMode) return;
+      document.addEventListener("shopify:section:select", (event) => {
+        const modal = event.target.querySelector('#hdt-quick-view-modal');
+        if (modal) modal.parentElement.open();
+      });
+      document.addEventListener("shopify:section:deselect", (event) => {
+        const modal = event.target.querySelector('#hdt-quick-view-modal');
+        if (modal) modal.parentElement.close();
+      });
+    });
+  </script>
+  {%- endif -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.main-quick-view.name",
+  "tag": "section",
+  "class": "hdt-main-section hdt-main-section--quick-view hdt-quick-view-modal",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+  ],
+  "blocks": [
+    {
+      "type": "_qv-medias"
+    },
+    {
+      "type": "_qv-group"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,28 @@
+{%- unless block.settings.title == blank -%}
+  <!--item-title>
+  <button aria-current="false" class="hdt-relative hdt-font-semibold">{{ block.settings.title | escape }}</button>
+  -->
+  <div class="hdt-tab-item" tab-item {{ block.shopify_attributes }}>
+    {%- render 'hdt-pr-single-review' -%}
+  </div>
+{%- endunless -%}
+{% schema %}
+  {
+    "name": "t:sections.main-product-tabs.blocks.tab_review.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:sections.main-product-tabs.blocks.title.label",
+        "default": "Reviews"
+      }/*,
+      {
+        "type": "checkbox",
+        "id": "open",
+        "label": "Open / Close"
+      }*/
+    ],
+    "presets": [{ "name": "t:sections.main-product-tabs.blocks.tab_review.name" }]
+  }
+{% endschema %}

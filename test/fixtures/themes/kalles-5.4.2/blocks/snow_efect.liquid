@@ -1,0 +1,42 @@
+<!-- Snow Effect Block -->
+{%- liquid
+  assign hdt_speed = block.settings.hdt_speed
+  assign hdt_overlay_opacity = block.settings.hdt_overlay_opacity | divided_by: 100.0
+-%}
+
+
+<hdt-snow-effect speed="{{ hdt_speed }}" overlay-opacity="{{ hdt_overlay_opacity }}" />
+
+{% schema %}
+{
+  "name": "❄️ Falling snow effect",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "range",
+      "id": "hdt_speed",
+      "label": "Speed falling snow",
+      "default": 3,
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "unit": "s"
+    },
+    {
+      "type": "range",
+      "id": "hdt_overlay_opacity",
+      "label": "Background opacity",
+      "default": 30,
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%"
+    }
+  ],
+  /*"presets": [
+    {
+      "name": "❄️ Falling snow effect"
+    }
+  ]*/
+}
+{% endschema %} 

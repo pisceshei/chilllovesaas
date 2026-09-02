@@ -1,0 +1,144 @@
+<div class="hdt-masonry-image__item hdt-oh hdt-eff-{{ section.settings.b_effect }} hdt-eff-img-{{ section.settings.img_effect }}" {{ block.shopify_attributes }} style="--item-column-span: {{ block.settings.column_width }}; --item-row-span: {{ block.settings.row_count }};--item-column-span-tb: {{ block.settings.tb_column_width }}; --item-row-span-tb: {{ block.settings.tb_row_count }};--item-column-span-mb: {{ block.settings.mb_column_width }}; --item-row-span-mb: {{ block.settings.mb_row_count }}" hdt-reveal="slide-in" timeline> 
+  <div class="hdt-gallery-item hdt-masonry-gallery__item hdt-relative hdt-oh hdt-radius">
+    <div class="hdt-gallery-img" style="--aspect-ratioapt: {{ block.settings.image.aspect_ratio | default: 1.2 }};">
+      <div class="{% if section.settings.image_ratio != "custom" %}hdt-ratio {% endif %}hdt-oh hdt-radius">
+      {%- if block.settings.image != blank -%}
+        {{ block.settings.image | image_url: width: block.settings.image.width | image_tag: loading: 'lazy', width: block.settings.image.width, height: block.settings.image.height, class: 'hdt-obj-eff', sizes: '(max-width: 767px) 200px', widths: '285, 370, 385, 200' }}
+      {%- else -%}
+        {{ 'collection-apparel-1' | placeholder_svg_tag: 'hdt-placeholder-svg' }}  
+      {%- endif -%}
+      {% if block.settings.item_link != blank %}<a class="hdt-full-width-link"  aria-label="link" href="{{ block.settings.item_link }}"></a>{% endif %}
+    </div>
+    </div>
+    {%- if block.settings.product_item != blank -%}
+      {%- if settings.show_ultra_btn %}{% render 'btn-ultra', class: 'hdt-pr_btn hdt-gallery-product hdt-absolute hdt-inline-flex hdt-align-center hdt-justify-center', product: block.settings.product_item, product_url: block.settings.product_item.url, section_id: block.id, placement: 'top' %}{% endif -%}
+    {%- endif -%}
+  </div> 
+</div>
+{% schema %}
+  {
+    "name": "t:sections.gallery.blocks.gallery_item.label",
+    "tag": null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:sections.gallery.blocks.gallery_item.image"
+      },
+      {
+        "type": "url",
+        "id": "item_link",
+        "label": "t:sections.gallery.blocks.gallery_item.link"
+      },
+      {
+        "type": "product",
+        "id": "product_item",
+        "label": "t:sections.gallery.blocks.gallery_item.product"
+      },
+      {
+        "type": "select",
+        "id": "column_width",
+        "label": "t:sections.collections-list.blocks.column_width",
+        "options": [
+          {
+            "value": "3",
+            "label": "25%"
+          },
+          {
+            "value": "4",
+            "label": "33%"
+          },
+          {
+            "value": "6",
+            "label": "50%"
+          },
+          {
+            "value": "8",
+            "label": "67%"
+          },
+          {
+            "value": "12",
+            "label": "100%"
+          }
+        ],
+        "default": "6"
+      },
+      {
+        "type": "range",
+        "id": "row_count",
+        "label": "t:sections.collections-list.blocks.row_count",
+        "min": 1,
+        "max": 3,
+        "step": 1,
+        "default": 1
+      },
+      {
+        "type": "select",
+        "id": "tb_column_width",
+        "label": "t:sections.collections-list.blocks.column_width_tb",
+        "options": [
+          {
+            "value": "3",
+            "label": "25%"
+          },
+          {
+            "value": "4",
+            "label": "33%"
+          },
+          {
+            "value": "6",
+            "label": "50%"
+          },
+          {
+            "value": "8",
+            "label": "67%"
+          },
+          {
+            "value": "12",
+            "label": "100%"
+          }
+        ],
+        "default": "6"
+      },
+      {
+        "type": "range",
+        "id": "tb_row_count",
+        "label": "t:sections.collections-list.blocks.row_count_tb",
+        "min": 1,
+        "max": 3,
+        "step": 1,
+        "default": 1
+      },
+      {
+        "type": "select",
+        "id": "mb_column_width",
+        "label": "t:sections.collections-list.blocks.column_width_mb",
+        "options": [
+          {
+            "value": "1",
+            "label": "50%"
+          },
+          {
+            "value": "2",
+            "label": "100%"
+          }
+        ],
+        "default": "1"
+      },
+      {
+        "type": "range",
+        "id": "mb_row_count",
+        "label": "t:sections.collections-list.blocks.row_count_mb",
+        "min": 1,
+        "max": 3,
+        "step": 1,
+        "default": 1
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.gallery.blocks.gallery_item.label"
+      }
+    ]
+  }
+{% endschema %}

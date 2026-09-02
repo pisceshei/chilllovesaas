@@ -1,0 +1,170 @@
+{%- liquid
+  capture blocks_content
+    content_for 'blocks'
+  endcapture
+-%}
+
+<div class="hdt-list-categories-inner hdt-absolute hdt-radius hdt-left-0" color-scheme="{{ block.settings.menu_categories_colors }}">
+  <ul class="hdt-categories-list">
+    {{ blocks_content | replace: 'position="bottom"', 'position="right-start"' | replace: 'position="center_on_screen"', 'position="right-start"' | replace: 'not-need-calc', '' }}
+    {%- for link in menu_categories.links -%}
+      {%- liquid
+        assign li_class = ""
+        assign mega_position = 'right-start'
+        
+        if link.links != blank
+          assign li_class = "hdt-has-children"
+        endif
+      -%}
+      {% liquid
+        assign index_check = 'data-index="' | append: forloop.index | append: '"'
+        if blocks_content contains index_check
+          continue
+        endif
+        assign arr_title = link.title | split: '['
+        assign arr_label = arr_title[1] | split: ','
+        if link.links != blank
+          assign li_class = "hdt-has-children"
+        endif
+        assign collection_item = blank
+        if link.object and link.object.handle and link.object.url contains '/collections/'
+          assign collection_item = link.object
+        elsif link.type == "collection_link" and link.object
+          assign collection_item = link.object
+        elsif link.handle != blank and collections[link.handle]
+          assign collection_item = collections[link.handle]
+        elsif link.url contains '/collections/'
+          assign collection_handle = link.url | split: '/collections/' | last | split: '?' | first | split: '#' | first | split: '/' | first
+          assign collection_item = collections[collection_handle]
+        endif
+        assign image_item = collection_item.image | default: collection_item.metafields.theme.category_image.value | default: collection_item.products.first.featured_image
+      %}
+      <li class="hdt-menu-item hdt-flex hdt-justify-center hdt-flex-col {{ li_class }}" data-index="{{ forloop.index }}" style="order: {{ forloop.index }};">
+        {%- if li_class != blank and block.blocks.size == 0 -%}
+          <hdt-accordion class="hdt-contents" only-click-icon> 
+            <details>
+              <summary data-url="{{ link.url }}" class="hdt-menu-link hdt-flex hdt-align-center hdt-justify-between hdt-relative {%- if link.current and section.settings.active_link %} hdt-menu-link--active{% endif %}">
+                <span class="hdt-menu-link-text hdt-block {%- if arr_label.size > 0 %} hdt-relative hdt-title_size-{{ arr_title[0].size | at_most: 20 }} hdt-has-{{ arr_label.size | at_most: 2 }}label{% endif %}">
+                  {%- if image_item != blank -%}
+                    <span class="hdt-category-img hdt-relative">
+                      {{ image_item | image_url: width: image_item.width | image_tag: loading: 'lazy', width: image_item.width, height: image_item.height, class: 'hdt-radius-f hdt-radius-full', sizes: '40px', widths: '40,34,30' }}
+                    </span>
+                  {%- endif -%}
+                  <span class="hdt-block hdt-line-clamp">{{ arr_title[0] }}</span>
+                  {%- if arr_label.size > 0 -%}
+                    <span class="hdt_label_menu hdt-absolute hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-xs">
+                      {%- for label in arr_label limit: 2 -%}
+                        {%- assign label_text = label | remove: 'label_' | remove: ','  | remove: ']' | strip -%}
+                        <span class="hdt_label_{{ label_text | handleize }} hdt-flex hdt-align-center hdt-justify-center">{{ label_text }}</span>
+                      {%- endfor -%}
+                    </span>
+                  {%- endif -%}
+                </span>          
+                {%- if li_class != "" -%}
+                  <span class="hdt-inline-flex hdt-align-center hdt-justify-center" accordion-icon>
+                    <svg class="hdt-menu-item-arrow" xmlns="http://www.w3.org/2000/svg" width="10" height="7" viewBox="0 0 10 7" fill="none"><path d="M10 1.24243L5 6.24243L-2.18557e-07 1.24243L0.8875 0.354932L5 4.46743L9.1125 0.354931L10 1.24243Z" fill="currentColor"/></svg>
+                  </span>
+                {%- endif -%}
+              </summary>
+              {%- render 'sub_menu_blocks', link: link -%}
+            </details>
+          </hdt-accordion>
+        {%- elsif li_class != blank -%}
+          <hdt-header-menu class="hdt-contents" opened-able-click event="{{ section.settings.open_event }}" position="{{ mega_position }}">
+            <details>
+              <summary data-url="{{ link.url }}" class="hdt-menu-link hdt-flex hdt-align-center hdt-justify-between hdt-relative hdt-text-{{ section.settings.menu_size }} hdt-font-{{ section.settings.menu_weight }}{% if link.current and section.settings.active_link %} hdt-menu-link--active{% endif %}">
+                <span class="hdt-menu-link-text hdt-block{% if arr_label.size > 0 %} hdt-relative hdt-title_size-{{ arr_title[0].size | at_most: 20 }} hdt-has-{{ arr_label.size | at_most: 2 }}label{% endif %}">
+                  {%- if image_item != blank -%}
+                    <span class="hdt-category-img hdt-relative">
+                      {{ image_item | image_url: width: image_item.width | image_tag: loading: 'lazy', width: image_item.width, height: image_item.height, class: 'hdt-radius-f hdt-radius-full', sizes: '40px', widths: '40,34,30' }}
+                    </span>
+                  {%- endif -%}
+                  <span class="hdt-block hdt-line-clamp">{{ arr_title[0] }}</span>
+                  {%- if arr_label.size > 0 -%}
+                    <span class="hdt_label_menu hdt-absolute hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-xs">
+                      {%- for label in arr_label limit: 2 -%}
+                        {%- assign label_text = label | remove: 'label_' | remove: ','  | remove: ']' | strip -%}
+                        <span class="hdt_label_{{ label_text | handleize }} hdt-flex hdt-align-center hdt-justify-center">{{ label_text }}</span>
+                      {%- endfor -%}
+                    </span>
+                  {%- endif -%}
+                </span>
+                {%- if li_class != "" -%}
+                  <span class="hdt-inline-flex hdt-align-center hdt-justify-center" accordion-icon>
+                    <svg class="hdt-menu-item-arrow" xmlns="http://www.w3.org/2000/svg" width="10" height="7" viewBox="0 0 10 7" fill="none"><path d="M10 1.24243L5 6.24243L-2.18557e-07 1.24243L0.8875 0.354932L5 4.46743L9.1125 0.354931L10 1.24243Z" fill="currentColor"/></svg>
+                  </span>
+                {%- endif -%}
+              </summary>
+              {%- render 'sub_menu_blocks', link: link -%}
+            </details>
+          </hdt-header-menu>
+        {%- else -%}
+          <a href="{{ link.url }}" class="hdt-menu-link hdt-flex hdt-align-center hdt-justify-between hdt-relative {%- if link.current and section.settings.active_link %} hdt-menu-link--active{% endif %}" {% if link.current %} aria-current="page" {% endif %}>
+            <span class="hdt-menu-link-text hdt-block{% if arr_label.size > 0 %} hdt-relative hdt-title_size-{{ arr_title[0].size | at_most: 20 }} hdt-has-{{ arr_label.size | at_most: 2 }}label{% endif %}">
+              {%- if image_item != blank -%}
+                <span class="hdt-category-img hdt-relative">
+                  {{ image_item | image_url: width: image_item.width | image_tag: loading: 'lazy', width: image_item.width, height: image_item.height, class: 'hdt-radius-f hdt-radius-full', sizes: '40px', widths: '40,34,30' }}
+                </span>
+              {%- endif -%}
+              <span class="hdt-block hdt-line-clamp">{{ arr_title[0] }}</span>
+              {%- if arr_label.size > 0 -%}
+                <span class="hdt_label_menu hdt-absolute hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-xs">
+                  {%- for label in arr_label limit: 2 -%}
+                    {%- assign label_text = label | remove: 'label_' | remove: ','  | remove: ']' | strip -%}
+                    <span class="hdt_label_{{ label_text | handleize }} hdt-flex hdt-align-center hdt-justify-center">{{ label_text }}</span>
+                  {% endfor %}
+                </span>
+              {%- endif -%}
+            </span>
+          </a>
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+    {% comment %} {%- for link in menu_categories.links -%}
+      <li class="hdt-category-item hdt-relative hdt-flex hdt-justify-center hdt-flex-col{% if link.links != blank %} hdt-has-children hdt-relative{% endif %} {% if link.type == "collection_link" %}hdt-has-img{% endif %}">
+        <a href="{{ link.url }}" class="hdt-category-link hdt-flex hdt-align-center hdt-justify-between hdt-relative hdt-text-base hdt-font-medium{% if link.current %} hdt-category-link--active{% endif %}" {% if link.current %} aria-current="page" {% endif %}>
+          <span class="hdt-category-title hdt-flex hdt-align-center">
+            {%- if link.type == "collection_link" -%}
+              {%- assign image_item = link.object.metafields.theme.image_collection_list.value | default: link.object.image | default: link.object.featured_image | default: link.object.products.first.featured_image -%}
+              {%- if image_item != null -%}
+                <span class="hdt-category-img hdt-relative">
+                  {{ image_item | image_url: width: image_item.width | image_tag: loading: 'lazy', width: image_item.width, height: image_item.height, class: 'hdt-radius-f hdt-radius-full', sizes: '40px', widths: '40,34,30' }}
+                </span>
+              {%- endif -%}
+            {%- endif -%}
+            <span class="hdt-category-link-text"> {{- link.title | escape -}} </span>
+          </span>
+        </a>
+      </li>
+    {%- endfor -%} {% endcomment %}
+  </ul>
+</div>
+{% schema %}
+  {
+    "name": "Menu categories",
+    "tag": null,
+    "settings": [
+      {
+        "type": "color_scheme",
+        "id": "menu_categories_colors",
+        "label": "Menu categories colors"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "_mega_block"
+      },
+      {
+        "type": "_mega_block_column_10"
+      },
+      {
+        "type": "_mega_block_column_12"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Menu categories"
+      }
+    ]
+  }
+{% endschema %}

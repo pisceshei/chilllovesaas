@@ -1,0 +1,7 @@
+<div class="m-footer--block-content{% if enable_accordion %} m-accordion--item-content{% endif %}">
+  {% if block.settings.html != blank %}
+    <div class="block-text">
+      {{ block.settings.html }}
+    </div>
+  {% endif %}
+</div>

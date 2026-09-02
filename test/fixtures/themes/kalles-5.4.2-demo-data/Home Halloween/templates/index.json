@@ -1,0 +1,2159 @@
+{
+  "sections": {
+    "hero_image_4tFpRd": {
+      "type": "hero-image",
+      "blocks": {
+        "heading_yEnDgq": {
+          "type": "heading",
+          "settings": {
+            "heading": "<p>Your One-Stop<br\/>Halloween Shop<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "line_height": "hdt-lh-1-2",
+            "font_weight": "normal",
+            "heading_size": "h_custom",
+            "text_color": "hdt-s-text",
+            "font_size_heading_lg": 70,
+            "font_size_heading": 50,
+            "letter_spacing_heading": 0
+          },
+          "blocks": {}
+        },
+        "spacer_EanbeD": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 20,
+            "space_md": 20,
+            "space": 20
+          },
+          "blocks": {}
+        },
+        "text_VmPGaH": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Costumes, spooky décor & candy galore – everything <br\/>you need for a haunting night.<\/p>",
+            "hidden_br_mobile": true,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "custom",
+            "line_height": "hdt-lh-1-2",
+            "font_weight": "normal",
+            "text_color": "hdt-s-text",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 16,
+            "font_size_text": 16,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "spacer_hbmXnC": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 30,
+            "space_md": 26,
+            "space": 26
+          },
+          "blocks": {}
+        },
+        "button_rPWBHz": {
+          "type": "button",
+          "name": "t:blocks.button.name",
+          "settings": {
+            "label": "Get Spooky Now",
+            "link": "shopify:\/\/collections\/halloween",
+            "open_in_new_tab": false,
+            "full_width": false,
+            "btn_style": "",
+            "color_btn": "#ffffff",
+            "color_hover_btn": "#ffffff",
+            "background_btn": "#222222",
+            "background_hover_btn": "#333333",
+            "border_w_btn": "",
+            "border_btn": "#222222",
+            "border_hover_btn": "#333333",
+            "size": "custom custom-inline",
+            "text_size": "hdt-text-base",
+            "font_weight": "semibold",
+            "font_size_btn": 20,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 162,
+            "min_height_btn": 25,
+            "rounded": "",
+            "icon": "none",
+            "icon_position": "after",
+            "icon_height": 14,
+            "icon_spacing": 5
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_yEnDgq",
+        "spacer_EanbeD",
+        "text_VmPGaH",
+        "spacer_hbmXnC",
+        "button_rPWBHz"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--font-heading-family);}"
+      ],
+      "name": "t:sections.hero-image.name",
+      "settings": {
+        "image": "shopify:\/\/shop_images\/Hero_section.png",
+        "link_img": "",
+        "target": false,
+        "image_height": "adapt_image",
+        "fixed_height": 720,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 500,
+        "image_behavior": "none",
+        "content_position_type": "auto",
+        "position_x": 25,
+        "position_y": 50,
+        "content_position": "center-start",
+        "alignment": "center",
+        "position_x_mb": 50,
+        "position_y_mb": 50,
+        "content_position_mb": "center",
+        "alignment_mb": "left",
+        "overlay_content": false,
+        "overlay_color": "#000000",
+        "overlay_opacity": 0,
+        "background_content": false,
+        "background_content_color": "#ffffff",
+        "bg_opacity": 0,
+        "box_square": false,
+        "content_rounded": false,
+        "use_border_content": false,
+        "border_color": "#ffffff",
+        "background_border": "#ffffff",
+        "border_opacity": 0,
+        "border_style": "none",
+        "border_pd_dk": 0,
+        "padding_vertical": 30,
+        "padding_horizontal": 30,
+        "min_width_content": 350,
+        "border_pd": 0,
+        "colors_by_section": true,
+        "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "collections_list_XfREcV": {
+      "type": "collections-list",
+      "blocks": {
+        "collection_item_ngnQDV": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "halloween",
+            "image": "shopify:\/\/shop_images\/Cate_5.png",
+            "title": "Customes",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_TAxTBi": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "decoration",
+            "image": "shopify:\/\/shop_images\/Cate_6.png",
+            "title": "Decoration",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_LRNHxY": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "halloween",
+            "image": "shopify:\/\/shop_images\/Cate_7.png",
+            "title": "Decoration",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_TPygfy": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "decoration",
+            "image": "shopify:\/\/shop_images\/Cate_8.png",
+            "title": "Party Supplies",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "section-heading-collections-list": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 12,
+            "margin_bottom": 50
+          },
+          "blocks": {
+            "heading_section_EPyAJw": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Find Your Fright",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_rjjLUh": {
+              "type": "_sub_heading_section",
+              "name": "t:blocks.section_heading.sub_heading",
+              "settings": {
+                "text": "<p>Find exactly what you need for the ultimate Halloween look.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_EPyAJw",
+            "sub_heading_section_rjjLUh"
+          ]
+        }
+      },
+      "block_order": [
+        "collection_item_ngnQDV",
+        "collection_item_TAxTBi",
+        "collection_item_LRNHxY",
+        "collection_item_TPygfy"
+      ],
+      "custom_css": [
+        ".hdt-collection-title-text {font-size: 20px; font-weight: 400; line-height: normal; margin-block-end: 12px;}",
+        ".hdt-collection-title {font-size: 12px; font-weight: 700;}",
+        ".hdt-collection-wrapper {padding-top: 20px;}",
+        "@media (width >= 768px) {.hdt-collection-title-text {font-size: 24px; } .hdt-collection-title {font-size: 14px; }}"
+      ],
+      "name": "t:sections.collections-list.name",
+      "settings": {
+        "collection_list": [],
+        "collection_des": "15",
+        "content_size": "base",
+        "content_weight": "semibold",
+        "content_position": "center",
+        "content_space": 20,
+        "show_count": false,
+        "count_label": "Products",
+        "image_rounded": false,
+        "enable_border": false,
+        "image_padding": 30,
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "img_effect": "none",
+        "b_effect": "none",
+        "col_dk": "4",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "layout_mode": "carousel",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "banners_cAw3RE": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_iPwX8c": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 30,
+            "gap_c": 30,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 30,
+            "gap_c_mb": 30,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_JG63pb": {
+              "type": "text",
+              "settings": {
+                "text": "<p>MAKE HALLOWEEN EXTRA FUN!<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_8btDXE": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 8,
+                "space_md": 8,
+                "space": 8
+              },
+              "blocks": {}
+            },
+            "heading_4pFUWr": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Up to 30% OFF<br\/>Kids’ Costumes<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_K4frPE": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "button_custom_bAeP7H": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop Kids’ Costumes",
+                "link": "shopify:\/\/collections\/halloween",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#ff9a10",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#56cfe1",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 5,
+                "padding_left_right": 30,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Group_4_03b003c0-5694-450b-9e8b-a1b58f72b700.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_JG63pb",
+            "spacer_8btDXE",
+            "heading_4pFUWr",
+            "spacer_K4frPE",
+            "button_custom_bAeP7H"
+          ]
+        },
+        "banner_item_XiE3xW": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 30,
+            "gap_c": 30,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 30,
+            "gap_c_mb": 30,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_37UJG6": {
+              "type": "text",
+              "settings": {
+                "text": "<p>MAKE HALLOWEEN EXTRA FUN!<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 14,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_b8bBHc": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 8,
+                "space_md": 8,
+                "space": 8
+              },
+              "blocks": {}
+            },
+            "heading_fgemzk": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Halloween candy<br\/> combos from $3.99<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_ApQ7Nc": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "button_custom_dyzwtH": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop Candy Deals",
+                "link": "shopify:\/\/collections\/halloween",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#ff9a10",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#56cfe1",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 5,
+                "padding_left_right": 30,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Banner_2.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_37UJG6",
+            "spacer_b8bBHc",
+            "heading_fgemzk",
+            "spacer_ApQ7Nc",
+            "button_custom_dyzwtH"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "11",
+            "horizontal": true,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_iPwX8c",
+        "banner_item_XiE3xW"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--font-heading-family);}"
+      ],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "adapt_image",
+        "fixed_height": 400,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "space_items": "30px",
+        "space_items_tb": "15px",
+        "space_items_mb": "15px",
+        "col_dk": "2",
+        "col_tb": "2",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_bd3JpK": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_carousel_aV7zhc": {
+          "type": "_product-carousel",
+          "name": "t:blocks.product_carousel.name",
+          "settings": {
+            "collection": "halloween",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "on_item",
+            "product_des": "12",
+            "image_ratio": "custom-pr",
+            "image_size": true,
+            "show_vendor": true,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": true,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "icon": "none",
+            "size": "m",
+            "btn_fw": "medium",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": false,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "default",
+            "nav_shape": "default",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": true,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 10,
+            "pag_mgt": 50,
+            "only_show_mobile": false,
+            "pag_hide_mobile": false
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": true,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "group_BHRzT4": {
+              "type": "group",
+              "name": "Group",
+              "settings": {
+                "content_direction": "column",
+                "vertical_on_mobile": false,
+                "horizontal_alignment": "flex-start",
+                "vertical_alignment": "center",
+                "horizontal_alignment_flex_direction_column": "flex-start",
+                "vertical_alignment_flex_direction_column": "center",
+                "gap": 12,
+                "width": "fit-content",
+                "custom_width": 100,
+                "width_mobile": "fit-content",
+                "custom_width_mobile": 100,
+                "colors_by_block": true,
+                "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+                "group_rounded": "",
+                "padding_top": 0,
+                "padding_bottom": 0,
+                "padding_left": 0,
+                "padding_right": 0,
+                "padding_rate_mobile": 0
+              },
+              "blocks": {
+                "heading_7w6QCd": {
+                  "type": "heading",
+                  "name": "t:blocks.heading.name",
+                  "settings": {
+                    "heading": "<p>Spook-tacular Picks You Can’t Miss<\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "line_height": "hdt-lh-1-2",
+                    "font_weight": "normal",
+                    "heading_size": "h_custom",
+                    "text_color": "hdt-s-text",
+                    "font_size_heading_lg": 40,
+                    "font_size_heading": 34,
+                    "letter_spacing_heading": 0
+                  },
+                  "blocks": {}
+                },
+                "text_F6X97F": {
+                  "type": "text",
+                  "name": "t:blocks.text.name",
+                  "settings": {
+                    "text": "<p>Don’t wait—these are flying off the shelves (and into the night).<\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "ffamily": "",
+                    "text_size": "base",
+                    "line_height": "hdt-lh-1-2",
+                    "font_weight": "normal",
+                    "text_color": "hdt-text-secondary",
+                    "countdown": "2025-12-30 15:00:00",
+                    "txt_day": "days",
+                    "font_size_text_lg": 16,
+                    "font_size_text": 14,
+                    "letter_spacing_text": 0
+                  },
+                  "blocks": {}
+                },
+                "spacer_GqXiPD": {
+                  "type": "spacer",
+                  "name": "t:blocks.spacer.name",
+                  "settings": {
+                    "direction": false,
+                    "space_lg": 2,
+                    "space_md": 2,
+                    "space": 2
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "heading_7w6QCd",
+                "text_F6X97F",
+                "spacer_GqXiPD"
+              ]
+            },
+            "button_BUGNDW": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "View all products",
+                "link": "shopify:\/\/collections\/halloween",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-outline",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "bold",
+                "font_size_btn": 20,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "group_BHRzT4",
+            "button_BUGNDW"
+          ]
+        }
+      },
+      "block_order": [
+        "product_carousel_aV7zhc"
+      ],
+      "custom_css": [
+        ".hdt-price-wrapp * {font-size: 1.6rem;}",
+        ".hdt-h_custom {font-family: var(--font-heading-family);}",
+        ".hdt-button-block {font-family: \"Inter\", sans-serif;}",
+        ".hdt-card-product__title {line-height: 1.2;}",
+        "@media (width > 768px) {.hdt-slider__slide {--slide-spacing: 4rem; } .hdt-card-product__info {padding: 0 15px 20px; }}",
+        "@media (width <= 1350px) {.hdt-group-content {justify-content: center; align-items: center; } .hdt-button-block {width: fit-content; justify-self: center; }}"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "banners_akd4zU": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_736RdE": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "shopify:\/\/collections\/halloween",
+            "banner_target": false,
+            "img_effect": "rotate",
+            "b_effect": "none",
+            "colors_by_block": true,
+            "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 30,
+            "gap_c": 30,
+            "content_position": "start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 30,
+            "gap_c_mb": 30,
+            "content_position_mb": "start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_mmggmL": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "SALE OFF 20%",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#ff9a10",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "spacer_jt8YzP": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 0,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "heading_ccYt7g": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Creepy & Cute Costumes<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 34,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_e8iVe8": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_8kYQXz": {
+              "type": "text",
+              "settings": {
+                "text": "<p>From classic witches to trending monsters – find your perfect match.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_pXDfQV": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "button_custom_AnHiRY": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop the Looks",
+                "link": "shopify:\/\/collections\/halloween",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#ff9a10",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#56cfe1",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 5,
+                "padding_left_right": 30,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Box_2.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_mmggmL",
+            "spacer_jt8YzP",
+            "heading_ccYt7g",
+            "spacer_e8iVe8",
+            "text_8kYQXz",
+            "spacer_pXDfQV",
+            "button_custom_AnHiRY"
+          ]
+        },
+        "banner_item_QWnmkM": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "shopify:\/\/collections\/halloween",
+            "banner_target": false,
+            "img_effect": "rotate",
+            "b_effect": "none",
+            "colors_by_block": true,
+            "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 30,
+            "gap_c": 30,
+            "content_position": "start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 30,
+            "gap_c_mb": 30,
+            "content_position_mb": "start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_Q6AixT": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "SALE OFF 20%",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#ff9a10",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "spacer_raGT9R": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 0,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "heading_PJ9jKa": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Décor That Sets the Scene<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 34,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_CDkiP8": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_bfL78w": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Transform your home into the ultimate haunted house.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_LqTGUM": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "button_custom_WVdNDA": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop the Looks",
+                "link": "shopify:\/\/collections\/halloween",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#ff9a10",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#56cfe1",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 5,
+                "padding_left_right": 30,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Box_3.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_Q6AixT",
+            "spacer_raGT9R",
+            "heading_PJ9jKa",
+            "spacer_CDkiP8",
+            "text_bfL78w",
+            "spacer_LqTGUM",
+            "button_custom_WVdNDA"
+          ]
+        },
+        "banner_item_q7hqXR": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "shopify:\/\/collections\/halloween",
+            "banner_target": false,
+            "img_effect": "rotate",
+            "b_effect": "none",
+            "colors_by_block": true,
+            "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 30,
+            "gap_c": 30,
+            "content_position": "start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 30,
+            "gap_c_mb": 30,
+            "content_position_mb": "start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_BiBP6e": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "SALE OFF 20%",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#ff9a10",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "spacer_eaVAtC": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 0,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "heading_H87jw8": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Accessories for the Perfect Look<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 34,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_mWLy3j": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_p9PaKB": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Make every detail count – masks, makeup & more.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_6QFQpy": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "button_custom_tmCEFx": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop the Looks",
+                "link": "shopify:\/\/collections\/halloween",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#ff9a10",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#56cfe1",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 5,
+                "padding_left_right": 30,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Box_4.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_BiBP6e",
+            "spacer_eaVAtC",
+            "heading_H87jw8",
+            "spacer_mWLy3j",
+            "text_p9PaKB",
+            "spacer_6QFQpy",
+            "button_custom_tmCEFx"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_736RdE",
+        "banner_item_QWnmkM",
+        "banner_item_q7hqXR"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--font-heading-family);}",
+        ".hdt-block-button__custom {font-family: \"Inter\", sans-serif;}",
+        "@media (width >= 768px) {.hdt-text-custom {line-height: 1.4; }}",
+        "@media (width <= 1350px) {.hdt-block-button__custom {white-space: nowrap; }}"
+      ],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "adapt_image",
+        "fixed_height": 400,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "space_items": "30px",
+        "space_items_tb": "15px",
+        "space_items_mb": "15px",
+        "col_dk": "3",
+        "col_tb": "3",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": true,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_Q6HDJ4": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_carousel_C9Pby9": {
+          "type": "_product-carousel",
+          "name": "t:blocks.product_carousel.name",
+          "settings": {
+            "collection": "decoration",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "on_item",
+            "product_des": "12",
+            "image_ratio": "custom-pr",
+            "image_size": true,
+            "show_vendor": true,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": true,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "icon": "none",
+            "size": "m",
+            "btn_fw": "medium",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": false,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "default",
+            "nav_shape": "default",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": true,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 10,
+            "pag_mgt": 50,
+            "only_show_mobile": false,
+            "pag_hide_mobile": false
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": true,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "group_cKnpwF": {
+              "type": "group",
+              "name": "Group",
+              "settings": {
+                "content_direction": "column",
+                "vertical_on_mobile": false,
+                "horizontal_alignment": "flex-start",
+                "vertical_alignment": "center",
+                "horizontal_alignment_flex_direction_column": "flex-start",
+                "vertical_alignment_flex_direction_column": "center",
+                "gap": 12,
+                "width": "fit-content",
+                "custom_width": 100,
+                "width_mobile": "fit-content",
+                "custom_width_mobile": 100,
+                "colors_by_block": true,
+                "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+                "group_rounded": "",
+                "padding_top": 0,
+                "padding_bottom": 0,
+                "padding_left": 0,
+                "padding_right": 0,
+                "padding_rate_mobile": 0
+              },
+              "blocks": {
+                "heading_aLggad": {
+                  "type": "heading",
+                  "name": "t:blocks.heading.name",
+                  "settings": {
+                    "heading": "<p>This Year’s Spook-tacular Picks<\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "line_height": "hdt-lh-1-2",
+                    "font_weight": "normal",
+                    "heading_size": "h_custom",
+                    "text_color": "hdt-s-text",
+                    "font_size_heading_lg": 40,
+                    "font_size_heading": 34,
+                    "letter_spacing_heading": 0
+                  },
+                  "blocks": {}
+                },
+                "text_dNDj9r": {
+                  "type": "text",
+                  "name": "t:blocks.text.name",
+                  "settings": {
+                    "text": "<p>Don’t wait – these favorites are flying off the shelves!<\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "ffamily": "",
+                    "text_size": "base",
+                    "line_height": "hdt-lh-1-2",
+                    "font_weight": "normal",
+                    "text_color": "hdt-text-secondary",
+                    "countdown": "2025-12-30 15:00:00",
+                    "txt_day": "days",
+                    "font_size_text_lg": 16,
+                    "font_size_text": 14,
+                    "letter_spacing_text": 0
+                  },
+                  "blocks": {}
+                },
+                "spacer_4RkwKT": {
+                  "type": "spacer",
+                  "name": "t:blocks.spacer.name",
+                  "settings": {
+                    "direction": false,
+                    "space_lg": 2,
+                    "space_md": 2,
+                    "space": 2
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "heading_aLggad",
+                "text_dNDj9r",
+                "spacer_4RkwKT"
+              ]
+            },
+            "button_nxdVak": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "View all products",
+                "link": "shopify:\/\/collections\/halloween",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-outline",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "bold",
+                "font_size_btn": 20,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "group_cKnpwF",
+            "button_nxdVak"
+          ]
+        }
+      },
+      "block_order": [
+        "product_carousel_C9Pby9"
+      ],
+      "custom_css": [
+        ".hdt-price-wrapp * {font-size: 1.6rem;}",
+        ".hdt-h_custom {font-family: var(--font-heading-family);}",
+        ".hdt-button-block {font-family: \"Inter\", sans-serif;}",
+        ".hdt-card-product__title {line-height: 1.2;}",
+        "@media (width > 768px) {.hdt-slider__slide {--slide-spacing: 4rem; }}",
+        "@media (width <= 1350px) {.hdt-group-content {justify-content: center; align-items: center; } .hdt-button-block {width: fit-content; justify-self: center; }}"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-f6cce95b-ac69-42d5-a3fa-f30ddc163339",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "collections_list_manual_QHetmd": {
+      "type": "collections-list-manual",
+      "blocks": {
+        "collection_manual_item_kTcYUE": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/Frame_911.png",
+            "title": "",
+            "collection_link": "shopify:\/\/collections\/halloween",
+            "column_width": "4",
+            "row_count": 1,
+            "tb_column_width": "6",
+            "tb_row_count": 1,
+            "mb_column_width": "2",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collection_manual_item_tUYaWP": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/7_9de3f766-9ddc-4f17-a05c-12a8291114d0.png",
+            "title": "",
+            "collection_link": "shopify:\/\/collections\/halloween",
+            "column_width": "4",
+            "row_count": 2,
+            "tb_column_width": "6",
+            "tb_row_count": 1,
+            "mb_column_width": "1",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collection_manual_item_wJcC7V": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/6_e4a06498-fd96-488b-aff7-7c8beae7736c.png",
+            "title": "",
+            "collection_link": "shopify:\/\/collections\/halloween",
+            "column_width": "4",
+            "row_count": 1,
+            "tb_column_width": "6",
+            "tb_row_count": 1,
+            "mb_column_width": "1",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collection_manual_item_eQRaX3": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/4_bfe8a3eb-caf7-4909-8c6c-44f5d469300a.png",
+            "title": "",
+            "collection_link": "shopify:\/\/collections\/decoration",
+            "column_width": "4",
+            "row_count": 1,
+            "tb_column_width": "12",
+            "tb_row_count": 1,
+            "mb_column_width": "1",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collection_manual_item_GawmCt": {
+          "type": "_collection_manual-item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/5_bf079e19-bdf2-4c84-a189-51c3ea11a1ef.png",
+            "title": "",
+            "collection_link": "shopify:\/\/collections\/halloween",
+            "column_width": "4",
+            "row_count": 1,
+            "tb_column_width": "6",
+            "tb_row_count": 1,
+            "mb_column_width": "1",
+            "mb_row_count": 1
+          },
+          "blocks": {}
+        },
+        "collections-list-manual-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "collection_manual_item_kTcYUE",
+        "collection_manual_item_tUYaWP",
+        "collection_manual_item_wJcC7V",
+        "collection_manual_item_eQRaX3",
+        "collection_manual_item_GawmCt"
+      ],
+      "custom_css": [
+        "{--masonry-grid-row-height: 325px;}"
+      ],
+      "name": "t:sections.collections-list.name_manual",
+      "settings": {
+        "collection_des": "1",
+        "rounded": "",
+        "content_size": "base",
+        "font_size_text_lg": 16,
+        "font_size_text_md": 14,
+        "font_size_text": 14,
+        "font_weight_text": 400,
+        "letter_spacing_text": 0,
+        "content_weight": "semibold",
+        "content_position": "end-center",
+        "content_space": 20,
+        "show_count": false,
+        "count_label": "Products",
+        "image_rounded": false,
+        "enable_border": false,
+        "image_padding": 30,
+        "img_effect": "zoom",
+        "b_effect": "overlay",
+        "row_height": 330,
+        "row_height_tb": 300,
+        "row_height_mb": 250,
+        "space_items": "30px",
+        "space_items_tb": "15px",
+        "space_items_mb": "15px",
+        "colors_by_section": true,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "shipping_tF48Rw": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_cnG9AL": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"33\" height=\"32\" viewbox=\"0 0 33 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M17.8333 19.6665H3.16663C2.61996 19.6665 2.16663 19.2132 2.16663 18.6665V7.99984C2.16663 4.5065 5.00663 1.6665 8.49996 1.6665H20.5C21.0466 1.6665 21.5 2.11984 21.5 2.6665V15.9998C21.5 18.0265 19.86 19.6665 17.8333 19.6665ZM4.16663 17.6665H17.8333C18.7533 17.6665 19.5 16.9198 19.5 15.9998V3.6665H8.49996C6.11329 3.6665 4.16663 5.61317 4.16663 7.99984V17.6665Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M25.8333 27.6665H24.5C23.9533 27.6665 23.5 27.2132 23.5 26.6665C23.5 25.7465 22.7533 24.9998 21.8333 24.9998C20.9133 24.9998 20.1666 25.7465 20.1666 26.6665C20.1666 27.2132 19.7133 27.6665 19.1666 27.6665H13.8333C13.2866 27.6665 12.8333 27.2132 12.8333 26.6665C12.8333 25.7465 12.0866 24.9998 11.1666 24.9998C10.2466 24.9998 9.49996 25.7465 9.49996 26.6665C9.49996 27.2132 9.04663 27.6665 8.49996 27.6665H7.16663C4.40663 27.6665 2.16663 25.4265 2.16663 22.6665V18.6665C2.16663 18.1198 2.61996 17.6665 3.16663 17.6665H17.8333C18.7533 17.6665 19.5 16.9198 19.5 15.9998V6.6665C19.5 6.11984 19.9533 5.6665 20.5 5.6665H22.9533C24.2733 5.6665 25.4866 6.37319 26.14 7.51986L28.42 11.5065C28.5933 11.8132 28.5933 12.1998 28.42 12.5065C28.2466 12.8132 27.9133 12.9998 27.5533 12.9998H25.8333C25.6466 12.9998 25.5 13.1465 25.5 13.3332V17.3332C25.5 17.5198 25.6466 17.6665 25.8333 17.6665H29.8333C30.38 17.6665 30.8333 18.1198 30.8333 18.6665V22.6665C30.8333 25.4265 28.5933 27.6665 25.8333 27.6665ZM25.3666 25.6665H25.8333C27.4866 25.6665 28.8333 24.3198 28.8333 22.6665V19.6665H25.8333C24.5533 19.6665 23.5 18.6132 23.5 17.3332V13.3332C23.5 12.0532 24.54 10.9998 25.8333 10.9998L24.4066 8.50651C24.1133 7.98651 23.5533 7.6665 22.9533 7.6665H21.5V15.9998C21.5 18.0265 19.86 19.6665 17.8333 19.6665H4.16663V22.6665C4.16663 24.3198 5.51329 25.6665 7.16663 25.6665H7.6333C8.0733 24.1332 9.48663 22.9998 11.1666 22.9998C12.8466 22.9998 14.26 24.1332 14.7 25.6665H18.3133C18.7533 24.1332 20.1666 22.9998 21.8466 22.9998C23.5266 22.9998 24.9266 24.1332 25.3666 25.6665Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M11.1667 30.3333C9.14 30.3333 7.5 28.6933 7.5 26.6667C7.5 24.64 9.14 23 11.1667 23C13.1933 23 14.8333 24.64 14.8333 26.6667C14.8333 28.6933 13.1933 30.3333 11.1667 30.3333ZM11.1667 25C10.2467 25 9.5 25.7467 9.5 26.6667C9.5 27.5867 10.2467 28.3333 11.1667 28.3333C12.0867 28.3333 12.8333 27.5867 12.8333 26.6667C12.8333 25.7467 12.0867 25 11.1667 25Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M21.8333 30.3333C19.8066 30.3333 18.1666 28.6933 18.1666 26.6667C18.1666 24.64 19.8066 23 21.8333 23C23.86 23 25.5 24.64 25.5 26.6667C25.5 28.6933 23.86 30.3333 21.8333 30.3333ZM21.8333 25C20.9133 25 20.1666 25.7467 20.1666 26.6667C20.1666 27.5867 20.9133 28.3333 21.8333 28.3333C22.7533 28.3333 23.5 27.5867 23.5 26.6667C23.5 25.7467 22.7533 25 21.8333 25Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M29.8333 19.6667H25.8333C24.5533 19.6667 23.5 18.6133 23.5 17.3333V13.3333C23.5 12.0533 24.5533 11 25.8333 11H27.5533C27.9133 11 28.2467 11.1867 28.42 11.5067L30.7 15.5067C30.78 15.6533 30.8333 15.8267 30.8333 16V18.6667C30.8333 19.2133 30.38 19.6667 29.8333 19.6667ZM25.8333 13C25.6467 13 25.5 13.1467 25.5 13.3333V17.3333C25.5 17.52 25.6467 17.6667 25.8333 17.6667H28.8333V16.2667L26.9667 13H25.8333Z\" fill=\"#FF9A10\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "spacer_edhf8d": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 6,
+                "space_md": 6,
+                "space": 6
+              },
+              "blocks": {}
+            },
+            "heading_UYUt3N": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Fast Delivery<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 22,
+                "font_size_heading": 22,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_zY7HDW": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_jfgJjn": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Free shipping on all US orders<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_edhf8d",
+            "heading_UYUt3N",
+            "spacer_zY7HDW",
+            "text_jfgJjn"
+          ]
+        },
+        "shipping_KJFafD": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "help",
+            "icon": "<svg width=\"33\" height=\"32\" viewbox=\"0 0 33 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M5.74007 22.1732C5.48674 22.1732 5.23341 22.0798 5.03341 21.8798C4.64674 21.4932 4.64674 20.8532 5.03341 20.4665L20.9667 4.53316C21.3534 4.1465 21.9934 4.1465 22.3801 4.53316C22.7667 4.91983 22.7667 5.55983 22.3801 5.9465L6.44674 21.8932C6.26007 22.0798 5.99341 22.1732 5.74007 22.1732Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M15.2999 25.3735C15.0466 25.3735 14.7932 25.2802 14.5932 25.0802C14.2066 24.6935 14.2066 24.0535 14.5932 23.6669L16.1932 22.0669C16.5799 21.6802 17.2199 21.6802 17.6066 22.0669C17.9932 22.4535 17.9932 23.0935 17.6066 23.4802L16.0066 25.0802C15.8199 25.2669 15.5666 25.3735 15.2999 25.3735Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M18.8866 21.7868C18.6332 21.7868 18.3799 21.6935 18.1799 21.4935C17.7932 21.1069 17.7932 20.4668 18.1799 20.0802L21.3666 16.8935C21.7532 16.5068 22.3932 16.5068 22.7799 16.8935C23.1666 17.2802 23.1666 17.9202 22.7799 18.3068L19.5932 21.4935C19.4066 21.6802 19.1399 21.7868 18.8866 21.7868Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M15.3 30.3334C13.9934 30.3334 12.6867 29.5334 11.1 27.9467L4.55338 21.4C1.36671 18.2134 1.38005 16.16 4.59338 12.9467L13.4467 4.09338C16.66 0.880048 18.7134 0.866715 21.9 4.05338L28.4467 10.6C31.6334 13.7867 31.62 15.84 28.4067 19.0534L19.5534 27.9067C17.94 29.52 16.62 30.3334 15.3 30.3334ZM17.7 3.66672C17.0067 3.66672 16.1267 4.24005 14.86 5.50672L6.00672 14.36C4.74005 15.6267 4.16672 16.5067 4.16672 17.1867C4.16672 17.88 4.70005 18.72 5.96671 19.9867L12.5134 26.5334C13.78 27.8 14.6067 28.3334 15.3 28.3334C15.3 28.3334 15.3 28.3334 15.3134 28.3334C16.0067 28.3334 16.8734 27.7601 18.14 26.4934L26.9934 17.64C28.2601 16.3734 28.8334 15.4934 28.8334 14.8134C28.8334 14.12 28.3 13.28 27.0334 12.0134L20.4867 5.46671C19.2334 4.20005 18.3934 3.66672 17.7 3.66672Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M29.8334 30.3335H3.16675C2.62008 30.3335 2.16675 29.8802 2.16675 29.3335C2.16675 28.7868 2.62008 28.3335 3.16675 28.3335H29.8334C30.3801 28.3335 30.8334 28.7868 30.8334 29.3335C30.8334 29.8802 30.3801 30.3335 29.8334 30.3335Z\" fill=\"#FF9A10\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "spacer_6r3kjh": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 6,
+                "space_md": 6,
+                "space": 6
+              },
+              "blocks": {}
+            },
+            "heading_HRwrkR": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Safe Payment<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 22,
+                "font_size_heading": 22,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_rbBHjt": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_6ahUmJ": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We ensure secure payment with PEV<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_6r3kjh",
+            "heading_HRwrkR",
+            "spacer_rbBHjt",
+            "text_6ahUmJ"
+          ]
+        },
+        "shipping_6Q4heR": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "refesh",
+            "icon": "<svg width=\"33\" height=\"32\" viewbox=\"0 0 33 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M23.0334 25.3468C22.6201 25.3468 22.2067 25.2268 21.8467 24.9868L20.5668 24.1468C20.2068 23.9068 20.0334 23.4535 20.1534 23.0402C20.2468 22.7335 20.2867 22.3735 20.2867 21.9735V16.5468C20.2867 14.3735 18.9268 13.0135 16.7534 13.0135H7.70007C7.54007 13.0135 7.39341 13.0269 7.24674 13.0402C6.96674 13.0535 6.70009 12.9602 6.48676 12.7735C6.27342 12.5869 6.16675 12.3202 6.16675 12.0402V8.34684C6.16675 4.42684 8.91341 1.68018 12.8334 1.68018H24.1667C28.0867 1.68018 30.8334 4.42684 30.8334 8.34684V15.1468C30.8334 17.0801 30.1801 18.7868 28.9801 19.9601C28.0201 20.9335 26.6867 21.5602 25.1667 21.7468V23.2268C25.1667 24.0268 24.7267 24.7469 24.0334 25.1202C23.7134 25.2669 23.3667 25.3468 23.0334 25.3468ZM22.2334 22.8402L23.1001 23.3335C23.1801 23.2935 23.1801 23.2268 23.1801 23.2135V20.8001C23.1801 20.2535 23.6334 19.8001 24.1801 19.8001C25.5801 19.8001 26.7667 19.3602 27.5801 18.5335C28.4201 17.7069 28.8467 16.5335 28.8467 15.1335V8.3335C28.8467 5.4935 27.0201 3.66683 24.1801 3.66683H12.8467C10.0067 3.66683 8.18007 5.4935 8.18007 8.3335V11.0002H16.7667C20.0201 11.0002 22.3001 13.2802 22.3001 16.5335V21.9601C22.2868 22.2668 22.2734 22.5602 22.2334 22.8402Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M8.59342 30.3333C8.30009 30.3333 7.99342 30.2667 7.71342 30.12C7.08675 29.7867 6.70007 29.1467 6.70007 28.4267V27.4133C5.52674 27.2267 4.48675 26.7333 3.71342 25.96C2.70009 24.9466 2.16675 23.56 2.16675 21.96V16.5334C2.16675 13.52 4.14007 11.3067 7.07341 11.0267C7.28674 11.0134 7.48674 11 7.70007 11H16.7534C20.0068 11 22.2867 13.28 22.2867 16.5334V21.96C22.2867 22.5466 22.2201 23.0933 22.0734 23.5867C21.4734 25.9867 19.4334 27.4933 16.7534 27.4933H13.4334L9.66008 30C9.34008 30.2267 8.96676 30.3333 8.59342 30.3333ZM7.70007 13C7.54007 13 7.39341 13.0134 7.24674 13.0267C5.32674 13.2 4.16675 14.52 4.16675 16.5334V21.96C4.16675 23.0266 4.50008 23.92 5.12675 24.5466C5.74008 25.16 6.63341 25.4933 7.70007 25.4933C8.24674 25.4933 8.70007 25.9467 8.70007 26.4933V28.24L12.5668 25.6667C12.7268 25.56 12.9267 25.4933 13.1268 25.4933H16.7534C18.5134 25.4933 19.7534 24.6133 20.1401 23.0667C20.2334 22.7333 20.2867 22.36 20.2867 21.96V16.5334C20.2867 14.36 18.9268 13 16.7534 13H7.70007Z\" fill=\"#FF9A10\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "spacer_MBtjpJ": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 6,
+                "space_md": 6,
+                "space": 6
+              },
+              "blocks": {}
+            },
+            "heading_VDBRy9": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>24\/7 Online Support<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 22,
+                "font_size_heading": 22,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_9LqUpx": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_piGQtt": {
+              "type": "text",
+              "settings": {
+                "text": "<p>24 hours a day, 7 days a week<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_MBtjpJ",
+            "heading_VDBRy9",
+            "spacer_9LqUpx",
+            "text_piGQtt"
+          ]
+        },
+        "shipping_DUnMk8": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "door-lock",
+            "icon": "<svg width=\"33\" height=\"32\" viewbox=\"0 0 33 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M16.4999 24.0132C12.2733 24.0132 8.83325 20.5732 8.83325 16.3465C8.83325 14.8265 9.27325 13.3465 10.1266 12.0932C10.4333 11.6398 11.0599 11.5065 11.5132 11.8132C11.9666 12.1198 12.0999 12.7465 11.7933 13.1998C11.1666 14.1332 10.8466 15.2265 10.8466 16.3465C10.8466 19.4665 13.3932 22.0132 16.5132 22.0132C19.6332 22.0132 22.1799 19.4665 22.1799 16.3465C22.1799 13.2265 19.6332 10.6798 16.5132 10.6798C15.8466 10.6798 15.2066 10.7732 14.5799 10.9598C14.0599 11.1198 13.4999 10.8265 13.3266 10.2932C13.1666 9.75984 13.4599 9.19984 13.9932 9.03984C14.8066 8.7865 15.6466 8.6665 16.5132 8.6665C20.7399 8.6665 24.1799 12.1065 24.1799 16.3332C24.1799 20.5598 20.7266 24.0132 16.4999 24.0132Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M13.3269 11.2C13.1002 11.2 12.8602 11.12 12.6735 10.96C12.2602 10.6 12.2202 9.95999 12.5802 9.54666L14.8069 6.99998C15.1669 6.58665 15.8069 6.53332 16.2202 6.90665C16.6335 7.26665 16.6735 7.90665 16.3135 8.31998L14.0869 10.8667C13.8735 11.08 13.6069 11.2 13.3269 11.2Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M15.9131 13.0931C15.7131 13.0931 15.4998 13.0264 15.3264 12.9064L12.7398 11.0131C12.2998 10.6931 12.1931 10.0664 12.5264 9.61306C12.8464 9.17306 13.4731 9.0664 13.9265 9.39973L16.5131 11.2931C16.9531 11.6131 17.0598 12.2397 16.7264 12.6931C16.5264 12.9464 16.2198 13.0931 15.9131 13.0931Z\" fill=\"#FF9A10\"><\/path>\n<path d=\"M20.5001 30.3332H12.5001C5.26008 30.3332 2.16675 27.2398 2.16675 19.9998V11.9998C2.16675 4.75984 5.26008 1.6665 12.5001 1.6665H20.5001C27.7401 1.6665 30.8334 4.75984 30.8334 11.9998V19.9998C30.8334 27.2398 27.7401 30.3332 20.5001 30.3332ZM12.5001 3.6665C6.35341 3.6665 4.16675 5.85317 4.16675 11.9998V19.9998C4.16675 26.1465 6.35341 28.3332 12.5001 28.3332H20.5001C26.6467 28.3332 28.8334 26.1465 28.8334 19.9998V11.9998C28.8334 5.85317 26.6467 3.6665 20.5001 3.6665H12.5001Z\" fill=\"#FF9A10\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "spacer_Dpd9xU": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 6,
+                "space_md": 6,
+                "space": 6
+              },
+              "blocks": {}
+            },
+            "heading_QmLzme": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Free Returns<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 22,
+                "font_size_heading": 22,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_h3Uyem": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 16,
+                "space_md": 16,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "text_9VETXt": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Simply return it within 30 days<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "spacer_Dpd9xU",
+            "heading_QmLzme",
+            "spacer_h3Uyem",
+            "text_9VETXt"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_cnG9AL",
+        "shipping_KJFafD",
+        "shipping_6Q4heR",
+        "shipping_DUnMk8"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--font-heading-family);}",
+        ".hdt-container > div {border: 20px solid transparent; border-image: url(\"https:\/\/cdn.shopify.com\/s\/files\/1\/0880\/8864\/1836\/files\/box.svg\") 20 round; background: #310c69;}"
+      ],
+      "name": "t:sections.shipping.name",
+      "settings": {
+        "content_align": "center",
+        "align_center": true,
+        "icon_design": "default",
+        "use_border": false,
+        "space_padding": false,
+        "icon_size": "medium",
+        "icon_color": "hdt-icon-secondary",
+        "col_dk": "4",
+        "col_tb": "2",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,0px,",
+        "mg_mb": ",,30px,",
+        "pd": "30px,30px,30px,30px",
+        "pd_mb": ""
+      }
+    }
+  },
+  "order": [
+    "hero_image_4tFpRd",
+    "collections_list_XfREcV",
+    "banners_cAw3RE",
+    "featured_collection_bd3JpK",
+    "banners_akd4zU",
+    "featured_collection_Q6HDJ4",
+    "collections_list_manual_QHetmd",
+    "shipping_tF48Rw"
+  ]
+}

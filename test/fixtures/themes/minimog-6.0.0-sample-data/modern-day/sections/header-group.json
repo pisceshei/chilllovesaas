@@ -1,0 +1,56 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "message": "<span class=\"font-medium\">Free Delivery on orders over £120. Don’t miss discount.<\/span>",
+        "message_link": "",
+        "show_divider": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+
+      },
+      "block_order": [
+
+      ],
+      "settings": {
+        "header_design": "logo-center-menu-left",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "MINIMOG",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 145,
+        "sticky_logo_max_width": 140,
+        "mobile_logo_max_width": 110,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

@@ -1,0 +1,393 @@
+{
+  "sections": {
+    "1659522563f86b9b11": {
+      "type": "slider",
+      "blocks": {
+        "1659522562509a09c0-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "SUMMER VIBE",
+            "title": "NEW <br>SURFBOARDS",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1659522562509a09c0-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "SUMMER VIBE",
+            "title": "UNLOCK YOUR<br> SURFING",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1659522562509a09c0-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "SUMMER VIBE",
+            "title": "R-SERIES BY <br>ALMOND",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1659522562509a09c0-0",
+        "1659522562509a09c0-1",
+        "1659522562509a09c0-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "165959735609d886fa": {
+      "type": "custom-content",
+      "blocks": {
+        "1659597356de9bf213-0": {
+          "type": "text",
+          "settings": {
+            "title": "",
+            "subheading": "BUILDING YOUR PERFECT SURFBOARD",
+            "text": "<p>Catch waves earlier, and catch them<br\/> more often.This board really flows off the<br\/> tai volume underneath.<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "shop all sufboard",
+            
+            "button_style": "m-button--primary",
+            
+            "block_custom_class": "m-custom-content-block-text",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1659597356de9bf213-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "footer",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-content-section"
+      }
+    },
+    "1659587158ce41b7ac": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "BEST SELLERS",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        
+        "button_style": "sf__btn-primary",
+        
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        
+        "animations": "inherit"
+      }
+    },
+    "1659587649be0ad169": {
+      "type": "custom-content",
+      "blocks": {
+        "1659587649f05ec37f-1": {
+          "type": "image",
+          "settings": {
+            
+            "width": "50%",
+            "alignment": "center",
+            
+            "animations": "inherit"
+          }
+        },
+        "1659587649f05ec37f-0": {
+          "type": "text",
+          "settings": {
+            "title": "NEW SURBOARDS <br>\nADDED EVERY WEEK",
+            "subheading": "<img src=\"\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/surboard_image.png?v=1659588226\" sizes=\"105px\" alt=\"\" loading=\"lazy\" class=\"f-img-loaded\" width=\"105\" height=\"113\" style=\"margin: 0 auto 28px\">\nCHECK BACK OFTEN",
+            "text": "<p>Shopping for skincare at the drugstore is frustrating. Buy <br\/>it, try it, toss it, repeat. Sound familiar? Get skincare <br\/>made to fit—with some of the top acne-busting <br\/>ingredients prescribed by derm<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "SHOP NOW",
+            "button_link": "shopify:\/\/collections\/surfboards",
+            "button_style": "m-button--secondary",
+            
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1659587649f05ec37f-1",
+        "1659587649f05ec37f-0"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 30,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-custom--02"
+      }
+    },
+    "16595850289c0b4c41": {
+      "type": "collection-list",
+      "blocks": {
+        "16595850286b090433-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "LONGBOARD"
+          }
+        },
+        "16595850286b090433-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "FISH"
+          }
+        },
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd": {
+          "type": "collection_block",
+          "settings": {
+            "title": "GUN"
+          }
+        },
+        "16595850286b090433-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "GUNBOARD"
+          }
+        },
+        "f252af0f-5067-4648-aa55-1e9f6cb8f4c6": {
+          "type": "collection_block",
+          "settings": {
+            "title": "SHORTBOARD"
+          }
+        }
+      },
+      "block_order": [
+        "16595850286b090433-0",
+        "16595850286b090433-1",
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd",
+        "16595850286b090433-2",
+        "f252af0f-5067-4648-aa55-1e9f6cb8f4c6"
+      ],
+      "settings": {
+        "heading": "SHOP BY CATEGORIES",
+        "heading_size": "h3",
+        "subheading": "OUR SURBOARD",
+        "description": "Shopping for skincare at the \ndrating. Buy it, try it, toss it, repeat.",
+        "header_alignment": "left",
+        "color_scheme": "scheme-6ee3b9ef-0167-4c14-aeac-e0a2f63d957f",
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "boxed",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": true,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16595990778ee1a54a": {
+      "type": "custom-content",
+      "blocks": {
+        "639463e6-49a7-43cf-92f3-3a8d66d50319": {
+          "type": "product",
+          "settings": {
+            "width": "33%",
+            "alignment": "center",
+            
+            "animations": "inherit"
+          }
+        },
+        "20f60023-e308-4d74-9054-0101fec913ac": {
+          "type": "product",
+          "settings": {
+            "width": "33%",
+            "alignment": "center",
+            
+            "animations": "inherit"
+          }
+        },
+        "4bfa3e65-1b9a-415b-81ea-37afbacfc148": {
+          "type": "product",
+          "settings": {
+            "width": "33%",
+            "alignment": "center",
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "639463e6-49a7-43cf-92f3-3a8d66d50319",
+        "20f60023-e308-4d74-9054-0101fec913ac",
+        "4bfa3e65-1b9a-415b-81ea-37afbacfc148"
+      ],
+      "settings": {
+        "heading": "PERFECT SURFBOARD",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "165959683132f7888b": {
+      "type": "image-with-text-2",
+      "settings": {
+        
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "SURF CLUB",
+        "subtitle": "SUMMER VIBE",
+        
+        "button_label": "JOIN NOW",
+        
+        "button_style": "m-button--primary",
+        
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf-home__hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    }
+  },
+  "order": [
+    "1659522563f86b9b11",
+    "165959735609d886fa",
+    "1659587158ce41b7ac",
+    "1659587649be0ad169",
+    "16595850289c0b4c41",
+    "16595990778ee1a54a",
+    "165959683132f7888b"
+  ]
+}

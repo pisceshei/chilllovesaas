@@ -1,0 +1,455 @@
+{
+  "sections": {
+    "16602968525a62efef": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-menu .m-menu__link--main {\n  padding: 23px 16px;\n}\n\n.m-menu__link--main,\n.m-slider--home .m-slide__title,\n.m-slider--home .m-richtext__description,\n.m-collection-list--home .m-collection-card__link {\n  font-weight: 700;\n}\n\n.m-collection-list--home .m-collection-card__link {\n  font-size: 18px;\n}\n\n.subheading__label {\n  line-height: 20px;\n  color: #5fa6b1;\n  padding: 5px 15px;\n  background-color: #d6f1f4;\n  border-radius: 50px;\n  font-weight: 700;\n}\n.m-newsletter--home {\n  --color-border: transparent;\n}\n.m-newsletter--home .m-newsletter-section__header {\n  margin-bottom: 18px;\n}\n.m-newsletter--home .m-newsletter-form__agreement-text {\n  font-size: 14px;\n}\n.m-newsletter--home .m-newsletter-form--bordered .m-newsletter-form__input, \n.m-newsletter--home .m-newsletter-form--bordered .m-newsletter-form__button--icon {\n  background-color: #fff;\n}\n\n@media (min-width: 1280px) {\n  .sf-custom--02 .col-3 {\n    padding-left: 100px;\n  }\n  .m-collection-list--home .m-collection-list__container {\n    --column-gap: 74px !important;\n  }\n  .sf-custom--01 .m-image-card__heading {\n    font-size: 30px;\n  }\n}\n@media (max-width: 767px) {\n  .m-collection-list--home {\n    --mobile-column-width: 38vw !important;\n  }\n  .m-collection-list--home .m-collection-list__container {\n    --row-gap-mobile: 5px !important;\n  }\n  .hidden-mobile {\n    display: none;\n  }\n  .sf-custom--02 .m-featured-slider__col-left {\n    padding-top: 48px;\n    padding-bottom: 48px;\n  }\n  .m-product-slider--home .m-section-py {\n    padding-top: 48px;\n    padding-bottom: 48px;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            
+            "title": "Kids Mini<br> \nGolf Toy Set",
+            "description": "<p>Your little one will love creating their own tricky<br\/> course with this mini golf set.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            
+            "button_style": "sf__btn-white",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            
+            "title": "Bird's Nest<br> Cafe Toy Set",
+            "description": "<p>Your little one will love creating their own tricky<br\/> course with this mini golf set.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            
+            "button_style": "sf__btn-white",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            
+            "title": "Wooden<br> Abacus",
+            "description": "<p>Your little one will love creating their own tricky<br\/> course with this mini golf set.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            
+            "button_style": "sf__btn-white",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "16236620625914e204": {
+      "type": "collection-list",
+      "blocks": {
+        "16236620625914e204-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Dolls"
+          }
+        },
+        "16236620625914e204-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Books"
+          }
+        },
+        "16236620625914e204-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sensory"
+          }
+        },
+        "d3333f55-c24d-4fad-a54c-8784cf25f0b6": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Game"
+          }
+        },
+        "50006155-3671-4866-881a-8906f6317c81": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Decoration"
+          }
+        },
+        "fbc8fa31-2342-4430-bf1c-2758d069ed32": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Gifts"
+          }
+        }
+      },
+      "block_order": [
+        "16236620625914e204-0",
+        "16236620625914e204-1",
+        "16236620625914e204-2",
+        "d3333f55-c24d-4fad-a54c-8784cf25f0b6",
+        "50006155-3671-4866-881a-8906f6317c81",
+        "fbc8fa31-2342-4430-bf1c-2758d069ed32"
+      ],
+      "settings": {
+        "heading": "Season Collection",
+        "heading_size": "h3",
+        
+        "description": "Must-have pieces selected \nevery month",
+        "header_alignment": "left",
+        
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": true,
+        "items_per_row": 6,
+        "item_gap": 50,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "1623662888aa704094": {
+      "type": "custom-content",
+      "blocks": {
+        "4cbb6e11-ddf5-4a3e-97dc-1616f1a29d7e": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "white",
+            
+            "title": "<span class=\"font-bold\">Snuggle Baby Gift Set<\/span>",
+            "subtitle": "",
+            "button_label": "Shop Now",
+            "button_style": "m-button--link",
+            
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        },
+        "b1ddbe25-44d2-4aa4-bfd3-87c1ae66af8a": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "white",
+            
+            "title": "<span class=\"font-bold\">First Go! Balance Bike<\/span>",
+            "subtitle": "",
+            "button_label": "Shop Now",
+            "button_style": "m-button--link",
+            
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        },
+        "92f78be8-f43d-4094-acbc-edc861890d6e": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "white",
+            
+            "title": "<span class=\"font-bold\">Tamsin Kids Play Table<\/span>",
+            "subtitle": "",
+            "button_label": "Shop Now",
+            "button_style": "m-button--link",
+            
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "4cbb6e11-ddf5-4a3e-97dc-1616f1a29d7e",
+        "b1ddbe25-44d2-4aa4-bfd3-87c1ae66af8a",
+        "92f78be8-f43d-4094-acbc-edc861890d6e"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom--01"
+      }
+    },
+    "162366334970e94c99": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "This week’s highlights",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 10,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "original",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop now",
+        "button_style": "m-button--primary",
+        
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-featured-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "1623663486654b39cd": {
+      "type": "featured-product-slider",
+      "blocks": {
+        "1623663486654b39cd-0": {
+          "type": "product",
+          "settings": {
+            "heading": "Featured Products",
+            "description": ""
+          }
+        },
+        "1623663486654b39cd-1": {
+          "type": "product",
+          "settings": {
+            "heading": "Featured Products",
+            "description": ""
+          }
+        },
+        "1623663486654b39cd-2": {
+          "type": "product",
+          "settings": {
+            "heading": "Featured Products",
+            "description": ""
+          }
+        }
+      },
+      "block_order": [
+        "1623663486654b39cd-0",
+        "1623663486654b39cd-1",
+        "1623663486654b39cd-2"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-c3c75c98-59e7-496a-8fcd-3350b15d74ea",
+        "image_placement": "left",
+        "slide_autoplay": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "autorotate_speed": 5,
+        "pcard_layout": "",
+        "pcard_alignment": "center",
+        "pcard_image_ratio": "1\/1",
+        "show_vendor": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-product-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "1623664609f235a30c": {
+      "type": "custom-content",
+      "blocks": {
+        "1623664609f235a30c-1": {
+          "type": "image",
+          "settings": {
+            
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "hidden-mobile",
+            "animations": "inherit"
+          }
+        },
+        "ceb41575-697b-4fd3-9cf8-aa762127bd5e": {
+          "type": "image",
+          "settings": {
+            
+            "width": "33%",
+            "alignment": "center",
+            
+            "animations": "inherit"
+          }
+        },
+        "1623664609f235a30c-0": {
+          "type": "text",
+          "settings": {
+            "title": "Rainbow Tamsin Kids<br> Chair Collection",
+            "subheading": "<span class=\"subheading__label\">Special Price<\/span>",
+            "text": "<p>High shine, long-lasting, vegan nail polishes in a<br\/> range of fashion colours and finishes <\/p>",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "button_label": "Shop Collection",
+            
+            "button_style": "m-button--primary",
+            
+            "block_custom_class": "col-3",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1623664609f235a30c-1",
+        "ceb41575-697b-4fd3-9cf8-aa762127bd5e",
+        "1623664609f235a30c-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 50,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-custom--02"
+      }
+    },
+    "162366529630bfe1d2": {
+      "type": "newsletter",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "scheme-c3c75c98-59e7-496a-8fcd-3350b15d74ea",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "Join the family!",
+        "description": "",
+        "text_size": "h3",
+        "email_placeholder": "Enter your email",
+        "submit_button": "",
+        "text_color": "black",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-newsletter--home",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "16602968525a62efef",
+    "1621243260e1af0c20",
+    "16236620625914e204",
+    "1623662888aa704094",
+    "162366334970e94c99",
+    "1623663486654b39cd",
+    "1623664609f235a30c",
+    "162366529630bfe1d2"
+  ]
+}

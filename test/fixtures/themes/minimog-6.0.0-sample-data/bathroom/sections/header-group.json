@@ -1,0 +1,63 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "message": "<span class=\"font-bold tracking-widest\">FREE SHIPPING ON ALL U.S. ORDERS $50+<\/span>",
+        "show_divider": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "05dc728c-4420-4597-818c-e4551c8328b8": {
+          "type": "topbar",
+          "settings": {
+            "show_divider": true,
+            "show_phone_numb": true,
+            "show_email": true,
+            "show_social_links": false,
+            "show_stores_page": true,
+            "show_currency_switcher": true,
+            "show_country_selector": false,
+            "show_language_switcher": false
+          }
+        }
+      },
+      "block_order": [
+        "05dc728c-4420-4597-818c-e4551c8328b8"
+      ],
+      "settings": {
+        "header_design": "logo-center-menu-left",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "STORE LOGO",
+        "logo_max_width": 180,
+        "sticky_logo_max_width": 105,
+        "mobile_logo_max_width": 105,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "uppercase_parent_level": true,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": false,
+        "show_cart_icon": true,
+        "show_wishlist_icon": false,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

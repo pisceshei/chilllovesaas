@@ -1,0 +1,61 @@
+{%-liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+  assign product_form_id = 'product-form-' | append: section.id | append: product.id 
+  
+  assign un_no_pick = true
+  if settings.pick_mode == 'no' and product.variants.size > 1
+    assign selected_variant = product.selected_variant
+    unless selected_variant
+      assign un_no_pick = false
+    endunless
+  elsif settings.pick_mode == 'first' and settings.hide_sold_out == false
+    assign selected_variant = product.selected_variant | default: product.variants.first
+  else
+    assign selected_variant = product.selected_or_first_available_variant
+  endif
+  if block.settings.label_onsale_style == 'fixed_amount'
+    assign sale_percent_t = 'products.product.save_fix_amount_single_price' | t: amount: 'save_1904' | replace_first: 'save_1904', '<span amount>save_1904</span>'
+  elsif block.settings.label_onsale_style == 'percentage'
+    assign sale_percent_t = 'products.product.save_percent_single_price' | t: percent: 'save_1904' | replace_first: 'save_1904', '<span percent>save_1904</span>'
+  endif 
+-%}
+<div class="hdt-product-info__item hdt-product__price hdt-flex hdt-flex-wrap" {{ block.shopify_attributes }}>
+  {%- render 'price', product: product, use_variant: true, form_id: product_form_id, show_badges: false, only_show_sale: true, show_volume_note: false, un_no_pick: un_no_pick -%}
+  {%- if block.settings.label_onsale_style != 'none' -%}
+    {%- render 'badges', product: product, use_variant: true,sale_percent_t:sale_percent_t,only_show_sale: true, form_id: product_form_id, label_onsale_style: block.settings.label_onsale_style -%}
+  {%- endif -%}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.main-product.blocks.price.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "select",
+        "id": "label_onsale_style",
+        "label": "t:settings_schema.products.settings.badges.onsale_badge.style.label",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:none"
+          },
+          {
+            "value": "percentage",
+            "label": "t:settings_schema.products.settings.badges.onsale_badge.style.percentage"
+          },
+          {
+            "value": "fixed_amount",
+            "label": "t:settings_schema.products.settings.badges.onsale_badge.style.fixed_amount"
+          }
+        ],
+        "default": "none"
+      },
+    ],
+    "presets": [
+      {
+        "name": "t:sections.main-product.blocks.price.name"
+      }
+    ]
+  }
+{% endschema %}

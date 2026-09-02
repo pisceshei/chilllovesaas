@@ -1,0 +1,25 @@
+<div class="m-menu-customer">
+  {% if shop.customer_accounts_enabled %}
+    <div class="m-menu-customer__wrapper">
+      <div class="m-menu-customer__label">{{ 'customer.account.title' | t }}</div>
+      {% render 'account-component',
+        display_by: 'text',
+        external_classes: 'm-menu-customer__account',
+        account_button_classes: 'm-button m-button--primary m-signin-button m:w-full'
+      %}
+    </div>
+  {% endif %}
+  <div class="m-menu-customer__language-currency">
+    {%- liquid
+      if section.settings.mb_show_country_selector
+        render 'country-selector', box_size: '', pos: 'top'
+      endif
+      if section.settings.mb_show_currency_switcher
+        render 'currency-switcher', box_size: '', pos: 'top'
+      endif
+      if section.settings.mb_show_language_switcher
+        render 'language-switcher', box_size: '', pos: 'top'
+      endif
+    -%}
+  </div>
+</div>

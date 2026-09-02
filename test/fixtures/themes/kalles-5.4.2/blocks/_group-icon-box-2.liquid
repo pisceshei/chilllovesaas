@@ -1,0 +1,183 @@
+{% style %}
+  .hdt-group-block--{{ block.id }} {
+    {%- capture width -%}
+    --width-group: {{ block.settings.width }}%; --width-group-md: {{ block.settings.width_md }}%; --width-group-lg: {{ block.settings.width_lg }}%;
+    {%- endcapture -%}
+    {{ width | replace: ' 8%', '8.33333333%' | replace: ' 16%', '16.66666667%' | replace: ' 33%', '33.33333333%' | replace: ' 41%', '41.66666667%' | replace: ' 58%', '58.33333333%' | replace: ' 66%', '66.66666667%' | replace: ' 83%', '83.33333333%' | replace: ' 91%', '91.66666667%' }};
+    --space-group: {{ block.settings.space }}px; --space-group-md: {{ block.settings.space_md }}px; --space-group-lg: {{ block.settings.space_lg }}px;
+  }
+  .hdt-group-block--{{ block.id }}>.hdt-group-block {
+    --space-groups: {{ block.settings.space }}px !important;
+  }
+  .hdt-group-block.hdt-hidden {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .hdt-group-block--{{ block.id }}>.hdt-group-block {
+      --space-groups: {{ block.settings.space_md }}px !important;
+    }
+    .hdt-group-block.md\:hdt-hidden {
+      display: none;
+    }
+    .hdt-group-block.md\:hdt-flex {
+      display: flex;
+    }
+  }
+  @media (min-width: 1050px) {
+    .hdt-group-block--{{ block.id }}>.hdt-group-block {
+      --space-groups: {{ block.settings.space_lg }}px !important;
+    }
+    .hdt-group-block.lg\:hdt-hidden {
+      display: none;
+    }
+    .hdt-group-block.lg\:hdt-flex {
+      display: flex;
+    }
+  }
+  .hdt-icon-box .hdt-text-start > .hdt-group-block{
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .hdt-text-block.hdt-rte.hdt-s-text2 > * {
+    color: rgb(var(--color-foreground2));
+  }
+  .hdt-icon-box .hdt-text-end > .hdt-group-block {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .hdt-icon-box:has(.hdt_icon_heading) .hdt-scroll-snap {
+    padding: 0 15px 15px;
+    margin: 0 -15px -15px;
+  }
+
+  #Scroll-{{ block.id }} {
+    padding: 20px;
+    border: 1px solid rgb(var(--color-line-border));
+    border-radius: 10px;
+    transition: .3s all linear;
+    box-shadow: 7px 7px 12.22px .78px #557bd012;
+    align-items: {{ section.settings.content_align }}
+  }
+
+  #Scroll-{{ block.id }}:hover {
+    background-color: rgb(var(--color-accent));
+
+  }
+
+
+  #Scroll-{{ block.id }}:hover .hdt_icon__header > .hdt-heading-block.hdt-s-text {
+    color: rgb(var(--color-background));
+  }
+  #Scroll-{{ block.id }}:hover .hdt_icon__header > .hdt-icon-block.hdt-s-text {
+    color: rgb(var(--color-background));
+  }
+
+  #Scroll-{{ block.id }}:hover .hdt-text-block.hdt-rte.hdt-s-text2 > * {
+    color: rgb(var(--color-background));
+  }
+{% endstyle %}
+{%- capture visible -%}
+{%- if block.settings.width == 0 %} hdt-hidden{% endif -%}
+{%- if block.settings.width_md == 0 %} md:hdt-hidden{% else %} md:hdt-flex{% endif -%}
+{%- if block.settings.width_lg == 0 %} lg:hdt-hidden{% else %} lg:hdt-flex{% endif -%}
+{%- endcapture -%}
+<div
+  id="Scroll-{{ block.id }}"
+  class="hdt-group-block hdt-group-block--{{ block.id }} hdt-group-layout hdt-snap-center {{ visible }}"
+  {{ block.shopify_attributes }}
+>
+  {% content_for 'blocks' %}
+</div>
+
+{% schema %}
+{
+  "name": "Group box 2",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "_icon-heading"
+    },
+    {
+      "type": "text"
+    }
+  ],
+  "settings": [
+    {
+      "type": "range",
+      "id": "width_lg",
+      "label": "Width",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "width_md",
+      "label": "Tablet width",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "width",
+      "label": "Mobile width",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100
+    },
+
+    {
+      "type": "range",
+      "id": "space_lg",
+      "label": "Vertical space",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "space_md",
+      "label": "Tablet vertical space",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "space",
+      "label": "Mobile vertical space",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    }
+  ],
+  "presets": [
+    {
+      "name": "Group box 2",
+      "blocks": [
+        {
+          "type": "_icon-heading"
+        },
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

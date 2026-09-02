@@ -1,0 +1,98 @@
+<!-- sections/sidebar-product.liquid -->
+{{ 'hdt-widget.css' | asset_url | stylesheet_tag }}
+<style>
+  .hdt-product-sidebar:has(.hdt-sidebar-inner:empty){
+    display: none;
+  }
+  @media (width > 767px){
+    .hdt-product-sidebar{
+      .hdt-sidebar-dialog{
+        .hdt-dialog-drawer__header{
+          display: none;
+        }
+        display: block;
+        position: static;
+        .hdt-dialog-drawer__inner{
+          padding: 0;
+          overflow: unset;
+        }
+      }
+    }
+  }
+</style>
+<div class="hdt-section hdt-section-sidebar hdt-section-sidebar-product hdt-product-sidebar {% if block.settings.last_order %}md:hdt-order-last hdt-sidebar-order-last{% endif %}">
+  <div class="hdt-sidebar hdt-sidebar-product" color-scheme="{{ block.settings.color_scheme }}">
+    <button aria-controls="drawer-sidebar-product-{{ block.id }}" class="hdt-btn-sidebar hdt-fixed hdt-left-0 hdt-flex hdt-align-center hdt-oh hdt-s-gradient hdt-s-text md:hdt-hidden">
+      <span class="hdt-btn-sidebar-icon hdt-inline-flex hdt-align-center hdt-justify-center"><svg class="hdt-inline-block" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></span>
+      <span class="hdt-btn-sidebar-text">{{ 'onboarding.open_sidebar' | t }}</span>
+    </button>
+    <hdt-drawer class="hdt-drawer hdt-drawer-sidebar hdt-contents" color-scheme="{{ block.settings.color_scheme }}">
+      <dialog id="drawer-sidebar-product-{{ block.id }}" class="hdt-dialog hdt-dialog-drawer hdt-sidebar-dialog" scroll-lock pos="left">
+        <div class="hdt-dialog-drawer__header">
+          <h3 slot="header" class="hdt-drawer-sidebar-title hdt-text-lg hdt-uppercase hdt-font-semibold">{{ 'products.sidebar.label' | t }}</h3>
+          <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="drawer-sidebar-product-{{ block.id }}" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+        </div>
+        <div class="hdt-dialog-drawer__inner hdt-current-scrollbar">
+          <div class="hdt-sidebar-inner" style="--spacing-item:{{ block.settings.space }}px">
+            {%- content_for 'blocks' -%}
+          </div>
+        </div>
+      </dialog>
+    </hdt-drawer>
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:sections.sidebar-product.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Enable sidebar block can be disable sidebar section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label"
+      },
+      {
+        "type": "range",
+        "id": "space",
+        "label": "t:sections.sidebar-product.settings.space.label",
+        "info": "t:sections.sidebar-product.settings.space.info",
+        "default": 50,
+        "min": 20,
+        "max": 100,
+        "step": 1,
+        "unit": "px"
+      },
+      {
+        "type": "checkbox",
+        "id": "last_order",
+        "label": "Last position",
+        "default": false,
+        "info": "Only work on desktop"
+      },
+    ],
+    "blocks": [
+      {
+        "type": "_product_sidebar_categories",       
+      },
+      {
+        "type": "_product_sidebar_gallery",
+      },
+      {
+        "type": "_product_sidebar_fp",
+      },
+      {
+        "type": "_product_sidebar_iconbox",
+      },
+      {
+        "type": "_product_sidebar_html",
+      },
+      {
+        "type": "_product_sidebar_socials",
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,517 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main_heading_fgVmaw": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_p4fPaC": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page.title }}",
+            "line_height": "hdt-lh-1",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false
+          },
+          "blocks": {}
+        },
+        "heading_liquid_q9LNqL": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "Follow your passion, and success will follow you",
+            "line_height": "",
+            "font_family": "hdt-font-1",
+            "text_size": "base",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_p4fPaC",
+        "heading_liquid_q9LNqL"
+      ],
+      "settings": {
+        "use_dynamic_source": true,
+        "image": "shopify://shop_images/shop-banner.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 54,
+        "space_item": 10,
+        "pd": "54px,,54px,",
+        "pd_mb": "54px,,54px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "custom_section_mnTphP": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_DCDGjR": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "start",
+            "content_position_mb": "center-start",
+            "alignment": "left",
+            "alignment_mb": "left",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "text_JNRV4X": {
+              "type": "text",
+              "settings": {
+                "text": "<h6>OUR MISSION</h6>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "2xl",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_kRAtyr": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "liquid_rgJ8Fd": {
+              "type": "_liquid",
+              "settings": {
+                "text": "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,<hdt-font-3> totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae</hdt-font-3> vitae dicta sunt explicabo nemo enim ipsam.",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "base",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_JNRV4X",
+            "spacer_kRAtyr",
+            "liquid_rgJ8Fd"
+          ]
+        },
+        "multi_column_mJ4tbf": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 20,
+            "content_position": "start",
+            "content_position_mb": "center-start",
+            "alignment": "left",
+            "alignment_mb": "left",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "text_YnAUrb": {
+              "type": "text",
+              "settings": {
+                "text": "<h6>OUR<strong> </strong>STORIES</h6>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "2xl",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_JK7pAQ": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_kHUw3G": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_YnAUrb",
+            "spacer_JK7pAQ",
+            "text_kHUw3G"
+          ]
+        },
+        "multi_column_N8zgbM": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 10,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "start",
+            "content_position_mb": "center-start",
+            "alignment": "left",
+            "alignment_mb": "left",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "text_3qbFR6": {
+              "type": "text",
+              "settings": {
+                "text": "<h6>OUR APPROACH</h6>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "2xl",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_TFppb4": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "liquid_YjyfWf": {
+              "type": "_liquid",
+              "settings": {
+                "text": "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit,<hdt-font-3> sed quia non numquam eius modi tempora incidunt ut labore</hdt-font-3>  et dolore magnam aliquam quaerat voluptatem.",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "base",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_cDrtpW": {
+              "type": "spacer",
+              "name": "Spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 14,
+                "space": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_3qbFR6",
+            "spacer_TFppb4",
+            "liquid_YjyfWf",
+            "spacer_cDrtpW"
+          ]
+        },
+        "multi_column_q8pbfr": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 10,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 20,
+            "content_position": "start",
+            "content_position_mb": "center-start",
+            "alignment": "left",
+            "alignment_mb": "left",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "text_nddCYE": {
+              "type": "text",
+              "settings": {
+                "text": "<h6>OUR PHILOSOPHY</h6>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "2xl",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_MBmq6H": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_VETPai": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur? Quis nostrum exercitationem ullam.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_nddCYE",
+            "spacer_MBmq6H",
+            "text_VETPai"
+          ]
+        },
+        "multi_column_L3VjgX": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "12",
+            "column_tb": "12",
+            "column_mb": "12",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "content_position_mb": "center",
+            "alignment": "left",
+            "alignment_mb": "left",
+            "background_color": "#ffffff",
+            "rounded": "none"
+          },
+          "blocks": {
+            "blockquote_enU7Da": {
+              "type": "blockquote",
+              "settings": {
+                "quote": "<p><em>I am text block. Click edit button to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur? Quis nostrum exercitationem ullam.</em></p>"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "blockquote_enU7Da"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_DCDGjR",
+        "multi_column_mJ4tbf",
+        "multi_column_N8zgbM",
+        "multi_column_q8pbfr",
+        "multi_column_L3VjgX"
+      ],
+      "custom_css": [
+        "blockquote {font-family: var(--f_family_3); color: rgb(var(--color-foreground2));background-color: #f5f5f5;}",
+        "hdt-font-3{font-style: italic;}"
+      ],
+      "settings": {
+        "layout": "12",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "color_scheme": "",
+        "pd": "60px,,50px,",
+        "pd_mb": "48px,,40px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "our_team_VpLJtG": {
+      "type": "our-team",
+      "blocks": {
+        "ourteam_carousel_cxphgq": {
+          "type": "_ourteam_carousel",
+          "settings": {
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "hover",
+            "nav_style": "default",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": false,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "pag_hide_mobile": false
+          },
+          "blocks": {
+            "ourteam_item_G4UN6c": {
+              "type": "_ourteam_item",
+              "settings": {
+                "image": "shopify://shop_images/mem-01.jpg",
+                "name": "Lisa John",
+                "position": "Fashion Design",
+                "facebook": "https://facebook.com/",
+                "instagram": "https://instagram.com",
+                "behance": "https://behance.net/",
+                "tiktok": ""
+              },
+              "blocks": {}
+            },
+            "ourteam_item_FNc7q9": {
+              "type": "_ourteam_item",
+              "settings": {
+                "image": "shopify://shop_images/mem-02.jpg",
+                "name": "Jane Doe",
+                "position": "Director",
+                "facebook": "https://facebook.com/",
+                "instagram": "https://instagram.com/",
+                "behance": "",
+                "tiktok": ""
+              },
+              "blocks": {}
+            },
+            "ourteam_item_MMyXqF": {
+              "type": "_ourteam_item",
+              "settings": {
+                "image": "shopify://shop_images/mem-03.jpg",
+                "name": "Cartherin Forres",
+                "position": "Marketing Director",
+                "facebook": "https://facebook.com/",
+                "instagram": "https://instagram.com/",
+                "behance": "",
+                "tiktok": "https://tiktok.com/"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "ourteam_item_G4UN6c",
+            "ourteam_item_FNc7q9",
+            "ourteam_item_MMyXqF"
+          ]
+        },
+        "our-team": {
+          "type": "section-heading",
+          "disabled": true,
+          "static": true,
+          "settings": {
+            "design_heading": "2",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_d3A4By": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Our Team",
+                "line_height": "",
+                "heading_size": "h5",
+                "text_color": "hdt-s-text"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_d3A4By"
+          ]
+        }
+      },
+      "block_order": [
+        "ourteam_carousel_cxphgq"
+      ],
+      "settings": {
+        "image_ratio": "adapt_image",
+        "col_dk": "3",
+        "col_tb": "2",
+        "col_mb": "1",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "pd": ",,85px,",
+        "pd_mb": ",,49px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    }
+  },
+  "order": [
+    "main_heading_fgVmaw",
+    "custom_section_mnTphP",
+    "our_team_VpLJtG"
+  ]
+}

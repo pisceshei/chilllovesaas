@@ -1,0 +1,24 @@
+{%- capture style_css -%}
+  {%- case type -%}
+    {%- when 'background_content' -%}
+      --overlay-opacity: {{ settings.overlay_opacity | divided_by: 100.00 }};
+      --overlay-color: {{ settings.overlay_color.rgb }};
+      --content-pd-tb-dk: {{ settings.padding_vertical }}px;
+      --content-pd-lr-dk: {{ settings.padding_horizontal }}px;
+      --content-min-width: {{ settings.min_width_content }}px;
+      --content-position-x: {{ settings.position_x }}%;
+      --content-position-y: {{ settings.position_y }}%;
+      --content-position-mb-x: {{ settings.position_x_mb }}%;
+      --content-position-mb-y: {{ settings.position_y_mb }}%;
+      --border-color: {{ settings.border_color }};
+      --background-border: {{ settings.background_border.rgb }};
+      --background-content-color: {{ settings.background_content_color.rgb }};
+      --content-bg-opacity: {{ settings.bg_opacity | divided_by: 100.00 }};
+      --content-border-opacity: {{ settings.border_opacity | divided_by: 100.00 }};
+      --content-border-style: {{ settings.border_style }};
+      --border-w: {% if settings.border_style == 'none' %}0px{%- elsif settings.border_style == 'double' -%}5px{% else %}1px{% endif %};
+      --border-pd-dk: {{ settings.border_pd_dk }}px;
+      --border-pd-mb: {{ settings.border_pd }}px;
+  {%- endcase -%}
+{%- endcapture -%}
+{{ style_css | strip_newlines | replace: '  ' | join: ' ' }}

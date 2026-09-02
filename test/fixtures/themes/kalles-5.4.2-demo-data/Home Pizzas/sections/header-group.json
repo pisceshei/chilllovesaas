@@ -1,0 +1,226 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "header_inline_blocks_xePFbC": {
+      "type": "header-inline-blocks",
+      "blocks": {
+        "mega_block_7DJYPE": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_PKdDaN": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "pizzas",
+              "burgers"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "scheme-1",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_ntakNQ": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_7qDM6U": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "copy-of-mushroom-pizza",
+              "copy-of-combo-pizza-1",
+              "copy-of-combo-pizza-2",
+              "copy-of-vegetable-pizza",
+              "paneer-onion-pizza",
+              "copy-of-burnt-grilled-pizza",
+              "copy-of-paneer-onion-pizza-1"
+            ],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_MtwFkx": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_Jbe4K9": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Blog",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_blog",
+            "html": "",
+            "page": "",
+            "blog": "fashion",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_7DJYPE",
+        "mega_block_PKdDaN",
+        "mega_block_ntakNQ",
+        "mega_block_7qDM6U",
+        "mega_block_MtwFkx",
+        "mega_block_Jbe4K9"
+      ],
+      "custom_css": [
+        "[data-index=\"6\"],[data-index=\"7\"],[data-index=\"4\"] {display: none;}",
+        ".hdt-collection-title-text {font-weight: 600; font-size: 1.4rem;}"
+      ],
+      "settings": {
+        "header_layout": "logo_center",
+        "header_fullwidth": true,
+        "header_height": 88,
+        "logo": "shopify:\/\/shop_images\/kalles.svg",
+        "logo_width": 95,
+        "header_colors": "",
+        "main_menu": "main-menu",
+        "lazy_mn": false,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "normal",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "menu_type": "default",
+        "header_menu_colors": "",
+        "h_icon": "kalles",
+        "hover_icon": "2",
+        "search_type": "icon",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_socials": false,
+        "header_height_mb": 60,
+        "logo_width_mb": 95,
+        "main_menu_mobile": "",
+        "header_categories": true,
+        "menu_categories": "shop-categories",
+        "lazy_mn_mb": true,
+        "only_click_icon": false,
+        "header_mobile_colors": "",
+        "note_mobile": "<span class=\"hdt-inline-flex\" style=\"margin-bottom: 10px\">Need help ? <\/span><span class=\"hdt-flex hdt-flex-col hdt-text-sm hdt-text-secondary\" style=\"line-height: 24px;\"><span>Email: <b class=\"hdt-font-medium\">info@fashionshop.com<\/b><\/span><span>Phone: <b class=\"hdt-font-medium\">(212) 555-1234<\/b><\/span><\/span>",
+        "header_transparent": false,
+        "header_transparent_colors": "",
+        "background_opacity_transparent": 0,
+        "header_space_top": 0,
+        "header_space_top_mobile": 0,
+        "sticky_type": "on_scroll_up",
+        "header_sticky_colors": "",
+        "background_opacity_sticky": 0,
+        "sticky_glass": false
+      }
+    }
+  },
+  "order": [
+    "header_inline_blocks_xePFbC"
+  ]
+}

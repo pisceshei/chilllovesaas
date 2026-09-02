@@ -1,0 +1,48 @@
+
+  {%- assign mg = box.settings.mg | remove: ' ' | split: ',' -%}
+  {%- assign pd = box.settings.pd | remove: ' ' | split: ',' -%}
+  {%- assign mg_mb = box.settings.mg_mb | remove: ' ' | split: ',' -%}
+  {%- assign pd_mb = box.settings.pd_mb | remove: ' ' | split: ',' -%}
+  {%- assign names = 'block-start,inline-end,block-end,inline-start' | split: ',' -%}
+
+  .hdt-section-spacing-{{ box.id }} {
+    @layer sectionspace.base {
+      {%- if box.settings.mg != blank or box.settings.pd != blank -%}
+        {%- for i in (0..3) -%}
+          {%- assign n = names[i] -%}
+          {%- if box.settings.mg != blank and mg[i] != blank -%}
+            --mg-{{ n }}: {{ mg[i] }};
+          {%- endif -%}
+          {%- if box.settings.pd != blank and pd[i] != blank -%}
+            --pd-{{ n }}: {{ pd[i] }};
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+    }
+    @layer sectionspace.tablet {
+      {%- if box.settings.mg != blank or box.settings.pd != blank -%}
+        {%- for i in (0..3) -%}
+          {%- assign n = names[i] -%}
+          {%- if box.settings.mg != blank and mg[i] != blank -%}
+            --mg-{{ n }}: calc({{ mg[i] }} * var(--space-rate-{{ n | split: '-' | first }}, 0.75));
+          {%- endif -%}
+          {%- if box.settings.pd != blank and pd[i] != blank -%}
+            --pd-{{ n }}: calc({{ pd[i] }} * var(--space-rate-{{ n | split: '-' | first }}, 0.75));
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+    }
+    @layer sectionspace.mobile {
+      {%- if box.settings.mg_mb != blank or box.settings.pd_mb != blank -%}
+        {%- for i in (0..3) -%}
+          {%- assign n = names[i] -%}
+          {%- if box.settings.mg_mb != blank and box.settings.mg != blank and mg_mb[i] != blank -%}
+            --mg-{{ n }}: {{ mg_mb[i] }};
+          {%- endif -%}
+          {%- if box.settings.pd_mb != blank and box.settings.pd != blank and pd_mb[i] != blank -%}
+            --pd-{{ n }}: {{ pd_mb[i] }};
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+    }
+  }

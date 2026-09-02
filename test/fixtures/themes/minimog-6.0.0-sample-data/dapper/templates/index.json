@@ -1,0 +1,732 @@
+{
+  "sections": {
+    "c72959ad-9620-4e94-ae33-1bde908e9701": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__slideshow .m-slider__footer span + a {\n  margin-left: 12px;\n}\n.sf-home__slideshow .m-slider__footer span + span {\n  margin-left: 21px;\n}\n.sf-home__slideshow  .m-slider__footer {\n     gap: 0;\n}\n.sf-home__slideshow  .m-slider__footer span + span {\n     margin-left: 21px;\n     color: rgba(var(--color-foreground), 0.3);\n}\n.sf-home__slideshow  .m-slider__footer span + a {\n     margin-left: 12px;\n}\n\n@media (max-width: 1023px) and (min-width: 768px) {\n  .sf-home__slideshow .m-richtext__title {\n    font-size: 32px;\n  }\n  .sf-home__slideshow .m-slider__footer {\n    bottom: 15px;\n  }\n.sf-home__slideshow .m-slide__content {\npadding-right: 25%;\n}\n}\n@media (min-width: 1024px) {\n  .sf-home__slideshow .m-slide__content {\n    padding-right: 15%;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "slider_item_ibwtFQ": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "right middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "New Arrivals",
+            "title": "Discover your <br>\nown style",
+            "description": "",
+            "image_link": "",
+            "button_text": "Explore Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "second_button_text": "",
+            "second_button_link": "",
+            "second_button_style": "m-button--primary",
+            "second_button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The Waffle Long-Sleeve Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "right middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "New Arrivals",
+            "title": "Venice Haute <br>\nCouture",
+            "description": "",
+            "image_link": "",
+            "button_text": "Explore Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "second_button_text": "",
+            "second_button_link": "",
+            "second_button_style": "m-button--primary",
+            "second_button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The Waffle Long-Sleeve Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "slider_item_7dFdK9": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "right middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "New Arrivals",
+            "title": "Get ready <br>\nStay classic",
+            "description": "",
+            "image_link": "",
+            "button_text": "Explore Now",
+            "button_link": "shopify:\/\/collections\/men-all",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "second_button_text": "",
+            "second_button_link": "",
+            "second_button_style": "m-button--primary",
+            "second_button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The Waffle Long-Sleeve Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "slider_item_ibwtFQ",
+        "1621243260e1af0c20-0",
+        "slider_item_7dFdK9"
+      ],
+      "custom_css": [
+
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 4,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "collection_list_aQpHyf": {
+      "type": "collection-list",
+      "blocks": {
+        "collection_block_gVeKAE": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shirts"
+          }
+        },
+        "collection_block_iymnkm": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Pants"
+          }
+        },
+        "collection_block_h9MRbe": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shorts"
+          }
+        },
+        "collection_block_Epf7Np": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sweaters"
+          }
+        }
+      },
+      "block_order": [
+        "collection_block_gVeKAE",
+        "collection_block_iymnkm",
+        "collection_block_h9MRbe",
+        "collection_block_Epf7Np"
+      ],
+      "custom_css": [
+        ".m-collection-card__title {font-weight: 400;}",
+        "@media (min-width: 1280px) {.m-collection-list__wrapper .m-collection-list__content {padding-left: 0; } .m-collection-list__content-container {padding-left: var(--fluid-container-offset, 60px); }}",
+        "@media (min-width: 1550px) {[data-enable-slider=\"true\"] .m-collection-list__content {padding-left: calc( (100vw - 1420px - var(--m-scrollbar-width, 0px) - 30px) \/ 2 ); } .m-collection-list__content-container {padding-left: 15px; }}",
+        "@media (max-width: 767px) {.m-section__header {text-align: center; }}"
+      ],
+      "settings": {
+        "heading": "Shop by Categories",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "inside",
+        "text_alignment": "left",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 4,
+        "item_gap": 50,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "featured_collection_mRiy4D": {
+      "type": "featured-collection",
+      "custom_css": [
+        ".m-featured-collection__button {margin-top: 40px;}",
+        "@media (max-width: 767px) {.m-featured-collection__button {margin-top: 32px; }}"
+      ],
+      "settings": {
+        "heading": "A new season essential",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 7,
+        "items_per_row": 3,
+        "item_gap": 50,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "Shop All Products",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "scrolling_promotion_nWVx9B": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "image_qxFWXq": {
+          "type": "image",
+          "settings": {
+            "image_height": 80,
+            "image_link": ""
+          }
+        },
+        "announcement_ib4Lfj": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "large",
+            "text": "New Season Essential",
+            "text_size": 42,
+            "text_link": ""
+          }
+        },
+        "image_bagiw8": {
+          "type": "image",
+          "settings": {
+            "image_height": 80,
+            "image_link": ""
+          }
+        },
+        "announcement_U3Q3jt": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "large",
+            "text": "Purposefully Designed",
+            "text_size": 42,
+            "text_link": ""
+          }
+        },
+        "image_fiWd83": {
+          "type": "image",
+          "settings": {
+            "image_height": 80,
+            "image_link": ""
+          }
+        },
+        "announcement_JpWgpN": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "large",
+            "text": "New Season Essential",
+            "text_size": 42,
+            "text_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "image_qxFWXq",
+        "announcement_ib4Lfj",
+        "image_bagiw8",
+        "announcement_U3Q3jt",
+        "image_fiWd83",
+        "announcement_JpWgpN"
+      ],
+      "custom_css": [
+        ".m-scrolling-promotion-section {border-width: 1px 0 1px 0; border: 1px solid rgb(var(--color-border));}",
+        "@media (max-width: 767px) {.m-promotion__text {--text-size: 40px !important; }}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 30,
+        "item_gap": 40,
+        "item_gap_mobile": 20,
+        "color_scheme": "",
+        "padding_top": 26,
+        "padding_bottom": 26,
+        "custom_class": ""
+      }
+    },
+    "lookbook_MrzxNk": {
+      "type": "lookbook",
+      "blocks": {
+        "lookbook_slider_fkXebk": {
+          "type": "lookbook-slider",
+          "settings": {
+            "color_scheme": "default",
+            "sub_title": "Favorite products",
+            "title": "Shop this look",
+            "heading_size": "h3",
+            "text": "",
+            "content_alignment": "center",
+            "text_color": "inherit",
+            "image_position": "right",
+            "button_style": "light",
+            "color_scheme_hovered": "default",
+            "top_1": 72,
+            "left_1": 55,
+            "top_2": 33,
+            "left_2": 40,
+            "top_3": 93,
+            "left_3": 30,
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "product_per_view": "2",
+            "show_pagination": true,
+            "pagination_style": "fraction",
+            "show_navigation": true,
+            "pcard_layout": "",
+            "pcard_image_ratio": "",
+            "show_vendor": false,
+            "hide_title": false
+          }
+        }
+      },
+      "block_order": [
+        "lookbook_slider_fkXebk"
+      ],
+      "custom_css": [
+        ".m-lookbook__heading {font-size: calc(((var(--font-h2-desktop)) \/ (var(--font-base-size))) * 1rem);}",
+        ".m-lookbook__header {margin-bottom: 32px;}",
+        "@media (max-width: 767px) {.m-lookbook__subheading {margin-bottom: 12px; } .m-lookbook__heading {font-size: calc(((var(--font-h2-mobile)) \/ (var(--font-base-size))) * 1rem); } .m-lookbook .m-mixed-layout + .m-lookbook__col-full {margin-top: 0; } .m-lookbook-card {margin-bottom: 0; }}",
+        "@media (min-width: 768px) {.m-lookbook__header {margin-bottom: 60px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "default",
+        "image_aspect_ratio": "original",
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "testimonials_bzU636": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_JrQTB7": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>“ These are beautiful, well made & comfortable! I bought them to wear to work & casually. I wore them immediately walking in the city & has no problem. “<\/p>",
+            "footer": "<p>Jared S.<\/p>",
+            "image_text": ""
+          }
+        },
+        "testimonial_Ax89pn": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>“ These are beautiful, well made & comfortable! I bought them to wear to work & casually. I wore them immediately walking in the city & has no problem. “<\/p>",
+            "footer": "<p>Austin L.<\/p>",
+            "image_text": ""
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_JrQTB7",
+        "testimonial_Ax89pn"
+      ],
+      "custom_css": [
+        ".m-testimonial__name > div {font-weight: 500;}",
+        ".m-slider-controls__button {background-color: rgb(var(--color-background-secondary)); border-color: rgb(var(--color-background-secondary));}",
+        ".m-slider-controls__button:hover {background-color: rgb(var(--color-button-hover)); color: rgb(var(--color-button-text-hover)); border-color: rgb(var(--color-button-hover));}",
+        "@media (max-width: 767px) {.m-slider-controls__button {display: none; }}"
+      ],
+      "settings": {
+        "heading": "What People Are Saying",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "footer",
+        "design": "testimonials-3",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "image_with_text_TcXCQD": {
+      "type": "image-with-text",
+      "custom_css": [
+        ".m-richtext .m-richtext__button {margin-top: 32px;}",
+        "@media (max-width: 1023px) {.m-image-with-text__inner {row-gap: 48px; } .m-richtext__description br, .m-richtext__title br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 124,
+        "item_gap_mobile": 28,
+        "layout": "left",
+        "image_column_size": "7",
+        "image_overlap": false,
+        "show_image_reverse": false,
+        "hover_effect": false,
+        "image_animation": "none",
+        "link": "",
+        "link_2": "",
+        "second_image_offset_top": 10,
+        "title": "Get Moving with 60% Off <br>on Heavyweight Shirt",
+        "sub_title": "On Sale",
+        "text": "<p>The perfect blend of comfort and durability is now at your <br\/>fingertips, all at a price that's hard to resist.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "featured_collection_BT7LDj": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "A new season essential",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 6,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_qCQcCx": {
+      "type": "custom-content",
+      "blocks": {
+        "text_8wFzXG": {
+          "type": "text",
+          "settings": {
+            "title": "The Coastal Edition",
+            "subheading": "",
+            "text": "<p>Our new cozy collection is made with environmentally friendly materials and <br\/>simple to care for so you can stay cozy wherever .<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "Shop Collection",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_8wFzXG"
+      ],
+      "custom_css": [
+        ".m-richtext .m-richtext__button {margin-top: 32px;}",
+        "@media (max-width: 767px) {.m-richtext__description br, .m-richtext__title br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "custom_content_G7X4g7": {
+      "type": "custom-content",
+      "blocks": {
+        "image_card_76hwqU": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Sweaters",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_kPeqEU": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Jeans",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_Nx8QTE": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Polo Shirts",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_card_76hwqU",
+        "image_card_kPeqEU",
+        "image_card_Nx8QTE"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 50,
+        "gap_mobile": 20,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "16225125199f82d8fe": {
+      "type": "icon-box",
+      "blocks": {
+        "16225125199f82d8fe-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "100 Days Return",
+            "description": "<p>No question asked<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16225125199f82d8fe-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Lifetime Warranty",
+            "description": "<p>For original owners<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16225125199f82d8fe-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Customers Services",
+            "description": "<p>Our priority<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "16225125199f82d8fe-0",
+        "16225125199f82d8fe-1",
+        "16225125199f82d8fe-2"
+      ],
+      "custom_css": [
+        ".m-icon-box--vertical .m-icon-box__content {margin-top: 12px;}",
+        ".m-mixed-layout--mobile-scroll .m-mixed-layout__inner > * {--mobile-column-width: 60vw;}"
+      ],
+      "settings": {
+        "heading": "Embrace comfort & style",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 0,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "76px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": true,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "m-icon-box--small",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "c72959ad-9620-4e94-ae33-1bde908e9701",
+    "1621243260e1af0c20",
+    "collection_list_aQpHyf",
+    "featured_collection_mRiy4D",
+    "scrolling_promotion_nWVx9B",
+    "lookbook_MrzxNk",
+    "testimonials_bzU636",
+    "image_with_text_TcXCQD",
+    "featured_collection_BT7LDj",
+    "custom_content_qCQcCx",
+    "custom_content_G7X4g7",
+    "16225125199f82d8fe"
+  ]
+}

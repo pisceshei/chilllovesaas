@@ -1,0 +1,50 @@
+{%- assign image = article.image -%}
+{%- assign article_tags = article.tags  -%}
+{% if image == blank %}{% continue %}{% endif -%}
+<div class="hdt-article-image hdt-relative" style="max-width:{{ image.width }}px;margin-left:auto;margin-right:auto;">   
+  {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: 'image-full_width hdt-full-image hdt-object-cover', sizes: '100vw', widths: '375,450,550,750,800,1100,1500,1780,1920,2000,3000,3840' }}
+  {%- if block.settings.cate_des != 'none' -%}
+    {%- assign article_tags = article_tags | join: ';' | split: ';' -%}
+    {%- assign tag_category = article_tags | where: 'category_' | first -%}
+    <div class="hdt-article-cate-{{ block.settings.cate_des }} {% if block.settings.cate_des == 'alternative' %} hdt-absolute hdt-font-medium {%  else %} hdt-font-normal hdt-text-base {% endif %}">
+      {%- if tag_category != blank -%} 
+        <a href="{{ blog.url }}/tagged/{{ tag_category | handle }}" class="hdt-article-cate-text {% if block.settings.cate_des == 'alternative' %}hdt-btn{% endif %}">{{ tag_category | remove : 'category_' | strip }}</a> 
+      {%- else -%}
+        <a href="{{ blog.url }}" class="hdt-article-cate-text">{{ blog.title }}</a> 
+      {%- endif -%}
+    </div> 
+  {%- endif -%}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.main-article.image_name",
+    "tag": null,
+    "settings": [
+      {
+        "type":"select",
+        "id":"cate_des",
+        "label":"t:sections.main-article.cate_des.label",
+        "options":[
+          {
+            "value":"none",
+            "label":"t:sections.main-article.cate_des.option_1"
+          },
+          {
+            "value":"default",
+            "label":"t:sections.main-article.cate_des.option_2"
+          },
+          {
+            "value":"alternative",
+            "label":"t:sections.main-article.cate_des.option_3"
+          }
+        ]
+      }
+    
+    ],
+    "presets":[
+      {
+        "name":"t:sections.main-article.image_name"
+      }
+    ]
+  }
+{% endschema %}

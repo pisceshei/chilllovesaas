@@ -1,0 +1,408 @@
+{
+  "sections": {
+    "1659926191a36ed220": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".border-top-double-6 {\n  border-top: 6px double rgb(var(--color-border));\n}\n  \n.sf-custom-content--richtext .m-custom-content__block-inner {\n  border-style: double;\n  border-width: 6px 0;\n  padding: 40px 0; \n  border-color: rgb(var(--color-border));\n}\n  \n@media ( min-width: 1024px ) {\n  .sf-custom-content--richtext .m-custom-content__block-inner {\n    padding: 60px 0;\n    margin: 0;\n  }\n}"
+      }
+    },
+    "165959683132f7888b": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "container-fluid",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "white",
+        "title": "The symbolism of <br>spring flowers",
+        "subtitle": "",
+        "text": "<p>Each petal and leaf is meticulously hand-cut from Italian <br\/>crepe paper, painted, shaped.<\/p>",
+        "button_label": "SHOP NOW",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf-home__hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "16595850289c0b4c41": {
+      "type": "collection-list",
+      "blocks": {
+        "16595850286b090433-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Peonies"
+          }
+        },
+        "16595850286b090433-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Roses"
+          }
+        },
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sunflowers"
+          }
+        },
+        "16595850286b090433-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Lilies"
+          }
+        },
+        "1fe4fd06-880b-41c3-a95a-1a5b5ea99c60": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Ranunculus"
+          }
+        },
+        "72dc4ccf-807d-4ec7-a19c-ea5dde5b6a95": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Lavender"
+          }
+        }
+      },
+      "block_order": [
+        "16595850286b090433-0",
+        "16595850286b090433-1",
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd",
+        "16595850286b090433-2",
+        "1fe4fd06-880b-41c3-a95a-1a5b5ea99c60",
+        "72dc4ccf-807d-4ec7-a19c-ea5dde5b6a95"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 6,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 30,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "166011443573f307ac": {
+      "type": "custom-content",
+      "blocks": {
+        "16601144354b6b3a11-0": {
+          "type": "text",
+          "settings": {
+            "title": "Creating connections",
+            "subheading": "Our Mission",
+            "text": "<p>We're a modern floral and gifting company designed for thoughtful people. <br\/>Through our expressive bouquets and plants as well as reason-specific gifts, we're helping <br\/>others feel more cared for even from afar.<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "small",
+            "text_color": "black",
+            "button_label": "Learn More",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "sf-custom-content--richtext",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16601144354b6b3a11-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 0,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom-content--richtext section__flush-top"
+      }
+    },
+    "16601152667022b9ba": {
+      "type": "icon-box",
+      "blocks": {
+        "166011526688dbc7d6-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Friendship day",
+            "description": "<p>Friendship Day is July 30! Find flowers and gifts<br\/> perfect for your BFF<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "166011526688dbc7d6-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Anniversary",
+            "description": "<p>Friendship Day is July 30! Find flowers and gifts<br\/>perfect for your BFF<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "166011526688dbc7d6-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Birthday",
+            "description": "<p>Friendship Day is July 30! Find flowers and gifts<br\/>perfect for your BFF<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "166011526688dbc7d6-0",
+        "166011526688dbc7d6-1",
+        "166011526688dbc7d6-2"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "446px",
+        "content_alignment": "center",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16601159733a324156": {
+      "type": "custom-content",
+      "blocks": {
+        "html_QwFcBR": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"border-top-double-6\"><\/div>",
+            "width": "100%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "html_QwFcBR"
+      ],
+      "custom_css": [
+
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1659587158ce41b7ac": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Summer Blooms",
+        "heading_size": "h3",
+        "subheading": "Our Best Sellers",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1660115938b8b2b7a3": {
+      "type": "custom-content",
+      "blocks": {
+        "a4dfcb84-6894-4dba-abad-7717f280604e": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"border-top-double-6\"><\/div>",
+            "width": "100%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "a4dfcb84-6894-4dba-abad-7717f280604e"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "16595990778ee1a54a": {
+      "type": "custom-content",
+      "blocks": {
+        "a4019331-fbb4-4ebe-8e9e-aa7010d8a2bc": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "58b3e52b-7b2c-4465-8369-5e2f0caa2663": {
+          "type": "text",
+          "settings": {
+            "title": "We pride ourselves on <br>\nsourcing on-trend flowers",
+            "subheading": "Our Mission",
+            "text": "<p>We're a modern floral and gifting company designed for <br\/>thoughtful people. Through our expressive bouquets and <br\/>plants as well as reason-specific gifts, we're helping others <br\/>feel more cared for even from afar.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "button_label": "learn more",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "a4019331-fbb4-4ebe-8e9e-aa7010d8a2bc",
+        "58b3e52b-7b2c-4465-8369-5e2f0caa2663"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 90,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    }
+  },
+  "order": [
+    "1659926191a36ed220",
+    "165959683132f7888b",
+    "16595850289c0b4c41",
+    "166011443573f307ac",
+    "16601152667022b9ba",
+    "16601159733a324156",
+    "1659587158ce41b7ac",
+    "1660115938b8b2b7a3",
+    "16595990778ee1a54a"
+  ]
+}

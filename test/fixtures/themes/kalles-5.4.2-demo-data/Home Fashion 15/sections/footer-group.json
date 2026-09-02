@@ -1,0 +1,363 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+ {
+  "type": "footer",
+  "name": "Footer Group",
+  "sections": {
+    "footer_KwXhWr": {
+      "type": "footer",
+      "blocks": {
+        "footer_column_C3zLBR": {
+          "type": "_footer-column",
+          "settings": {
+            "col_heading": "CATEGORIES",
+            "hide_on_mobile": false,
+            "only_mobile": false,
+            "sec_heading_size": "lg",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "font_weight_text": "semibold",
+            "letter_spacing_text": 0,
+            "space": 30,
+            "alignment": "left",
+            "alignment_mb": "left",
+            "colors_by_section": false,
+            "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+            "background_opacity": 0,
+            "width_lg": 25,
+            "width_md": 50,
+            "width": 100,
+            "mg": "",
+            "mg_mb": ",,30px,",
+            "pd": "",
+            "pd_mb": ""
+          },
+          "blocks": {
+            "linklist_mTLiQc": {
+              "type": "_linklist",
+              "settings": {
+                "menu_inline": false,
+                "align": "left",
+                "align_mb": "left",
+                "menu": "footer-categories",
+                "text_size": "lg",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "linklist_mTLiQc"
+          ]
+        },
+        "footer_column_3Dap6p": {
+          "type": "_footer-column",
+          "settings": {
+            "col_heading": "INFORMATION",
+            "hide_on_mobile": false,
+            "only_mobile": false,
+            "sec_heading_size": "lg",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "font_weight_text": "semibold",
+            "letter_spacing_text": 0,
+            "space": 30,
+            "alignment": "left",
+            "alignment_mb": "left",
+            "colors_by_section": false,
+            "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+            "background_opacity": 0,
+            "width_lg": 25,
+            "width_md": 50,
+            "width": 100,
+            "mg": "",
+            "mg_mb": ",,30px,",
+            "pd": "",
+            "pd_mb": ""
+          },
+          "blocks": {
+            "linklist_BDr677": {
+              "type": "_linklist",
+              "settings": {
+                "menu_inline": false,
+                "align": "left",
+                "align_mb": "left",
+                "menu": "footer",
+                "text_size": "lg",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "linklist_BDr677"
+          ]
+        },
+        "footer_column_U4EkTn": {
+          "type": "_footer-column",
+          "settings": {
+            "col_heading": "QUICK LINKS",
+            "hide_on_mobile": false,
+            "only_mobile": false,
+            "sec_heading_size": "lg",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "font_weight_text": "semibold",
+            "letter_spacing_text": 0,
+            "space": 30,
+            "alignment": "left",
+            "alignment_mb": "left",
+            "colors_by_section": false,
+            "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+            "background_opacity": 0,
+            "width_lg": 25,
+            "width_md": 50,
+            "width": 100,
+            "mg": "",
+            "mg_mb": ",,30px,",
+            "pd": "",
+            "pd_mb": ""
+          },
+          "blocks": {
+            "linklist_cCjYzb": {
+              "type": "_linklist",
+              "settings": {
+                "menu_inline": false,
+                "align": "left",
+                "align_mb": "left",
+                "menu": "footer-useful-links",
+                "text_size": "lg",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "linklist_cCjYzb"
+          ]
+        },
+        "footer_column_dYTFqa": {
+          "type": "_footer-column",
+          "settings": {
+            "col_heading": "FOLLOW US",
+            "hide_on_mobile": false,
+            "only_mobile": false,
+            "sec_heading_size": "lg",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "font_weight_text": "normal",
+            "letter_spacing_text": 0,
+            "space": 30,
+            "alignment": "left",
+            "alignment_mb": "left",
+            "colors_by_section": false,
+            "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+            "background_opacity": 0,
+            "width_lg": 25,
+            "width_md": 50,
+            "width": 100,
+            "mg": "",
+            "mg_mb": ",,30px,",
+            "pd": "",
+            "pd_mb": ""
+          },
+          "blocks": {
+            "socials_YqpccQ": {
+              "type": "socials",
+              "name": "Social",
+              "settings": {
+                "text_color": "hdt-s-text",
+                "type": "follow",
+                "share_facebook": false,
+                "share_x": false,
+                "share_pinterest": false,
+                "share_tumblr": false,
+                "share_telegram": false,
+                "share_email": false,
+                "share_whatsapp": false,
+                "socials_style": "simple",
+                "socials_size": "medium",
+                "bd_radius": 30,
+                "space_item": 30
+              },
+              "blocks": {}
+            },
+            "spacer_B8ncn6": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 30
+              },
+              "blocks": {}
+            },
+            "text_Mh6Yzg": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Subscribe to our newsletter and get 10% off your first purchase</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "lg",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_NL7ph9": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 30
+              },
+              "blocks": {}
+            },
+            "newsletter_k8PhDN": {
+              "type": "_newsletter",
+              "settings": {
+                "color_scheme": "",
+                "des_newsletter": "2",
+                "alignment": "left",
+                "button_lb": "Subscribe",
+                "size": "m",
+                "btn_fw": "semibold",
+                "agree_form": false,
+                "content": "I agree with the terms and conditions",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "socials_YqpccQ",
+            "spacer_B8ncn6",
+            "text_Mh6Yzg",
+            "spacer_NL7ph9",
+            "newsletter_k8PhDN"
+          ]
+        }
+      },
+      "block_order": [
+        "footer_column_C3zLBR",
+        "footer_column_3Dap6p",
+        "footer_column_U4EkTn",
+        "footer_column_dYTFqa"
+      ],
+      "custom_css": [],
+      "settings": {
+        "collapse": true,
+        "full_width": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "50px,,50px,",
+        "pd_mb": "30px,,30px,",
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1
+      }
+    },
+    "footer_qVxAwX": {
+      "type": "footer",
+      "blocks": {
+        "footer_column_wXfenF": {
+          "type": "_footer-column",
+          "name": "t:blocks.footer_column.name",
+          "settings": {
+            "col_heading": "",
+            "hide_on_mobile": false,
+            "only_mobile": false,
+            "sec_heading_size": "lg",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "font_weight_text": "normal",
+            "letter_spacing_text": 0,
+            "space": 30,
+            "alignment": "center",
+            "alignment_mb": "center",
+            "colors_by_section": false,
+            "color_scheme": "",
+            "background_opacity": 0,
+            "width_lg": 100,
+            "width_md": 100,
+            "width": 100,
+            "mg": "",
+            "mg_mb": ",,30px,",
+            "pd": "",
+            "pd_mb": ""
+          },
+          "blocks": {
+            "liquid_3WrAdh": {
+              "type": "_liquid",
+              "name": "t:blocks.liquid.name",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<span class=\"hdt-text-secondary\">All Rights Reserved © 2025 <a href=\"https://1.envato.market/Eamba9\" aria-describedby=\"a11y-external-message\" style=\"text-decoration: none;\"><span style=\"color: rgb(var(--color-accent)) !important\">Kalles</span></a> - Developed by <a class=\"t4s-secondary\" href=\"https://the4.co/?utm_source=Kalles-Demo&amp;utm_medium=Copyright\" aria-describedby=\"a11y-external-message\" style=\"color: rgb(var(--color-foreground));text-decoration: none;\"> The4 </a></span>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "liquid_3WrAdh"
+          ]
+        }
+      },
+      "block_order": [
+        "footer_column_wXfenF"
+      ],
+      "custom_css": [
+        "* {opacity: 1 !important;}"
+      ],
+      "name": "t:sections.footer.name",
+      "settings": {
+        "collapse": false,
+        "full_width": false,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "10px,,10px,",
+        "pd_mb": "",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0
+      }
+    }
+  },
+  "order": [
+    "footer_KwXhWr",
+    "footer_qVxAwX"
+  ]
+}

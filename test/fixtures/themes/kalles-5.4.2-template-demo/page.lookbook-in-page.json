@@ -1,0 +1,446 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main_heading_Gg63eE": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_gEADwf": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page.title }}",
+            "line_height": "hdt-lh-1",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": true,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_gEADwf"
+      ],
+      "settings": {
+        "use_dynamic_source": true,
+        "image": "shopify://shop_images/bg-heading.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 54,
+        "space_item": 0,
+        "padding_top": 50,
+        "padding_bottom": 50,
+        "padding_rate": 100
+      }
+    },
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "full_width": false,
+        "color_scheme": "",
+        "padding_top": 0,
+        "padding_bottom": 30,
+        "padding_rate": 75
+      }
+    },
+    "custom_section_gf38C7": {
+      "type": "custom-section",
+      "blocks": {
+        "group_FUCeJp": {
+          "type": "group",
+          "settings": {
+            "colors_by_block": false,
+            "color_scheme": ""
+          },
+          "blocks": {
+            "text_K8pVK7": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Typography is the work of<em>typesetters, compositors, typographers, graphic designers, art directors, manga artists, comic book artists, graffiti artists</em>, and now—anyone who arranges words, letters, numbers, and symbols for publication, display, or distribution—from clerical <strong>workers and newsletter writers to anyone self-publishing materials.</strong></p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_K8pVK7"
+          ]
+        }
+      },
+      "block_order": [
+        "group_FUCeJp"
+      ],
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "padding_top": 30,
+        "padding_bottom": 0,
+        "padding_rate": 50
+      }
+    },
+    "image_gallery_aB7Vn7": {
+      "type": "image-gallery",
+      "blocks": {
+        "image_CN7N4y": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/gallery-01.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_bT9Uma": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/gallery-02.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_ctzq6c": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/gallery-03.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_hqHFpx": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/gallery-04.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_VyBEKy": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/p1-2.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_CyNDpF": {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/gallery-06.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image-gallery-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "image_CN7N4y",
+        "image_bT9Uma",
+        "image_ctzq6c",
+        "image_hqHFpx",
+        "image_VyBEKy",
+        "image_CyNDpF"
+      ],
+      "settings": {
+        "col_dk": "3",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "5",
+        "color_scheme": "",
+        "padding_top": 30,
+        "padding_bottom": 30,
+        "padding_rate": 75,
+        "border_radius": 0
+      }
+    },
+    "custom_section_4BpWXC": {
+      "type": "custom-section",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "padding_rate": 50
+      }
+    },
+    "custom_section_96CMPc": {
+      "type": "custom-section",
+      "blocks": {
+        "group_BrjQAz": {
+          "type": "group",
+          "settings": {
+            "colors_by_block": false,
+            "color_scheme": ""
+          },
+          "blocks": {
+            "text_xJm3zN": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Until the Digital Age, typography was a specialized occupation. Digitization opened up typography to new generations of previously unrelated designers and lay users, and David Jury, head of graphic design at Colchester Institute in England, states that “typography is now something everybody does. As the capability to create typography has become ubiquitous, the application of principles and best practices developed over generations of skilled workers and professionals has diminished. Ironically, at a time when scientific techniques.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_xJm3zN"
+          ]
+        }
+      },
+      "block_order": [
+        "group_BrjQAz"
+      ],
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "padding_top": 0,
+        "padding_bottom": 30,
+        "padding_rate": 50
+      }
+    },
+    "lookbook_grid_7crnyV": {
+      "type": "lookbook-grid",
+      "blocks": {
+        "lookbook_VGGmDR": {
+          "type": "_lookbook",
+          "settings": {
+            "image": "shopify://shop_images/bg-loobook.jpg",
+            "img_effect": "none",
+            "b_effect": "none"
+          },
+          "blocks": {
+            "pin_product_KwCrcf": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#01bad4",
+                "pin_text": "#ffffff",
+                "left": 50,
+                "top": 37,
+                "pin_size": "medium",
+                "pin_type": "1",
+                "text": "$59",
+                "product": "cyan-boheme-3",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_HJmGrM": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#01bad4",
+                "pin_text": "#ffffff",
+                "left": 91,
+                "top": 14,
+                "pin_size": "medium",
+                "pin_type": "1",
+                "text": "$59",
+                "product": "2-hearts-interlock-pendant-necklace",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_GPq4ij": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#01bad4",
+                "pin_text": "#ffffff",
+                "left": 20,
+                "top": 3,
+                "pin_size": "medium",
+                "pin_type": "1",
+                "text": "$59",
+                "product": "ecomus20-bape®",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_pXMCQn": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#01bad4",
+                "pin_text": "#ffffff",
+                "left": 21,
+                "top": 84,
+                "pin_size": "medium",
+                "pin_type": "1",
+                "text": "$59",
+                "product": "cyan-boheme",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_text_4fike8": {
+              "type": "_pin-text",
+              "settings": {
+                "pin_bg": "#01bad4",
+                "pin_text": "#ffffff",
+                "left": 16,
+                "top": 55,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "$59",
+                "title": "01 - Water Resistance",
+                "content": "<p>With groundbreaking water resistant capabilities, The Mission has the highest waterproof rating of any smartwatch on the market.</p>",
+                "placement": "top"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "pin_product_KwCrcf",
+            "pin_product_HJmGrM",
+            "pin_product_GPq4ij",
+            "pin_product_pXMCQn",
+            "pin_text_4fike8"
+          ]
+        },
+        "lookbook-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "lookbook_VGGmDR"
+      ],
+      "settings": {
+        "col_dk": "1",
+        "col_tb": "1",
+        "col_mb": "1",
+        "space_items": "0",
+        "space_items_mb": "0",
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "padding_rate": 50
+      }
+    }
+  },
+  "order": [
+    "main_heading_Gg63eE",
+    "main",
+    "custom_section_gf38C7",
+    "image_gallery_aB7Vn7",
+    "custom_section_4BpWXC",
+    "custom_section_96CMPc",
+    "lookbook_grid_7crnyV"
+  ]
+}

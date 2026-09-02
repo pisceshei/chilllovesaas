@@ -1,0 +1,403 @@
+{
+  "sections": {
+    "1659926191a36ed220": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-press--home .m-press__title {\n  font-family: var(--font-stack-header);\n}\n\n@media (min-width: 1280px) {\n  .m-press--home .m-press__title {\n    font-size: 30px;\n  }\n}\n\n@media (max-width: 767px) {\n  .sf-home__collection-list .m-section__header,\n  .sf-home__collection-list .m-slider-controls {\n    text-align: center;\n  }\n}"
+      }
+    },
+    "1659522563f86b9b11": {
+      "type": "slider",
+      "blocks": {
+        "1659522562509a09c0-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "center middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            
+            "title": "The Elegant Art of<br>\nTable Settings",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "m-button--white",
+            
+            "show_footer": true,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1659522562509a09c0-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "center middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            
+            "title": "French Design and <br>\nMise en Place",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "m-button--white",
+            
+            "show_footer": true,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1659522562509a09c0-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "center middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            
+            "title": "A Salute to your<br>\nCeramic Satisfaction",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "m-button--white",
+            
+            "show_footer": true,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1659522562509a09c0-0",
+        "1659522562509a09c0-1",
+        "1659522562509a09c0-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": true,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1659587158ce41b7ac": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Designed with integrity",
+        "heading_size": "h2",
+        "subheading": "our best sellers",
+        "description": "",
+        "header_alignment": "center",
+        
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 10,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        
+        "animations": "inherit"
+      }
+    },
+    "16595850289c0b4c41": {
+      "type": "collection-list",
+      "blocks": {
+        "16595850286b090433-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Bowls"
+          }
+        },
+        "16595850286b090433-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Plates"
+          }
+        },
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Decaration"
+          }
+        },
+        "16595850286b090433-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "The mugs"
+          }
+        }
+      },
+      "block_order": [
+        "16595850286b090433-0",
+        "16595850286b090433-1",
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd",
+        "16595850286b090433-2"
+      ],
+      "settings": {
+        "heading": "Our most popular styles",
+        "heading_size": "h2",
+        
+        "description": "Luxe, lightweight, and made with the perfect blend of cashmere and cotton.",
+        "header_alignment": "left",
+        "color_scheme": "footer",
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16599311720e2a99a0": {
+      "type": "press",
+      "blocks": {
+        "1659931171294ccf69-0": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "130px"
+          }
+        },
+        "1659931171294ccf69-1": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1659931171294ccf69-2": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1659931171294ccf69-3": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1659931171294ccf69-4": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1659931171294ccf69-5": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        }
+      },
+      "block_order": [
+        "1659931171294ccf69-0",
+        "1659931171294ccf69-1",
+        "1659931171294ccf69-2",
+        "1659931171294ccf69-3",
+        "1659931171294ccf69-4",
+        "1659931171294ccf69-5"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "show_divider": false,
+        "autoplay": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-press--home",
+        "animations": "inherit"
+      }
+    },
+    "16595990778ee1a54a": {
+      "type": "custom-content",
+      "blocks": {
+        "20dd2364-3c9c-43b8-a6da-93e33573dfee": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "black",
+            
+            "title": "Bud Vase Set",
+            "subtitle": "FROM $250.00",
+            
+            "button_style": "sf__btn-primary",
+            
+            "button_fixed": false,
+            "use_content_above": false,
+            
+            "animations": "inherit"
+          }
+        },
+        "a603de90-5eff-4c9d-8a85-d5c58b951321": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "black",
+            
+            "title": "Base Dinnerware Set",
+            "subtitle": "FROM $250.00",
+            
+            "button_style": "sf__btn-primary",
+            
+            "button_fixed": false,
+            "use_content_above": false,
+            
+            "animations": "inherit"
+          }
+        },
+        "f12f0783-27da-4af3-8c80-2abd23b729a8": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "black",
+            
+            "title": "Serving Platter Set",
+            "subtitle": "FROM $250.00",
+            
+            "button_style": "sf__btn-primary",
+            
+            "button_fixed": false,
+            "use_content_above": false,
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "20dd2364-3c9c-43b8-a6da-93e33573dfee",
+        "a603de90-5eff-4c9d-8a85-d5c58b951321",
+        "f12f0783-27da-4af3-8c80-2abd23b729a8"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "165959683132f7888b": {
+      "type": "image-with-text-2",
+      "settings": {
+        
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "Serving platter for one",
+        "subtitle": "",
+        
+        "button_label": "SHOP NOW",
+        
+        "button_style": "m-button--white",
+        
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf-home__hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    }
+  },
+  "order": [
+    "1659926191a36ed220",
+    "1659522563f86b9b11",
+    "1659587158ce41b7ac",
+    "16595850289c0b4c41",
+    "16599311720e2a99a0",
+    "16595990778ee1a54a",
+    "165959683132f7888b"
+  ]
+}

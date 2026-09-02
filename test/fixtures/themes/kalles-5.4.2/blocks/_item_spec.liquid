@@ -1,0 +1,91 @@
+{% liquid
+  assign image = block.settings.image
+  assign list_product = block.settings.list_product
+%}
+<div class="hdt-spec-item">
+  <div class="hdt-item-inner hdt-relative">
+    <div class="hdt-ratio" style="--aspect-ratioapt: {{ image.aspect_ratio | default: 1.777 }}">
+      {% liquid
+        if image != blank
+          assign img_class = 'hdt-object-pos-mb'
+          echo '<picture id="' | append: block.id | append: '" class="hdt-media-wrapper">'
+          echo image | image_url: width: image.width | image_tag: loading: 'eager', class: img_class, widths: '400,600,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000,3200,3400,3600', class: 'hdt-w-full hdt-h-full hdt-object-cover'
+          echo '</picture>'
+        else
+          capture current
+            cycle 1, 2 , 3
+          endcapture
+          echo '<div class="hdt-media-wrapper hdt-h-full">'
+          echo 'hero-apparel-' | append: current | placeholder_svg_tag: 'placeholder-svg hdt-placeholder hdt-w-full hdt-h-full'
+          echo '</div>'
+        endif
+      %}
+    </div>
+    {%- if list_product != blank -%}
+      <input type="checkbox" id="box-{{ block.id }}" hidden>
+      <div class="hdt-wrap-box hdt-ratio--adapt_image">
+        <div class="hdt-box-inner hdt-current-scrollbar">
+          <div class="hdt-list-products">
+            {%- for product in list_product -%}
+              <div class="hdt-product-item">
+                <div class="hdt-product-item__inner">
+                  {% if product.featured_image != blank %}
+                    <a href="{{ product.url }}" class="hdt-product-item__image hdt-ratio" style="--aspect-ratioapt: {{ product.featured_image.aspect_ratio }}">
+                      {{ product.featured_image | image_url: width: product.featured_image.width | image_tag: width: '46,92,138', loading: 'eager', class: 'hdt-w-full hdt-h-full hdt-object-cover' }}
+                    </a>
+                  {% endif %}
+                  <div class="hdt-product-item__info">
+                    <a href="{{ product.url }}" class="hdt-product-item__title">
+                      {{ product.title }}
+                    </a>
+                    {% render 'card-price', section_id: block.id, product: product, show_volume_note: true %}
+                  </div>
+                </div>
+                {%- if settings.show_quick_view %}{% render 'btn-quick-view', class: 'hdt-pr_btn', product: product, section_id: block.id, disable_sr_only: false, placement: 'top' %}{% endif -%}
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+        <h3 class="hdt-spec-box__title hdt-truncate">
+            {%- if block.settings.title != blank -%}
+              {{ block.settings.title }}
+            {%- endif -%}
+          </h3>
+      </div>
+      <label for="box-{{ block.id }}">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15.2012" width="3.04" height="33.44" fill="currentColor"/>
+          <rect x="33.4404" y="15.2002" width="3.04" height="33.44" transform="rotate(90 33.4404 15.2002)" fill="currentColor"/>
+        </svg>                    
+      </label>
+    {%- endif -%}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Item",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title"
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Image"
+      },
+      {
+        "type": "product_list",
+        "id": "list_product",
+        "label": "List Product"
+      },
+    ],
+    "presets": [
+      {
+        "name": "Item"
+      }
+    ]
+  }
+{% endschema %}

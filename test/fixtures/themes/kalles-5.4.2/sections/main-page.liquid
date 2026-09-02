@@ -1,0 +1,88 @@
+<!-- sections/main-page.liquid -->
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+<div timeline hdt-reveal="slide-in" class="hdt-main-page hdt-relative hdt-section-spacing hdt-section-spacing-{{ section.id }} hdt-s-gradient hdt-s-text" color-scheme="{{ section.settings.color_scheme }}">
+  <div class="hdt-container{%- if section.settings.full_width -%}-full{% endif %}">
+    {%- if section.settings.image_bg != blank -%}
+      <div class="hdt-main-page_imagebg hdt-h-full hdt-w-full hdt-full-width-link"  aria-label="link">
+        {{ section.settings.image_bg | image_url: width: section.settings.image_bg.width | image_tag: loading: 'lazy', width: section.settings.image_bg.width, height: section.settings.image_bg.height, class: 'hdt-w-full hdt-h-full hdt-object-cover', sizes: "100vw", widths: "375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840" }}
+      </div>
+    {%- endif -%}
+    {%- if page.content != blank -%}
+      <div class="hdt-main-area hdt-rte hdt-relative">
+      {{ page.content }}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+{%- style -%}.hdt-main-page .hdt-main-area{z-index:2}{%- endstyle -%}
+{% schema %}
+{
+  "name": "t:sections.main-page.name",
+  "class": "hdt-section hdt-section-main-page",
+  "tag": "section",
+  "enabled_on": {
+    "templates": [
+      "page"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_bg",
+      "label": "t:sections.main-page.image.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main-page.name"
+    }
+  ]
+}
+{% endschema %}

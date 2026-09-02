@@ -1,0 +1,138 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "5f60031b-2ab7-4a0c-87f8-e2ca555bad26": {
+          "type": "custom_text",
+          "settings": {
+            "title": "",
+            "image_max": "200px",
+            "description": "<p>Super class, cute, comfortable. You <br\/>can wear them with just about<br\/> anything.<\/p>",
+            "width": "50%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "91d63955-3f1a-4ff2-a47d-ffb805c827eb": {
+          "type": "our_store",
+          "settings": {
+            "title": "COMPANY",
+            "description": "<p>184 Main Rd E, St Albans<br\/>VIC 3021, Australia<\/p>",
+            "show_email": true,
+            "show_phone": true,
+            "show_socials_link": false,
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "89e1f0c6-2322-46f3-b8b8-a1833e3c1bb4": {
+          "type": "menu",
+          "settings": {
+            "title": "INFORMATION",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "fcfdca66-8761-4e56-9c16-c6c8a80e1097": {
+          "type": "menu",
+          "settings": {
+            "title": "CONTACT",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "ff42a552-7df5-4002-9f6d-dec8eb2ce5dc": {
+          "type": "menu",
+          "settings": {
+            "title": "SERVICES",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "5f60031b-2ab7-4a0c-87f8-e2ca555bad26",
+        "91d63955-3f1a-4ff2-a47d-ffb805c827eb",
+        "89e1f0c6-2322-46f3-b8b8-a1833e3c1bb4",
+        "fcfdca66-8761-4e56-9c16-c6c8a80e1097",
+        "ff42a552-7df5-4002-9f6d-dec8eb2ce5dc"
+      ],
+      "settings": {
+        "color_scheme": "dark",
+        "design": "footer-1",
+        "container": "container-fluid",
+        "bordered": false,
+        "copyright": "<span class=\"text-base\">© Minimog 2024<\/span>",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "dark"
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

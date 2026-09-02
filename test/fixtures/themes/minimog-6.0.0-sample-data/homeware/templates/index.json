@@ -1,0 +1,528 @@
+{
+  "sections": {
+    "316f4dc7-13ad-4a8d-a20b-412681e11e21": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf__heading-color {\n  color: #322b81;\n}\n.sf__font-size-40 {\n  font-size: 40px;\n  line-height: 56px;\n}\n.sf__font-size-24 {\n    font-size: 24px;\n    line-height: 1.4;\n}\n.sf__text-style1 {\n  position: relative;\n  z-index: 1;\n}\n.sf__text-style1::after {\n  position: absolute;\n  content: \"\";\n  left: 50%;\n  bottom: 5px;\n  width: calc(100% + 4px);\n  height: 8px;\n  background: #fbf19b;\n  border-radius: 10px;\n  z-index: -1;\n  transform: translateX(-50%);\n}\n.sf__font-size-20 {\n  font-size: 20px;\n  line-height: 32px;\n}\n.sf__font-size-18 {\n  font-size: 18px;\n  line-height: 30px;\n}\n.sf__font-weight-semibold {\n  font-weight: 600;\n}\n.m-section__subheading,\n.m-richtext__subtitle {\n  font-weight: 600;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n}\n\n.m-product-slider--home .m-featured-slider__product-item {\n  max-width: 300px;\n  margin: 0 auto;\n}\n.m-product-slider--home .m-product-card__name,\n.m-product-slider--home .m-product-card__price {\n  display: none;\n}\n.m-product-slider--home .m-featured-slider__product-content h3 {\n  color: #000000;\n}\n\n.m-testimonial--home .m-testimonial__description {\n  font-weight: 600;\n}\nbody .m-testimonial--home .m-testimonial__fraction {\n  font-weight: 700;\n}\n\n.m-slider--cta .m-custom-content__block {\n  text-align: center;\n}\n.m-slider--cta .section-my {\n  margin-top: 0;\n}\n.m-slider--cta .custom__html {\n  padding: 45px 60px;\n  background: #e6f0f2;\n  border-radius: 15px;\n  text-align: left;\n}\n.m-slider--cta .custom__html .block__text {\n  margin-right: 90px;\n}\n\n.m-blog--home .m-section-my {\n  margin-bottom: 20px;\n}\n\n.m-featured-collection--home .section__header .section__subheading {\n  letter-spacing: 0.1rem;\n  font-weight: 600;\n  font-size: 16px;\n  line-height: 22px;\n}\n.m-featured-collection--home .section__header .section__heading {\n  font-weight: bold;\n  font-size: 48px;\n  line-height: 56px;\n}\n\n.m-section__description {\n  color: var(--color-body-text);\n}\n.m-instagram--home .m-section-my {\n  margin-bottom: 20px;\n}\n\n@media (min-width: 768px) {\n  .m-section__description,\n  .m-section__subheading,\n  .m-richtext__subtitle,\n  .m-slider--cta .custom__html p {\n    font-size: 18px;\n  }\n  .m-product-slider--home .m-featured-slider__container {\n    background: #fff;\n  }\n  .m-blog--home .m-article-card__title {\n    font-size: 24px;\n  }\n}\n\n@media (min-width: 1280px) {\n  .m-testimonial--home .m-testimonial__description {\n    font-size: 34px;\n    line-height: 48px;\n  }\n  .m-testimonial--home .m-testimonial__name {\n    font-size: 20px;\n    font-weight: 600;\n  }\n  body .m-testimonial--home .m-testimonial__fraction {\n    margin-top: 55px;\n    font-size: 18px;\n  }\n  .m-product-slider--home .m-featured-slider__col-left {\n    padding-top: 30px;\n    padding-bottom: 30px;\n  }\n  .m-product-slider--home .m-featured-slider__product  {\n    padding-left: 15px;\n    padding-right: 15px;\n  }\n}\n\n@media(max-width: 767px) {\n  .hide_br_mb br {\n    display: none;\n  }\n  .m-slider--cta .custom__html {\n    padding: 30px 20px;\n    text-align: center;\n  }\n  .m-slider--cta .custom__html .block__text {\n    margin-right: 0;\n    margin-bottom: 30px;\n  }\n  .m-instagram--home .section__description {\n      margin-top: 0;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"uppercase sf__heading-color\">Your house’s best mate.<\/span>",
+            "title": "<span class=\"sf__heading-color\">A Reflection of Your<br> Decoration Choices<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"uppercase sf__heading-color\">Make waves<\/span>",
+            "title": "<span class=\"sf__heading-color\">Quality never <br>goes out of style<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"uppercase sf__heading-color\">Stay Classy<\/span>",
+            "title": "<span class=\"sf__heading-color\">Delight in the details.<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "162209953296371dbc": {
+      "type": "icon-box",
+      "blocks": {
+        "162209953296371dbc-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<div class=\"sf__font-size-20 sf__font-weight-semibold hide_br_mb\">“Also the customer service is<br> phenomenal. I would purchase again.”<\/div>",
+            "description": "",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162209953296371dbc-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<div class=\"hide_br_mb sf__font-size-20 sf__font-weight-semibold\">“Great product line. Very attentive staff<br> to deal with.”<\/div>",
+            "description": "",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162209953296371dbc-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<div class=\"hide_br_mb sf__font-size-20 sf__font-weight-semibold\">\"Looking to affordably upgrade your<br> everyday dinnerware? Look no further<br> than e.Space\"<\/div>",
+            "description": "",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "162209953296371dbc-2",
+        "162209953296371dbc-1",
+        "162209953296371dbc-0"
+      ],
+      "settings": {
+        "heading": "As <span class=\"sf__text-style1\">featured<\/span> on:",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "162px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-icon-box--home",
+        "animations": "inherit"
+      }
+    },
+    "1622105990d12b473e": {
+      "type": "featured-product-slider",
+      "blocks": {
+        "48a645de-f01e-448f-96ad-3dfe8c3fe1b6": {
+          "type": "product",
+          "settings": {
+            "heading": "Sevi Dinner Plate",
+            "description": "<p>Turn organization into decor with a multi-use, three-tier rack that’s beautiful in any room<\/p>"
+          }
+        },
+        "144f20b4-2d90-467d-a322-d897aa234374": {
+          "type": "product",
+          "settings": {
+            "heading": "Entryway Rack",
+            "description": "<p>Turn organization into decor with a multi-use, three-tier rack that’s beautiful in any room<\/p>"
+          }
+        }
+      },
+      "block_order": [
+        "48a645de-f01e-448f-96ad-3dfe8c3fe1b6",
+        "144f20b4-2d90-467d-a322-d897aa234374"
+      ],
+      "settings": {
+        "heading": "<span class=\"sf__text-style1\">Refresh<\/span> Your Home Ware Style",
+        "heading_size": "h2",
+        "subheading": "THE CORE COLLECTION",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "scheme-ac6267a5-b373-4bf0-a361-3eca20e9376a",
+        "image_placement": "left",
+        "slide_autoplay": true,
+        "show_navigation": true,
+        "show_pagination": false,
+        "autorotate_speed": 5,
+        "pcard_layout": "4",
+        "pcard_alignment": "center",
+        "pcard_image_ratio": "1\/1",
+        "show_vendor": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-product-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "1622101295c7d1aa4c": {
+      "type": "icon-box",
+      "blocks": {
+        "1622101295c7d1aa4c-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<div class=\"hide_br_mb sf__font-size-18 sf__font-weight-semibold\">Answer a few quick questions<br> about your lifestyle.<\/div>",
+            "description": "",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1622101295c7d1aa4c-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<div class=\"hide_br_mb sf__font-size-18 sf__font-weight-semibold\">Your colours - Choose your<br> palette.<\/div>",
+            "description": "",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1622101295c7d1aa4c-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<div class=\"hide_br_mb sf__font-size-18 sf__font-weight-semibold\">Accept (or tweak) your customized<br> recommendations.<\/div>",
+            "description": "",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "de97b43c-9a8b-488e-941e-36cf14cc4b0f": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<div class=\"hide_br_mb sf__font-size-18 sf__font-weight-semibold\">Decorate your house; paint<br> your life.<\/div>",
+            "description": "",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1622101295c7d1aa4c-0",
+        "1622101295c7d1aa4c-1",
+        "1622101295c7d1aa4c-2",
+        "de97b43c-9a8b-488e-941e-36cf14cc4b0f"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "scheme-ac6267a5-b373-4bf0-a361-3eca20e9376a",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "70px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 50,
+        "padding_bottom": 100,
+        "custom_class": "sf-icon-box--02",
+        "animations": "inherit"
+      }
+    },
+    "1622102101fd8de171": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Create A Unique Style with Us.",
+        "heading_size": "h2",
+        "subheading": "FEATURED PRODUCTS",
+        "description": "",
+        "header_alignment": "center",
+        
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 3,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "View all product",
+        "button_style": "m-button--primary",
+        
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-featured-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "162210227148d9bc93": {
+      "type": "testimonials",
+      "blocks": {
+        "162210227148d9bc93-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love my new purchase",
+            "description": "<p>I was thrilled to be able to visit your store again! Love my new purchase.<\/p>",
+            "footer": "<p>Shane T.<\/p>"
+          }
+        },
+        "162210227148d9bc93-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "What a delight to find you",
+            "description": "<p>I've been getting good wear out of the shirt. It's very light and soft, comfortable to wear.<\/p>",
+            "footer": "<p>Fernanda K.<\/p>"
+          }
+        },
+        "162210227148d9bc93-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Thanks for being so fabulous!",
+            "description": "<p>Thanks for the lovely time shopping and all the good work you do.<\/p>",
+            "footer": "<p>Gloria T.<\/p>"
+          }
+        },
+        "162210227148d9bc93-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "I will certainly recommend to others.",
+            "description": "<p>I was recently at your store, what a delight to find you!<\/p>",
+            "footer": "<p>Zeferino G.<\/p>"
+          }
+        },
+        "162210227148d9bc93-4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "A great store you can find.",
+            "description": "<p>Thanks for being so fabulous...and continuing to provide such a wonderful service<\/p>",
+            "footer": "<p>Denzil A.<\/p>"
+          }
+        },
+        "162210227148d9bc93-5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Thank you for your help!",
+            "description": "<p>Thank you so much for your help in finding some new clothes that I needed desperately.<\/p>",
+            "footer": "<p>Adelia C.<\/p>"
+          }
+        }
+      },
+      "block_order": [
+        "162210227148d9bc93-0",
+        "162210227148d9bc93-1",
+        "162210227148d9bc93-2",
+        "162210227148d9bc93-3",
+        "162210227148d9bc93-4",
+        "162210227148d9bc93-5"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-11e29ab1-b4ff-40d3-8fff-34fb7c9a9de5",
+        "design": "testimonials-4",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "star_color": "#322b81",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-testimonial--home",
+        "animations": "inherit"
+      }
+    },
+    "1622104207398b7347": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "blog": "housewares",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 10,
+        "article_image_aspect_ratio": "3\/4",
+        "article_align_content": "text-left",
+        "article_show_tags": false,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": true,
+        
+        
+        "button_style": "sf__btn-primary",
+        
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-blog--home",
+        "animations": "inherit"
+      }
+    },
+    "1622104533c8fb705d": {
+      "type": "custom-content",
+      "blocks": {
+        "d45b6f85-8bf5-46e3-a887-04aeb6940c20": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"m:inline-flex m:items-center lg:m:flex-row m:flex-col custom__html\">\n<div class=\"block__text\">\n<p class=\"mb-2.5 font-semibold\">Redefining creativity.<\/p>\n<h3 class=\"mb-0 font-semibold hide_br_mb\">Connecting homes &amp;<br> improving lives.<\/h3>\n<\/div>\n<div><a href=\"\/collections\/all\" class=\"m-button m-button--primary\">View all products<\/a><\/div>\n<\/div>",
+            "width": "100%",
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "d45b6f85-8bf5-46e3-a887-04aeb6940c20"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-slider--cta"
+      }
+    },
+    "162116424311055429": {
+      "type": "instagram",
+      "settings": {
+        "heading": "Come Chill with Us",
+        "heading_size": "h3",
+        
+        "description": "@e.Sapce_store",
+        "header_alignment": "center",
+        "container": "w-full",
+        
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 20,
+        "mobile_gap": 20,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        
+        "padding_top": 100,
+        "padding_bottom": 20,
+        "custom_class": "m-instagram--home"
+      }
+    }
+  },
+  "order": [
+    "316f4dc7-13ad-4a8d-a20b-412681e11e21",
+    "1621243260e1af0c20",
+    "162209953296371dbc",
+    "1622105990d12b473e",
+    "1622101295c7d1aa4c",
+    "1622102101fd8de171",
+    "162210227148d9bc93",
+    "1622104207398b7347",
+    "1622104533c8fb705d",
+    "162116424311055429"
+  ]
+}

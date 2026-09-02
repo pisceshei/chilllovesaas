@@ -1,0 +1,367 @@
+{
+  "sections": {
+    "1662458033a6636467": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom-content-section .m-image-card {\n  height: 100%;\n}\n\n@media (max-width: 767px) {\n.m-custom-image-card-2 .m-image-card__heading { \nfont-size: 24px; \n}\n.m-custom-image-card-2 .m-image-card__subheading { \n font-size: 14px;\n}\n.m-custom-image-card-2 .m-image-card__content {\nalign-items: flex-start;\n} \n.m-custom-image-card-2 .m-richtext__button {\nborder: none;\n    padding-left: 0;\n    padding-right: 0;\n    text-decoration: 2px underline;\n    text-underline-offset: 8px;\n}\n}"
+      }
+    },
+    "1620813069167db316": {
+      "type": "slider",
+      "blocks": {
+        "1620813069167db316-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subheading": "",
+            "title": "A COLOR FOR<br>EVERY BODY",
+            "description": "<p>Open Doors To A World Of Fashion<\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "27403af4-f4e3-4833-9189-9868705845f7": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subheading": "",
+            "title": "SHOP YOUR<br> OUTFIT STYLE",
+            "description": "<p>Tell your campaign through images<\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "c0ce169f-1329-47fc-9e42-915e4961aa32": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subheading": "",
+            "title": "CHOOSE THE BEST<br>CHOOSE US",
+            "description": "<p>Tell your campaign through images<\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1620813069167db316-0",
+        "27403af4-f4e3-4833-9189-9868705845f7",
+        "c0ce169f-1329-47fc-9e42-915e4961aa32"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 4,
+        "use_content_above": false,
+        "custom_class": "m-custom-slideshow",
+        "animations": "inherit"
+      }
+    },
+    "162081317833a6e943": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "SHOP MEN",
+        "heading_size": "h3",
+        "subheading": "FEATURE IN",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1620889733b8bebef8": {
+      "type": "custom-content",
+      "blocks": {
+        "302f4255-280e-48a3-9f00-b9e6fd50230a": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "CLASSIC SPORT<br> OLD SKOOL",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "m-custom-image-card-1",
+            "animations": "inherit"
+          }
+        },
+        "190cefb9-e7ca-4316-8e55-b3b82656701b": {
+          "type": "image_card",
+          "settings": {
+            "width": "66%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "link": "",
+            "title": "THE VINTAGE<br> SNEAKERS",
+            "subtitle": "SPRING \/ SUMMER",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--secondary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "m-custom-image-card-2",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "302f4255-280e-48a3-9f00-b9e6fd50230a",
+        "190cefb9-e7ca-4316-8e55-b3b82656701b"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 20,
+        "use_scroll_mobile": false,
+        "gap_mobile": 40,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-content-section"
+      }
+    },
+    "162095835646fd819e": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "SHOP WOMEN",
+        "heading_size": "h3",
+        "subheading": "FEATURED IN",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162089604618911426": {
+      "type": "collection-list",
+      "blocks": {
+        "162089604618911426-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Men's Tree Dasher Relay"
+          }
+        },
+        "162089604618911426-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Men's Tree Dasher Relay"
+          }
+        },
+        "162089604618911426-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Men's Tree Dasher Relay"
+          }
+        }
+      },
+      "block_order": [
+        "162089604618911426-0",
+        "162089604618911426-1",
+        "162089604618911426-2"
+      ],
+      "settings": {
+        "heading": "HAND-PICKED DAILY",
+        "heading_size": "h3",
+        "subheading": "FEATURED IN",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": false,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 38,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162098050586305bd8": {
+      "type": "custom-content",
+      "blocks": {
+        "e165b9f6-b00e-4698-9310-422404897180": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"sf__scrolling-text font_size_11vh\" data-style=\"text-outline\" data-s-speed=\"slowest\" data-outline-thickness=\"thin\" data-s-dir=\"rtl\">\n    <div class=\"sf__scrolling-text-inner\">\n      <h2>\n<a href=\"#\"><em>BEST SNEAKER IN TOWN<\/em><\/a><span class=\"custom\" data-scale=\"small\"><\/span>\n<\/h2>\n      <h2>\n<a href=\"#\"><em>BEST SNEAKER IN TOWN<\/em><\/a><span class=\"custom\" data-scale=\"small\"><\/span>\n<\/h2>\n      <h2>\n<a href=\"#\"><em>BEST SNEAKER IN TOWN<\/em><\/a><span class=\"custom\" data-scale=\"small\"><\/span>\n<\/h2>\n      <h2>\n<a href=\"#\"><em>BEST SNEAKER IN TOWN<\/em><\/a><span class=\"custom\" data-scale=\"small\"><\/span>\n<\/h2>\n      <h2>\n<a href=\"#\"><em>BEST SNEAKER IN TOWN<\/em><\/a><span class=\"custom\" data-scale=\"small\"><\/span>\n<\/h2>\n      <h2>\n<a href=\"#\"><em>BEST SNEAKER IN TOWN<\/em><\/a><span class=\"custom\" data-scale=\"small\"><\/span>\n<\/h2>\n      <h2>\n<a href=\"#\"><em>BEST SNEAKER IN TOWN<\/em><\/a><span class=\"custom\" data-scale=\"small\"><\/span>\n<\/h2>\n    <\/div>\n  <\/div>",
+            "width": "100%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "e165b9f6-b00e-4698-9310-422404897180"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1620980035fb4a935a": {
+      "type": "newsletter",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "",
+        "form_layout": "vertical",
+        "form_design": "2",
+        "heading": "SUBSCRIBE TO BE FRIEND",
+        "description": "",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email address",
+        "submit_button": "Subscribe",
+        "text_color": "black",
+        "show_icon": true,
+        "icon_img_width": "40",
+        "show_agreement": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-newsletters",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1662458033a6636467",
+    "1620813069167db316",
+    "162081317833a6e943",
+    "1620889733b8bebef8",
+    "162095835646fd819e",
+    "162089604618911426",
+    "162098050586305bd8",
+    "1620980035fb4a935a"
+  ]
+}

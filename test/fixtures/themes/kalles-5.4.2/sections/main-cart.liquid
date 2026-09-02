@@ -1,0 +1,1151 @@
+{%- liquid
+  assign form_id = 'CartPage-Form'
+  assign shipping_amount = settings.free_ship_pr.metafields.theme.shipping_money.value | default: settings.free_ship_pr.price | default: -1
+  assign gift_wrap_pr = settings.gift_wrap_pr
+  if gift_wrap_pr != blank and gift_wrap_pr.available
+    assign gift_wrap_pr_quantity = cart | item_count_for_variant: gift_wrap_pr.selected_or_first_available_variant.id
+    assign gift_wrap_pr_id = gift_wrap_pr.selected_or_first_available_variant.id
+  endif
+
+  # shipping protection
+  assign protect_product = settings.protect_product
+  assign protect_product_id = protect_product.selected_or_first_available_variant.id | default: protect_product.variants.first.id | default: protect_product.id | default: 'kalles-5'
+
+  assign cart_items = cart.items
+  assign has_protect_product = 0
+  if protect_product_id != blank and settings.enable_shipping_protection
+    assign cart_items = cart.items | reject: 'variant_id', protect_product_id
+    assign has_protect_product = cart.items | where: 'variant_id', protect_product_id | size
+  endif
+  if has_protect_product > 0 
+    assign is_protect_active = true
+  endif 
+  # end shipping protection
+-%}
+{{ 'hdt-main-cart.css' | asset_url | stylesheet_tag }}
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+<hdt-main-cart ref="hdt-cart" section-id="{{ section.id }}"  data-count="{{ cart.item_count | minus: has_protect_product }}" data-total-price="{{ cart.total_price | money | strip_html }}" main-content class="hdt-block hdt-page-cart hdt-section-spacing hdt-section-spacing-{{ section.id }} hdt-s-gradient" id="hdt-page-cart" color-scheme="{{ section.settings.color_scheme }}">
+  <div class="hdt-container">
+    {%- if cart_items == empty -%}
+      <cart-items-component class="hdt-contents">
+        <form action="{{ routes.cart_url }}" method="POST" id="{{ form_id }}" section-id="{{ section.id }}">
+          <div class="hdt-page-cart__empty hdt-text-center">
+            <svg class="hdt-page-cart-icon__emty hdt-inline-block hdt-s-text2" widht="50" height="50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M263.4 103.4C269.7 97.18 279.8 97.18 286.1 103.4L320 137.4L353.9 103.4C360.2 97.18 370.3 97.18 376.6 103.4C382.8 109.7 382.8 119.8 376.6 126.1L342.6 160L376.6 193.9C382.8 200.2 382.8 210.3 376.6 216.6C370.3 222.8 360.2 222.8 353.9 216.6L320 182.6L286.1 216.6C279.8 222.8 269.7 222.8 263.4 216.6C257.2 210.3 257.2 200.2 263.4 193.9L297.4 160L263.4 126.1C257.2 119.8 257.2 109.7 263.4 103.4zM80 0C87.47 0 93.95 5.17 95.6 12.45L100 32H541.8C562.1 32 578.3 52.25 572.6 72.66L518.6 264.7C514.7 278.5 502.1 288 487.8 288H158.2L172.8 352H496C504.8 352 512 359.2 512 368C512 376.8 504.8 384 496 384H160C152.5 384 146.1 378.8 144.4 371.5L67.23 32H16C7.164 32 0 24.84 0 16C0 7.164 7.164 0 16 0H80zM107.3 64L150.1 256H487.8L541.8 64H107.3zM128 456C128 425.1 153.1 400 184 400C214.9 400 240 425.1 240 456C240 486.9 214.9 512 184 512C153.1 512 128 486.9 128 456zM184 480C197.3 480 208 469.3 208 456C208 442.7 197.3 432 184 432C170.7 432 160 442.7 160 456C160 469.3 170.7 480 184 480zM512 456C512 486.9 486.9 512 456 512C425.1 512 400 486.9 400 456C400 425.1 425.1 400 456 400C486.9 400 512 425.1 512 456zM456 432C442.7 432 432 442.7 432 456C432 469.3 442.7 480 456 480C469.3 480 480 469.3 480 456C480 442.7 469.3 432 456 432z"></path></svg>
+            <h3 class="hdt-page-cart__emty-heading hdt-text-12xl hdt-font-semibold hdt-uppercase">{{ 'sections.cart.empty' | t }}</h3>
+            <div class="hdt-page-cart__emty_txt hdt-s-text2">{{ 'sections.cart.empty_html' | t }}</div>
+            {%- if settings.empty_cart_link != blank -%}
+              {%- if settings.empty_cart_link != blank -%}
+                <a href="{{ settings.empty_cart_link }}" class="hdt-mini-cart__emty-button hdt-button-block hdt-btn hdt-relative hdt-oh hdt-btn--size-xl hdt-btn-accent hdt-font-semibold hdt-uppercase">
+                  <span>{{ 'sections.cart.return_shop' | t }}</span>
+                </a>
+              {%- endif -%}
+            {%- endif -%}
+            {%- if section.settings.show_free_shipping_bar and shipping_amount > -1 -%}
+              {%- liquid
+                assign calculated_total_price = cart_items | where: "requires_shipping", true | sum: 'final_line_price'
+                assign money_need_add = shipping_amount | minus: calculated_total_price | money_with_currency
+              -%}
+              {%- assign progress_shipping = calculated_total_price | times: 1.0 | divided_by: shipping_amount | at_most: 1 -%}
+              <span class="hdt-progress-msg hdt-block">
+                {%- if progress_shipping == 0 -%}
+                  {{ 'sections.cart.free_shipping_bar.intial_html' | t: money: money_need_add }}
+                {%- elsif progress_shipping == 1 -%}
+                  {{ 'sections.cart.free_shipping_bar.success' | t | replace: '[', '<span class="is--congratulations">' | replace: ']', '</span>'  }}
+                {%- else -%}
+                  {{ 'sections.cart.free_shipping_bar.unreached_html' | t: money: money_need_add }}
+                {%- endif -%}
+              </span>
+            {%- endif -%}
+          </div>
+        </form>
+      <style>
+        .hdt-page-cart .hdt-shipping-calculator{display:none}
+      </style>
+    </cart-items-component>
+    {%- else -%}
+      <div class="hdt-cart-page__items hdt-ratio--adapt_image">
+        <cart-items-component class="hdt-contents">
+          <form action="{{ routes.cart_url }}" method="POST" id="{{ form_id }}" section-id="{{ section.id }}">
+            <input type="hidden" name="attributes[products_items_per_row]" value="">
+            <table class="hdt-cart-items hdt-table-page-cart">
+              <caption class="sr-only">{{ 'sections.cart.title' | t }}</caption>
+              <thead>
+                <tr>
+                  <th>{{ 'sections.cart.headings.product' | t }}</th>
+                  <th>{{ 'sections.cart.headings.price' | t }}</th>
+                  <th>{{ 'sections.cart.headings.quantity' | t }}</th>
+                  <th>{{ 'sections.cart.headings.total' | t }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%- for item in cart_items -%}
+                  {%- liquid
+                    assign quantity_rule = item.variant.quantity_rule
+                    if item.variant.inventory_management != null and item.variant.inventory_quantity > 0 and item.variant.inventory_policy != 'continue'
+                      assign qty = item.variant.inventory_quantity
+                    else
+                      assign qty = 9999
+                    endif
+                    assign qty_rule_max = quantity_rule.max | default: 0
+                    assign max_qty = qty | at_least: qty_rule_max
+                  -%}
+                  <tr class="hdt-cart-item hdt-page-cart__item hdt-relative hdt-oh{% if item.variant.id == settings.gift_card_pr.selected_or_first_available_variant.id or item.variant.id == gift_wrap_pr_id or item.gift_card %} is-gift-wrap{% endif %}" id="CartItem-{{ item.index | plus: 1 }}">
+                    <td class="hdt-cart-item__product hdt-page-cart__infos hdt-text-start">{%- render 'item-cart-page', item: item, form_id: form_id -%}</td>
+                    <td class="hdt-cart-item__price hdt-page-cart__prices hdt-text-center" cart-data-title="{{ 'sections.cart.headings.price' | t }}">{%- render 'line-item-price', line_item: item, price_class: 'hdt-price-wrapp hdt-justify-center' -%}</td>
+                    <td class="hdt-cart-item__quantity hdt-page-cart__quantity" cart-data-title="{{ 'sections.cart.headings.quantity' | t }}">
+                      <div class="hdt-quantity--error hdt-form-message--error">{% render 'icon' with 'error' %} <span class="hdt-error-message">{{ 'products.product.quantity_not_available' | t }}</span></div>
+                      <hdt-quantity-wrapp class="hdt-quantity-wrapp hdt-quantity-cart-item hdt-s-text hdt-text-center hdt-relative">
+                        <wrapp-remove-item-oncart placement="none" class="{% if item.quantity == 1 %}hdt-inline-flex hdt-align-center no-js-hidden hdt-absolute hdt-p-0 hdt-top-0 hdt-left-0 hdt-text-start{% else %}hdt-hidden{% endif %}" data-index="{{ item.index | plus: 1 }}" form="id:{{ form_id }}"><a href="{{ routes.cart_change_url }}?line={{ item.index | plus: 1 }}&quantity=0" class="hdt-mini-cart__remove hdt-s-text"><svg viewBox="0 0 24 24" width="17"><use href="#icon-cart-remove"></use></svg></a></wrapp-remove-item-oncart>
+                        <button class="hdt-quantity__button no-js-hidden is--minus hdt-absolute hdt-p-0 hdt-top-0 hdt-left-0 hdt-text-start{% if item.quantity == 1 %} hdt-hidden{% endif %}" name="minus" type="button">
+                          <span class="sr-only">{{- 'products.product.quantity.decrease' | t: product: item.product.title | escape -}}</span>
+                          {%- render 'icon' with 'minus' -%}
+                        </button>
+
+                        <input class="quantity__input hdt-quantity-input hdt-text-center hdt-text-lg hdt-font-semibold hdt-p-0" type="number" name="updates[]" min="{{ quantity_rule.min }}" data-max="{{ max_qty }}" max="{{ max_qty }}" value="{{ item.quantity }}" aria-label="{{ 'products.product.quantity.input_label' | t: product: item.product.title | escape }}" data-index="{{ item.index | plus: 1 }}">
+                        <button class="hdt-quantity__button no-js-hidden is--plus hdt-absolute hdt-p-0 hdt-top-0 hdt-right-0 hdt-text-end" name="plus" type="button">
+                          <span class="sr-only">{{- 'products.product.quantity.increase' | t: product: item.product.title | escape -}}</span>
+                          {%- render 'icon' with 'plus' -%}
+                        </button>
+                      </hdt-quantity-wrapp>
+                    </td>
+                    <td class="hdt-cart-item__total hdt-page_cart__total-price hdt-text-end hdt-s-text hdt-font-semibold" cart-data-title="{{ 'sections.cart.headings.total' | t }}">{%- render 'line-item-price', line_item: item, get_total: true, show_unit_price: true, price_class: 'hdt-justify-end' -%}</td>
+                  </tr>
+                {%- endfor -%}
+              </tbody>
+            </table>
+          </form>
+        </cart-items-component>
+      </div>
+      <div class="hdt-page-cart__footer">
+        <div class="hdt-page-cart__footer-wrap hdt-row-flex md:hdt-flex-cols-2 hdt-flex-cols-1">
+          <div class="hdt-col hdt-page-cart__content">
+            {%- if section.settings.show_gift and gift_wrap_pr_quantity == 0 -%}
+              {%- assign gift_pr_money = gift_wrap_pr.variants.first.price | money -%}
+              <div class="hdt-page-cart__addgift hdt-flex hdt-align-center hdt-justify-between">
+                <div class="hdt-page-cart__addgift-info">
+                  <svg class="hdt-inline-block hdt-relative hdt-s-text" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="t4s-d-inline-block t4s-pr"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+                  <div class="hdt-page-cart__addgift-text hdt-inline-block">{{ 'sections.cart.tool.gift_wrap_html' | t: money: gift_pr_money }}</div>
+                </div>
+                <div class="hdt-page-cart__addgift-button">
+                  <wrapp-hdt-pr-frm class="hdt-contents">
+                    {%- form 'product', gift_wrap_pr, id: 'product-form-gift-wrap', novalidate: 'novalidate' -%}
+                      <input type="hidden" name="action_added" value="no">
+                      <input type="hidden" name="quantity" value="{{ gift_wrap_pr.selected_or_first_available_variant.min }}">
+                      <input type="hidden" name="id" value="{{ gift_wrap_pr_id }}">
+                      <button type="submit" name="add" id="hdt-cart-gift-submit" class="hdt-button-block hdt-btn hdt-text-base hdt-font-semibold hdt-btn-outline">{{ 'sections.cart.tool.add_gift_wrap' | t }}</button>
+                    {%- endform -%}
+                  </wrapp-hdt-pr-frm>
+                </div>
+              </div>
+              <script type="text/javascript">
+                function addGift() {
+                  const giftCheckBox = document.getElementById('hdt-cart-gift-checkbox').checked;
+                  if (giftCheckBox) {
+                    giftCheckBox.checked = false;
+                    document.getElementById('product-form-gift-wrap').submit();
+                  }
+                }
+              </script>
+            {%- endif -%}
+            {% render 'shipping-protection', protect_product: protect_product, is_protect_active: is_protect_active, data_page_id: '#hdt-page-cart' %}
+            {%- if section.settings.show_cart_note -%}
+              <hdt-cart-note class="hdt-page-cart__note">
+                <label for="Cart-note" class="hdt-s-text hdt-block" data-label-note>
+                  <span {% if cart.note != blank %}hidden{% endif %}>{{ 'sections.cart.add_note' | t }}</span>
+                  <span {% if cart.note == blank %}hidden{% endif %}>{{ 'sections.cart.edit_note' | t }}</span>
+                </label>
+                <textarea name="note" id="Cart-note" placeholder="{{ 'sections.cart.placeholder_note' | t | escape }}">{{ cart.note }}</textarea>
+              </hdt-cart-note>
+            {%- endif -%}
+            {%- if section.settings.show_cart_discount -%}
+              <hdt-cart-discount data-cart-scope="main">
+                <div class="hdt-page-cart__coupon hdt-page-cart__field" style="margin-top: 20px;">
+                  <label class="hdt-s-text hdt-block">{{ 'sections.cart.tool.discount' | t }}</label>
+                  <div class="hdt-flex" style="align-items: center; gap: 15px;">
+                    <input type="text" name="discount" class="hdt-input" data-cart-discount-input placeholder="{{ 'sections.cart.tool.placeholder_discount' | t | escape }}" data-value="{{ cart.discount_applications | map: 'title' | join: ',' }}" style="max-width: 46rem;">
+                    <button type="button" class="hdt-btn hdt-main-cart__apply" data-cart-discount-apply>
+                      <span class="hdt-truncate">{{ 'sections.cart.tool.apply' | t }}</span>
+                    </button>
+                  </div>
+                  <div data-cart-discount-error class="hdt-discount-error hdt-text-error hdt-mt-2" style="display: none;">{{ section.settings.discount_error_message }}</div>
+                </div>
+              </hdt-cart-discount>
+            {%- endif -%}
+          </div>
+          <div class="hdt-col hdt-page-cart__content md:hdt-text-end hdt-text-center">
+            {%- if section.settings.show_free_shipping_bar and shipping_amount > -1 -%}
+              {%- render 'cart-shipping-bar', shipping_amount: shipping_amount -%}
+            {%- endif -%}
+            {%- if section.blocks.size > 0 -%}
+              <div class="hdt-page-cart__content">
+                {%- for block in section.blocks -%}
+                  {%- case block.type -%}
+                    {%- when 'subtotal' -%}
+                      <div class="hdt-cart-totals-discounts" shipping-protection-update {{ block.shopify_attributes }}>
+                        {%- if cart.cart_level_discount_applications.size > 0 -%}
+                            <ul class="hdt-discounts hdt-cart_discounts" role="list" aria-label="{{ 'customer.order.discount' | t }}" color-scheme="{{ settings.color_scheme_body }}">
+                              {%- for discount in cart.cart_level_discount_applications -%}
+                                <li class="hdt-discounts__discount hdt-discounts__discount--end">
+                                  <div class="hdt-discount-item">
+                                    <div class="hdt-discount-info">
+                                      {%- render 'icon' with 'discount' -%} 
+                                      <span class="hdt-discount-title hdt-truncate">{{ discount.title }}</span>
+                                      <span class="hdt-discount-amount">(-<span class="hdt-money">{{ discount.total_allocated_amount | money }}</span>)</span>
+                                    </div>
+                                    <button type="button" class="hdt-discount-remove" data-discount-code="{{ discount.title }}" aria-label="{{ 'sections.cart.remove_discount' | t }}">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </li>
+                              {%- endfor -%}
+                            </ul>
+                        {%- endif -%}
+                        <div class="hdt-totals hdt-page-cart__totals hdt-inline-flex hdt-align-center hdt-justify-between" role="status">
+                          <h3 class="hdt-totals__total hdt-text-xl hdt-font-semibold">{{ 'sections.cart.subtotal' | t }}</h3>
+                          <span class="hdt-totals__total-value hdt-text-xl hdt-s-text hdt-font-semibold hdt-money">{{ cart.total_price | money_with_currency }}</span>
+                        </div>
+                      </div>
+                    {%- when 'tax' -%}
+                      {%- liquid
+                        assign page_url = block.settings.url | default: shop.shipping_policy.url
+                      -%}
+                      <div class="hdt-cart-tax hdt-rte" {{ block.shopify_attributes }}>
+                        {%- if cart.taxes_included and shop.shipping_policy.body != blank -%}
+                          {{ 'sections.cart.taxes_included_and_shipping_policy_html' | t: link: page_url }}
+                        {%- elsif cart.taxes_included -%}
+                          {{ 'sections.cart.taxes_included_but_shipping_at_checkout' | t }}
+                        {%- elsif shop.shipping_policy.body != blank -%}
+                          {{ 'sections.cart.taxes_and_shipping_policy_at_checkout_html' | t: link: page_url }}
+                        {%- else -%}
+                          {{ 'sections.cart.taxes_and_shipping_at_checkout' | t }}
+                        {%- endif -%}
+                      </div>
+                    {%- when 'agree' -%}{%- render 'cart-checkbox', form_id: form_id, block: block -%}
+                    {%- when 'btn_checkout' -%}
+                      {%- capture style -%}
+                        {%- if block.settings.icon != "none" -%}--gap-btn-icon: {{ block.settings.icon_spacing }}px; --height-btn-icon: {{ block.settings.icon_height }}px;{%- endif -%}
+                        {%- if block.settings.size == "custom custom-inline" -%}--hdt-btn-padding-x: {{ block.settings.padding_btn }}px; --hdt-btn-line-height: {{ block.settings.min_height_btn }}px; font-size: {{ block.settings.font_size_btn }}px;--minw-button: {{ block.settings.min_width_btn }}px; --minwdt-button: {{ block.settings.min_width_dt_btn }}px;{%- endif -%}
+                        {%- if block.settings.btn_style == 'hdt-btn-custom' -%}--hdt-btn-color: {{ block.settings.color_btn.rgb }}; --hdt-btn-hover-color: {{ block.settings.color_hover_btn.rgb }}; --hdt-btn-bg: {% if block.settings.background_btn == "rgba(0,0,0,0)" %}transparent{% else %}{{ block.settings.background_btn.rgb }}{% endif %}; --hdt-btn-hover-bg: {% if block.settings.background_hover_btn == "rgba(0,0,0,0)" %}transparent{% else %}{{ block.settings.background_hover_btn.rgb }}{% endif %};
+                        {% if block.settings.border_w_btn != blank %}
+                          --hdt-btn-border-color: {{ block.settings.border_btn.rgb }}; --hdt-btn-hover-border-color: {{ block.settings.border_hover_btn.rgb }}; --hdt-btn-border-width: {{ block.settings.border_w_btn }};
+                        {%- else -%}
+                          --hdt-btn-border-color: {{ block.settings.background_btn.rgb }}; --hdt-btn-hover-border-color: {{ block.settings.background_hover_btn.rgb }}; --hdt-btn-border-width: {{ block.settings.border_w_btn }};
+                        {%- endif -%}
+                      {%- endif -%}
+                      {%- endcapture -%}
+                      
+                      {%- capture class -%}
+                        hdt-button-block hdt-btn hdt-relative hdt-oh hdt-font-{{ block.settings.font_weight }} hdt-btn--size-{{ block.settings.size }} {{ block.settings.text_size }} {{ block.settings.btn_style }}{% if block.settings.boder_hover %} hdt-btn-boder-hover{% endif %}{% if block.settings.full_width %} hdt-btn-full-width{% endif %} {{ block.settings.rounded }}{% if block.settings.icon != "none" %} hdt-btn--with-icon hdt-btn--pos-icon-{{ block.settings.icon_position }}{% endif %}
+                      {%- endcapture -%}
+                      <button form="{{ form_id }}" type="submit" name="checkout" id="block-{{ block.id }}" class="hdt-main-cart__button-checkout hdt-button-block {{ class }}" style="{{ style }}" {{ block.shopify_attributes }}>  
+                        {%- liquid
+                          if block.settings.icon != 'none'
+                            render 'icons', icon: block.settings.icon
+                          endif
+                        -%}
+                        <span>
+                          {%- liquid
+                            echo 'sections.cart.checkout' | t
+                          -%}
+                        </span>
+                      </button>
+                    {%- when 'accelerated_btns' -%}
+                      {%- comment %} https://shopify.dev/docs/themes/pricing-payments/accelerated-checkout {% endcomment -%}
+                      <hdt-need-checked-to-use get-id="{{ form_id }}_agree">
+                      <div class="additional-checkout-buttons additional-checkout-buttons--vertical" disabled>
+                        {{ content_for_additional_checkout_buttons }}
+                      </div>
+                      </hdt-need-checked-to-use>
+                      {%- if additional_checkout_buttons -%}{%- endif -%}
+                    {%- when 'img_trust' -%}
+                      <div class="hdt-page-cart__imgtrust">
+                        {%- capture html_trust -%}
+                          {%- if block.settings.image != blank -%}
+                            {%- assign image_size_2x = block.settings.wimg | times: 2 -%}
+                            <div class="hdt-page-cart__imgtrust-image hdt-block lg:hdt-inline-block" style="max-width: min(100%, {{ block.settings.wimg }}px);">
+                              <img width="{{ block.settings.image.width }}" class="hdt-inline-block" height="{{ block.settings.image.height }}" srcset="{{ block.settings.image | image_url: width: block.settings.image_width }}, {{ block.settings.image | image_url: width: image_size_2x }} 2x" src="{{ block.settings.image | image_url: width: 760 }}" alt="{{ block.settings.image.alt | escape }}" loading="lazy">
+                            </div>
+                          {%- elsif block.settings.svg != blank -%}
+                            {%- assign arr = block.settings.svg | remove: ' ' | split: "," -%}
+                            <div class="hdt-page-cart__imgtrust-svgs hdt-block lg:hdt-inline-block" style="--height-img:{{ block.settings.height }}px;">
+                              {%- for img in arr -%}
+                                <div class="hdt-payment-item hdt-inline-block"><img src="https://raw.githubusercontent.com/activemerchant/payment_icons/refs/heads/master/app/assets/images/payment_icons/{{ img }}.svg" height="{{ block.settings.height }}" width="" class="hdt-icon-payment hdt-inline-block"></div>
+                              {%- endfor -%}
+                            </div>
+                          {%- endif -%}
+                        {%- endcapture -%}
+                        {{- html_trust -}}
+                      </div>
+                    {%- when 'payment-terms' -%}
+                      <div class="hdt-cart-payment-terms" {{ block.shopify_attributes }}>
+                        {%- form 'cart', cart -%}
+                          <span data-cart-subtotal class="hdt-hidden">{{ cart.total_price | money }}</span>
+                          {{ form | payment_terms }}
+                        {%- endform -%}
+                      </div>
+                  {%- endcase -%}
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+    {%- if section.settings.show_estimate -%}
+        <hdt-shipping-calculator class="hdt-shipping-calculator hdt-block hdt-relative" id="shipping-calculator-{{ form_id }}">
+          <h3 class="hdt-absolute hdt-top-0 hdt-text-6xl hdt-font-semibold hdt-text-center hdt-inline-block">{{ 'sections.cart.shipping_estimator.title' | t }}</h3>
+          <hdt-country-province-selector class="hdt-contents hdt-row-flex lg:hdt-flex-cols-4 md:hdt-flex-cols-3 hdt-flex-cols-1 hdt-align-center hdt-justify-center" {% if customer and customer.default_address %}country="{{ customer.default_address.country | escape }}"{% endif %}>
+            <div class="hdt-field hdt-col">
+              <label for="ShippingCountry_{{ form_id }}">{{ 'sections.cart.shipping_estimator.country' | t }}</label>
+              <select id="ShippingCountry_{{ form_id }}" name="address[country]" data-default="{% if customer %}{{ customer.default_address.country }}{% endif %}">{{- country_option_tags -}}</select>
+            </div>
+            <div class="hdt-field hdt-col">
+              <label for="ShippingProvince_{{ form_id }}" id="address_province_label">{{ 'sections.cart.shipping_estimator.province' | t }}</label>
+              <select id="ShippingProvince_{{ form_id }}" name="address[province]" data-default="{% if customer %}{{ customer.default_address.province }}{% endif %}"></select>
+            </div>
+            <div class="hdt-field hdt-col">
+              <label for="ShippingZip_{{ form_id }}">{{ 'sections.cart.shipping_estimator.zip_code' | t }}</label>
+              <input type="text" data-opend-focus id="ShippingZip_{{ form_id }}" name="address[zip]" value="{% if customer %}{{ customer.default_address.zip }}{% endif %}"/>
+            </div>
+            <div class="hdt-field hdt-field-get__rates hdt-col">
+              <button type="button" class="hdt-get__rates hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn hdt-oh hdt-btn-default hdt-font-semibold hdt-btn-full-width"><span class="hdt-truncate">{{ 'sections.cart.shipping_estimator.estimate' | t }}</span></button>
+            </div>
+          </hdt-country-province-selector>
+          <div role="region" aria-live="polite" class="hdt-response__rates hdt-text-center"></div>
+          <template data-lang-rates class="hdt-hidden">
+          {
+            "multiple_rates": {{ 'sections.cart.shipping_estimator.multiple_rates' | t | json }},
+            "one_rate": {{ 'sections.cart.shipping_estimator.one_rate' | t | json }},
+            "no_rates": {{ 'sections.cart.shipping_estimator.no_rates' | t | json }},
+            "errors": {{ 'sections.cart.shipping_estimator.errors' | t | json }},
+            "free": {{ 'sections.cart.shipping_estimator.free' | t | json }}
+          }
+          </template>
+        </hdt-shipping-calculator>
+    {%- endif -%}
+  </div>
+</hdt-main-cart>
+<svg class="hdt-hidden">
+  <symbol id="icon-cart-remove" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+  </symbol>
+  <symbol id="icon-cart-edit" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+  </symbol>
+</svg>
+{% schema %}
+{
+  "name": "t:sections.main-cart.name",
+  "class": "hdt-section-main hdt-section-main-cart",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart_note",
+      "label": "t:sections.main-cart.settings.show_cart_note.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_free_shipping_bar",
+      "label": "t:sections.main-cart.settings.show_free_shipping_bar.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_gift",
+      "label": "t:sections.main-cart.settings.show_gift.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_estimate",
+      "label": "t:sections.main-cart.settings.show_estimate.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart_discount",
+      "label": "t:sections.main-cart.settings.show_cart_discount.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "discount_error_message",
+      "label": "t:sections.main-cart.settings.discount_error_message.label",
+      "default": "Enter a valid discount code",
+      "visible_if": "{{ section.settings.show_cart_discount }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "subtotal",
+      "name": "t:sections.main-cart.blocks.subtotal.name",
+      "limit": 1,
+      "settings":[    
+        {
+          "type": "paragraph",
+          "content": "t:settings_schema.currency_format.settings.paragraph"
+        }
+      ]
+    },
+    {
+      "type": "tax",
+      "name": "t:sections.main-cart.blocks.tax.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "url",
+          "id": "url",
+          "label": "t:sections.mini-cart.blocks.tax.settings.url.label",
+        },
+      ]
+    },
+    {
+      "type": "agree",
+      "name": "t:sections.main-cart.blocks.agree.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "t:sections.main-cart.blocks.agree.settings.paragraph.content"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "content",
+          "label": "t:sections.main-cart.blocks.agree.settings.content.label",
+          "default": "I agree with the terms and conditions"
+        }
+      ]
+    },
+    {
+      "type": "btn_checkout",
+      "name": "t:sections.main-cart.blocks.btn_checkout.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "btn_style",
+          "label": "t:blocks.button.settings.button_style.label",
+          "default": "",
+          "options": [
+            {
+              "value": "",
+              "label": "t:blocks.button.settings.button_style.options.default"
+            },
+            {
+              "value": "hdt-btn-custom",
+              "label": "t:blocks.button.settings.button_style.options.custom"
+            },
+            {
+              "value": "hdt-btn-outline",
+              "label": "t:blocks.button.settings.button_style.options.outline"
+            },
+            {
+              "value": "hdt-btn-link",
+              "label": "t:blocks.button.settings.button_style.options.link"
+            },
+            {
+              "value": "hdt-btn-secondary",
+              "label": "t:blocks.button.settings.button_style.options.secondary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.tertiary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-accent",
+              "label": "t:blocks.button.settings.button_style.options.accent",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-hover-secondary",
+              "label": "t:blocks.button.settings.button_style.options.hover_secondary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-hover-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.hover_tertiary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-hover-accent",
+              "label": "t:blocks.button.settings.button_style.options.hover_accent",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-outline-secondary",
+              "label": "t:blocks.button.settings.button_style.options.outline_secondary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.outline_tertiary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-accent",
+              "label": "t:blocks.button.settings.button_style.options.outline_accent",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-hover-secondary",
+              "label": "t:blocks.button.settings.button_style.options.outline_hover_secondary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-hover-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.outline_hover_tertiary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-hover-accent",
+              "label": "t:blocks.button.settings.button_style.options.outline_hover_accent",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-link-secondary",
+              "label": "t:blocks.button.settings.button_style.options.link_secondary",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-accent",
+              "label": "t:blocks.button.settings.button_style.options.link_accent",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-hover",
+              "label": "t:blocks.button.settings.button_style.options.link_hover",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-secondary-hover",
+              "label": "t:blocks.button.settings.button_style.options.link_secondary_hover",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-accent-hover",
+              "label": "t:blocks.button.settings.button_style.options.link_accent_hover",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+          ]
+        },
+        {
+          "type": "color",
+          "id": "color_btn",
+          "label": "Color",
+          "default": "#fff",
+          "visible_if": "{{ block.settings.btn_style == 'hdt-btn-custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "color_hover_btn",
+          "label": "Color hover",
+          "default": "#fff",
+          "visible_if": "{{ block.settings.btn_style == 'hdt-btn-custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "background_btn",
+          "label": "Background button",
+          "default": "#222",
+          "visible_if": "{{ block.settings.btn_style == 'hdt-btn-custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "background_hover_btn",
+          "label": "Background hover button",
+          "default": "#333",
+          "visible_if": "{{ block.settings.btn_style == 'hdt-btn-custom' }}"
+        },
+        {
+          "type": "text",
+          "id": "border_w_btn",
+          "label": "Border width button",
+          "visible_if": "{{ block.settings.btn_style == 'hdt-btn-custom' }}",
+          "placeholder": "1px 1px 1px 1px"
+        },
+        {
+          "type": "color",
+          "id": "border_btn",
+          "label": "Border button",
+          "default": "#222",
+          "visible_if": "{{ block.settings.btn_style == 'hdt-btn-custom' and block.settings.border_w_btn != '' }}"
+        },
+        {
+          "type": "color",
+          "id": "border_hover_btn",
+          "label": "Border hover button",
+          "default": "#333",
+          "visible_if": "{{ block.settings.btn_style == 'hdt-btn-custom' and block.settings.border_w_btn != '' }}"
+        },
+        {
+          "type": "select",
+          "id": "size",
+          "label": "t:blocks.button.settings.button_size.label",
+          "options": [
+            {
+              "value": "xs",
+              "label": "t:blocks.button.settings.button_size.options.xs"
+            },
+            {
+              "value": "s",
+              "label": "t:blocks.button.settings.button_size.options.s"
+            },
+            {
+              "value": "m",
+              "label": "t:blocks.button.settings.button_size.options.m"
+            },
+            {
+              "value": "l",
+              "label": "t:blocks.button.settings.button_size.options.l"
+            },
+            {
+              "value": "xl",
+              "label": "t:blocks.button.settings.button_size.options.xl"
+            },
+            {
+              "value": "custom hdt-btn--size-custom-1",
+              "label": "t:blocks.button.settings.button_size.options.custom_1"
+            },
+            {
+              "value": "custom custom-inline",
+              "label": "t:blocks.button.settings.button_size.options.custom_inline"
+            }
+          ],
+          "default": "m"
+        },
+        {
+          "type": "select",
+          "id": "text_size",
+          "label": "t:blocks.button.settings.button_label_size",
+          "options": [
+              {
+                "value": "hdt-text-xs",
+                "label": "t:settings_schema.typography.settings.font_size.xs"
+              },
+              {
+                "value": "hdt-text-sm",
+                "label": "t:settings_schema.typography.settings.font_size.sm"
+              },
+              {
+                "value": "hdt-text-base",
+                "label": "t:settings_schema.typography.settings.font_size.base"
+              },
+              {
+                "value": "hdt-text-lg",
+                "label": "t:settings_schema.typography.settings.font_size.lg"
+              },
+              {
+                "value": "hdt-text-xl",
+                "label": "t:settings_schema.typography.settings.font_size.xl"
+              },
+              {
+                "value": "hdt-text-2xl",
+                "label": "t:settings_schema.typography.settings.font_size.2xl"
+              },
+              {
+                "value": "hdt-text-4xl",
+                "label": "t:settings_schema.typography.settings.font_size.4xl"
+              }
+            ],
+          "default": "hdt-text-base",
+          "visible_if": "{{ block.settings.size != 'custom custom-inline' and block.settings.size != 'custom hdt-btn--size-custom-1' }}"
+        },
+        {
+          "type": "select",
+          "id": "font_weight",
+          "label": "t:blocks.button.settings.button_font_weight",
+          "options": [
+            {
+              "value": "light",
+              "label": "t:settings_schema.typography.settings.font_weight.light"
+            },
+            {
+              "value": "normal",
+              "label": "t:settings_schema.typography.settings.font_weight.normal"
+            },
+            {
+              "value": "medium",
+              "label": "t:settings_schema.typography.settings.font_weight.medium"
+            },
+            {
+              "value": "semibold",
+              "label": "t:settings_schema.typography.settings.font_weight.semibold"
+            },
+            {
+              "value": "bold",
+              "label": "t:settings_schema.typography.settings.font_weight.bold"
+            },
+          ],
+          "default": "normal"
+        },
+        {
+          "type": "header",
+          "content": "t:blocks.text.custom_size_options.label",
+          "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+        },
+        {
+          "type": "range",
+          "id": "font_size_btn",
+          "min": 10,
+          "max": 50,
+          "step": 1,
+          "unit": "px",
+          "label": "t:settings_schema.typography.settings.font_size.label",
+          "default": 14,
+          "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+        },
+        {
+          "type": "range",
+          "id": "padding_btn",
+          "min": 5,
+          "max": 80,
+          "step": 1,
+          "unit": "px",
+          "label": "t:settings_schema.button.settings.padding",
+          "default": 30,
+          "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+        },
+        {
+          "type": "range",
+          "id": "min_width_btn",
+          "min": 100,
+          "max": 300,
+          "step": 2,
+          "unit": "px",
+          "label": "t:settings_schema.button.settings.min_width",
+          "default": 100,
+          "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+        },
+        {
+          "type": "range",
+          "id": "min_width_dt_btn",
+          "min": 100,
+          "max": 300,
+          "step": 2,
+          "unit": "px",
+          "label": "t:settings_schema.button.settings.min_width_dt",
+          "default": 100,
+          "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+        },
+        {
+          "type": "range",
+          "id": "min_height_btn",
+          "min": 25,
+          "max": 100,
+          "step": 1,
+          "unit": "px",
+          "label": "t:settings_schema.button.settings.min_height",
+          "default": 40,
+          "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+        },
+        {
+          "type": "select",
+          "id": "rounded",
+          "label": "t:blocks.column.settings.rounded.label",
+          "options": [
+            {
+              "value": "",
+              "label": "t:default"
+            },
+            {
+              "value": "hdt-btn-radius-none",
+              "label": "t:none"
+            },
+            {
+              "value": "hdt-btn-radius-xs",
+              "label": "t:blocks.column.settings.rounded.options.xs"
+            },
+            {
+              "value": "hdt-btn-radius-sm",
+              "label": "t:blocks.column.settings.rounded.options.sm"
+            },
+            {
+              "value": "hdt-btn-radius",
+              "label": "t:blocks.column.settings.rounded.options.medium"
+            },
+            {
+              "value": "hdt-btn-radius-lg",
+              "label": "t:blocks.column.settings.rounded.options.large"
+            },
+            {
+              "value": "hdt-btn-radius-full",
+              "label": "t:blocks.column.settings.rounded.options.full"
+            }
+          ],
+          "default": ""
+        },
+        {
+          "type": "header",
+          "content": "t:blocks.icon.name"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "t:blocks.icon.name",
+          "options": [
+            {
+              "value": "none",
+              "label": "t:blocks.icon.options.none"
+            },
+            {
+              "value": "arrow_right",
+              "label": "t:blocks.icon.options.arrow_right"
+            },
+            {
+              "value": "arrow_simple",
+              "label": "t:blocks.icon.options.arrow_simple"
+            },
+            {
+              "value": "arrow_bottom",
+              "label": "t:blocks.icon.options.arrow_bottom"
+            },
+            {
+              "value": "arrow_stretch",
+              "label": "t:blocks.icon.options.arrow_stretch"
+            },
+            {
+              "value": "car",
+              "label": "t:blocks.icon.options.car"
+            },
+            {
+              "value": "truck",
+              "label": "t:blocks.icon.options.truck"
+            },
+            {
+              "value": "diamond",
+              "label": "t:blocks.icon.options.diamond"
+            },
+            {
+              "value": "door-lock",
+              "label": "t:blocks.icon.options.door_lock"
+            },
+            {
+              "value": "gym",
+              "label": "t:blocks.icon.options.gym"
+            },
+            {
+              "value": "hammer",
+              "label": "t:blocks.icon.options.hammer"
+            },
+            {
+              "value": "headphones",
+              "label": "t:blocks.icon.options.headphones"
+            },
+            {
+              "value": "helm",
+              "label": "t:blocks.icon.options.helm"
+            },
+            {
+              "value": "hourglass",
+              "label": "t:blocks.icon.options.hourglass"
+            },
+            {
+              "value": "map",
+              "label": "t:blocks.icon.options.map"
+            },
+            {
+              "value": "piggy",
+              "label": "t:blocks.icon.options.piggy"
+            },
+            {
+              "value": "refesh",
+              "label": "t:blocks.icon.options.refesh"
+            },
+            {
+              "value": "rocket",
+              "label": "t:blocks.icon.options.rocket"
+            },
+            {
+              "value": "shield",
+              "label": "t:blocks.icon.options.shield"
+            },
+            {
+              "value": "shield2",
+              "label": "t:blocks.icon.options.shield_2"
+            },
+            {
+              "value": "smile",
+              "label": "t:blocks.icon.options.smile"
+            },
+            {
+              "value": "scissors",
+              "label": "t:blocks.icon.options.scissors"
+            },
+            {
+              "value": "shuffle",
+              "label": "t:blocks.icon.options.shuffle"
+            },
+            {
+              "value": "cloud_upload",
+              "label": "t:blocks.icon.options.cloud_upload"
+            },
+            {
+              "value": "cash",
+              "label": "t:blocks.icon.options.cash"
+            },
+            {
+              "value": "way",
+              "label": "t:blocks.icon.options.way"
+            },
+            {
+              "value": "wristwatch",
+              "label": "t:blocks.icon.options.wristwatch"
+            },
+            {
+              "value": "world",
+              "label": "t:blocks.icon.options.world"
+            },
+            {
+              "value": "wallet",
+              "label": "t:blocks.icon.options.wallet"
+            },
+            {
+              "value": "unlock",
+              "label": "t:blocks.icon.options.unlock"
+            },
+            {
+              "value": "umbrella",
+              "label": "t:blocks.icon.options.umbrella"
+            },
+            {
+              "value": "repeat",
+              "label": "t:blocks.icon.options.repeat"
+            },
+            {
+              "value": "refesh-2",
+              "label": "t:blocks.icon.options.refesh_2"
+            },
+            {
+              "value": "medal",
+              "label": "t:blocks.icon.options.medal"
+            },
+            {
+              "value": "portfolio",
+              "label": "t:blocks.icon.options.portfolio"
+            },
+            {
+              "value": "like",
+              "label": "t:blocks.icon.options.like"
+            },
+            {
+              "value": "plance",
+              "label": "t:blocks.icon.options.plance"
+            },
+            {
+              "value": "map-maker",
+              "label": "t:blocks.icon.options.map_maker"
+            },
+            {
+              "value": "help",
+              "label": "t:blocks.icon.options.help"
+            },
+            {
+              "value": "gift",
+              "label": "t:blocks.icon.options.gift"
+            },
+            {
+              "value": "cart",
+              "label": "t:blocks.icon.options.cart"
+            },
+            {
+              "value": "box",
+              "label": "t:blocks.icon.options.box"
+            },
+            {
+              "value": "back",
+              "label": "t:blocks.icon.options.back"
+            },
+            {
+              "value": "back2",
+              "label": "t:blocks.icon.options.back2"
+            }
+          ],
+          "default": "none"
+        },
+        {
+          "type": "select",
+          "id": "icon_position",
+          "label": "t:blocks.icon.icon_position.label",
+          "options": [
+            {
+              "value": "before",
+              "label": "t:blocks.icon.icon_position.before"
+            },
+            {
+              "value": "after",
+              "label": "t:blocks.icon.icon_position.after"
+            }
+          ],
+          "default": "after",
+          "visible_if": "{{ block.settings.icon != 'none' }}"
+        },
+        {
+          "type": "range",
+          "id": "icon_height",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "unit": "px",
+          "label": "t:blocks.icon.icon_size.label",
+          "default": 14,
+          "visible_if": "{{ block.settings.icon != 'none' }}"
+        },
+        {
+          "type": "range",
+          "id": "icon_spacing",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "unit": "px",
+          "label": "t:blocks.icon.settings.icon_spacing.label",
+          "default": 5,
+          "visible_if": "{{ block.settings.icon != 'none' }}"
+        }
+      ]
+    },
+    {
+      "type": "accelerated_btns",
+      "name": "t:sections.main-cart.blocks.accelerated_btns.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "t:sections.main-cart.blocks.accelerated_btns.settings.paragraph1.content"
+        },
+        {
+          "type": "paragraph",
+          "content": "t:sections.main-cart.blocks.accelerated_btns.settings.paragraph2.content"
+        }
+      ]
+    },
+    {
+      "type": "img_trust",
+      "name": "t:sections.main-cart.blocks.img_trust.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "t:sections.main-cart.blocks.img_trust.settings.header_image.content"
+        },        
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.main-cart.blocks.img_trust.settings.image.label"
+        },
+        {
+          "type": "range",
+          "id": "wimg",
+          "min": 100,
+          "max": 600,
+          "step": 5,
+          "unit": "px",
+          "label": "t:sections.main-cart.blocks.img_trust.settings.wimg.label",
+          "default": 350
+        },
+        {
+          "type": "header",
+          "content": "t:sections.main-cart.blocks.img_trust.settings.header_svg.content"
+        },
+        {
+          "type": "textarea",
+          "id": "svg",
+          "label": "t:sections.main-cart.blocks.img_trust.settings.svg.label",
+          "default": "visa,paypal,master,american_express,amazon",
+          "info": "amazon,american_express,apple_pay,bitcoin,dankort,diners_club,discover,dogecoin,dwolla,forbrugsforeningen,interac,google_pay,jcb,klarna,klarna-pay-later,litecoin,maestro,master,paypal,shopify_pay,sofort,visa"
+        },
+        {
+          "type": "range",
+          "id": "height",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "label": "t:sections.main-cart.blocks.img_trust.settings.height.label",
+          "unit": "px",
+          "default": 25
+        }
+      ]
+    },
+    {
+      "type": "payment-terms",
+      "name": "t:sections.main-cart.blocks.payment-terms.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "t:sections.main-cart.blocks.payment-terms.settings.info.content"
+        }
+      ]
+    }
+  ],
+  "default": {
+    "blocks": [
+      {
+        "type": "subtotal"
+      },
+      {
+        "type": "tax"
+      },
+      {
+        "type": "agree"
+      },
+      {
+        "type": "btn_checkout"
+      },
+      {
+        "type": "accelerated_btns"
+      }
+    ]
+  }
+}
+{% endschema %}

@@ -1,0 +1,178 @@
+{% style %}
+  #{{ block.id }}{
+    overflow-y: auto;
+  }
+{% endstyle %}
+<div id="{{ block.id }}" {%- if block.settings.colors_by_block %} color-scheme="{{ block.settings.color_scheme }}"{% endif %} class="hdt-group-block hdt-group-product-block hdt-s-gradient hdt-relative hdt-section-spacing hdt-current-scrollbar" {{ block.shopify_attributes }}>
+  <div id="product-info-{{ section.id }}" class="hdt-product-info__list hdt-w-full">{% content_for "blocks" %}</div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.group_product",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "_product-brands"
+    },
+    {
+      "type": "_product-buy-button"
+    },
+    {
+      "type": "_product-description"
+    },
+    {
+      "type": "_product-inventory"
+    },
+    {
+      "type": "_product-item-property"
+    },
+    {
+      "type": "_product-extra-link"
+    },
+    {
+      "type": "_product-meta"
+    },
+    {
+      "type": "_product-title-qv"
+    },
+    {
+      "type": "_product-payment-terms"
+    },
+    {
+      "type": "_product-price"
+    },
+    {
+      "type": "_product-trust-badge"
+    },
+    {
+      "type": "_quantity-selector"
+    },
+    {
+      "type": "_product-variant-picker"
+    },
+    {
+      "type": "socials"
+    },
+    {
+      "type": "@app"
+    },
+    {
+      "type": "button"
+    }
+  ],
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "colors_by_block",
+      "label": "t:sections.all.colors.display_colors_by_block"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ block.settings.colors_by_block }}"
+    },
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main-product.blocks.group_product",
+      "blocks": [
+        {
+          "type": "_product-title-qv",
+          "settings": {
+            "txt_tr_pr": "none",
+            "tag": "h2",
+            "heading_size": "h6"
+          }
+        },
+        {
+          "type": "_product-price"
+        },
+        {
+          "type": "_product-description",
+          "settings": {
+            "short_des": "<p>Go kalles this summer with this vintage navy and white striped v-neck t-shirt from the Nike. Perfect for pairing with denim and white kicks for a stylish kalles vibe.</p>",
+            "readm": false,
+            "length": 31,
+            "readm_txt": "Read more",
+            "readl_txt": "Read less"
+          }
+        },
+        {
+          "type": "_product-variant-picker",
+          "name": "t:sections.main-product.blocks.variant_picker.name",
+          "settings": {
+            "color_picker_type": "color_rounded",
+            "color_size": "medium",
+            "picker_type": "circle",
+            "size_chart_source": "page",
+            "size_chart_page": ""
+          }
+        },
+        {
+          "type": "_quantity-selector"
+        },
+        {
+          "type": "_product-buy-button",
+          "settings": {
+            "show_dynamic_checkout": true,
+            "show_gift_card_recipient": true
+          }
+        },
+       {
+          "type": "_product-trust-badge",
+          "settings": {
+            "mess": "",
+            "size": 16,
+            "source": "1",
+            "image": "shopify://shop_images/trust_img.png",
+            "wimg": 400,
+            "svg": "amazon,american_express,apple_pay,bitcoin,dankort,diners_club,discover,dogecoin,dwolla,forbrugsforeningen,interac,google_pay,jcb,klarna,klarna-pay-later,litecoin,maestro,master,paypal,shopify_pay,sofort,visa",
+            "height": 30
+          }
+        },
+        {
+          "type": "_product-extra-link",
+          "settings": {},
+          "blocks": [
+            {
+              "type": "_product-size-chart",
+              "name": "t:sections.main-product.blocks.variant_picker.settings.header_size_chart.content",
+              "settings": {
+                "size_chart": "3",
+                "size_chart_source": "page",
+                "size_chart_page": "size-chart"
+              }
+            },
+            {
+              "type": "_product-delivery-return",
+              "name": "t:sections.main-product.blocks.extra_link.settings.header_delivery_return.content",
+              "settings": {
+                "page_delivery": "delivery-return"
+              }
+            },
+            {
+              "type": "_product-ask-question",
+              "name": "t:sections.main-product.blocks.extra_link.settings.header_ask.content"  
+            }
+          ]
+        },
+        {
+          "type": "_product-meta",
+          "blocks": [
+            {
+              "type": "_product-meta-sku"
+            },
+            {
+              "type": "_product-meta-category"
+            },
+            {
+              "type": "_product-meta-tags"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

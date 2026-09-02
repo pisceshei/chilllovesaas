@@ -1,0 +1,271 @@
+{
+  "sections": {
+    "1660288859a7b26f31": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom-newsletters {\n  --input-rounded: 12px;\n  --border-color: #fff;\n}\n.m-custom-newsletters .m-newsletter-form--bordered .m-newsletter-form__input {\n  color: #000;\n}\n.m-custom-newsletters .m-newsletter-form--bordered .m-newsletter-form__input,\n.m-custom-newsletters .m-newsletter-form--bordered .m-newsletter-form__button {\n  background-color: #fff;\n}\n\n.m-press--home .m-press__title {\n  font-size: 18px;\n}\n\n@media (min-width: 768px) {\n  .m-custom-newsletters .m-newsletter-section__header {\n    margin-bottom: 36px;\n  }\n  .m-press--home .m-press__title {\n    font-size: 24px;\n  }\n}"
+      }
+    },
+    "1622684711d8d3374b": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "w-full",
+        "color_scheme": "",
+        "item_gap": 120,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "5",
+        "hover_effect": false,
+        "title": "Keep it clean!\n<p class=\"mt-5 text-xl lg:text-2xl\">Wash <span class=\"text-color-primary\">your hands<\/span> for 20 seconds!<\/p>",
+        "sub_title": "<img style=\"max-width: 100px;\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/icon1.png?v=1622685498\">",
+        "text": "<p>Turn organization into decor with a multi-use, <br\/>three-tier rack that’s beautiful in any room<\/p>",
+        "text_size": "large",
+        "content_alignment": "left",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-image-with-text",
+        "animations": "inherit"
+      }
+    },
+    "1622430211caf90a8a": {
+      "type": "press",
+      "blocks": {
+        "1622430211caf90a8a-0": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique<br\/> piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1622430211caf90a8a-1": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique<br\/> piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1622430211caf90a8a-2": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique<br\/> piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1622430211caf90a8a-3": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique<br\/> piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1622430211caf90a8a-4": {
+          "type": "news",
+          "disabled": true,
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique<br\/> piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "1622430211caf90a8a-5": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“Millions of combinations, meaning you get a totally unique<br\/> piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        }
+      },
+      "block_order": [
+        "1622430211caf90a8a-0",
+        "1622430211caf90a8a-1",
+        "1622430211caf90a8a-2",
+        "1622430211caf90a8a-3",
+        "1622430211caf90a8a-4",
+        "1622430211caf90a8a-5"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "scheme-f4ee02ac-f600-4b42-b348-f9cff50eaf07",
+        "show_divider": false,
+        "autoplay": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-press--home",
+        "animations": "inherit"
+      }
+    },
+    "1622689774f85795d7": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Clean hands, Safe hands",
+        "heading_size": "h3",
+        "subheading": "<img style=\"margin:0 auto; max-width: 140px;margin-bottom: 35px;\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/icon2.png?v=1622690382\">",
+        "description": "An organic, no-water hand lotion made with essential oils sourced from the Atlas<br> Mountains. Woody warming scent.",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "collection": "hand-sanitizer",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 6,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16226905136ce4269f": {
+      "type": "custom-content",
+      "blocks": {
+        "1dd7af76-ebfe-417a-a96d-a4f1ab210d8e": {
+          "type": "text",
+          "settings": {
+            "title": "<span class=\"leading-tight\">Be aware, <br>\nwash with care.<\/span>",
+            "subheading": "<img style=\"max-width: 100px;\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/icon3.png?v=1622692373\">",
+            "text": "<p>An organic, no-water hand lotion made with essential oils<br\/> sourced from the Atlas Mountains. Woody warming scent.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "button_label": "Wash and protect",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "fe92849d-2019-4ef9-9c96-096cd358296c": {
+          "type": "video",
+          "settings": {
+            "video_type": "shopify",
+            "ratio": "4:3",
+            "video_title": "",
+            "text_size": "medium",
+            "text_color": "white",
+            "play_style": "solid",
+            "play_size": "large",
+            "autoplay": false,
+            "loop": false,
+            "muted": false,
+            "show_controls": false,
+            "width": "50%",
+            "alignment": "start",
+            "block_custom_class": "relative z-[70]",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1dd7af76-ebfe-417a-a96d-a4f1ab210d8e",
+        "fe92849d-2019-4ef9-9c96-096cd358296c"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-37f202f0-f103-447b-bf5d-7d002034a883",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-content-section"
+      }
+    },
+    "1622692989745ca65f": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "<span class=\"leading-tight\">Save Lives and<br> Money.<\/span>",
+        "sub_title": "<img style=\"max-width: 220px;\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/icon4.png?v=1622693038\">",
+        "text": "<p>An organic, no-water hand lotion made with essential oils<br\/> sourced from the Atlas Mountains. Woody warming scent.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Wash and protect",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1622693237069e4651": {
+      "type": "newsletter",
+      "settings": {
+        "container": "container",
+        "color_scheme": "scheme-37f202f0-f103-447b-bf5d-7d002034a883",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "Subscribe to our Newsletter",
+        "description": "",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email address",
+        "submit_button": "",
+        "text_color": "white",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-newsletters",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1660288859a7b26f31",
+    "1622684711d8d3374b",
+    "1622430211caf90a8a",
+    "1622689774f85795d7",
+    "16226905136ce4269f",
+    "1622692989745ca65f",
+    "1622693237069e4651"
+  ]
+}

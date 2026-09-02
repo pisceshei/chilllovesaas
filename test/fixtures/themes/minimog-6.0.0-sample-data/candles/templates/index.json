@@ -1,0 +1,365 @@
+{
+  "sections": {
+    "c733824a-c9bf-4797-9c98-fce58c08ea76": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-section__description,\n.m-richtext__description {\n  font-weight: 400;\n  font-family: \"M-Body-Font\";\n}\n\n.m-custom--video .container-full {\n  padding-left: 0;\n  padding-right: 0;\n}\n.m-custom--video .col-left {\n  background-color: #fff7f3;\n  padding: 48px 15px;\n}\n\n.sf__subheading-label {\n  line-height: 24px;\n  font-size: 16px;\n  color: #f58448;\n  padding: 5px 15px;\n  background: #f3ede8;\n  border-radius: 50px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n}\n.m-featured-collection--home .m-section__header {\n  background-image: url(https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/icon1.png?v=1623831328);\n  background-repeat: no-repeat;\n  background-position: top;\n  background-size: 140px;\n  padding-top: 30px;\n}\n.m-instagram--home .m-section-my {\n  margin-bottom: 0;\n}\n\n.m-custom--countdown .col-3 .m-countdown-timer__digit {\n  font-size: 40px;\n  color: #c26431;\n}\n.m-custom--countdown .col-3 .m-countdown-timer__separator {\n  font-size: 24px;\n  color: #c26431;\n  padding: 0;\n  display: flex;\n  justify-content: center;\n}\n.m-custom--countdown .col-3 .m-countdown-timer__text {\n  display: none;\n}\n@media (min-width: 768px) {\n  .m-custom--countdown .col-3 .m-countdown-timer__box {\n    min-width: 55px;\n  }\n  .m-custom--countdown .col-3 .m-countdown-timer__wrapper {\n    gap: 12px;\n  }\n}\n@media (min-width: 1024px) {\n  .m-custom--countdown .m-custom-content__wrapper {\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n  }\n  .m-custom--countdown .col-1 {\n    grid-column-start: 1;\n    grid-column-end: span 1;\n    grid-row-start: 1;\n    grid-row-end: span 2;\n    width: 100%;\n  }\n  .m-custom--countdown .col-2 {\n    grid-column-start: 2;\n    grid-column-end: 3;\n    grid-row-start: 1;\n    grid-row-end: 2;\n    width: 100%;\n    align-self: flex-end;\n  }\n  .m-custom--countdown .col-3 {\n    grid-column-start: 2;\n    grid-column-end: 3;\n    grid-row-start: 2;\n    grid-row-end: 3;\n    width: 100%;\n    align-self: flex-start;\n  }\n}\n\n@media (min-width: 1280px) {\n  .m-featured-collection--home .m-section__header {\n    margin-bottom: 100px;\n  }\n  body .m-featured-collection__button {\n    margin-top: 50px;\n  }\n}\n@media (max-width: 767px) {\n  .m-custom--video .col-left {\n    order: 2;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "New arrivals",
+            "title": "Choose well<br> Be well",
+            "description": "",
+            "image_link": "",
+            "button_text": "Check our item",
+            
+            "button_style": "sf__btn-link",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now",
+            "footer_link": "shopify:\/\/collections"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subheading": "Hot Trend",
+            "title": "Buy less<br>Choose well",
+            "description": "",
+            "image_link": "",
+            "button_text": "Check our item",
+            
+            "button_style": "sf__btn-link",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now",
+            "footer_link": "shopify:\/\/collections"
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "New Collection",
+            "title": "Be your <br>Own label",
+            "description": "",
+            "image_link": "",
+            "button_text": "Check our item",
+            
+            "button_style": "sf__btn-link",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now",
+            "footer_link": "shopify:\/\/collections"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "162366334970e94c99": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Be like a candle, give your warmth  and light to others",
+        "heading_size": "h2",
+        
+        "description": "",
+        "header_alignment": "center",
+        
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "view all products",
+        "button_style": "m-button--link",
+        
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-featured-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "162383223456f37047": {
+      "type": "collection-list",
+      "blocks": {
+        "162383223456f37047-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Jar Candle"
+          }
+        },
+        "162383223456f37047-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "3Wick Candle"
+          }
+        },
+        "162383223456f37047-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Candle set"
+          }
+        }
+      },
+      "block_order": [
+        "162383223456f37047-0",
+        "162383223456f37047-2",
+        "162383223456f37047-1"
+      ],
+      "settings": {
+        "heading": "Shop by categories",
+        "heading_size": "h2",
+        
+        "description": "All our candles are made from the finest wax and lead-free wicks to ensure a long, clean burn.",
+        "header_alignment": "left",
+        "color_scheme": "scheme-1dde6628-e5c2-4001-a4c1-245d59409554",
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "boxed",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": true,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        
+        "animations": "inherit"
+      }
+    },
+    "16286445898e5570c5": {
+      "type": "custom-content",
+      "blocks": {
+        "16286445898e5570c5-1": {
+          "type": "image",
+          "settings": {
+            
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "col-1",
+            "animations": "inherit"
+          }
+        },
+        "16286445898e5570c5-0": {
+          "type": "text",
+          "settings": {
+            "title": "<span class=\"leading-tight  sf__heading-style\">Capri Blue Jar Candle<\/span>",
+            "subheading": "<span class=\"sf__subheading-label\">Special Price<\/span>",
+            "text": "<p>Capri Blue's iconic vessels and fragrances - blended <br\/>candles and vegan-formulated beauty care.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            
+            
+            "button_style": "m-button--primary",
+            
+            "block_custom_class": "col-2",
+            "animations": "inherit"
+          }
+        },
+        "971c9b8d-5ba0-46f4-888e-1ca1cc80102d": {
+          "type": "countdown",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "align": "center",
+            "time": "2024-11-26 23:00:00",
+            "heading": "",
+            "heading_size": "h3",
+            "button_label": "Add To Cart <span class=\"px-3\">|<\/span> $47.00",
+            "button_link": "#",
+            "button_style": "m-button--primary",
+            
+            "block_custom_class": "col-3",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16286445898e5570c5-1",
+        "16286445898e5570c5-0",
+        "971c9b8d-5ba0-46f4-888e-1ca1cc80102d"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom--countdown"
+      }
+    },
+    "1623833347a34a98ed": {
+      "type": "custom-content",
+      "blocks": {
+        "1623833347a34a98ed-0": {
+          "type": "text",
+          "settings": {
+            "title": "<span class=\"leading-tight sf__heading-style\">Enjoy the fragrance of a<br> scented candle<\/span>",
+            "subheading": "<img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/icon1.png?v=1623831328\" style=\"width: 130px; margin: 0 auto;\">",
+            "text": "<p>Made using clean, non-toxic ingredients, our<br\/> products are designed for everyone.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "discover now",
+            
+            "button_style": "m-button--link",
+            
+            "block_custom_class": "col-left",
+            "animations": "inherit"
+          }
+        },
+        "b5f0a6df-e7c4-432e-a298-7c7fefa24c49": {
+          "type": "video",
+          "settings": {
+            "video_type": "shopify",
+            "ratio": "4:3",
+            "video_title": "",
+            "text_size": "medium",
+            "text_color": "white",
+            "play_style": "solid",
+            "play_size": "medium",
+            "autoplay": false,
+            "loop": false,
+            "muted": false,
+            "show_controls": false,
+            "width": "50%",
+            "alignment": "start",
+            "block_custom_class": "col-right",
+            "animations": "fade-in"
+          }
+        }
+      },
+      "block_order": [
+        "1623833347a34a98ed-0",
+        "b5f0a6df-e7c4-432e-a298-7c7fefa24c49"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 0,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--video"
+      }
+    },
+    "162383422006ee342e": {
+      "type": "instagram",
+      "settings": {
+        "heading": "Give us your best shot!",
+        "heading_size": "h2",
+        
+        "description": "Follow us on Instagram <span class=\"m:text-black\">@Lucerna<\/span> and make sure to tag<br> us for a chance to be featured.",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "layout": "grid",
+        "images_count": 4,
+        "grid_columns": 4,
+        "gap": 30,
+        "mobile_gap": 10,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-instagram--home"
+      }
+    }
+  },
+  "order": [
+    "c733824a-c9bf-4797-9c98-fce58c08ea76",
+    "1621243260e1af0c20",
+    "162366334970e94c99",
+    "162383223456f37047",
+    "16286445898e5570c5",
+    "1623833347a34a98ed",
+    "162383422006ee342e"
+  ]
+}

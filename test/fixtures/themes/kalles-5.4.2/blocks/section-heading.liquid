@@ -1,0 +1,172 @@
+<!-- blocks/section-heading.liquid -->
+{%- if block.blocks.size > 0 -%}
+  {% style %}
+    #{{ block.id }} {
+      row-gap: {{ block.settings.heading_gap | times: 0.5 }}px;
+      margin-bottom: {{ block.settings.margin_bottom | times: 0.5 }}px;
+    }
+    
+    {% if block.settings.horizontal == false %}
+      #{{ block.id }} .hdt-btn:not(.hdt-btn-full-width) {
+        width: fit-content;
+      }
+      #{{ block.id }}.hdt-text-center .hdt-btn{
+        margin: 0 auto;
+      }
+      #{{ block.id }}.hdt-text-right .hdt-btn{
+        margin-inline-start: auto;
+      }
+    {% endif %}
+    @media (min-width: 1150px) {
+      #{{ block.id }} {
+        row-gap: {{ block.settings.heading_gap }}px;
+        margin-bottom: {{ block.settings.margin_bottom }}px;
+      }
+      {% if section.settings.enable_tabs_on_heading %}
+        #{{ block.id }} {
+          margin-bottom: 0;
+        }
+        #{{ section.id }} .hdt-tabs-head{
+          margin-bottom: {{ block.settings.margin_bottom }}px;
+        }
+      {% endif %}
+      {% if block.settings.horizontal %}
+        #{{ block.id }}{
+          display: flex;
+          /* flex-wrap: wrap; */
+          justify-content: space-between;
+          align-items: center;
+          gap: {{ block.settings.heading_gap }}px;
+        }
+        #{{ block.id }} > * {
+          flex: 0 0 auto;
+        }
+        #{{ block.id }} > .hdt-btn {
+          flex: 0 1 auto;
+        }
+      {% endif %}
+    }
+  {% endstyle %}
+  <div id="{{ block.id }}" class="hdt-row-grid hdt-grid-cols-1 hdt-text-{{ block.settings.alignment }} hdt-des-{{ block.settings.design_heading }} hdt-section-heading_block">
+    {% content_for 'blocks' %}
+  </div>
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:blocks.section_heading.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "design_heading",
+      "label": "t:blocks.section_heading.settings.design_heading.label",
+      "options": [
+        {
+          "value": "1",
+          "label": "t:blocks.section_heading.settings.design_heading.options_1"
+        },
+        {
+          "value": "2",
+          "label": "t:blocks.section_heading.settings.design_heading.options_2"
+        },
+        {
+          "value": "3",
+          "label": "t:blocks.section_heading.settings.design_heading.options_3"
+        },
+        {
+          "value": "4",
+          "label": "t:blocks.section_heading.settings.design_heading.options_4"
+        },
+        {
+          "value": "5",
+          "label": "t:blocks.section_heading.settings.design_heading.options_5"
+        },
+        {
+          "value": "6",
+          "label": "t:blocks.section_heading.settings.design_heading.options_6"
+        },
+        {
+          "value": "7",
+          "label": "t:blocks.section_heading.settings.design_heading.options_7"
+        },
+        {
+          "value": "8",
+          "label": "t:blocks.section_heading.settings.design_heading.options_8"
+        },
+        {
+          "value": "9",
+          "label": "t:blocks.section_heading.settings.design_heading.options_9"
+        },
+        {
+          "value": "10",
+          "label": "t:blocks.section_heading.settings.design_heading.options_10"
+        },
+        {
+          "value": "11",
+          "label": "t:blocks.section_heading.settings.design_heading.options_11"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "checkbox",
+      "id": "horizontal",
+      "label": "t:blocks.section_heading.settings.horizontal.label",
+      "default": false,
+      "info": "t:blocks.section_heading.settings.horizontal.info"
+    },
+    {
+      "type": "text_alignment",
+      "id": "alignment",
+      "label": "t:blocks.section_heading.settings.alignment.label",
+      "visible_if": "{{ block.settings.horizontal == false }}"
+    },
+    {
+      "type": "range",
+      "id": "heading_gap",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "t:blocks.section_heading.settings.heading_gap",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:blocks.section_heading.settings.margin_bottom",
+      "default": 30
+    },
+  ],
+  "blocks": [
+    {
+      "type": "_heading_section"
+    },
+    {
+      "type": "_sub_heading_section"
+    },
+    {
+      "type": "_heading_icon"
+    },
+    {
+      "type": "button"
+    },
+    {
+      "type": "group"
+    },
+    {
+      "type": "_space_html"
+    },
+    {
+      "type": "spacer"
+    },
+    {
+      "type": "_liquid"
+    }
+  ],
+}
+{% endschema %}

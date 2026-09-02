@@ -1,0 +1,113 @@
+<!-- collection-group-item.liquid -->
+<style>
+  #{{ block.id }}-products{
+    --spacing-y: {{ block.settings.spacing_y }}px;
+  }
+  @media (width < 768px){
+    #{{ block.id }}-products{
+      --spacing-y: {{ block.settings.spacing_y_mb }}px;
+    }
+  }
+</style>
+<div id="{{ block.id }}" class="hdt-col-item hdt-collection-group-item">
+  {% if block.settings.title  != blank %}
+    <h3 class="hdt-collection-group-title hdt-flex hdt-justify-between hdt-align-center hdt-title-style{{ section.settings.heading_style }}">
+      <span class="hdt-inline-flex hdt-relative hdt-text-xl">{{  block.settings.title }}</span>
+      {% if section.settings.enable_btn %}
+        {% assign view_all_df = 'general.pagination.view_all' | t %}
+        {%- capture style -%}
+          {%- if section.settings.icon != "none" -%}--gap-btn-icon: {{ section.settings.icon_spacing }}px; --height-btn-icon: {{ section.settings.icon_height }}px;{%- endif -%}
+        {%- endcapture -%}
+        <a href="{{ block.settings.btn_url | default: block.settings.collection.url | default: routes.all_products_collection_url }}" class="hdt-viewall-btn hdt-btn hdt-oh hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center hdt-btn--size-{{ section.settings.size }} {{ section.settings.btn_style }} hdt-font-{{ section.settings.btn_fw }}{% if section.settings.icon != "none" %} hdt-btn--with-icon hdt-btn--pos-icon-{{ section.settings.icon_position }}{% endif %}" style="{{ style }}">
+          {%- liquid
+            if section.settings.icon != 'none'
+              render 'icons', icon: section.settings.icon
+            endif
+          -%}
+          {%- liquid
+            echo block.settings.btn_label | default: view_all_df
+          -%}
+        </a>
+      {% endif %}
+    </h3>
+  {% endif %}
+  <div id="{{ block.id }}-products" class="hdt-collection-products hdt-collection-has-pr-loop hdt-row-grid hdt-grid-cols-1" >
+    {%- liquid 
+      assign product_collection = block.settings.product_list | default: block.settings.collection.products
+      if product_collection != blank
+        for product in product_collection limit: section.settings.products_count
+          render 'pr_loop_item', section_id: block.id, product: product, sizes: "92px", widths: "92, 100, 180, 200",show_vendor: section.settings.show_vendor
+        endfor
+      else
+        for i in (1..section.settings.products_count)
+          capture current
+          cycle 1, 2 , 3, 4
+          endcapture
+          assign placeholder_image = 'product-apparel-' | append: current
+          render 'card-product-placeholder', image_ratio: section.settings.image_ratio, placeholder_image: placeholder_image, section_id: block.id, class: "hdt-pr-loop"
+        endfor
+      endif
+    -%}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:sections.collection_products.blocks.products_item.name",
+    "class": "hdt-blog-category hdt-widget",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:sections.collection_products.blocks.products_item.settings.title",
+        "default": "Top product"
+      },
+      {
+        "id": "collection",
+        "type": "collection",
+        "label": "t:sections.collection_products.settings.collection"
+      },
+      {
+        "type": "product_list",
+        "id": "product_list",
+        "label": "t:sections.collection_products.settings.product_list.label",
+        "info": "t:sections.collection_products.settings.product_list.info"
+      },
+      {
+        "type": "text",
+        "id": "btn_label",
+        "label": "t:sections.collection_products.blocks.products_item.settings.btn_label",
+        "default": "View all"
+      },
+      {
+        "type": "url",
+        "id": "btn_url",
+        "label": "t:sections.collection_products.blocks.products_item.settings.btn_url"
+      },
+      {
+        "type": "range",
+        "id": "spacing_y",
+        "min": 0,
+        "max": 30,
+        "step": 1,
+        "unit": "px",
+        "label": "Space vertical items",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "spacing_y_mb",
+        "min": 0,
+        "max": 30,
+        "step": 1,
+        "unit": "px",
+        "label": "Space vertical items (Mobile)",
+        "default": 15
+      },
+    ],
+    "presets":[
+      {
+        "name":"t:sections.collection_products.blocks.products_item.name"
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,255 @@
+<!-- sections/newsletter-modal.liquid -->
+<link href="{{ 'hdt-newsletter-popup.css' | asset_url }}" rel="stylesheet" media="print" onload="this.media='all'">
+<sys-newsletter configs='{ "id": "{{ section.id }}", "after": "{{ section.settings.after }}", "day_next": {{ section.settings.day_next }}, "time_delay": {{ section.settings.time_delay }}, "scroll_delay": {{ section.settings.scroll_delay }} }'>
+  <hdt-modal class="hdt-modal hdt-modal-newsletter hdt-modal-{{ section.settings.direction }} hdt-contents" color-scheme="{% if section.settings.colors_by_section %}{{ section.settings.color_scheme }}{% else %}{{ settings.color_scheme_dialog }}{% endif %}">
+    <dialog id="modalNewsletter-{{ section.id }}" class="hdt-dialog hdt-s-gradient hdt-dialog-modal" scroll-lock>
+      <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="modalNewsletter-{{ section.id }}" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+      <div class="hdt-dialog-modal__inner hdt-current-scrollbar">
+        <div class="hdt-wrapper hdt-ratio--adapt_image {% if section.settings.direction == "hor" %} hdt-flex hdt-justify-center hdt-align-center{% endif %}">
+          <div class="hdt-img_wrap">
+            {%- if section.settings.image != blank -%}
+              <div class="hdt-ratio hdt-modal-newsletter-image_dk hdt-hidden@mobile" style="--aspect-ratioapt: {{ section.settings.image.aspect_ratio | default: 1.6 }};">
+                {{ section.settings.image | image_url: width: section.settings.image.width | image_tag: loading: 'lazy', sizes: "(min-width: 768px) 625px, 100vw", class: 'hdt-object-pos-mb', widths: '400,600,800,1000,1200,1400,1500' }}
+              </div>
+            {%- endif -%}
+            {%- if section.settings.image_mb != blank -%}
+              <div class="hdt-ratio hdt-modal-newsletter-image_mb" style="--aspect-ratioapt: {{ section.settings.image_mb.aspect_ratio | default: 1.6 }};">
+                {{ section.settings.image_mb | image_url: width: section.settings.image_mb.width | image_tag: loading: 'lazy', sizes: "(min-width: 768px) 625px, 100vw", class: 'hdt-object-pos-mb', widths: '400,600,800,1000,1200,1400,1500' }}
+              </div>
+            {%- endif -%}
+          </div>
+          {%- if section.blocks.size > 0 -%}   
+            <div class="hdt-content hdt-text-center hdt-current-scrollbar">
+            {% content_for 'blocks' %}
+            {% content_for 'block', type: '_popup_button', id: 'popup-button' %}
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </dialog>
+  </hdt-modal>
+</sys-newsletter>
+{% schema %}
+{
+  "name": "t:sections.newsletter_popup.name",
+  "class": "hdt-section-admn2-fixed sys-newsletter",
+  "limit": 1,
+  "enabled_on": {
+    "groups": [
+      "custom.system"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.newsletter_popup.settings.color",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.newsletter_popup.settings.image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.newsletter_popup.settings.image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mb",
+      "label": "t:sections.newsletter_popup.settings.image_mb"
+    },
+    {
+      "type":"select",
+      "id":"direction",
+      "label":"t:sections.newsletter_popup.settings.direction.label",
+      "default":"ver",
+      "info":"t:sections.newsletter_popup.settings.direction.info", 
+      "options":[
+        {
+          "value":"hor",
+          "label":"t:sections.newsletter_popup.settings.direction.option_1"
+        },
+        {
+          "value":"ver",
+          "label":"t:sections.newsletter_popup.settings.direction.option_2"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.newsletter_popup.settings.show_popup"
+    },
+    {
+      "type": "select",
+      "id": "after",
+      "label": "t:sections.newsletter_popup.settings.after.label",
+      "default": "scroll",
+      "options": [
+        {
+          "value": "time",
+          "label": "t:sections.newsletter_popup.settings.after.some_time"
+        },
+        {
+          "value": "scroll",
+          "label": "t:sections.newsletter_popup.settings.after.scroll"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "time_delay",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "unit": "sec",
+      "label": "t:sections.newsletter_popup.settings.time_delay.label",
+      "info": "t:sections.newsletter_popup.settings.time_delay.info",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "scroll_delay",
+      "min": 100,
+      "max": 5000,
+      "step": 50,
+      "label": "t:sections.newsletter_popup.settings.scroll_delay.label",
+      "info": "t:sections.newsletter_popup.settings.scroll_delay.info",
+      "default": 800
+    },
+    {
+      "type": "range",
+      "id": "day_next",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "unit": "day",
+      "label": "t:sections.exit_popup.settings.next_time.label",
+      "info": "t:sections.exit_popup.settings.next_time.info",
+      "default": 7
+    },
+    
+  ],
+  
+  "blocks": [{ "type": "heading" },{ "type": "text" },{ "type": "_newsletter" },{ "type": "spacer" }],
+  "presets": [
+    {
+      "name": "t:sections.newsletter_popup.name",
+      "blocks": [
+        {
+          "type": "heading",
+          "name": "t:blocks.heading.name",
+          "settings": {
+            "heading": "<p>Sign up our newsletter and save 25% off for the next purchase!</p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "line_height": "",
+            "font_weight": "medium",
+            "heading_size": "h_custom",
+            "text_color": "hdt-s-text",
+            "font_size_heading_lg": 18,
+            "font_size_heading": 18,
+            "letter_spacing_heading": 0
+          },
+        },
+        {
+          "type": "spacer",
+          "name": "t:blocks.spacer.name",
+          "settings": {
+            "direction": false,
+            "space_lg": 10,
+            "space_md": 10,
+            "space": 10
+          }, 
+        },
+        {
+          "type": "text",
+          "settings": {
+            "text": "<p>Subscribe to our newsletters and don’t miss new arrivals, the latest fashion updates and our promotions.</p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "base",
+            "line_height": "",
+            "font_weight": "normal",
+            "text_color": "hdt-text-secondary",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+        },
+        {
+          "type": "spacer",
+          "name": "t:blocks.spacer.name",
+          "settings": {
+            "direction": false,
+            "space_lg": 10,
+            "space_md": 10,
+            "space": 10
+          },
+        },
+        {
+          "type": "_newsletter",
+          "name": "t:blocks.newsletter.name",
+          "settings": {
+            "color_scheme": "",
+            "des_newsletter": "6",
+            "button_lb": "Subscribe",
+            "agree_form": false,
+            "content": "Hello",
+            "icon": "none",
+            "icon_position": "after",
+            "icon_height": 14,
+            "icon_spacing": 5
+          },
+        },
+        {
+          "type": "spacer",
+          "name": "t:blocks.spacer.name",
+          "settings": {
+            "direction": false,
+            "space_lg": 10,
+            "space_md": 10,
+            "space": 10
+          },
+        },
+        {
+          "type": "text",
+          "settings": {
+            "text": "<p>Your Information will never be shared with any third party.</p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "custom",
+            "line_height": "",
+            "font_weight": "normal",
+            "text_color": "hdt-text-secondary",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 12,
+            "font_size_text": 12,
+            "letter_spacing_text": 0
+          },
+        },
+        {
+          "type": "_popup_button",
+          "id": "popup-button",
+          "static": true,
+          "settings": {
+            "button_label": "Do not show it anymore."
+          },
+        }
+      ],
+    }
+  ]
+}
+{% endschema %}

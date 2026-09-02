@@ -1,0 +1,435 @@
+{
+  "sections": {
+    "a2923645-9e59-47aa-9af4-65c5b07e587e": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__slideshow .m-slide__title {\n  font-weight: 800;\n  letter-spacing: 8px;\n  text-transform: uppercase;\n}\n.m-slider__footer {\n  font-weight: 600;\n}\n\n.sf-home__collection-list sup {\n  top: -1em;\n  right: -0.2em;\n}\n.sf-home__collection-list .m-collection-card__link:hover {\n  color: #666666;\n}\n\n.sf-home__iconbox {\n  border-top: 1px solid #eeeeee;\n}\n\n.sf-home__iconbox .m-icon-box__heading {\n  font-weight: 500;\n  font-size: 20px;\n}\n\n@media (min-width: 1536px) {\n  .sf-home__slideshow .m-slide__title {\n    font-size: 100px;\n    letter-spacing: 12.5px;\n  }\n}\n\n@media screen and (max-width: 767px) {\n  .sf-home__collection-list .m-section__header,\n  .m-collection-list .m-slider-controls {\n    text-align: center;\n  }\n}"
+      }
+    },
+    "16184552193b4706ec": {
+      "type": "slider",
+      "blocks": {
+        "16184552193b4706ec-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "center middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "Sweaters.",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "",
+            "footer_link": ""
+          }
+        },
+        "16184552193b4706ec-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "center middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "Pants.",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "",
+            "footer_link": ""
+          }
+        },
+        "16184552193b4706ec-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "center middle",
+            "text_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "",
+            "title": "Coats.",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "center",
+            "footer_text": "* Sign up for 10% off your first order. Valid within two days of signup.",
+            "footer_button": "",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "16184552193b4706ec-0",
+        "16184552193b4706ec-1",
+        "16184552193b4706ec-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": true,
+        "custom_class": "sf-home__slideshow sf-btn-mb__fullwidth",
+        "animations": "inherit"
+      }
+    },
+    "16224232499c18da1e": {
+      "type": "product-tabs",
+      "blocks": {
+        "16224232499c18da1e-0": {
+          "type": "tab",
+          "settings": {
+            "title": "best sellers"
+          }
+        },
+        "16224232499c18da1e-1": {
+          "type": "tab",
+          "settings": {
+            "title": "new arrivals"
+          }
+        }
+      },
+      "block_order": [
+        "16224232499c18da1e-0",
+        "16224232499c18da1e-1"
+      ],
+      "settings": {
+        "heading": "You are in",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "tab_header": "select",
+        "limit": 10,
+        "show_button": true,
+        "button_type": "load",
+        "button_label": "Load More",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": false,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-btn-mb__fullwidth",
+        "animations": "inherit"
+      }
+    },
+    "16184584660def4136": {
+      "type": "collection-list",
+      "blocks": {
+        "16184584660def4136-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Glasses"
+          }
+        },
+        "a6f03c42-db82-4239-a833-03e558db6f6c": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Leather bag"
+          }
+        },
+        "16184584660def4136-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Jeans"
+          }
+        },
+        "ac747298-a90b-4f75-9d7e-6ccde324d2cc": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sunglasses"
+          }
+        },
+        "16184584660def4136-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shoes"
+          }
+        },
+        "c1388d70-089c-4371-8d55-6b052bea45be": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Tops"
+          }
+        },
+        "5b708eff-95e3-49e6-98f5-be3e4f5dd2b0": {
+          "type": "collection_block",
+          "disabled": true,
+          "settings": {
+            "title": "Coat Jacket"
+          }
+        }
+      },
+      "block_order": [
+        "16184584660def4136-0",
+        "a6f03c42-db82-4239-a833-03e558db6f6c",
+        "16184584660def4136-1",
+        "ac747298-a90b-4f75-9d7e-6ccde324d2cc",
+        "16184584660def4136-2",
+        "c1388d70-089c-4371-8d55-6b052bea45be",
+        "5b708eff-95e3-49e6-98f5-be3e4f5dd2b0"
+      ],
+      "settings": {
+        "heading": "The Sonoma Collection",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Luxe, lightweight, and made with<br> the perfect blend of cashmere<br> and cotton,",
+        "header_alignment": "left",
+        "color_scheme": "scheme-3f85c31c-53f2-4997-8d00-502734890d80",
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "162632519269113d67": {
+      "type": "lookbook",
+      "blocks": {
+        "162632519269113d67-0": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "button_text": "",
+            "button_link": "",
+            "button_style": "light",
+            "top_1": 20,
+            "left_1": 52,
+            "product_1": "",
+            "top_2": 62,
+            "left_2": 33,
+            "product_2": "",
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": ""
+          }
+        },
+        "162632519269113d67-1": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "button_text": "",
+            "button_link": "",
+            "button_style": "light",
+            "top_1": 27,
+            "left_1": 41,
+            "product_1": "",
+            "top_2": 64,
+            "left_2": 57,
+            "product_2": "",
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": ""
+          }
+        },
+        "2e0e6e92-85f3-46b0-a21d-04f1de006a93": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "button_text": "",
+            "button_link": "",
+            "button_style": "light",
+            "top_1": 29,
+            "left_1": 52,
+            "product_1": "",
+            "top_2": 60,
+            "left_2": 32,
+            "product_2": "",
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": ""
+          }
+        }
+      },
+      "block_order": [
+        "162632519269113d67-0",
+        "162632519269113d67-1",
+        "2e0e6e92-85f3-46b0-a21d-04f1de006a93"
+      ],
+      "settings": {
+        "heading": "Hand-Picked Daily",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "image_aspect_ratio": "3\/4",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1626331641004c09fa": {
+      "type": "icon-box",
+      "blocks": {
+        "1626331641004c09fa-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Shipping",
+            "description": "<p>Free Shipping for orders over £130<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1626331641004c09fa-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Money Guarantee",
+            "description": "<p>Within 30 days for an exchange.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1626331641004c09fa-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Online Support",
+            "description": "<p>24 hours a day, 7 days a week<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "b2daca12-6dd6-4dbf-80d9-f092f4840d82": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Flexible Payment",
+            "description": "<p>Pay with Multiple Credit Cards<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1626331641004c09fa-0",
+        "1626331641004c09fa-1",
+        "1626331641004c09fa-2",
+        "b2daca12-6dd6-4dbf-80d9-f092f4840d82"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "horizontal",
+        "image_max_width": "30px",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "sf-home__iconbox",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "a2923645-9e59-47aa-9af4-65c5b07e587e",
+    "16184552193b4706ec",
+    "16224232499c18da1e",
+    "16184584660def4136",
+    "162632519269113d67",
+    "1626331641004c09fa"
+  ]
+}

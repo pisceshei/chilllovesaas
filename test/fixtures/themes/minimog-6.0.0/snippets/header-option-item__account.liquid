@@ -1,0 +1,11 @@
+{% liquid
+  assign display_by = display_by | default: 'icon'
+  assign external_classes = 'm-header__account m-header__account-' | append: display_by
+%}
+
+{% render 'account-component',
+  display_by: display_by,
+  box_size: box_size,
+  external_classes: external_classes,
+  enable_tooltip: true
+%}

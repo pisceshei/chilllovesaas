@@ -1,0 +1,436 @@
+{
+  "name": "t:sections.name_group.system",
+  "type": "custom.system",
+  "sections": {
+    "cart-drawer": {
+      "type": "cart-drawer",
+      "blocks": {
+        "subtotal_hPmjgN": {
+          "type": "subtotal",
+          "settings": {}
+        },
+        "tax_rkEdFK": {
+          "type": "tax",
+          "settings": {}
+        },
+        "agree_y3A6EM": {
+          "type": "agree",
+          "settings": {
+            "content": "I agree with the terms and conditions"
+          }
+        },
+        "btn_cart_74AGUK": {
+          "type": "btn_cart",
+          "settings": {
+            "style_class": "",
+            "icon": "none",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "btn_checkout_bcnmpT": {
+          "type": "btn_checkout",
+          "settings": {
+            "style_class": "hdt-btn-accent",
+            "icon": "none",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "img_trust_zatTgB": {
+          "type": "img_trust",
+          "settings": {
+            "wimg": 350,
+            "svg": "visa,paypal,master,american_express,amazon",
+            "height": 25
+          }
+        }
+      },
+      "block_order": [
+        "subtotal_hPmjgN",
+        "tax_rkEdFK",
+        "agree_y3A6EM",
+        "btn_cart_74AGUK",
+        "btn_checkout_bcnmpT",
+        "img_trust_zatTgB"
+      ],
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "show_free_shipping_bar": true,
+        "show_cart_note": true,
+        "show_gift_wrap": true,
+        "show_shipping_estimator": true,
+        "show_cart_discount": true,
+        "discount_error_message": "Enter a valid discount code",
+        "heading": "Customers also bought",
+        "product_list": [
+          "menu-monuments-magazine-1",
+          "menu-monuments-magazine",
+          "menu-bottle-grinders-ash-carbon",
+          "menu-carrie-led-lamp",
+          "menu-folded-vase-by-betz"
+        ],
+        "replaces_products_selected": true
+      }
+    },
+    "toolbar-mobile": {
+      "type": "toolbar-mobile",
+      "blocks": {
+        "shop_jQccrN": {
+          "type": "shop",
+          "settings": {
+            "title": "Shop",
+            "link": ""
+          }
+        },
+        "wishlist_FLDXnV": {
+          "type": "wishlist",
+          "settings": {
+            "title": "Wishlist"
+          }
+        },
+        "cart_qEaYLM": {
+          "type": "cart",
+          "settings": {
+            "title": "Cart"
+          }
+        },
+        "account_KBmadz": {
+          "type": "account",
+          "settings": {
+            "title": "Account"
+          }
+        },
+        "search_wxK4Le": {
+          "type": "search",
+          "settings": {
+            "title": "Search"
+          }
+        }
+      },
+      "block_order": [
+        "shop_jQccrN",
+        "wishlist_FLDXnV",
+        "cart_qEaYLM",
+        "account_KBmadz",
+        "search_wxK4Le"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "background_opacity": 1,
+        "show_txt": true
+      }
+    },
+    "exit_popup_MNrmxJ": {
+      "type": "exit-popup",
+      "blocks": {
+        "heading_e6wna7": {
+          "type": "heading",
+          "name": "t:blocks.heading.name",
+          "settings": {
+            "heading": "<p>Wait! before you leave...<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "line_height": "hdt-lh-1-2",
+            "font_weight": "semibold",
+            "heading_size": "h_custom",
+            "text_color": "hdt-s-text",
+            "font_size_heading_lg": 32,
+            "font_size_heading": 24,
+            "letter_spacing_heading": 0
+          },
+          "blocks": {}
+        },
+        "spacer_YEmKmn": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 4,
+            "space_md": 4,
+            "space": 4
+          },
+          "blocks": {}
+        },
+        "text_eA38VY": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Get 15% off for your first order<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "base",
+            "line_height": "",
+            "font_weight": "normal",
+            "text_color": "hdt-s-text",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "spacer_NXiy48": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 30,
+            "space_md": 30,
+            "space": 30
+          },
+          "blocks": {}
+        },
+        "discount_7AUrrt": {
+          "type": "_discount",
+          "name": "t:sections.exit_popup.blocks.discount.name",
+          "settings": {
+            "discount": "CODE20OFF"
+          },
+          "blocks": {}
+        },
+        "spacer_4bRTmd": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 30,
+            "space_md": 30,
+            "space": 30
+          },
+          "blocks": {}
+        },
+        "text_NRC8zg": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Use above code to get 15% 0FF for your first order when checkout<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "base",
+            "line_height": "",
+            "font_weight": "normal",
+            "text_color": "hdt-s-text",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "spacer_4bRTmk": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 30,
+            "space_md": 30,
+            "space": 30
+          },
+          "blocks": {}
+        },
+        "button_bTit9U": {
+          "type": "button",
+          "name": "t:blocks.button.name",
+          "settings": {
+            "label": "GRAB THE DISCOUNT",
+            "link": "shopify:\/\/collections\/sale",
+            "open_in_new_tab": false,
+            "full_width": false,
+            "btn_style": "hdt-btn-accent",
+            "size": "custom custom-inline",
+            "font_weight": "semibold",
+            "font_size_btn": 18,
+            "padding_btn": 50,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 30,
+            "icon": "none",
+            "icon_position": "after",
+            "icon_height": 14,
+            "icon_spacing": 5
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_e6wna7",
+        "spacer_YEmKmn",
+        "text_eA38VY",
+        "spacer_NXiy48",
+        "discount_7AUrrt",
+        "spacer_4bRTmd",
+        "text_NRC8zg",
+        "spacer_4bRTmk",
+        "button_bTit9U"
+      ],
+      "name": "t:sections.exit_popup.name",
+      "settings": {
+        "color_scheme": "",
+        "heading": "Recommended Products",
+        "color_scheme_pr": "",
+        "collections": "handmade",
+        "product_list": [],
+        "limit": 3,
+        "image_ratio": "adapt_image",
+        "after": "move_cursor",
+        "time_delay": 2,
+        "day_next": 7,
+        "index": true,
+        "product": false,
+        "collection": false,
+        "article": false,
+        "blog": false,
+        "cart": false,
+        "page": false
+      }
+    },
+    "newsletter_modal_FCRPEW": {
+      "type": "newsletter-modal",
+      "blocks": {
+        "heading_AAGCgt": {
+          "type": "heading",
+          "name": "t:blocks.heading.name",
+          "settings": {
+            "heading": "<p>Sign up our newsletter and save 25% off for the next purchase!<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "line_height": "",
+            "font_weight": "medium",
+            "heading_size": "h_custom",
+            "text_color": "hdt-s-text",
+            "font_size_heading_lg": 18,
+            "font_size_heading": 18,
+            "letter_spacing_heading": 0
+          },
+          "blocks": {}
+        },
+        "spacer_6EwHTT": {
+          "type": "spacer",
+          "name": "t:blocks.spacer.name",
+          "settings": {
+            "direction": false,
+            "space_lg": 10,
+            "space_md": 10,
+            "space": 10
+          },
+          "blocks": {}
+        },
+        "text_U9tM4f": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Subscribe to our newsletters and don’t miss new arrivals, the latest fashion updates and our promotions.<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "base",
+            "line_height": "",
+            "font_weight": "normal",
+            "text_color": "hdt-text-secondary",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "spacer_BcEgzE": {
+          "type": "spacer",
+          "name": "t:blocks.spacer.name",
+          "settings": {
+            "direction": false,
+            "space_lg": 10,
+            "space_md": 10,
+            "space": 10
+          },
+          "blocks": {}
+        },
+        "newsletter_MjH9mQ": {
+          "type": "_newsletter",
+          "name": "t:blocks.newsletter.name",
+          "settings": {
+            "color_scheme": "",
+            "des_newsletter": "6",
+            "alignment": "left",
+            "button_lb": "Subscribe",
+            "size": "m",
+            "btn_fw": "normal",
+            "agree_form": false,
+            "content": "Hello",
+            "icon": "none",
+            "icon_position": "after",
+            "icon_height": 14,
+            "icon_spacing": 5
+          },
+          "blocks": {}
+        },
+        "spacer_MyUDDL": {
+          "type": "spacer",
+          "name": "t:blocks.spacer.name",
+          "settings": {
+            "direction": false,
+            "space_lg": 10,
+            "space_md": 10,
+            "space": 10
+          },
+          "blocks": {}
+        },
+        "text_PA6xpK": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Your Information will never be shared with any third party.<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "custom",
+            "line_height": "",
+            "font_weight": "normal",
+            "text_color": "hdt-text-secondary",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 12,
+            "font_size_text": 12,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "popup-button": {
+          "type": "_popup_button",
+          "static": true,
+          "settings": {
+            "button_label": "Do not show it anymore."
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_AAGCgt",
+        "spacer_6EwHTT",
+        "text_U9tM4f",
+        "spacer_BcEgzE",
+        "newsletter_MjH9mQ",
+        "spacer_MyUDDL",
+        "text_PA6xpK"
+      ],
+      "disabled": true,
+      "name": "t:sections.newsletter_popup.name",
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "",
+        "direction": "ver",
+        "after": "scroll",
+        "time_delay": 2,
+        "scroll_delay": 800,
+        "day_next": 7
+      }
+    }
+  },
+  "order": [
+    "cart-drawer",
+    "toolbar-mobile",
+    "exit_popup_MNrmxJ",
+    "newsletter_modal_FCRPEW"
+  ]
+}

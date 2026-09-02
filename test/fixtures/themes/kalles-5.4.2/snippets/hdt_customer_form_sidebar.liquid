@@ -1,0 +1,85 @@
+{{ 'hdt-customer.css' | asset_url | stylesheet_tag }}
+{%- unless id -%}
+  {%- assign id = section.id | default: 0 -%}
+{%- endunless -%}
+<hdt-drawer class="hdt-sidebar-customer hdt-customer hdt-drawer hdt-drawer-sidebar hdt-contents" color-scheme="{{ settings.color_scheme_dialog }}">
+  <dialog id="login-form-sidebar" class="hdt-dialog hdt-dialog-drawer" scroll-lock pos="right">
+    <div class="hdt-dialog-drawer__header">
+      <h3 slot="header" id="recover-modal" class="hdt-s-text hdt-text-lg hdt-font-medium hdt-uppercase">{{ 'customer.recover_password.title' | t }}</h3>
+      <h3 slot="header" id="login-modal" class="hdt-s-text hdt-text-lg hdt-font-medium hdt-uppercase">{{ 'customer.log_in' | t }}</h3>
+      <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="login-form-sidebar" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+    </div>
+    <div class="hdt-dialog-drawer__inner">
+      <div class="hdt-login-form hdt-recover-form">
+        {%- assign form_id = 'recover-customer-password-modal-' | append: id -%}
+        {%- form 'recover_customer_password', id: form_id -%}
+          <p>{{ 'customer.recover_password.subtext' | t }}</p>
+          <div class="hdt-field hdt-relative" style="margin-top:2rem;">
+            <input class="hdt-input" type="email" name="email" id="RecoverEmail-{{ form_id }}" autocomplete="email" autocorrect="off" autocapitalize="off" {% if form.errors contains 'form' %} aria-invalid="true" aria-describedby="RecoverEmail-email-error" autofocus {% endif %} placeholder="{{ 'customer.login_page.email' | t }}">
+            <label for="RecoverEmail-{{ form_id }}" class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center">{{ 'customer.login_page.email' | t }}<span class="hdt-required">*</span></label>
+          </div>
+          <div class="hdt-field">
+            <button class="hdt-btn hdt-btn-accent hdt-oh hdt-btn-solid hdt-font-semibold hdt-btn-full-width"><span class="hdt-truncate">{{ 'customer.recover_password.submit' | t }}</span></button>
+          </div>
+          <a href="#login-modal" class="hdt-inline-block hdt-link-cancel hdt-link-underline">{{ 'customer.login_page.cancel' | t }}</a>
+        {%- endform -%}
+      </div>
+      
+      <div class="hdt-login-form hdt-lg-form">
+        {%- assign form_id = 'customer-login-modal-' | append: id -%}
+        {%- form 'customer_login', novalidate: 'novalidate', id: form_id -%}
+          <div class="hdt-field hdt-relative">
+            <input class="hdt-input" type="email" name="customer[email]" id="CustomerEmail-{{ form_id }}" autocomplete="email" autocorrect="off" autocapitalize="off" {% if form.errors contains 'form' %} aria-invalid="true" {% endif %} placeholder="{{ 'customer.login_page.email' | t }}">
+            <label for="CustomerEmail-{{ form_id }}" class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center">{{ 'customer.login_page.email' | t }}<span class="hdt-required">*</span></label>
+          </div>
+          {%- if form.password_needed -%}
+            <div class="hdt-field hdt-relative">
+              <input class="hdt-input" type="password" value="" name="customer[password]" id="CustomerPassword-{{ form_id }}" autocomplete="current-password" placeholder="{{ 'customer.login_page.password' | t }}">
+              <label for="CustomerPassword-{{ form_id }}" class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center">{{ 'customer.login_page.password' | t }}<span class="hdt-required">*</span></label>
+            </div>
+          {%- endif -%}
+          <a href="#recover-modal" class="hdt-inline-block hdt-link-recover hdt-link-underline hdt-s-text2">{{ 'customer.login_page.forgot_password' | t }}</a>
+          <div class="hdt-field" style="margin-top:1rem;">
+            <button class="hdt-login-form__submit hdt-relative hdt-btn hdt-btn-accent hdt-oh hdt-btn-solid hdt-font-semibold hdt-btn-full-width"><span class="hdt-truncate">{{ 'customer.login_page.sign_in' | t }}</span></button>
+            <a href="{{ routes.account_register_url }}" class="hdt-inline-block hdt-link-register hdt-link-underline hdt-s-text2" aria-controls="register-form-sidebar" close-dialog="login-form-sidebar">{{ 'customer.login_page.create_account' | t }}</a>
+          </div>
+        {%- endform -%}
+      </div>
+    </div>
+</dialog>
+</hdt-drawer>
+<hdt-drawer class="hdt-sidebar-customer hdt-customer hdt-drawer hdt-drawer-sidebar hdt-contents" color-scheme="{{ settings.color_scheme_dialog }}">
+  <dialog id="register-form-sidebar" class="hdt-dialog hdt-dialog-drawer" scroll-lock pos="right">
+    <div class="hdt-dialog-drawer__header">
+      <h3 slot="header" class="hdt-s-text hdt-text-lg hdt-font-medium hdt-uppercase">{{ 'customer.register.title' | t }}</h3>
+      <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="register-form-sidebar" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+    </div>
+    <div class="hdt-dialog-drawer__inner">
+      <div class="hdt-login-form">
+        {%- assign form_id = 'create-customer-modal-' | append: id -%}
+        {%- form 'create_customer', novalidate: 'novalidate', id: form_id -%}
+          <div class="hdt-field hdt-relative">
+            <input class="hdt-input" type="text" name="customer[first_name]" id="RegisterForm-FirstName-{{ form_id }}" {% if form.first_name %}value="{{ form.first_name }}" {% endif %} autocomplete="given-name" placeholder="{{ 'customer.register.first_name' | t }}">
+            <label class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center" for="RegisterForm-FirstName-{{ form_id }}">{{ 'customer.register.first_name' | t }}</label>
+          </div>
+          <div class="hdt-field hdt-relative">
+            <input class="hdt-input" type="text" name="customer[last_name]" id="RegisterForm-LastName-{{ form_id }}" {% if form.last_name %}value="{{ form.last_name }}" {% endif %} autocomplete="family-name" placeholder="{{ 'customer.register.last_name' | t }}">
+            <label class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center" for="RegisterForm-LastName-{{ form_id }}">{{ 'customer.register.last_name' | t }}</label>
+          </div>
+          <div class="hdt-field hdt-relative">
+            <input class="hdt-input" type="email" name="customer[email]" id="CustomerEmail-create-{{ form_id }}" {% if form.email %} value="{{ form.email }}" {% endif %} spellcheck="false" autocapitalize="off" autocomplete="email" autocorrect="off" autocapitalize="off" {% if form.errors contains 'email' %} aria-invalid="true" aria-describedby="RegisterForm-email-error"{% endif %} placeholder="{{ 'customer.register.email' | t }}">
+            <label class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center" for="CustomerEmail-create-{{ form_id }}">{{ 'customer.register.email' | t }}<span class="hdt-required">*</span></label>
+          </div>
+          <div class="hdt-field hdt-relative">
+            <input class="hdt-input" type="password" value="" name="customer[password]" id="CustomerPassword-create-{{ form_id }}" {% if form.errors contains 'password' %} aria-invalid="true" aria-describedby="RegisterForm-password-error" {% endif %} autocomplete="current-password" placeholder="{{ 'customer.register.password' | t }}">
+            <label class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center" for="CustomerPassword-create-{{ form_id }}">{{ 'customer.register.password' | t }}<span class="hdt-required">*</span></label>
+          </div>
+          <div class="hdt-field">
+            <button class="hdt-login-form__submit hdt-btn hdt-oh hdt-btn-accent hdt-btn-solid hdt-font-semibold hdt-btn-full-width"><span class="hdt-truncate">{{ 'customer.register.submit' | t }}</span></button>
+            <a class="hdt-inline-block hdt-link-login hdt-link-underline hdt-s-text2" href="{{ routes.account_login_url }}" aria-controls="login-form-sidebar" close-dialog="register-form-sidebar">{{ 'customer.register.login_here' | t }}</a>
+          </div>
+        {%- endform -%}
+      </div>
+    </div>
+</dialog>
+</hdt-drawer>

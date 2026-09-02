@@ -1,0 +1,272 @@
+<!-- sections/contact-form.liquid -->
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+{% liquid
+
+  assign section_layout = section.settings.section_layout
+  case section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative hdt-oh' | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative hdt-oh' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative hdt-oh' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+%}
+<div class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}"  {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %}>
+  <div class="{{ child }}">
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+        {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center' }}
+    {%- endif -%}
+    <div class="hdt-content-inner">
+      <div class="hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-2">
+        {% content_for 'blocks' %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.contact_form.name",
+    "class": "hdt-contact-form hdt-section",
+    "max_blocks": 2,
+    "enabled_on": {
+      "templates": ["page"]
+    },
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.all.section_layout.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "range",
+        "id": "background_opacity",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "label": "t:sections.all.background.opacity",
+        "default": 0,
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "select",
+        "id": "section_layout",
+        "label": "t:sections.all.section_layout.width.label",
+        "options": [
+          {
+            "value": "container",
+            "label": "t:sections.all.section_layout.width.container"
+          },
+          {
+            "value": "wrapper_container",
+            "label": "t:sections.all.section_layout.width.wrapper_container"
+          },
+          {
+            "value": "full_width",
+            "label": "t:sections.all.section_layout.width.full_width"
+          }
+        ],
+        "default": "container"
+      },
+      {
+        "type": "image_picker",
+        "id": "section_background",
+        "label": "t:sections.all.background.image"
+      },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false
+    },
+      {
+        "type": "range",
+        "id": "padding_top",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_top",
+        "default": 50
+      },
+      {
+        "type": "range",
+        "id": "padding_bottom",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_bottom",
+        "default": 50
+      },
+      {
+        "type": "range",
+        "id": "padding_rate",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "label": "t:sections.all.padding.padding_rate",
+        "default": 80
+      }
+    ],
+    "blocks": [
+      {
+        "type": "_contact_col",
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.contact_form.name",
+        "category": "t:sections_categories.05_section.name",
+        "blocks": {
+          "contact_col_39rTtM": {
+            "type": "_contact_col",
+            "settings": {},
+            "blocks": {
+              "spacer_hw8izD": {
+                "type": "spacer",
+                "settings": {
+                  "direction": false,
+                  "space_lg": 20,
+                  "space_md": 20,
+                  "space": 20
+                },
+                "blocks": {}
+              },
+              "text_MXnny3": {
+                "type": "text",
+                "settings": {
+                  "text": "<h3>DROP US A LINE</h3>",
+                  "hidden_br_mobile": false,
+                  "hidden_on_mobile": false,
+                  "text_size": "4xl",
+                  "text_color": "hdt-s-text",
+                  "font_size_text_lg": 16,
+                  "font_size_text": 14,
+                  "letter_spacing_text": 0
+                },
+                "blocks": {}
+              },
+              "spacer_DkBKe7": {
+                "type": "spacer",
+                "settings": {
+                  "direction": false,
+                  "space_lg": 20,
+                  "space_md": 20,
+                  "space": 20
+                },
+                "blocks": {}
+              },
+              "contact_form_4UVE84": {
+                "type": "_contact-form",
+                "settings": {
+                  "success_message": ""
+                },
+                "blocks": {}
+              }
+            },
+            "block_order": [
+              "spacer_hw8izD",
+              "text_MXnny3",
+              "spacer_DkBKe7",
+              "contact_form_4UVE84"
+            ]
+          },
+          "contact_col_gcMnTL": {
+            "type": "_contact_col",
+            "settings": {},
+            "blocks": {
+              "spacer_jDxYgm": {
+                "type": "spacer",
+                "settings": {
+                  "direction": false,
+                  "space_lg": 20,
+                  "space_md": 20,
+                  "space": 20
+                },
+                "blocks": {}
+              },
+              "text_QJ8PKt": {
+                "type": "text",
+                "settings": {
+                  "text": "<h3>CONTACT INFORMATION</h3>",
+                  "hidden_br_mobile": false,
+                  "hidden_on_mobile": false,
+                  "text_size": "4xl",
+                  "text_color": "hdt-s-text",
+                  "font_size_text_lg": 16,
+                  "font_size_text": 14,
+                  "letter_spacing_text": 0
+                },
+                "blocks": {}
+              },
+              "spacer_zDgFxQ": {
+                "type": "spacer",
+                "settings": {
+                  "direction": false,
+                  "space_lg": 20,
+                  "space_md": 20,
+                  "space": 20
+                },
+                "blocks": {}
+              },
+              "liquid_XznGcy": {
+                "type": "_liquid",
+                "settings": {
+                  "text": "<p>We love to hear from you on our customer service, merchandise, website or any topics you want to share with us. Your comments and suggestions will be appreciated. Please complete the form below.</p>\n<p style=\"display:flex;align-items:center;gap:3px;\"><svg style=\"margin-bottom:-2px;\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" viewBox=\"0 0 32 32\"><path d=\"M 16 2.59375 L 15.28125 3.28125 L 2.28125 16.28125 L 3.71875 17.71875 L 5 16.4375 L 5 28 L 14 28 L 14 18 L 18 18 L 18 28 L 27 28 L 27 16.4375 L 28.28125 17.71875 L 29.71875 16.28125 L 16.71875 3.28125 Z M 16 5.4375 L 25 14.4375 L 25 26 L 20 26 L 20 16 L 12 16 L 12 26 L 7 26 L 7 14.4375 Z\"></path></svg> 184 Main Rd E, St Albans Victoria 3021, Australia</p>\n<p style=\"display:flex;align-items:center;gap:3px;\"><svg style=\"margin-bottom:-2px;\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" viewBox=\"0 0 32 32\"><path d=\"M 8.65625 3 C 8.132813 3 7.617188 3.1875 7.1875 3.53125 L 7.125 3.5625 L 7.09375 3.59375 L 3.96875 6.8125 L 4 6.84375 C 3.035156 7.734375 2.738281 9.066406 3.15625 10.21875 C 3.160156 10.226563 3.152344 10.242188 3.15625 10.25 C 4.003906 12.675781 6.171875 17.359375 10.40625 21.59375 C 14.65625 25.84375 19.402344 27.925781 21.75 28.84375 L 21.78125 28.84375 C 22.996094 29.25 24.3125 28.960938 25.25 28.15625 L 28.40625 25 C 29.234375 24.171875 29.234375 22.734375 28.40625 21.90625 L 24.34375 17.84375 L 24.3125 17.78125 C 23.484375 16.953125 22.015625 16.953125 21.1875 17.78125 L 19.1875 19.78125 C 18.464844 19.433594 16.742188 18.542969 15.09375 16.96875 C 13.457031 15.40625 12.621094 13.609375 12.3125 12.90625 L 14.3125 10.90625 C 15.152344 10.066406 15.167969 8.667969 14.28125 7.84375 L 14.3125 7.8125 L 14.21875 7.71875 L 10.21875 3.59375 L 10.1875 3.5625 L 10.125 3.53125 C 9.695313 3.1875 9.179688 3 8.65625 3 Z M 8.65625 5 C 8.730469 5 8.804688 5.035156 8.875 5.09375 L 12.875 9.1875 L 12.96875 9.28125 C 12.960938 9.273438 13.027344 9.378906 12.90625 9.5 L 10.40625 12 L 9.9375 12.4375 L 10.15625 13.0625 C 10.15625 13.0625 11.304688 16.136719 13.71875 18.4375 L 13.9375 18.625 C 16.261719 20.746094 19 21.90625 19 21.90625 L 19.625 22.1875 L 22.59375 19.21875 C 22.765625 19.046875 22.734375 19.046875 22.90625 19.21875 L 27 23.3125 C 27.171875 23.484375 27.171875 23.421875 27 23.59375 L 23.9375 26.65625 C 23.476563 27.050781 22.988281 27.132813 22.40625 26.9375 C 20.140625 26.046875 15.738281 24.113281 11.8125 20.1875 C 7.855469 16.230469 5.789063 11.742188 5.03125 9.5625 C 4.878906 9.15625 4.988281 8.554688 5.34375 8.25 L 5.40625 8.1875 L 8.4375 5.09375 C 8.507813 5.035156 8.582031 5 8.65625 5 Z\"></path></svg> 1800-123-222 / 1900-1570-230</p>\n<p style=\"display:flex;align-items:center;gap:3px;\"><svg style=\"margin-bottom: -3px\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" width=\"14\" height=\"16\" fill=\"currentColor\"><path d=\"M3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3ZM20 7.23792L12.0718 14.338L4 7.21594V19H20V7.23792ZM4.51146 5L12.0619 11.662L19.501 5H4.51146Z\"></path></svg> contact@company.com</p>\n<p style=\"display:flex;align-items:center;gap:3px;\"><svg style=\"margin-bottom:-3px;\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" width=\"14\" height=\"16\" fill=\"currentColor\"><path d=\"M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM13 12H17V14H11V7H13V12Z\"></path></svg> Everyday 9:00-17:00</p>",
+                  "hidden_br_mobile": false,
+                  "hidden_on_mobile": false,
+                  "text_size": "base",
+                  "text_color": "hdt-text-secondary",
+                  "font_size_text_lg": 16,
+                  "font_size_text": 14,
+                  "letter_spacing_text": 0
+                },
+                "blocks": {}
+              }
+            },
+            "block_order": [
+              "spacer_jDxYgm",
+              "text_QJ8PKt",
+              "spacer_zDgFxQ",
+              "liquid_XznGcy"
+            ]
+          }
+        },
+        "block_order": [
+          "contact_col_39rTtM",
+          "contact_col_gcMnTL"
+        ],
+        "settings": {
+          "color_scheme": "",
+          "section_layout": "container",
+          "padding_top": 50,
+          "padding_bottom": 50,
+          "padding_rate": 80
+        }
+      }
+    ],
+  }
+{% endschema %}

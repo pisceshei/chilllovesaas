@@ -1,0 +1,95 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "scrolling_promotion_KNwh6H": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "announcement_CHddkQ": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "FREE SHIPPING OVER $50!",
+            "text_size": 20,
+            "text_link": ""
+          }
+        },
+        "announcement_JGUrMY": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "BECAUSE IT CAN CHANGE YOUR MOOD",
+            "text_size": 20,
+            "text_link": ""
+          }
+        },
+        "announcement_w3Rfxw": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "BRIGHT YOUR EVERY DAY",
+            "text_size": 20,
+            "text_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "announcement_CHddkQ",
+        "announcement_JGUrMY",
+        "announcement_w3Rfxw"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 30,
+        "item_gap": 50,
+        "item_gap_mobile": 30,
+        "color_scheme": "scheme-9fbdbd94-7bfe-48ef-8b02-4a3b8f6c8460",
+        "padding_top": 10,
+        "padding_bottom": 10,
+        "custom_class": ""
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        
+        "color_scheme_menu": "default",
+        "header_design": "logo-center__2l",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "STORE LOGO",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 180,
+        "sticky_logo_max_width": 140,
+        "mobile_logo_max_width": 100,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "scrolling_promotion_KNwh6H",
+    "header"
+  ]
+}

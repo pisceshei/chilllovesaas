@@ -1,0 +1,589 @@
+{
+  "sections": {
+    "banner_with_slider_fYPiLg": {
+      "type": "banner-with-slider",
+      "blocks": {
+        "item_slide_KGP8wP": {
+          "type": "item_slide",
+          "settings": {
+            "color_scheme": "dark",
+            "content_text_color": "inherit",
+            "content_position": "left top",
+            "text_alignment": "left",
+            "subheading": "",
+            "heading": "New <br> Collection",
+            "description": "<p>Openwork knit sweater fall.<\/p>",
+            "text_size": "h1",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "item_slide_N7qHbP": {
+          "type": "item_slide",
+          "settings": {
+            "color_scheme": "dark",
+            "content_text_color": "inherit",
+            "content_position": "left top",
+            "text_alignment": "left",
+            "subheading": "",
+            "heading": "New <br> Collection",
+            "description": "<p>Openwork knit sweater fall.<\/p>",
+            "text_size": "h1",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "item_slide_mJAeha": {
+          "type": "item_slide",
+          "settings": {
+            "color_scheme": "dark",
+            "content_text_color": "inherit",
+            "content_position": "left top",
+            "text_alignment": "left",
+            "subheading": "",
+            "heading": "New <br> Collection",
+            "description": "<p>Openwork knit sweater fall.<\/p>",
+            "text_size": "h1",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "item_slide_KGP8wP",
+        "item_slide_N7qHbP",
+        "item_slide_mJAeha"
+      ],
+      "custom_css": [
+        ".m-richtext__description {color: #fff; margin-top: 12px;}",
+        ".m-richtext__button {margin-top: 24px;}",
+        "@media (max-width: 767px) {.m-richtext__description + .m-richtext__button {margin-top: 12px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "layout": "layout-2",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "slide_autoplay": true,
+        "pagination_position": "left",
+        "autorotate_speed": 5,
+        "use_scroll_mobile": true,
+        "button_text_1": "Glasses",
+        "button_link_1": "",
+        "button_style_1": "m-button--white",
+        "button_size_1": "",
+        "button_text_2": "Jackets",
+        "button_link_2": "",
+        "button_style_2": "m-button--white",
+        "button_size_2": "",
+        "button_text_3": "Leather Boots",
+        "button_link_3": "",
+        "button_style_3": "m-button--white",
+        "button_size_3": "",
+        "button_text_4": "Hand Bags",
+        "button_link_4": "",
+        "button_style_4": "m-button--white",
+        "button_size_4": "",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_exTHBE": {
+      "type": "custom-content",
+      "blocks": {
+        "text_86GEpY": {
+          "type": "text",
+          "settings": {
+            "title": "Living out every single day and <br>\nbe brave to show off your own true colors",
+            "subheading": "Minimog Store",
+            "text": "<p>Our new cozy collection is made with environmentally friendly materials and<br\/> simple to care for so you can stay cozy wherever .<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "button_label": "Shop Collection",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_86GEpY"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; } .m-richtext__subtitle {margin-bottom: 20px; } .m-richtext__description {margin-top: 24px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "featured_collection_eCbhxg": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "default",
+        "container": "container-fluid",
+        "collection": "",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "countdown_timer_kRXWkV": {
+      "type": "countdown-timer",
+      "custom_css": [
+        ".m-countdown {--section-padding-top-mobile: 75px; --section-padding-bottom-mobile: 75px;}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "footer",
+        "align": "center",
+        "background_in_container": true,
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "use_image_as_background": true,
+        "heading": "Annual Sale Event",
+        "description": "<p>Save on all best selling and exclusive styles<\/p>",
+        "time": "2024-05-26 23:00:00",
+        "heading_size": "h2",
+        "button_label": "Get Notified",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collection_list_eia4Qp": {
+      "type": "collection-list",
+      "blocks": {
+        "collection_block_GegQdW": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Tops"
+          }
+        },
+        "collection_block_4NNMcG": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Shirts"
+          }
+        },
+        "collection_block_rVmyXq": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Sunglasses"
+          }
+        },
+        "collection_block_qy8dkz": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Shorts"
+          }
+        },
+        "collection_block_MHqbDK": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Leather Bags"
+          }
+        },
+        "collection_block_WenBq8": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Sandals"
+          }
+        }
+      },
+      "block_order": [
+        "collection_block_GegQdW",
+        "collection_block_4NNMcG",
+        "collection_block_rVmyXq",
+        "collection_block_qy8dkz",
+        "collection_block_MHqbDK",
+        "collection_block_WenBq8"
+      ],
+      "custom_css": [
+        ".m-mixed-layout__inner {--mobile-column-width: 40vw;}"
+      ],
+      "settings": {
+        "heading": "Season <br> Collection",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "Must-have pieces selected \nevery month",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": true,
+        "items_per_row": 6,
+        "item_gap": 60,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "empty_space_BJz9wA": {
+      "type": "empty-space",
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "show_divider_line": true,
+        "divider_style": "solid",
+        "divider_height": 1,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "icon_box_eDWgBK": {
+      "type": "icon-box",
+      "blocks": {
+        "iconbox_3FmUYc": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "The Cashmere Cardigan",
+            "description": "<p>Add a free personalized note during checkout.<\/p>",
+            "link": "",
+            "button_label": "Shop Cardigans [arrow]",
+            "button_link": "",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        },
+        "iconbox_eQipiE": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "The Sport Sneakers",
+            "description": "<p>Brittany Bathgate shows how less is more.<\/p>",
+            "link": "",
+            "button_label": "Shop Shoes [arrow]",
+            "button_link": "",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        },
+        "iconbox_YMNQPc": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Transit Fanny Pack",
+            "description": "<p>Brittany Bathgate shows how less is more.<\/p>",
+            "link": "",
+            "button_label": "Shop Bags [arrow]",
+            "button_link": "",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_3FmUYc",
+        "iconbox_eQipiE",
+        "iconbox_YMNQPc"
+      ],
+      "custom_css": [
+        ".m-button--text-with-icon {gap: 4px;}",
+        ".m-icon-box__heading {font-weight: 400;}",
+        ".m-icon-box .m-button {margin-top: 24px;}",
+        ".m-icon-box .m-button:not(:hover) {border-color: rgb(var(--color-border));}",
+        ".m-icon-box--vertical .m-icon-box__content {margin-top: 30px;}"
+      ],
+      "settings": {
+        "heading": "Season Collection",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "start",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "image_with_text_4rcFcL": {
+      "type": "image-with-text",
+      "custom_css": [
+        ".m-image-with-text--multiple .m-image-with-text__image-first {flex: 0 0 40%;}",
+        ".m-image-with-text--multiple .m-image-with-text__image-second {flex: 0 0 55%;}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "footer",
+        "item_gap": 120,
+        "item_gap_mobile": 30,
+        "layout": "left",
+        "image_column_size": "8",
+        "image_overlap": false,
+        "show_image_reverse": false,
+        "hover_effect": true,
+        "image_animation": "none",
+        "link": "",
+        "link_2": "",
+        "second_image_offset_top": 10,
+        "title": "Stripped <br>\nLong Sleeve",
+        "sub_title": "",
+        "text": "<p>We believe in crafting pieces where sustainability<br\/> and style go hand in hand. Made from materials like recycled cashmere and sust<\/p>",
+        "text_size": "large",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "featured_collection_hin3aX": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "This week’s highlights",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "collection": "",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_dtUVjD": {
+      "type": "custom-content",
+      "blocks": {
+        "text_e7gGgL": {
+          "type": "text",
+          "settings": {
+            "title": "The Luxe Italian<br> Leather Crossbody",
+            "subheading": "",
+            "text": "<p>We believe in crafting pieces where sustainability and <br\/>style go hand in hand. Made from materials like<br\/> recycled cashmere and sust<\/p>",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "button_label": "Shop Collection",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_brkXNm": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "66%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_e7gGgL",
+        "image_brkXNm"
+      ],
+      "custom_css": [
+        "@media (min-width: 1024px) {.m-richtext__description + .m-richtext__button {margin-top: 40px; }}",
+        "@media (max-width: 767px) {.m-richtext__description br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "default",
+        "content_color_scheme": "default",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 120,
+        "gap_mobile": 32,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "blog_posts_CDL6yD": {
+      "type": "blog-posts",
+      "custom_css": [
+        ".m-article-card__title {margin-bottom: 0;}",
+        ".m-article-card__tags {color: rgb(var(--color-foreground-secondary)); font-size: 12px;}"
+      ],
+      "settings": {
+        "heading": "Mix and Match",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "blog": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 10,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-left",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "show_button_on_header": false,
+        "button_link": "",
+        "button_text": "View More",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "use_scroll_mobile": true,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "banner_with_slider_fYPiLg",
+    "custom_content_exTHBE",
+    "featured_collection_eCbhxg",
+    "countdown_timer_kRXWkV",
+    "collection_list_eia4Qp",
+    "empty_space_BJz9wA",
+    "icon_box_eDWgBK",
+    "image_with_text_4rcFcL",
+    "featured_collection_hin3aX",
+    "custom_content_dtUVjD",
+    "blog_posts_CDL6yD"
+  ]
+}

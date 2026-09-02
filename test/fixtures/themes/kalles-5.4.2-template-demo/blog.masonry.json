@@ -1,0 +1,184 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "blog_slider_h7yXkz": {
+      "type": "blog-slider",
+      "settings": {
+        "blog": "fashion",
+        "image_ratio": "4-3",
+        "image_size": true,
+        "show_tags": true,
+        "show_author": false,
+        "show_comment": false,
+        "show_date": true,
+        "date": "%b %d",
+        "col_dk": "3",
+        "col_tb": "2",
+        "col_mb": "1",
+        "limit": 8,
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": true,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "rounded",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "pd": "",
+        "pd_mb": "",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "main": {
+      "type": "main-blog",
+      "blocks": {
+        "sidebar_blog": {
+          "type": "_sidebar_blog",
+          "static": true,
+          "settings": {},
+          "blocks": {
+            "blog_cate_TQrAYi": {
+              "type": "_blog-cate",
+              "settings": {
+                "widget_heading": "Product categories",
+                "cat_link_list": "menu-blogs",
+                "count": true
+              },
+              "blocks": {}
+            },
+            "blog_gallery_YKYUGk": {
+              "type": "_blog-gallery",
+              "settings": {
+                "widget_heading": "Gallery",
+                "img1": "shopify://shop_images/363032-40-2_1_7d1b2762-f156-4e17-a943-c0f4980ed6c8.jpg",
+                "link1": "",
+                "img2": "shopify://shop_images/361349-217-2_c9d91a63-b4f5-4bc4-b5e5-ab06a6c4ca63.jpg",
+                "link2": "",
+                "img3": "shopify://shop_images/363622-36-2_ecb83ae5-c9e4-4997-b438-4f8bb73dfe3b.jpg",
+                "link3": "",
+                "link4": "",
+                "link5": "",
+                "link6": "",
+                "link7": "",
+                "link8": "",
+                "link9": "",
+                "open_link": "_blank"
+              },
+              "blocks": {}
+            },
+            "blog_post_FcKRhA": {
+              "type": "_blog-post",
+              "settings": {
+                "widget_heading": "Recent Posts",
+                "blog": "fashion-11",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "blogs_count": 3,
+                "date": "%b %d"
+              },
+              "blocks": {}
+            },
+            "blog_icon_box_88DT9r": {
+              "type": "_blog-icon-box",
+              "settings": {
+                "widget_heading": "Shipping & Delivery",
+                "icon_svg1": "truck",
+                "custom_svg1": "",
+                "iconbox_content1": "FREE SHIPPING_ Free shipping for all US orders",
+                "link_item1": "",
+                "icon_svg2": "headphones",
+                "custom_svg2": "",
+                "iconbox_content2": "SUPPORT 24/7_ We support 24 hours a day",
+                "link_item2": "",
+                "icon_svg3": "refesh-2",
+                "custom_svg3": "",
+                "iconbox_content3": "30 DAYS RETURN_ You have 30 days to return",
+                "link_item3": "",
+                "icon_svg4": "car",
+                "custom_svg4": "",
+                "iconbox_content4": "",
+                "link_item4": ""
+              },
+              "blocks": {}
+            },
+            "blog_tags_socials_ykiWwx": {
+              "type": "_blog-tags-socials",
+              "settings": {
+                "widget_heading": "Follow us",
+                "socials_style": "default",
+                "socials_size": "medium"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "blog_cate_TQrAYi",
+            "blog_gallery_YKYUGk",
+            "blog_post_FcKRhA",
+            "blog_icon_box_88DT9r",
+            "blog_tags_socials_ykiWwx"
+          ]
+        }
+      },
+      "settings": {
+        "article_des": "6",
+        "show_cate": false,
+        "show_content": true,
+        "show_tags": false,
+        "show_author": true,
+        "show_comment": false,
+        "show_readmore": true,
+        "show_date": true,
+        "date": "date",
+        "content_align": "center",
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "blogs_count": 6,
+        "col_dk": "2",
+        "col_tb": "2",
+        "col_mb": "1",
+        "pagination_type": "links",
+        "paginate_pos": "center",
+        "dis_pagination": 60,
+        "btn_style": "solid",
+        "size": "m",
+        "btn_fw": "medium",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "pd": "60px,,60px,",
+        "pd_mb": "30px,,30px,",
+        "mg": "",
+        "mg_mb": "",
+        "sidebar_mode": "none",
+        "sidebar_position": "right",
+        "sidebar_size": "medium"
+      }
+    }
+  },
+  "order": [
+    "blog_slider_h7yXkz",
+    "main"
+  ]
+}

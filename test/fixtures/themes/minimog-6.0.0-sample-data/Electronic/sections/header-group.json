@@ -1,0 +1,69 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "message": "<p>Free shipping for all orders from $60+<\/p>",
+        "message_link": "",
+        "show_divider": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "694984b5-54b8-41af-b9a1-d7832e2df2ac": {
+          "type": "topbar",
+          "settings": {
+            "show_divider": true,
+            "show_phone_numb": false,
+            "show_email": false,
+            "show_social_links": true,
+            "show_stores_page": true,
+            "show_currency_switcher": true,
+            "show_country_selector": false,
+            "show_language_switcher": true,
+            "alert_message": ""
+          }
+        }
+      },
+      "block_order": [
+        "694984b5-54b8-41af-b9a1-d7832e2df2ac"
+      ],
+      "settings": {
+        "header_design": "logo-left__2l",
+        "container": "container",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "STORE LOGO",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 155,
+        "sticky_logo_max_width": 105,
+        "mobile_logo_max_width": 105,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": true,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

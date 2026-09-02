@@ -1,0 +1,103 @@
+<!-- blocks/_testimonial_item_2.liquid -->
+[split_child]
+<div id="block_id-{{ block.id }}-image" class="hdt-slider__slide" {{ block.shopify_attributes }} >
+  {% style %}
+    #Slider_sync-{{ section.id }} {
+      --slide-{{ block.id }}-ratio: {{ block.settings.image.aspect_ratio | default: 2.0 }};
+      --slide-{{ block.id }}-ratio-md: {{ block.settings.image.aspect_ratio | default: 2.0 }};
+    }
+  {% endstyle %}
+  {% assign image_mb = block.settings.image_mb | default: block.settings.image %}
+  <div class="hdt-slide_inner hdt-relative hdt-media-overlap-content" style="{% if section.settings.image_height_mb == 'adapt_image' %}--aspect-ratioapt: {{ image_mb.aspect_ratio | default: 2.0 }};{% endif %}{% if section.settings.image_height == 'adapt_image' %}--aspect-ratioapt-md: {{ block.settings.image.aspect_ratio | default: 2.0 }};{% endif %}{% if image_mb.presentation.focal_point != blank %}--object-pos-mb: {{ image_mb.presentation.focal_point }}{% endif %}">
+    {%- liquid
+      if block.settings.image != blank
+        echo '<picture class="hdt-media-wrapper">'
+        if block.settings.image_mb != blank and block.settings.image_mb != block.settings.image
+          assign srcset = block.settings.image_mb | image_url: width: block.settings.image_mb.width | image_tag: widths: '200,400,600,800,1000', alt: null | split: 'srcset="' | last
+          unless srcset contains 'src='
+            echo '<source media="(max-width: 767px)" srcset="' | append: srcset | replace_first: 'style=', 'data-none='
+          endunless
+        endif
+        echo block.settings.image | image_url: width: block.settings.image.width | image_tag: loading: 'eager', sizes: sizes, class: 'hdt-object-pos-mb', widths: '400,600,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000,3200'
+        echo '</picture>'
+      else
+        capture current
+        cycle 1, 2 , 3
+        endcapture
+        echo '<div class="hdt-media-wrapper">'
+        echo 'hero-apparel-' | append: current | placeholder_svg_tag: 'placeholder-svg hdt-placeholder'
+        echo '</div>'
+      endif
+    -%}
+  </div>
+</div>
+[split_child]
+<div id="block_id-{{ block.id }}-content" class="hdt-slider__slide" {{ block.shopify_attributes }}>
+  <div class="hdt-testimonial-inner hdt-text-{{ section.settings.content_align }}" timeline hdt-reveal="slide-in">
+    <div class="hdt-testimonial-content">
+        {%- render 'rating_star', rating: block.settings.rating -%}
+        {%- if block.settings.heading -%}<h3 class="hdt-testimonial-heading {{ section.settings.font_family }}">{{ block.settings.heading }}</h3>{%- endif -%}
+        {%- if block.settings.content -%}{{ block.settings.content }}{%- endif -%}
+    </div>
+    <div class="hdt-testimonial-author">
+        {%- if block.settings.author -%}<h4 class="hdt-testimonial-name">{{ block.settings.author }}</h4>{%- endif -%}
+        {%- if block.settings.pos -%}<p class="hdt-testimonial-pos">{{ block.settings.pos }}</p>{%- endif -%}
+    </div>
+</div>
+</div>
+{% schema %}
+  {
+    "name": "Testimonial",
+    "tag": null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Image"
+      },
+      {
+        "type": "image_picker",
+        "id": "image_mb",
+        "label": "Mobile image (optional)",
+        "info": "750 x 1100px .jpg recommended. If none is set, desktop image will be used."
+      },
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "Heading"
+      },
+      {
+        "type": "richtext",
+        "id": "content",
+        "label": "Text",
+        "default": "<p>Add customer reviews and testimonials to showcase your store’s happy customers.</p>"
+      },
+      {
+        "type": "text",
+        "id": "author",
+        "label": "Author",
+        "default": "Author's name",
+      },
+      {
+        "type": "text",
+        "id": "pos",
+        "label": "Position"
+      },
+      {
+        "type": "range",
+        "id": "rating",
+        "min": 0,
+        "max": 5,
+        "step": 0.5,
+        "label": "Rating",
+        "default": 5,
+        "info": "Set less than '1' to disable Rating."
+      },
+    ],
+    "presets": [
+      {
+        "name": "Testimonial"
+      }
+    ]
+  }
+{% endschema %}

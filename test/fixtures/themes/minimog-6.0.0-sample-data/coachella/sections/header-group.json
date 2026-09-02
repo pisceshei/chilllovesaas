@@ -1,0 +1,111 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "message": "<span class=\"font-size: 15px;\">Free shipping on all U.S. orders $50+</span>",
+        "message_link": "",
+        "show_divider": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "230dbd84-1f85-433d-9ee5-3f36f0742fa6": {
+          "type": "topbar",
+          "settings": {
+            "show_divider": true,
+            "show_phone_numb": false,
+            "show_email": false,
+            "show_social_links": true,
+            "show_stores_page": false,
+            "show_currency_switcher": true,
+            "show_country_selector": false,
+            "show_language_switcher": true,
+            "alert_message": "<span style=\"font-size: 14px;\">Order by phone: (310) 839-9009  |  Shop our Spring Bounty Sale </span>"
+          }
+        },
+        "8104f690-f152-4a2a-a0f5-7e6c792e3669": {
+          "type": "custom_html",
+          "settings": {
+            "heading": "Home",
+            "container": "container-fluid",
+            "html": ""
+          }
+        },
+        "a0bc23e3-f825-4f14-9235-7b3e04eeacbb": {
+          "type": "product-list",
+          "settings": {
+            "heading": "Products",
+            "container": "container-fluid",
+            "stretch_width": false,
+            "limit": 6,
+            "columns": 2
+          }
+        },
+        "af35ec79-450c-470f-9cd8-c5f9a8cc0b75": {
+          "type": "banner",
+          "settings": {
+            "heading": "Shops",
+            "container": "inherit",
+            "banner_style": "outside",
+            "banner_link": "",
+            "banner_title": "New Arrivals",
+            "banner_desc": "",
+            "banner_button_text": "Shop now"
+          }
+        },
+        "6ee964fa-63bf-417a-8a63-ac396e2e3af7": {
+          "type": "banner",
+          "settings": {
+            "heading": "FoxKit",
+            "container": "inherit",
+            "banner_style": "outside",
+            "banner_title": "",
+            "banner_desc": "",
+            "banner_button_text": ""
+          }
+        }
+      },
+      "block_order": [
+        "230dbd84-1f85-433d-9ee5-3f36f0742fa6",
+        "8104f690-f152-4a2a-a0f5-7e6c792e3669",
+        "a0bc23e3-f825-4f14-9235-7b3e04eeacbb",
+        "af35ec79-450c-470f-9cd8-c5f9a8cc0b75",
+        "6ee964fa-63bf-417a-8a63-ac396e2e3af7"
+      ],
+      "settings": {
+        "header_design": "logo-left-menu-center",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "MINIMOG",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 125,
+        "sticky_logo_max_width": 125,
+        "mobile_logo_max_width": 100,
+        "main_menu": "main-menu",
+        "secondary_menu": "",
+        "mobile_menu": "",
+        "uppercase_parent_level": true,
+        "show_menu_column_divider": true,
+        "search": "show_icon",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false
+      }
+    }
+  },
+  "order": ["annoucement", "header"]
+}

@@ -1,0 +1,180 @@
+<!-- blocks/_image-gallery.liquid -->
+{% style %}
+  {%- if block.settings.space_items != 'x' -%}
+    #{{block.id}} .hdt-spacing-{{ block.settings.space_items }} {
+      --spacing-x: {{ block.settings.space_items }}px;
+      --spacing-y: {{ block.settings.space_items }}px;
+    }
+  {%- endif -%}
+  #{{ block.id }} .hdt-container-image .hdt-image-wrap {
+    border-radius: {{ block.settings.border_radius | plus: 0 |divided_by:16 }}rem;
+  }
+{% endstyle %}
+
+<hdt-gallery-modal id="{{ block.id }}">
+  <div class="hdt-row-grid hdt-container-image hdt-row-grid--modify hdt-spacing-{{ block.settings.space_items }} hdt-grid-cols-{{ block.settings.col_mb }} md:hdt-grid-cols-{{ block.settings.col_tb }} lg:hdt-grid-cols-{{ block.settings.col_dk }} hdt-justify-center">
+    {% content_for 'blocks' %}
+  </div>
+</hdt-gallery-modal>
+{% schema %}
+{
+  "name": "t:sections.image_gallery.name",
+  "class": "hdt-block hdt-image-gallery",
+  "blocks": [
+    {
+      "type": "image"
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.lookbook.settings.options_layout"
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "t:sections.all.items_row.desktop",
+      "default": "2",
+      "options": [
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "6",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "t:sections.all.items_row.tablet",
+      "default": "2",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "t:sections.all.items_row.mobile",
+      "default": "2",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "space_items",
+      "label": "t:sections.all.space_items.desktop",
+      "default": "x",
+      "options": [
+        {
+          "label": "t:sections.all.space_items.default",
+          "value": "x"
+        },
+        {
+          "value": "0",
+          "label": "0px"
+        },
+        {
+          "label": "5px",
+          "value": "5"
+        },
+        {
+          "label": "10px",
+          "value": "10"
+        },
+        {
+          "label": "20px",
+          "value": "20"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "background-1"
+    },
+    {
+      "type": "header",
+      "content": "Item Option"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border radius",
+      "default": 0,
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.image_gallery.name",
+      "blocks": [
+        {
+          "type": "image",
+          "settings": {
+            "image_ratio": "adapt_image",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          }
+        },
+        {
+          "type": "image",
+          "settings": {
+            "image_ratio": "adapt_image",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

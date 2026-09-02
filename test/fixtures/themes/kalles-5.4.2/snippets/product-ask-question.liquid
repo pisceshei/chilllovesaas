@@ -1,0 +1,52 @@
+<hdt-modal class="hdt-product__modal hdt-modal hdt-contents" color-scheme="{{ settings.color_scheme_dialog }}">
+  <dialog id="modal-contactFormAsk" class="hdt-dialog hdt-dialog-modal hdt-modal-popup__ask" scroll-lock>
+    <div class="hdt-dialog-modal__header">
+      <h3 class="hdt-product__modal-title hdt-s-text hdt-font-semibold">{{ 'products.product.ask_question' | t }}</h3>
+      <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="modal-contactFormAsk" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+    </div>
+    <div class="hdt-dialog-modal__inner hdt-current-scrollbar">
+      {%- assign form_id = 'ContactFormAsk' -%}
+      {%- assign modal_id = 'modal-contactFormAsk' -%}
+      {%- form 'contact', id: form_id, data-modal: modal_id -%}
+        {%- liquid
+          assign name          = 'templates.contact.form.name'
+          assign phone         = 'templates.contact.form.phone'
+          capture status_ask_mirror
+          echo '<div class="form-status-mirror-' | append: form_id | append: '" style="display: none">'
+            echo '</div>'
+          endcapture
+          capture status_ask
+            render 'form-status', form: form, form_id: form_id
+          endcapture
+          echo status_ask
+          -%}
+        <p>
+          <label for="{{ form_id }}-name" class="hdt-s-text2 hdt-block">{{ 'templates.contact.form.name' | t }}</label>
+          <input type="text" id="{{ form_id }}-name" name="contact[name]" required="required" value="{% if form[name] %}{{ form[name] }}{% elsif customer %}{{ customer.name }}{% endif %}">
+        </p>
+        <p>
+          <label for="{{ form_id }}-email" class="hdt-s-text2 hdt-block">{{ 'templates.contact.form.email' | t }}</label>
+          <input type="email" id="{{ form_id }}-email" name="contact[email]" autocorrect="off" autocapitalize="off" value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}" aria-required="true" required="required"
+          {%- if form.errors contains 'email' %} class="input--error" aria-invalid="true" aria-describedby="{{ form_id }}-email-error"{%- endif -%}>
+        </p>
+        {%- if settings.show_phone_ask_question -%}
+          <p>
+            <label for="{{ form_id }}-phone" class="hdt-s-text2 hdt-block">{{ 'templates.contact.form.phone' | t }}</label>
+            <input type="tel" id="{{ form_id }}-phone" name="contact[phone]" pattern="[0-9\-]*" value="{% if form[phone] %}{{ form[phone] }}{% elsif customer %}{{ customer.phone }}{% endif %}">
+          </p>
+        {%- endif -%}
+        <p class="hdt-hidden">
+          <label for="{{ form_id }}-product">{{ 'products.product.label' | t }}</label>
+          <textarea rows="20" id="{{ form_id }}-product" name="contact[product]" required="required"></textarea>
+        </p>
+        <p>
+          <label for="{{ form_id }}-message" class="hdt-s-text2 hdt-block">{{ 'templates.contact.form.message' | t }}</label>
+          <textarea rows="8" id="{{ form_id }}-message" name="contact[body]" required="required">{% if form.body %}{{ form.body }}{% endif %}</textarea>
+        </p>
+        <button type="submit" class="hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn hdt-oh hdt-btn-accent hdt-font-semibold"><span class="hdt-truncate">{{ 'templates.contact.form.send' | t }}</span></button>
+      {%- endform -%}
+      {{ status_ask_mirror }}
+    </div>
+  </dialog>
+</hdt-modal>
+

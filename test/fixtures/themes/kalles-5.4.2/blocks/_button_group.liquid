@@ -1,0 +1,37 @@
+<div class="hdt-group-button-block hdt-button-group hdt-flex-block{% if block.settings.vertical_btns %} hdt-flex-col{% endif %}" id="block-{{ block.id }}" {{ block.shopify_attributes }}>{% content_for 'blocks' %}</div>
+
+{% schema %}
+{
+  "name": "t:blocks.button.name_group",
+  "tag": null,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "vertical_btns",
+      "label": "t:blocks.button.display_buttons_vertically",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "button"
+    },
+    {
+      "type": "button_custom"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.button.name_group",
+      "blocks": [
+        {
+          "type": "button"
+        },
+        {
+          "type": "button_custom"
+        },
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,781 @@
+{
+  "sections": {
+    "6fe82940-0766-4710-9772-8078627f1072": {
+      "type": "custom-code",
+      "custom_css": [
+
+      ],
+      "settings": {
+        "custom_css": ".m-richtext__subtitle {\n  font-size: 18px;\n  font-weight: 500;\n}\n\n.m-custom-content--countdown .m-custom-content__wrapper {\n  background-color: transparent !important;\n}\n@media (min-width: 768px) {\n  .m-custom-content--countdown .m-countdown__button {\n    margin-top: 40px;\n  }\n}\n@media (min-width: 1024px) {\n  .m-header__inner:after {\n    content: \"\";\n    max-width: var(--fluid-container-width);\n    width: 100%;\n    height: 1px;\n    background-color: rgba(255, 255, 255, 0.3);\n    position: absolute;\n    bottom: 0;\n    left: 50%;\n    transform: translateX(-50%);\n  }\n}\n@media (min-width: 1280px) {\n  .m-custom-content--countdown .m-custom-content__block-countdown {\n    flex: 1;\n    padding-left: 15px;\n    padding-right: 15px;\n    margin-left: calc(-1 * calc(100vw - var(--container-width)) \/ 2);\n  }\n  .m-custom-content--countdown .m-custom-content__block-image {\n    width: 60%;\n  }\n}\n@media (max-width: 1023px) {\n  .m-custom-content--countdown .m-custom-content__block-image {\n    margin-top: 48px;\n  }\n}"
+      }
+    },
+    "16083625557e6e6a59": {
+      "type": "slider",
+      "blocks": {
+        "16083625557e6e6a59-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "New Arrivals",
+            "title": "Our Classic <br>\nCashmere Crew",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "second_button_text": "",
+            "second_button_link": "",
+            "second_button_style": "m-button--primary",
+            "second_button_size": "",
+            "show_footer": true,
+            "footer_alignment": "start",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Show Now"
+          }
+        },
+        "slider_item_NahCEd": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "New Arrivals",
+            "title": "The New <br>\nActivewear Edit",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "second_button_text": "",
+            "second_button_link": "",
+            "second_button_style": "m-button--primary",
+            "second_button_size": "",
+            "show_footer": true,
+            "footer_alignment": "start",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Show Now"
+          }
+        },
+        "slider_item_V4zyXL": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "New Arrivals",
+            "title": "A Lightweight <br>\nLuxurious Layer",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "second_button_text": "",
+            "second_button_link": "",
+            "second_button_style": "m-button--primary",
+            "second_button_size": "",
+            "show_footer": true,
+            "footer_alignment": "start",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Show Now"
+          }
+        }
+      },
+      "block_order": [
+        "16083625557e6e6a59-1",
+        "slider_item_NahCEd",
+        "slider_item_V4zyXL"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {.m-slide__wrapper {justify-content: center; } .m-slide__content {text-align: center; } .m-slider-controls--absolute {position: absolute; inset: auto 0 10px; } .m-slide__button {justify-content: center; }}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": true,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 3,
+        "use_content_above": true,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1618461067a22af3dc": {
+      "type": "banner-with-slider",
+      "blocks": {
+        "1618461067a22af3dc-0": {
+          "type": "item_slide",
+          "settings": {
+            "color_scheme": "",
+            "content_text_color": "black",
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "subheading": "",
+            "heading": "New<br>\nCollection",
+            "description": "<p>Openwork knit sweater fall.<\/p>",
+            "text_size": "h1",
+            "button_text": "Shop Now",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "1c8defab-2397-46a1-89db-00cff962b425": {
+          "type": "item_slide",
+          "settings": {
+            "color_scheme": "",
+            "content_text_color": "black",
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "subheading": "",
+            "heading": "New<br>\nCollection",
+            "description": "<p>The possibilities are endless.<\/p>",
+            "text_size": "h1",
+            "button_text": "Shop Now",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "cb38f1d7-4467-4a2c-b30c-71e51e920937": {
+          "type": "item_slide",
+          "settings": {
+            "color_scheme": "",
+            "content_text_color": "black",
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "subheading": "",
+            "heading": "New<br>\nCollection",
+            "description": "<p>Feel the authentic peace.<\/p>",
+            "text_size": "h1",
+            "button_text": "Shop Now",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1618461067a22af3dc-0",
+        "1c8defab-2397-46a1-89db-00cff962b425",
+        "cb38f1d7-4467-4a2c-b30c-71e51e920937"
+      ],
+      "custom_css": [
+        ".m-slide__description {color: rgb(var(--color-foreground-secondary));}",
+        "@media (max-width: 767px) {.container-full {padding-left: 0; padding-right: 0; } .m-slide__title {font-size: 30px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "layout": "layout-1",
+        "container": "w-full",
+        "color_scheme": "",
+        "slide_autoplay": true,
+        "pagination_position": "left",
+        "autorotate_speed": 3,
+        "use_scroll_mobile": false,
+        "button_text_1": "Handbags",
+        "button_link_1": "",
+        "button_style_1": "m-button--white",
+        "button_size_1": "",
+        "button_text_2": "Puffa Clog",
+        "button_link_2": "",
+        "button_style_2": "m-button--white",
+        "button_size_2": "",
+        "button_text_3": "Glasses",
+        "button_link_3": "",
+        "button_style_3": "m-button--white",
+        "button_size_3": "",
+        "button_text_4": "Shop Now",
+        "button_link_4": "",
+        "button_style_4": "m-button--white",
+        "button_size_4": "",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1620184680dea8419f": {
+      "type": "product-tabs",
+      "blocks": {
+        "1620184680dea8419f-0": {
+          "type": "tab",
+          "settings": {
+            "title": "Hot items"
+          }
+        },
+        "1620184680dea8419f-1": {
+          "type": "tab",
+          "settings": {
+            "title": "Best sellers"
+          }
+        },
+        "9bd01e0c-2599-441f-ae81-f3ae0f41ad2f": {
+          "type": "tab",
+          "settings": {
+            "title": "New arrivals"
+          }
+        }
+      },
+      "block_order": [
+        "1620184680dea8419f-0",
+        "1620184680dea8419f-1",
+        "9bd01e0c-2599-441f-ae81-f3ae0f41ad2f"
+      ],
+      "custom_css": [
+        ".m-tab-header {font-weight: 500;}",
+        ".m-tab-header:after {height: 1px; bottom: 3px;}",
+        "@media (max-width: 767px) {.m-section__header {margin-bottom: 32px; }}"
+      ],
+      "settings": {
+        "heading": "This Week's Highlights",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "tab_header": "horizontal",
+        "limit": 8,
+        "show_button": true,
+        "button_type": "link",
+        "button_label": "Shop all products",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": false,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16184586065eceb2e2": {
+      "type": "custom-content",
+      "blocks": {
+        "b69672af-1f56-4513-9d03-61ae1abe81a0": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "inherit",
+            "title": "Braided Sandals",
+            "subtitle": "New Arrivals",
+            "description": "",
+            "button_label": "Shop now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "ff2205af-ce86-41ce-a934-398d8b3a99f2": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "inherit",
+            "title": "Shoulder Bags",
+            "subtitle": "New Arrivals",
+            "description": "",
+            "button_label": "Shop now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "b69672af-1f56-4513-9d03-61ae1abe81a0",
+        "ff2205af-ce86-41ce-a934-398d8b3a99f2"
+      ],
+      "custom_css": [
+        ".m-richtext__subtitle {margin-bottom: 12px;}",
+        ".m-image-card__content-inner {display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; height: 100%;}",
+        "@media (min-width: 768px) {.m-image-card__content {padding: 30px; }}",
+        "@media (max-width: 767px) {.m-richtext__subtitle {margin-bottom: 8px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__custom-content"
+      }
+    },
+    "custom_content_DgbHXb": {
+      "type": "custom-content",
+      "blocks": {
+        "countdown_zCKeYG": {
+          "type": "countdown",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "align": "center",
+            "time": "2024-05-08 24:00:00",
+            "heading": "Fine-knit Cardigan",
+            "heading_size": "h3",
+            "button_label": "Get Only $30",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_W7VD9m": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "countdown_zCKeYG",
+        "image_W7VD9m"
+      ],
+      "custom_css": [
+
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "content_color_scheme": "dark",
+        "enable_parallax": true,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-content--countdown"
+      }
+    },
+    "e27c015c-9abe-480c-a685-fe65151b9ca3": {
+      "type": "lookbook",
+      "blocks": {
+        "3e9aeb28-ac22-4dbb-a123-2aff0f82381e": {
+          "type": "lookbook-slider",
+          "settings": {
+            "color_scheme": "",
+            "sub_title": "",
+            "title": "Shop this look",
+            "heading_size": "h3",
+            "text": "",
+            "content_alignment": "center",
+            "text_color": "black",
+            "image_position": "left",
+            "button_style": "light",
+            "color_scheme_hovered": "",
+            "top_1": 29,
+            "left_1": 62,
+            "product_1": "",
+            "top_2": 58,
+            "left_2": 47,
+            "product_2": "",
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "product_per_view": "1",
+            "show_pagination": true,
+            "pagination_style": "fraction",
+            "show_navigation": true,
+            "pcard_layout": "",
+            "pcard_image_ratio": "",
+            "show_vendor": true,
+            "hide_title": false
+          }
+        }
+      },
+      "block_order": [
+        "3e9aeb28-ac22-4dbb-a123-2aff0f82381e"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {.swiper-container {margin-left: max(-15px, var(--column-gap-mobile, var(--column-gap)) \/ -2); margin-right: max(-15px, var(--column-gap-mobile, var(--column-gap)) \/ -2); }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "image_aspect_ratio": "original",
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "rich_text_Cnneyc": {
+      "type": "rich-text",
+      "blocks": {
+        "subheading_dtPhEh": {
+          "type": "subheading",
+          "settings": {
+            "subheading": "Minimog Store"
+          }
+        },
+        "heading_JhK8br": {
+          "type": "heading",
+          "settings": {
+            "heading": "Living out every single day and be brave to show off your own true colors",
+            "heading_size": "h2"
+          }
+        },
+        "text_nQzcbd": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Our new cozy collection is made with environmentally friendly materials and <br\/>simple to care for so you can stay cozy wherever.<\/p>"
+          }
+        },
+        "button_FgeaQF": {
+          "type": "button",
+          "settings": {
+            "button_label": "Shop Collection",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "subheading_dtPhEh",
+        "heading_JhK8br",
+        "text_nQzcbd",
+        "button_FgeaQF"
+      ],
+      "custom_css": [
+        ".m-richtext__title {display: inline-block; max-width: 700px;}",
+        ".m-richtext__description {color: rgb(var(--color-foreground-secondary));}"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "content_alignment": "center",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collection_list_UqNLLq": {
+      "type": "collection-list",
+      "blocks": {
+        "collection_block_cBHXVt": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Top"
+          }
+        },
+        "collection_block_MDrAf8": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sunglasses"
+          }
+        },
+        "collection_block_3gqezU": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shirts"
+          }
+        },
+        "collection_block_LWUz8t": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Bags"
+          }
+        },
+        "collection_block_anr4P6": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shoes"
+          }
+        }
+      },
+      "block_order": [
+        "collection_block_cBHXVt",
+        "collection_block_MDrAf8",
+        "collection_block_3gqezU",
+        "collection_block_LWUz8t",
+        "collection_block_anr4P6"
+      ],
+      "custom_css": [
+        ".m-collection-list {--mobile-column-width: 40vw;}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 5,
+        "item_gap": 10,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "3f722446-57c8-4ad8-9344-18a9d92275a6": {
+      "type": "custom-content",
+      "blocks": {
+        "5965aa9e-ebca-4b6b-b83c-86171e74214a": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "dark",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "inherit",
+            "title": "Striped bandeau",
+            "subtitle": "",
+            "description": "",
+            "button_label": "Shop The Look",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "button_fixed": true,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "e084c779-a5f8-42a6-8db7-10fb764b204f": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "dark",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "inherit",
+            "title": "Long Denim Skirt",
+            "subtitle": "",
+            "description": "",
+            "button_label": "Shop The Look",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "button_fixed": true,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "5965aa9e-ebca-4b6b-b83c-86171e74214a",
+        "e084c779-a5f8-42a6-8db7-10fb764b204f"
+      ],
+      "custom_css": [
+        ".m-image-card--button-fixed .m-button--fixed {padding-bottom: 24px; padding-top: 14px;}",
+        ".m-image-card--button-fixed .m-button--fixed:hover,.m-image-card--button-fixed .m-button--fixed:focus {color: rgb(var(--color-foreground));}",
+        "@media (max-width: 767px) {.m-image-card--button-fixed .m-button--fixed {justify-content: center; gap: 12px; border: 0; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "161855533598f3d13b": {
+      "type": "testimonials",
+      "blocks": {
+        "161855533598f3d13b-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>“ These are beautiful, well made & comfortable! I bought them to wear to work & casually. I wore them immediately walking in the city & has no problem. “<\/p>",
+            "footer": "<p>Dean D.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "161855533598f3d13b-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>“ These are beautiful, well made & comfortable! I bought them to wear to work & casually. I wore them immediately walking in the city & has no problem. “<\/p>",
+            "footer": "<p>Linnie H.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "161855533598f3d13b-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>“ These are beautiful, well made & comfortable! I bought them to wear to work & casually. I wore them immediately walking in the city & has no problem. “<\/p>",
+            "footer": "<p>Nancy W.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "161855533598f3d13b-0",
+        "161855533598f3d13b-1",
+        "161855533598f3d13b-2"
+      ],
+      "custom_css": [
+        ".m-testimonials-el {position: relative;}",
+        ".m-slider-controls__button {top: 39%;}",
+        ".m-testimonial__name > div {font-weight: 500;}",
+        ".m-slider-controls:not(.m-slider-controls--pagination-fraction) .m-slider-controls__button:not(:hover) {background-color: #fff;}",
+        "@media (max-width: 767px) {.m-slider-controls__button {display: none; }}"
+      ],
+      "settings": {
+        "heading": "What People Are Saying",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "footer_2",
+        "design": "testimonials-3",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "default",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "161845980909150899": {
+      "type": "instagram",
+      "custom_css": [
+        "@media (max-width: 767px) {.m-section__description br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "Follow us Instagram",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "<p>Tag <a href=\"https:\/\/www.instagram.com\/minimog.trendy\/\" target=\"_blank\" title=\"minimog\"><span class=\"m:text-black\">@minimog<\/span><\/a> in your Instagram photos for a chance to be featured here. <br>Find more inspiration on <a href=\"https:\/\/www.instagram.com\/minimog.trendy\/\" target=\"_blank\" title=\"our Instagram\" class=\"m:text-black\">our Instagram.<\/a><\/p>",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "color_scheme_content": "",
+        "layout": "grid",
+        "images_count": 4,
+        "grid_columns": 4,
+        "gap": 30,
+        "mobile_gap": 16,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        "button_label": "",
+        "button_style": "m-button--secondary",
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    }
+  },
+  "order": [
+    "6fe82940-0766-4710-9772-8078627f1072",
+    "16083625557e6e6a59",
+    "1618461067a22af3dc",
+    "1620184680dea8419f",
+    "16184586065eceb2e2",
+    "custom_content_DgbHXb",
+    "e27c015c-9abe-480c-a685-fe65151b9ca3",
+    "rich_text_Cnneyc",
+    "collection_list_UqNLLq",
+    "3f722446-57c8-4ad8-9344-18a9d92275a6",
+    "161855533598f3d13b",
+    "161845980909150899"
+  ]
+}

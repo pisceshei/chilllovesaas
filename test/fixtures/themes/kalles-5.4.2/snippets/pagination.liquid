@@ -1,0 +1,74 @@
+{%- comment -%}
+  Renders a set of links for paginated results. Must be used within paginate tags.
+
+  Accepts:
+  - paginate: {Object} (required)
+  - section_id: {String} The ID of the section that contains this card. (required)
+  - anchor: {String} (optional) This can be added so that on page reload it takes you to wherever you've placed your anchor tag. (optional)
+  - append_id: {String} The ID
+  - class: {String} a list class.
+  - pagination_type: {String} (optional)
+  - load_more_label: {String} (optional) articles, products
+
+  Usage:
+  {%- paginate results by 2 -%}
+    {%- render 'pagination', paginate: paginate -%}
+  {%- endpaginate -%}
+{%- endcomment -%}
+{{ 'hdt-pagination.css' | asset_url | stylesheet_tag }}
+{%- if paginate.parts.size > 0 -%}
+  {%- if pagination_type == 'load_more' or pagination_type == 'infinite' -%}
+    {%- if paginate.next.is_link -%}
+      {%- liquid
+        if load_more_label == 'articles'
+          assign label = 'general.pagination.load_more_articles' | t          
+        elsif load_more_label == 'items'
+          assign label = 'general.pagination.load_more_items' | t
+        else
+          assign default_label = 'general.pagination.load_more_products' | t
+          assign label = lm_text | default: default_label
+        endif
+      -%}
+      <div loadmore-btn-wrapp class="hdt-pagination-wrapper {{ class }} hdt-text-{{ paginate_pos }} hdt-justify-items-{{ paginate_pos }}" style="--pagination-distance:{{ dis_pagination }}px;">
+        {%- if section.settings.enable_progressbar -%}
+          {% render 'progress_bar', paginate: paginate, results_count: collection.products_count %}
+        {%- endif -%}
+        <wrapp-hdt-lm-main-url {%- if pagination_type == 'infinite' %} render-on-scroll{% endif %} section-id="{{ section_id }}" append="{{ append_id }}" {%- if is_prepend_btn %} prepend{% endif %}><a href="{{ paginate.next.url }}" {%- if is_prepend_btn %} prepend{% endif %} class="hdt-loamore-btn hdt-btn hdt-oh hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative {{ section.settings.btn_style }} hdt-btn--size-{{ section.settings.size }} hdt-font-{{ section.settings.btn_fw }}"><span>{{ label | escape }}</span></a></wrapp-hdt-lm-main-url>
+      </div>
+    {%- endif -%}
+  {%- else -%}
+    <div class="hdt-pagination-wrapper {{ class }} hdt-flex hdt-justify-{{ paginate_pos }} hdt-pagination-main-pages" style="--pagination-distance:{{ dis_pagination }}px;">
+      <nav class="hdt-pagination" role="navigation" aria-label="{{ 'general.pagination.label' | t | escape }}">
+        <ul class="hdt-pagination__list hdt-flex" role="list">
+          {%- if paginate.previous -%}
+            <li>
+              <wrapp-hdt-facet-url><a rel="prev" href="{{ paginate.previous.url }}{{ anchor }}" class="hdt-pagination__item hdt-inline-block hdt-pagination__item--next hdt-pagination__item-arrow" aria-label="{{ 'general.pagination.previous' | t | escape }}">
+                {{ 'general.pagination.previous' | t }}
+              </a></wrapp-hdt-facet-url>
+            </li>
+          {%- endif -%}
+          {%- for part in paginate.parts -%}
+            <li>
+              {%- if part.is_link -%}
+                <wrapp-hdt-facet-url><a href="{{ part.url }}{{ anchor }}" class="hdt-pagination__item hdt-inline-block" aria-label="{{ 'general.pagination.page' | t: number: part.title | escape }}"><span>{{ part.title }}</span></a></wrapp-hdt-facet-url>
+              {%- else -%}
+                {%- if part.title == paginate.current_page -%}
+                  <span class="hdt-pagination__item hdt-inline-block hdt-pagination__item--current" aria-current="page">{{ part.title }}</span>
+                {%- else -%}
+                  <span class="hdt-pagination__item hdt-inline-block " aria-current="page">{{ part.title }}</span>
+                {%- endif -%}
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+          {%- if paginate.next -%}
+            <li>
+              <wrapp-hdt-facet-url><a rel="next" href="{{ paginate.next.url }}{{ anchor }}" class="hdt-pagination__item hdt-inline-block hdt-pagination__item--prev hdt-pagination__item-arrow" aria-label="{{ 'general.pagination.next' | t | escape }}">
+                {{ 'general.pagination.next' | t }}
+              </a></wrapp-hdt-facet-url>
+            </li>
+          {%- endif -%}
+        </ul>
+      </nav>
+    </div>
+  {%- endif -%}
+{%- endif -%}

@@ -1,0 +1,542 @@
+<!-- collections-list-simple.liquid -->
+{{ 'hdt-collection-items.css' | asset_url | stylesheet_tag }}
+<style>
+  {% render 'spacing-vars', box: section %}
+  .hdt-slides-auto {
+    --slide-size:  auto;
+  }
+</style>
+{%- if section.settings.content_size == "custom" -%}
+  {%- capture style -%}
+    style="--text-custom-lg: {{ section.settings.font_size_text_lg }}px; --text-custom-md: {{ section.settings.font_size_text_md }}px; --text-custom-mb: {{ section.settings.font_size_text }}px; --text-ls: {{ section.settings.letter_spacing_text }}px;""
+  {%- endcapture -%}
+{%- endif -%}
+{%- liquid
+  if section.settings.space_items == "x"
+    assign space_item = settings.spacing_grid_horizontal
+  else
+    assign space_item = section.settings.space_items
+  endif
+-%}
+{%- capture html_els -%}
+  {%- if section.settings.souce_collection == 'all' and collections.size > 0 -%}
+    {%- case section.settings.sort_collections -%}
+      {%- when 'products_high' or 'products_low' -%}
+        {%- assign collections = collections | sort: 'all_products_count' -%}
+      {%- when 'date' or 'date_reversed' -%}
+        {%- assign collections = collections | sort: 'published_at' -%}
+    {%- endcase -%}
+    {%- if section.settings.sort_collections == 'products_low' or section.settings.sort_collections == 'date' or section.settings.sort_collections == 'alphabetical' -%}
+      {%- for collection in collections -%}
+        <div class="hdt-slider__slide hdt-collection-simple-item {% if collection.handle == collection.handle %} t4s-current-cat{% endif %}">
+          <a class="collection_link hdt-text-{{ section.settings.content_size}} hdt-font-{{ section.settings.content_weight}}" href="{{ collection.url }}" {{ style }}>{{ collection.title }}</a>
+        </div>
+      {%- endfor -%}
+    {%- else -%}
+      {%- for collection in collections reversed -%}
+        <div class="hdt-slider__slide hdt-collection-simple-item {% if collection.handle == collection.handle %} t4s-current-cat{% endif %}">
+          <a class="collection_link hdt-text-{{ section.settings.content_size}} hdt-font-{{ section.settings.content_weight}}" href="{{ collection.url }}" {{ style }}>{{ collection.title }}</a>
+        </div>
+      {%- endfor -%}
+    {%- endif -%}
+  {%- elsif section.settings.souce_collection == 'from_blocks' and section.blocks.size > 0 -%}
+    {%- for block in section.blocks %}
+      {%  assign collection = collections[block.settings.collection] -%}
+      <div class="hdt-slider__slide hdt-collection-simple-item {% if collection.handle == collection.handle %} t4s-current-cat{% endif %}">
+        <a class="collection_link hdt-text-{{ section.settings.content_size}} hdt-font-{{ section.settings.content_weight}}" href="{{ block.settings.collection_link | default: collection.url }}" {{ style }}>
+          {%- if block.settings.icon != blank -%}<i class="{{ block.settings.icon }}"></i>{%- endif -%}
+          {{ block.settings.title | default: collection.title }}
+        </a>
+      </div>
+    {%- endfor -%}
+  {%- elsif section.settings.souce_collection == 'from_menu' and section.settings.menu_collections != blank -%}
+    {%- for link in section.settings.menu_collections.links -%}
+      <div class="hdt-slider__slide hdt-collection-simple-item {% if collection.handle == collection.handle %} t4s-current-cat{% endif %}">
+        <a class="collection_link hdt-text-{{ section.settings.content_size}} hdt-font-{{ section.settings.content_weight}}" href="{{ link.url }}" {% if link.current%}  aria-current="page" {% endif %} {{ style }}>{{ link.title }}</a>
+      </div>
+    {%- endfor -%} 
+  {%- elsif section.settings.souce_collection == 'from_list' and section.settings.collection_list != blank -%}
+    {%- for collection in section.settings.collection_list -%}
+      <div class="hdt-slider__slide hdt-collection-simple-item {% if collection.handle == collection.handle %} t4s-current-cat{% endif %}">
+        <a class="collection_link hdt-text-{{ section.settings.content_size}} hdt-font-{{ section.settings.content_weight}}" href="{{ collection.url }}" {% if collection.current%}  aria-current="page" {% endif %} {{ style }}>{{ collection.title }}</a>
+      </div>
+    {%- endfor -%} 
+  {%- endif -%}
+{%- endcapture -%}
+{%- style -%}
+  #{{ section.id }} hdt-slider {
+    --slide-spacing: {{ space_item }}px;
+  } 
+  .hdt-box-top {
+    border-top: solid 1px rgb(var(--color-line-border));
+  }
+  .hdt-box-bottom {
+    border-bottom: solid 1px rgb(var(--color-line-border));
+  }
+  .hdt-box-top_bottom {
+    border-top: solid 1px rgb(var(--color-line-border));
+    border-bottom: solid 1px rgb(var(--color-line-border));
+  }
+{%- endstyle -%}
+
+{% liquid
+  #Section layout
+  assign sizes  = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+
+  case section.settings.section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative hdt-box-' | append: section.settings.box_border | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative hdt-box-' | append: section.settings.box_border | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative hdt-box-' | append: section.settings.box_border | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+%}
+<div id="{{ section.id }}" class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %} hdt-reveal="fade-in">
+  <div class="{{ child }}">
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+      {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center' }}
+    {%- endif -%}
+    <hdt-slider id="Slider-{{ section.id }}" class="hdt-top-collections-list hdt-slider hdt-slider-parent hdt-collections-divider-{{ section.settings.divider}} hdt-flex hdt-justify-{{ section.settings.list_position }} hdt-slide-spacing-{{ section.settings.space_items }} hdt-relative hdt-slides-auto" config='{ "id": "Slider-{{ section.id }}", "navUI": true, "dotUI": false }'>
+      <div class="hdt-slider__viewport hdt-relative">
+        <div class="hdt-slider__container hdt-justify-center">
+          {{ html_els }}
+        </div>
+      </div>
+      <div class="hdt-navigation hdt-position-default hdt-visible-always hdt-style-simple hdt-shape-default hdt-size-small hdt-hide-mobile-false" style="opacity: 0;">
+        <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+          <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+        </button>
+        <button aria-controls="Slider-{{ section.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+          <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </hdt-slider>
+    <div class="overlay"></div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.collections-list.name_simple",
+  "tag": "section",
+  "class": "hdt-section hdt-collections-list-simple",
+  "disabled_on": {
+    "groups": [
+      "*"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.all.general_options.label"
+    },
+    {
+      "type": "select",
+      "id": "souce_collection",
+      "options": [
+        {
+          "value": "all",
+          "label": "t:sections.collections-list.settings.souce_collection.all"
+        },
+        {
+          "value": "from_list",
+          "label": "t:sections.collections-list.settings.souce_collection.from_list"
+        },
+        {
+          "value": "from_menu",
+          "label": "t:sections.collections-list.settings.souce_collection.from_menu"
+        },
+        {
+          "value": "from_blocks",
+          "label": "t:sections.collections-list.settings.souce_collection.from_blocks"
+        }
+      ],
+      "label": "t:sections.collections-list.settings.souce_collection.label",
+      "default": "all"
+    },
+    {
+      "type": "select",
+      "id": "sort_collections",
+      "label": "t:sections.collections-list.settings.sort_collections.label",
+      "info": "t:sections.collections-list.settings.sort_collections.info",
+      "default": "alphabetical",
+      "options": [
+        {
+          "value": "products_high",
+          "label": "t:sections.collections-list.settings.sort_collections.options.products_high"
+        },
+        {
+          "value": "products_low",
+          "label": "t:sections.collections-list.settings.sort_collections.options.products_low"
+        },
+        {
+          "value": "alphabetical",
+          "label": "t:sections.collections-list.settings.sort_collections.options.alphabetical"
+        },
+        {
+          "value": "alphabetical_reversed",
+          "label": "t:sections.collections-list.settings.sort_collections.options.alphabetical_reversed"
+        },
+        {
+          "value": "date",
+          "label": "t:sections.collections-list.settings.sort_collections.options.date"
+        },
+        {
+          "value": "date_reversed",
+          "label": "t:sections.collections-list.settings.sort_collections.options.date_reversed"
+        }
+      ],
+      "visible_if": "{{ section.settings.souce_collection == 'all' }}"
+    },
+    {
+      "id": "collection_list",
+      "type": "collection_list", 
+      "label": "t:sections.collections-list.settings.collection_list"/*,
+      "visible_if": "{{ section.settings.souce_collection == 'from_list' }}"*/
+    },
+    {
+      "type": "link_list",
+      "id": "menu_collections",
+      "label": "t:sections.collections-list.settings.menu_collections",
+      "visible_if": "{{ section.settings.souce_collection == 'from_menu' }}"
+    },
+    {
+      "type": "select",
+      "id": "list_position",
+      "label": "t:sections.collections-list.settings.list_position.label",
+      "options": [
+        {
+          "value": "start",
+          "label": "t:sections.collections-list.settings.list_position.start"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.collections-list.settings.list_position.center"
+        },
+        {
+          "value": "end",
+          "label": "t:sections.collections-list.settings.list_position.end"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "checkbox",
+      "id": "divider",
+      "label": "t:sections.collections-list.settings.divider.label",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "content_size",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "options": [
+        {
+          "value": "xs",
+          "label": "t:settings_schema.typography.settings.font_size.xs"
+        },
+        {
+          "value": "sm",
+          "label": "t:settings_schema.typography.settings.font_size.sm"
+        },
+        {
+          "value": "base",
+          "label": "t:settings_schema.typography.settings.font_size.base"
+        },
+        {
+          "value": "lg",
+          "label": "t:settings_schema.typography.settings.font_size.lg"
+        },
+        {
+          "value": "xl",
+          "label": "t:settings_schema.typography.settings.font_size.xl"
+        },
+        {
+          "value": "2xl",
+          "label": "t:settings_schema.typography.settings.font_size.2xl"
+        },
+        {
+          "value": "4xl",
+          "label": "t:settings_schema.typography.settings.font_size.4xl"
+        },  
+        {
+          "value": "custom",
+          "label": "t:settings_schema.typography.settings.font_size.custom"
+        }
+      ],
+      "default": "base"
+    },
+    {
+      "type": "select",
+      "id": "content_weight",
+      "label": "t:settings_schema.typography.settings.font_weight.label",
+      "options": [
+        {
+          "value": "light",
+          "label": "t:settings_schema.typography.settings.font_weight.light"
+        },
+        {
+          "value": "normal",
+          "label": "t:settings_schema.typography.settings.font_weight.normal"
+        },
+        {
+          "value": "medium",
+          "label": "t:settings_schema.typography.settings.font_weight.medium"
+        },
+        {
+          "value": "semibold",
+          "label": "t:settings_schema.typography.settings.font_weight.semibold"
+        },
+        {
+          "value": "bold",
+          "label": "t:settings_schema.typography.settings.font_weight.bold"
+        },
+      ],
+      "default": "semibold"
+    },
+    {
+      "type": "select",
+      "id": "box_border",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.collections-list.settings.box_border.none"
+        },
+        {
+          "value": "top",
+          "label": "t:sections.collections-list.settings.box_border.top"
+        },
+        {
+          "value": "bottom",
+          "label": "t:sections.collections-list.settings.box_border.bottom"
+        },
+        {
+          "value": "top_bottom",
+          "label": "t:sections.collections-list.settings.box_border.top_bottom"
+        }
+      ],
+      "label": "t:sections.collections-list.settings.box_border.label",
+      "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "space_items",
+      "label": "t:sections.all.space_items.desktop",
+      "default": "x",
+      "options": [
+        {
+          "label": "t:sections.all.space_items.default",
+          "value": "x"
+        },
+        {
+          "label": "5px",
+          "value": "5"
+        },
+        {
+          "label": "10px",
+          "value": "10"
+        },
+        {
+          "label": "15px",
+          "value": "15"
+        },
+        {
+          "label": "20px",
+          "value": "20"
+        },
+        {
+          "label": "25px",
+          "value": "25"
+        },
+        {
+          "label": "30px",
+          "value": "30"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.text.custom_size_options.label",
+      "visible_if": "{{ section.settings.content_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_text_lg",
+      "min": 10,
+      "max": 70,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "default": 16,
+      "visible_if": "{{ section.settings.content_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_text",
+      "min": 10,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.mobile_font_size",
+      "default": 14,
+      "visible_if": "{{ section.settings.content_size == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing_text",
+      "min": -10,
+      "max": 10,
+      "step": 0.2,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.letter_spacing",
+      "default": 0,
+      "visible_if": "{{ section.settings.content_size == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0,
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "select",
+      "id": "section_layout",
+      "label": "t:sections.all.section_layout.width.label",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:sections.all.section_layout.width.container"
+        },
+        {
+          "value": "wrapper_container",
+          "label": "t:sections.all.section_layout.width.wrapper_container"
+        },
+        {
+          "value": "full_width",
+          "label": "t:sections.all.section_layout.width.full_width"
+        }
+      ],
+      "default": "container"
+    },
+    {
+      "type": "image_picker",
+      "id": "section_background",
+      "label": "t:sections.all.background.image"
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "blocks": [
+    {
+      "type": "collection_item",
+      "name": "t:sections.collections-list.blocks.collection_item",
+      "settings": [
+        {
+          "id": "collection",
+          "type": "collection",
+          "label": "t:sections.collections-list.blocks.collection"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.collections-list.blocks.title",
+          "info": "t:sections.collections-list.blocks.title_info",
+          "default": "Collection name"
+        },
+        {
+          "type": "url",
+          "id": "collection_link",
+          "label": "t:sections.collections-list.blocks.link",
+          "info": "t:sections.collections-list.blocks.link_info"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.collections-list.name_simple",
+      "category": "t:sections_categories.03_collections.name",
+      "blocks": [
+        {
+          "type": "collection_item"
+        },
+        {
+          "type": "collection_item"
+        },
+        {
+          "type": "collection_item"
+        },
+        {
+          "type": "collection_item"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

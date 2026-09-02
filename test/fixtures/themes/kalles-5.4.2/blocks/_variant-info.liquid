@@ -1,0 +1,207 @@
+{%-
+  liquid
+  unless product
+    assign product = section.settings.product
+  endunless
+  assign selected_variant = product.selected_or_first_available_variant
+  assign product_form_id = 'product-form-' | append: section.id | append: product.id
+  if block.settings.show_first_media
+    assign image = product.featured_media.preview_image
+  else
+    assign image = selected_variant.featured_image | default: product.featured_image
+  endif
+  assign un_no_pick = true
+  if settings.pick_mode == 'no' and product.variants.size > 1
+    assign selected_variant = product.selected_variant
+    unless selected_variant
+      assign un_no_pick = false
+    endunless
+  endif
+-%}
+<div class="hdt-product-info__item hdt-quick-add-infos hdt-flex hdt-align-center" data-type="{{ block.type }}" {{ block.shopify_attributes }}>
+  {%- if block.settings.show_media and image != blank -%}
+    <hdt-variant-preview-img form="{{ product_form_id }}" class="hdt-quick-add-pr-img">
+      {{ image | image_url: width: 160 | image_tag: sizes: '(max-width: 767px) 60px, 80px', widths: '60,80,120,160' }}
+    </hdt-variant-preview-img>
+  {%- endif -%}
+  <div class="hdt-quick-add-info hdt-flex hdt-flex-col">
+    {%- if block.settings.heading_size == "h_custom" -%}
+      {%- style -%}
+        #block-{{ block.id }} {
+          --heading-fs-lg: {{ block.settings.font_size_heading_lg }}px; --heading-fs-mb: {{ block.settings.font_size_heading }}px; --heading-ls: {{ block.settings.letter_spacing_heading }}px; 
+        }
+      {%- endstyle -%}
+    {%- endif -%}
+    <div id="block-{{ block.id }}" class="hdt-product__title" {{ block.shopify_attributes }} style="text-transform: {{ block.settings.txt_tr_pr }}">
+      <a href="{{ product.url }}" class="hdt-inline-block hdt-s-text">
+        <{{ block.settings.tag }} class="hdt-{{ block.settings.heading_size }}">{{ product.title | escape }}</{{ block.settings.tag }}>
+      </a>
+    </div>
+    <div class="hdt-product__price">
+      {%- render 'price', product: product, use_variant: true, form_id: product_form_id, show_badges: true, only_show_sale: true, show_volume_note: false, un_no_pick: un_no_pick -%}
+    </div>
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Variant info",
+    "tag":null,
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_media",
+        "label": "Show media",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "show_first_media",
+        "label": "Show first media",
+        "default": false,
+        "visible_if": "{{ block.settings.show_media }}"
+      },
+      {
+        "type": "select",
+        "id": "txt_tr_pr",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__0.label"
+          },
+          {
+            "value": "lowercase",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__1.label"
+          },
+          {
+            "value": "capitalize",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__2.label"
+          },
+          {
+            "value": "uppercase",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__3.label"
+          }
+        ],
+        "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.label"
+      },
+      {
+        "type": "select",
+        "id": "tag",
+        "label": "HTML tag",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          },
+          {
+            "value": "h4",
+            "label": "H4"
+          },
+          {
+            "value": "h5",
+            "label": "H5"
+          },
+          {
+            "value": "h6",
+            "label": "H6"
+          },
+          {
+            "value": "div",
+            "label": "div"
+          }
+        ],
+        "default": "h2"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:settings_schema.heading.settings.label",
+        "options": [
+          {
+            "value": "h6",
+            "label": "t:settings_schema.heading.settings.h6_size"
+          },
+          {
+            "value": "h5",
+            "label": "t:settings_schema.heading.settings.h5_size"
+          },
+          {
+            "value": "h4",
+            "label": "t:settings_schema.heading.settings.h4_size"
+          },
+          {
+            "value": "h3",
+            "label": "t:settings_schema.heading.settings.h3_size"
+          },
+          {
+            "value": "h2",
+            "label": "t:settings_schema.heading.settings.h2_size"
+          },
+          {
+            "value": "h1",
+            "label": "t:settings_schema.heading.settings.h1_size"
+          },
+          {
+            "value": "h0",
+            "label": "t:settings_schema.heading.settings.h0_size"
+          },
+          {
+            "value": "h_custom",
+            "label": "t:settings_schema.typography.settings.font_size.custom"
+          }
+        ],
+        "default": "h2"
+      },
+      {
+        "type": "header",
+        "content": "t:blocks.text.custom_size_options.label",
+        "visible_if": "{{ block.settings.heading_size == 'custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "font_size_heading_lg",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:settings_schema.typography.settings.font_size.label",
+        "default": 50,
+        "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "font_size_heading",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:settings_schema.typography.settings.font_size.mobile_font_size",
+        "default": 24,
+        "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "letter_spacing_heading",
+        "min": -10,
+        "max": 10,
+        "step": 0.2,
+        "label": "t:settings_schema.typography.settings.letter_spacing",
+        "default": 0,
+        "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Variant info",
+      }
+    ]
+  }
+{% endschema %}

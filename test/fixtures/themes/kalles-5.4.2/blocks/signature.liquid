@@ -1,0 +1,66 @@
+{%- liquid
+  assign content_alignment = block.settings.content_alignment
+  if content_alignment == "center"
+    assign content_alignment = "center"
+  elsif content_alignment == "left"
+    assign content_alignment = "start"
+  elsif content_alignment == "right"
+    assign content_alignment = "end"
+  endif
+-%}
+<div class="hdt-signature-block hdt-flex hdt-align-{{ content_alignment }} hdt-flex-col">
+  {% content_for "blocks" %}
+  {% if block.settings.signature_image != blank %}
+    <div class="hdt-signature-image">
+      {{ block.settings.signature_image | image_url: width: block.settings.signature_image.width | image_tag: width: block.settings.signature_image.width, widths: '20,30,40,50,60,70,80,90,100,120,140,160,180,200,220,240,260,280,300' }}
+    </div>
+  {% else %}
+    <div class="hdt-signature-image">
+      <img class="" width="150" height="auto" src="{{ "signature.png" | asset_url }}" alt="" loading="lazy">    
+    </div>
+  {% endif %}
+ 
+</div>
+{% schema %}
+  {
+    "name": "Signature",
+    "class": "hdt-signature-block-container",
+    "settings": [
+      {
+        "type": "text_alignment",
+        "id": "content_alignment",
+        "label": "Content alignment",
+        "default": "center"
+      },
+      {
+        "type": "image_picker",
+        "id": "signature_image",
+        "label": "Signature"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "text"
+      },
+      {
+        "type": "spacer"
+      },
+      {
+        "type": "button"
+      },
+      {
+        "type": "text_custom"
+      },
+      {
+        "type": "button_custom"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Your signature",
+        "settings": {
+        }
+      }
+    ]
+  }
+{% endschema %}

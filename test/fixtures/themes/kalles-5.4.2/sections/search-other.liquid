@@ -1,0 +1,47 @@
+{%- comment -%}
+/search?q=*&type=article&view=other
+/search?q=*&type=page&view=other
+/search?q=*&type=article&section_id=search-other
+/search?q=*&type=page&section_id=search-other
+https://woodmart.xtemos.com/?s=red&post_type=product&product_cat=0
+https://shopify.dev/docs/api/liquid/objects/search
+https://shopify.dev/docs/themes/navigation-search/search#search-url-structure
+{%- endcomment -%}
+
+{%- comment -%} 1. ARTICLE RESULTS {%- endcomment -%}
+{%- if search.types contains 'article' -%}
+  <div main-content id="results-search-article">
+    {%- if search.results_count == 0 -%}
+      {%- comment -%} no found {%- endcomment -%}
+    {%- else -%}
+      {%- paginate search.results by 20 -%}
+          {%- for item in search.results -%}
+            {{ item.title }}<br>
+          {%- endfor -%}
+          {%- if paginate.pages > 1 -%}
+            {%- if paginate.next.is_link %}<a href="{{ paginate.next.url }}&view=other" class="hdt-show-all hdt-hidden">Show all blog post results</a>{% endif -%}
+            {%- render 'pagination', paginate: paginate, anchor: '', section_id: section.id -%}
+          {%- endif -%}
+        {%- endpaginate -%}
+      {%- endif -%}
+  </div>
+{%- else -%}
+{%- comment -%} 2. PAGE RESULTS {%- endcomment -%}
+  <div main-content id="results-search-page">
+    {%- if search.results_count == 0 -%}
+      {%- comment -%} no found {%- endcomment -%}
+    {%- else -%}
+      {%- paginate search.results by 25 -%}
+        <ul class="hdt-results-page-list">
+          {%- for item in search.results -%}
+            <li class="hdt-results-page-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
+          {%- endfor -%}
+        </ul>
+        {%- if paginate.pages > 1 -%}
+          {%- if paginate.next.is_link %}<a href="{{ paginate.next.url }}&view=other" class="hdt-show-all hdt-hidden">Show all page results</a>{% endif -%}
+          {%- render 'pagination', paginate: paginate, anchor: '', section_id: section.id -%}
+        {%- endif -%}
+      {%- endpaginate -%}
+    {%- endif -%}
+  </div>
+{%- endif -%}

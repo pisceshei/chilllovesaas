@@ -1,0 +1,118 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main_heading_zHKQUU": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_zak73V": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page_title }}",
+            "line_height": "hdt-lh-1",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": true,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_zak73V"
+      ],
+      "settings": {
+        "use_dynamic_source": false,
+        "image": "shopify://shop_images/shopping-cart-head.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 54,
+        "space_item": 0,
+        "pd": "50px,,50px,",
+        "pd_mb": "50px,,50px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "main-cart": {
+      "type": "main-cart",
+      "blocks": {
+        "subtotal_zWXrDK": {
+          "type": "subtotal",
+          "settings": {}
+        },
+        "tax_WBJRLG": {
+          "type": "tax",
+          "settings": {}
+        },
+        "agree_x98Xcr": {
+          "type": "agree",
+          "settings": {
+            "content": "I agree with the terms and conditions"
+          }
+        },
+        "btn_checkout_mF3EDB": {
+          "type": "btn_checkout",
+          "settings": {
+            "btn_style": "hdt-btn-accent",
+            "icon": "none",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "accelerated_btns_gxxE7x": {
+          "type": "accelerated_btns",
+          "settings": {}
+        },
+        "img_trust_fbdPTB": {
+          "type": "img_trust",
+          "settings": {
+            "wimg": 350,
+            "svg": "visa,paypal,master,american_express,amazon",
+            "height": 25
+          }
+        },
+        "payment_terms_K7tERW": {
+          "type": "payment-terms",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "subtotal_zWXrDK",
+        "tax_WBJRLG",
+        "agree_x98Xcr",
+        "btn_checkout_mF3EDB",
+        "accelerated_btns_gxxE7x",
+        "img_trust_fbdPTB",
+        "payment_terms_K7tERW"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "show_cart_note": true,
+        "show_free_shipping_bar": true,
+        "show_gift": true,
+        "show_estimate": true,
+        "show_cart_discount": true,
+        "pd": "70px,,50px,",
+        "pd_mb": "70px,,50px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    }
+  },
+  "order": [
+    "main_heading_zHKQUU",
+    "main-cart"
+  ]
+}

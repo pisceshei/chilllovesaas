@@ -1,0 +1,33 @@
+{%- if block.settings.page_delivery != blank -%}
+  <button class="hdt-pr-popup__delivery hdt-s-text hdt-text-base hdt-font-semibold" aria-controls="modal-delivery-{{ block.id }}">{{ 'products.product.delivery_return' | t }}</button>
+  <hdt-modal class="hdt-modal hdt-modal__delivery hdt-product__modal hdt-contents" color-scheme="{{ settings.color_scheme_dialog }}">
+    <dialog id="modal-delivery-{{ block.id }}" class="hdt-dialog hdt-dialog-modal" scroll-lock>
+      <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="modal-delivery-{{ block.id }}" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+      {% comment %} <div class="hdt-dialog-modal__header">
+        <h3 class="hdt-product__modal-title">{{ block.settings.page_delivery.title }}</h3>
+      </div> {% endcomment %}
+      <div class="hdt-dialog-modal__inner hdt-current-scrollbar">
+        <div class="hdt-rte">{{ block.settings.page_delivery.content }}</div>
+      </div>
+  </dialog>
+  </hdt-modal>
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.extra_link.settings.header_delivery_return.content",
+  "tag": null,
+  "settings": [
+    {
+      "type": "page",
+      "id": "page_delivery",
+      "label": "t:sections.main-product.blocks.extra_link.settings.page_delivery.label",
+      "info": "t:sections.main-product.blocks.extra_link.settings.page_delivery.info"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main-product.blocks.extra_link.settings.header_delivery_return.content"
+    }
+  ]
+}
+{% endschema %}

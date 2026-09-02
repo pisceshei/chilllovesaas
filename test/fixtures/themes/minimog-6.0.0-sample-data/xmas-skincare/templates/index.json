@@ -1,0 +1,550 @@
+{
+  "sections": {
+    "image_with_text_2_bQqxbp": {
+      "type": "image-with-text-2",
+      "custom_css": [
+        ".m-hero__content {display: grid; max-width: 800px;}",
+        ".m-hero__title {order: -1;}",
+        ".m-hero__subtitle {margin-bottom: 20px;}",
+        ".m-hero__text.rte {font-size: 20px; font-weight: var(--font-weight-header); margin-bottom: 40px;}",
+        ".m-hero__title {line-height: 1.05; margin-bottom: 40px;}",
+        "@media only screen and (min-width: 1280px) {.m-hero__title {font-size: calc( ((var(--font-h1-desktop)) / (var(--font-base-size))) * 1rem ); } .m-hero__text.rte {font-size: 24px; }}"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "image": "",
+        "image_link": "",
+        "parallax": false,
+        "parallax_direction": "vertical",
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "medium",
+        "text_color": "white",
+        "title": "HOLIDAY PRESENTS",
+        "subtitle": "CHRISTMAS EVENT",
+        "text": "<p>FROM 10.12 TO 30.12</p>",
+        "button_label": "grab the deals",
+        "button_link": "",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "mb_image": "",
+        "use_content_above": true,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "icon_box_mENMdW": {
+      "type": "icon-box",
+      "blocks": {
+        "iconbox_f8jwiT": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "scheme-cee058e4-58e3-46aa-9af9-219dadc79066",
+            "image": "",
+            "image_by_url": "",
+            "title": "BUY ONE GET TWO",
+            "description": "<p>Our universally agreed, most-loved products</p>",
+            "link": "",
+            "button_label": "Shop now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "iconbox_D9kM9w": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "scheme-cee058e4-58e3-46aa-9af9-219dadc79066",
+            "image": "",
+            "image_by_url": "",
+            "title": "30% OFF LIPSTICK",
+            "description": "<p>Our universally agreed, most-loved products</p>",
+            "link": "",
+            "button_label": "Shop now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "iconbox_j8WXgk": {
+          "type": "iconbox",
+          "settings": {
+            "card_color_scheme": "scheme-cee058e4-58e3-46aa-9af9-219dadc79066",
+            "image": "",
+            "image_by_url": "",
+            "title": "PERSONAL GIFT BOX",
+            "description": "<p>Our universally agreed, most-loved products</p>",
+            "link": "",
+            "button_label": "Shop now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_f8jwiT",
+        "iconbox_D9kM9w",
+        "iconbox_j8WXgk"
+      ],
+      "custom_css": [
+        ".m-icon-box__inner {padding: 20px 20px 40px;}",
+        ".m-icon-box__heading {margin-bottom: 12px;}",
+        ".m-icon-box .m-button {margin-top: 24px;}",
+        ".m-icon-box-section__wrapper {--row-gap-mobile: 24px;}",
+        ".m-hover-box__wrapper {border-radius: var(--blocks-radius);}"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "heading": "CHRISTMAS DEALS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Sale up to 50% all items",
+        "header_alignment": "center",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "center",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "featured_collection_a6FCPj": {
+      "type": "featured-collection",
+      "custom_css": [
+
+      ],
+      "settings": {
+        "heading": "TOP RATED GIFTS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Sale up to 50% all items",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "collection": "",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "1",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 12,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "product_bundles_TMKWmA": {
+      "type": "product-bundles",
+      "blocks": {
+        "product_bYpA3i": {
+          "type": "product",
+          "settings": {
+            "product": "",
+            "top": 70,
+            "left": 15
+          }
+        },
+        "product_rtRKxF": {
+          "type": "product",
+          "settings": {
+            "product": "",
+            "top": 74,
+            "left": 64
+          }
+        },
+        "product_7LBEf7": {
+          "type": "product",
+          "settings": {
+            "product": "",
+            "top": 56,
+            "left": 29
+          }
+        }
+      },
+      "block_order": [
+        "product_bYpA3i",
+        "product_rtRKxF",
+        "product_7LBEf7"
+      ],
+      "custom_css": [
+        ".container-full {padding-inline: 0; --column-gap: 0; --blocks-radius: 0;}",
+        ".m-section__header {--m-section-header-spacing-bottom: 24px;}",
+        ".m-product-bundles__col-left {padding: 0 24px;}",
+        ".m-product-bundles .m\\:text-center + .product-bundles {max-width: 470px; margin-inline: auto; display: block;}",
+        "@media (min-width: 1024px) {.container-full {padding: 0; } .m-product-bundles__col-left {padding: 24px 48px; }}"
+      ],
+      "settings": {
+        "container": "container-full",
+        "color_scheme": "scheme-cee058e4-58e3-46aa-9af9-219dadc79066",
+        "layout": "1",
+        "heading": "SHOP BUNDLE",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Saving $10 per product in bundle",
+        "header_alignment": "center",
+        "image": "",
+        "image_position": "left",
+        "image_ratio": "original",
+        "show_reviews": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "scrolling_promotion_QEhjLY": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "image_GUGLKk": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "image_height": 30,
+            "image_link": ""
+          }
+        },
+        "announcement_LyNRhC": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "GRAB THE DEALS",
+            "text_size": 40,
+            "text_link": ""
+          }
+        },
+        "image_ahP9VN": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "image_height": 30,
+            "image_link": ""
+          }
+        },
+        "announcement_YXHJY8": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "BUNDLE SALE",
+            "text_size": 40,
+            "text_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "image_GUGLKk",
+        "announcement_LyNRhC",
+        "image_ahP9VN",
+        "announcement_YXHJY8"
+      ],
+      "custom_css": [
+        ".m-promotion__text {font-weight: var(--font-weight-header);}",
+        ".m-scrolling-promotion-section {border-bottom: 1px solid rgb(var(--color-border));}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 30,
+        "item_gap": 30,
+        "item_gap_mobile": 20,
+        "color_scheme": "",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "custom_class": ""
+      }
+    },
+    "custom_content_KrFzGj": {
+      "type": "custom-content",
+      "blocks": {
+        "image_card_7J7dRW": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "image": "",
+            "link": "",
+            "title": "HOLIDAY",
+            "subtitle": "ONLINE ORDER",
+            "description": "<p>Sale up to 50% all items</p>",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_k8TKtm": {
+          "type": "image_card",
+          "settings": {
+            "width": "66%",
+            "color_scheme": "dark",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "image": "",
+            "mobile_image": "",
+            "link": "",
+            "title": "EXTRA SALE",
+            "subtitle": "X-MAS PROMOTION",
+            "description": "<p>Buy one cleanser and get another one 50% off *Runs until 12/12/24, while supplies last</p>",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_card_7J7dRW",
+        "image_card_k8TKtm"
+      ],
+      "custom_css": [
+        ".m-custom-content__container {--row-gap-mobile: 24px;}",
+        ".m-image-card__content {padding: 25px 24px;}",
+        ".m-image-card__content-inner {max-width: 423px;}",
+        "@media (min-width: 1240px) {.m-image-card__content {padding: 30px 24px 48px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "featured_collection_yjAGpW": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "THE LAST CHANCE",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Sale up to 50% all items",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "collection": "",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "1",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 12,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "image_with_text_2_44rnzx": {
+      "type": "image-with-text-2",
+      "custom_css": [
+
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "container",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "image": "",
+        "image_link": "",
+        "parallax": false,
+        "parallax_direction": "vertical",
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "medium",
+        "text_color": "white",
+        "title": "HOLIDAY CAMPAIGN",
+        "subtitle": "CHRISTMAS EVENT",
+        "text": "",
+        "button_label": "SHOP NOW",
+        "button_link": "",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "mb_image": "",
+        "use_content_above": true,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "collection_list_waAk3i": {
+      "type": "collection-list",
+      "blocks": {
+        "collection_block_9bRNJj": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Skincare Basic Set",
+            "item_image": ""
+          }
+        },
+        "collection_block_NPVxNy": {
+          "type": "collection_block",
+          "settings": {
+            "collection": "",
+            "title": "Skincare Advance Set",
+            "item_image": ""
+          }
+        }
+      },
+      "block_order": [
+        "collection_block_9bRNJj",
+        "collection_block_NPVxNy"
+      ],
+      "custom_css": [
+        ".m-collection-card__link {font-size: calc(((var(--font-h6-desktop)) / (var(--font-base-size))) * 1rem); font-weight: var(--font-weight-header); margin-bottom: 0;}",
+        ".m-collection-card__info {margin-top: 20px;}",
+        "@media screen and (min-width: 1280px) {.m-collection-list--left-side .m-section__header {width: 33%; } .m-collection-list--left-side .m-collection-list__content {width: 67%; }}",
+        "@media screen and (max-width: 767px) {.m-mixed-layout--mobile-grid {--grid-columns-mobile: 1; --row-gap-mobile: 24px; }}"
+      ],
+      "settings": {
+        "heading": "FIND YOUR ROUTINE",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Your one-stop shop for tips, product launches, customer review highlights and more.",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "left-side",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-up",
+        "show_product_count": false,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 2,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": false,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "newsletter_Qepdr9": {
+      "type": "newsletter",
+      "custom_css": [
+        ".m-newsletter-form__button {background-color: rgb(var(--color-button)); border-color: rgb(var(--color-button)); color: rgb(var(--color-button-text)); border: var(--inputs-radius); border-top-left-radius: var(--inputs-radius); border-bottom-left-radius: var(--inputs-radius);}",
+        ".m-newsletter-section__header {max-width: 440px; margin: 0 auto 24px;}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "scheme-cee058e4-58e3-46aa-9af9-219dadc79066",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "JUST FOR YOU",
+        "description": "<p>Sign up and be the first to know about discounts, tips and everything</p>",
+        "text_size": "h3",
+        "email_placeholder": "Enter your email",
+        "submit_button": "Submit",
+        "text_color": "inherit",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "input-vertical-mb",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "image_with_text_2_bQqxbp",
+    "icon_box_mENMdW",
+    "featured_collection_a6FCPj",
+    "product_bundles_TMKWmA",
+    "scrolling_promotion_QEhjLY",
+    "custom_content_KrFzGj",
+    "featured_collection_yjAGpW",
+    "image_with_text_2_44rnzx",
+    "collection_list_waAk3i",
+    "newsletter_Qepdr9"
+  ]
+}

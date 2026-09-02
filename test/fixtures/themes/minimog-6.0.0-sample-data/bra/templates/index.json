@@ -1,0 +1,418 @@
+{
+  "sections": {
+    "1619592854a0f308da": {
+      "type": "slider",
+      "blocks": {
+        "1619592854a0f308da-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "<span class=\"font-semibold\">SS21 - EDITORIAL<\/span>",
+            "title": "Exceptionally <br>\nfitting bras.",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "<span class=\"font-medium border-b-2\">Pima Cotton Plunge Bra<\/span>   - $50.00",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "ad227bd8-62f2-4c12-bc64-eeacc448b0b4": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "<span class=\"font-semibold\">SS21 - COLLECTION<\/span>",
+            "title": "Adorn your<br>\nInner World",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "<span class=\"font-medium border-b-2\">Pima Cotton Plunge Bra<\/span>   - $50.00",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "dc639b8d-e661-4919-9679-7b06f207189c": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "<span class=\"font-semibold\">NEW ARRIVALS<\/span>",
+            "title": "The Joy of<br>\nBest Comfort",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "<span class=\"font-medium border-b-2\">Pima Cotton Plunge Bra<\/span>   - $50.00",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1619592854a0f308da-0",
+        "ad227bd8-62f2-4c12-bc64-eeacc448b0b4",
+        "dc639b8d-e661-4919-9679-7b06f207189c"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-custom-slideshow m-full-button",
+        "animations": "inherit"
+      }
+    },
+    "16195935890ca20fe4": {
+      "type": "icon-box",
+      "blocks": {
+        "16195935890ca20fe4-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Fullcup Style",
+            "description": "<p>A second-skin fit with smooth cups designed <br\/>to eliminate bra lines.<\/p>",
+            "link": "shopify:\/\/collections\/bra",
+            "button_label": "",
+            "button_link": "shopify:\/\/collections\/best-sellers-bra",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16195935890ca20fe4-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Bralets Bra",
+            "description": "<p>Wearing a bra that fits just right can be a life-changing experience. <\/p>",
+            "link": "shopify:\/\/collections\/bra",
+            "button_label": "",
+            "button_link": "shopify:\/\/collections\/bra",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16195935890ca20fe4-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Strapless",
+            "description": "<p>Our bras are designed to meet your expectations for comfort and performance.<\/p>",
+            "link": "shopify:\/\/collections\/best-sellers-bra",
+            "button_label": "",
+            "button_link": "shopify:\/\/collections",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "16195935890ca20fe4-0",
+        "16195935890ca20fe4-1",
+        "16195935890ca20fe4-2"
+      ],
+      "settings": {
+        "heading": "The Bra Style Guide",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "scheme-45842c86-b42e-4ca5-93e7-bd70b3e95695",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 16,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "center",
+        "hover_effect": "scaling-down",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-section-promotion",
+        "animations": "inherit"
+      }
+    },
+    "1619602504e31ad664": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 140,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "<span class=\"leading-tight\">What’s in our<br> special sauce?<\/span>",
+        "sub_title": "TRENDING",
+        "text": "<p>We know that confidence comes easily when you look and feel your best. Our large assortment of supportive bras features soft fabrics, stay-put straps, pinch-free bands, and so much more to make it easy to forget you’re wearing a bra at all.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "LEARN MORE",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16195941175c9ee0f8": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Our Best Sellers",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 12,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "1\/1",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "16195963538598b526": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "left middle",
+        "text_alignment": "center",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "Organic Undies<br>\nFor Everyday.",
+        "subtitle": "PROMOTION",
+        "text": "",
+        "button_label": "LEARN MORE",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1619596699bc9dd2dd": {
+      "type": "icon-box",
+      "blocks": {
+        "1619596699bc9dd2dd-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Perfect Fit Promise",
+            "description": "<p>We stand behind our products.<br\/>If you don't love it, exchanges.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1619596699bc9dd2dd-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Premium Details",
+            "description": "<p>Thoughtful designs for support <br\/>that puts your comfort first.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1619596699bc9dd2dd-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Over 80 Bra Sizes",
+            "description": "<p>Created with measurements of <br\/>millions of women.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "6ff0f1e8-dcdb-46d7-951d-2a1fa0be8e8f": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Support Woman",
+            "description": "<p>Over $18 million worth of bras <br\/>donated to women in need.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1619596699bc9dd2dd-0",
+        "1619596699bc9dd2dd-1",
+        "1619596699bc9dd2dd-2",
+        "6ff0f1e8-dcdb-46d7-951d-2a1fa0be8e8f"
+      ],
+      "settings": {
+        "heading": "Designed for Your Comfort",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "68px",
+        "content_alignment": "center",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-promotion-1",
+        "animations": "inherit"
+      }
+    },
+    "1619597089f20227b9": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "From The Blog",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 16,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-center",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "READ MORE",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-blog-post",
+        "animations": "inherit"
+      }
+    },
+    "1619597171b0441fa0": {
+      "type": "instagram",
+      "settings": {
+        "heading": "Instagram",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 10,
+        "mobile_gap": 10,
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 10,
+        "custom_class": ""
+      }
+    }
+  },
+  "order": [
+    "1619592854a0f308da",
+    "16195935890ca20fe4",
+    "1619602504e31ad664",
+    "16195941175c9ee0f8",
+    "16195963538598b526",
+    "1619596699bc9dd2dd",
+    "1619597089f20227b9",
+    "1619597171b0441fa0"
+  ]
+}

@@ -1,0 +1,60 @@
+<!-- blocks/_heading_brc.liquid -->
+{%- liquid 
+  capture heading_title
+    case request.page_type
+      when 'page'
+        echo page.title | default: page_title | escape
+      when 'customers/login'
+        echo 'customer.account.login' | t
+      when 'customers/register'
+        echo 'customer.account.register' | t
+      when 'customers/activate_account'
+        echo 'customer.activate_account.title' | t
+      when 'customers/reset_password'
+        echo 'customer.reset_password.title' | t
+      when 'customers/order'
+        echo 'customer.order.title' | t: name: order.name
+      when 'customers/addresses'
+        echo 'customer.addresses.title' | t
+      when 'customers/account'
+        echo 'customer.account.title' | t
+      when 'collection'
+        echo collection.title | escape
+      when 'blog'
+        echo blog.title | escape
+      when 'search'
+        if template == 'search.compare'
+          echo 'compare_page.title' | t
+        elsif template == 'search.wishlist'
+          echo 'general.wishlist.wishlist_page' | t
+        endif
+      else
+        echo page.title | escape
+    endcase
+  endcapture -%}
+<nav hdt-reveal="slide-in" class="hdt-breadcrumb" role="navigation" aria-label="breadcrumbs">
+  <ul class="hdt-text-base hdt-font-normal hdt-breadcrumb-list">
+    <li class="hdt-breadcrumb-item hdt-inline-block hdt-s-text">
+      <a href="{{ routes.root_url }}">{{ 'general.breadcrumb.home' | t }}</a>
+      <svg xmlns="http://www.w3.org/2000/svg" width="5" height="8" viewBox="0 0 5 8" class="hdt-s-text hdt-inline-block" fill="currentColor">
+        <path d="M0.886718 3.49691e-07L4.88672 4L0.886719 8L0.176719 7.29L3.46672 4L0.176719 0.71L0.886718 3.49691e-07Z"/>
+      </svg>
+    </li>
+    <li class="hdt-breadcrumb-item hdt-inline-block hdt-s-text">
+      {{ heading_title }}
+    </li>
+  </ul>
+</nav>
+{% schema %}
+  {
+    "name": "t:sections.heading-page.blocks.breadcrumb.label",
+    "tag": null,
+    "settings": [
+    ],
+    "presets": [
+      {
+        "name": "t:sections.heading-page.blocks.breadcrumb.label"
+      }
+    ]
+  }
+{% endschema %}

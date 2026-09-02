@@ -1,0 +1,171 @@
+
+<!-- accordion-item.liquid -->
+{% liquid
+  unless product
+    assign product = section.settings.product
+  endunless
+  if block.settings.title == blank or block.settings.content == blank and block.settings.page.content == blank
+    continue
+  endif
+%}
+<hdt-accordion class="hdt-content" {{ block.shopify_attributes }}>
+  <details class="hdt-accordion-item" is_open itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+    {%- if block.settings.title != blank -%}
+      <summary class="hdt-flex hdt-text-base hdt-font-medium hdt-justify-between hdt-font-medium" aria-expanded="false" >      
+        <span class="hdt-flex hdt-align-center hdt-accordion-title">
+          {% if block.settings.icon != 'none' %}<span class="hdt-accor-icon">{%- render 'icon_accordion', icon: block.settings.icon -%} </span>{% endif %}
+          <span itemprop="name">{{ block.settings.title }}</span>
+        </span>
+        <span class="hdt-accordion-icon hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center">
+          <svg class="hdt-icon-plus" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M12 6.85714H6.85714V12H5.14286V6.85714H0V5.14286H5.14286V0H6.85714V5.14286H12V6.85714Z" fill="currentColor"/>
+          </svg>
+          <svg class="hdt-icon-minus hdt-absolute hdt-top-0 hdt-left-0 hdt-right-0 hdt-bottom-0" width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="12" height="2" fill="currentColor"/>
+          </svg>
+        </span>
+      </summary>
+    {%- endif -%}
+    {%- unless block.settings.title == blank or block.settings.content == blank and block.settings.page.content == blank -%}
+      <div id="{{ block.id }}-item" class="hdt-accordion-content hdt-text-base hdt-font-normal hdt-rte" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+        <div itemprop="text">
+          <div class="hdt-rte">{{ block.settings.content }}</div>
+          {{ block.settings.page.content }}
+        </div>
+      </div>
+    {%- endunless -%}
+  </details>
+</hdt-accordion>
+{% schema %}
+  {
+    "name": "t:blocks.html.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "select",
+        "id": "icon",
+        "label": "t:sections.accordion.settings.accordion_icon",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:none"
+          },
+          {
+            "value": "box",
+            "label": "t:blocks.icon.options.box"
+          },
+          {
+            "value": "chat_bubble",
+            "label": "t:blocks.icon.options.chat_bubble"
+          },
+          {
+            "value": "check_mark",
+            "label": "t:blocks.icon.options.check_mark"
+          },
+          {
+            "value": "dryer",
+            "label": "t:blocks.icon.options.dryer"
+          },
+          {
+            "value": "eye",
+            "label": "t:blocks.icon.options.eye"
+          },
+          {
+            "value": "heart",
+            "label": "t:blocks.icon.options.heart"
+          },
+          {
+            "value": "iron",
+            "label": "t:blocks.icon.options.iron"
+          },
+          {
+            "value": "leaf",
+            "label": "t:blocks.icon.options.leaf"
+          },
+          {
+            "value": "leather",
+            "label": "t:blocks.icon.options.leather"
+          },
+          {
+            "value": "lock",
+            "label": "t:blocks.icon.options.lock"
+          },
+          {
+            "value": "map_pin",
+            "label": "t:blocks.icon.options.map_pin"
+          },
+          {
+            "value": "pants",
+            "label": "t:blocks.icon.options.pants"
+          },
+          {
+            "value": "plane",
+            "label": "t:blocks.icon.options.plane"
+          },
+          {
+            "value": "price_tag",
+            "label": "t:blocks.icon.options.price_tag"
+          },
+          {
+            "value": "question_mark",
+            "label": "t:blocks.icon.options.question_mark"
+          },
+          {
+            "value": "return",
+            "label": "t:blocks.icon.options.return"
+          },
+          {
+            "value": "ruler",
+            "label": "t:blocks.icon.options.ruler"
+          },
+          {
+            "value": "shirt",
+            "label": "t:blocks.icon.options.shirt"
+          },
+          {
+            "value": "shoe",
+            "label": "t:blocks.icon.options.shoe"
+          },
+          {
+            "value": "silhouette",
+            "label": "t:blocks.icon.options.silhouette"
+          },
+          {
+            "value": "star",
+            "label": "t:blocks.icon.options.star"
+          },
+          {
+            "value": "truck",
+            "label": "t:blocks.icon.options.truck"
+          },
+          {
+            "value": "washing",
+            "label": "t:blocks.icon.options.washing"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:sections.accordion.blocks.accordion_item.title",
+        "default": "Accordion title"
+      },
+      {
+        "type": "richtext",
+        "id": "content",
+        "label": "t:sections.main-product-tabs.blocks.tab_htmls.settings.content.label"
+      },
+      {
+        "type": "page",
+        "id": "page",
+        "label": "t:blocks.html.settings.page"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.html.name"
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,69 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "message": "Free shipping for all orders from $60+",
+        "message_link": "",
+        "show_divider": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "2548212d-1f7e-4c3e-9c8d-34f664f7fda4": {
+          "type": "topbar",
+          "settings": {
+            "show_divider": true,
+            "show_phone_numb": true,
+            "show_email": true,
+            "show_social_links": false,
+            "show_stores_page": true,
+            "show_currency_switcher": true,
+            "show_country_selector": false,
+            "show_language_switcher": true,
+            "alert_message": "<p><span style=\"color:#666; letter-spacing: 1px;\">Summer sale discount off<\/span><span style=\"color: #DA3F3F\n;\"> 50%<\/span> | Shop Now !<\/p>"
+          }
+        }
+      },
+      "block_order": [
+        "2548212d-1f7e-4c3e-9c8d-34f664f7fda4"
+      ],
+      "settings": {
+        "header_design": "both-center",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "MINIMOG",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 165,
+        "sticky_logo_max_width": 160,
+        "mobile_logo_max_width": 105,
+        "main_menu": "main-menu-2",
+        "secondary_menu": "main-menu-3",
+        "mobile_menu": "",
+        "uppercase_parent_level": true,
+        "show_menu_column_divider": true,
+        "search": "show_icon",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

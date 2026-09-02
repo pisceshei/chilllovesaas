@@ -1,0 +1,257 @@
+{
+  "sections": {
+    "16232926423298a4de": {
+      "type": "custom-content",
+      "blocks": {
+        "16232926423298a4de-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "32dc627e-8c6b-4671-a106-375a0d21863d": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16232926423298a4de-1",
+        "32dc627e-8c6b-4671-a106-375a0d21863d"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 20,
+        "padding_bottom": 0,
+        "custom_class": "sf__custom-image-banner"
+      }
+    },
+    "1623293128ea15b64a": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "The chair’s unique rail construction under<br> the seat in form-pressed.",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16232932164704bbe7": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "container",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "right middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "<div class=\"text-4xl\" style=\"max-width: 350px;\">Up to 20% Seclect tables & chairs items<\/div>",
+        "subtitle": "",
+        "text": "",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-custom-hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "162329352596f1ff1c": {
+      "type": "custom-content",
+      "blocks": {
+        "71ad9efa-9538-4a97-8eb4-05da1ea4d0cf": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sideboards",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "5cf4c32e-7799-443b-bfda-ffb9faf42df3": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Chairs",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "b3ab0d2f-3e22-4c19-a42a-267a2b45f0c9": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Tables",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "71ad9efa-9538-4a97-8eb4-05da1ea4d0cf",
+        "5cf4c32e-7799-443b-bfda-ffb9faf42df3",
+        "b3ab0d2f-3e22-4c19-a42a-267a2b45f0c9"
+      ],
+      "settings": {
+        "heading": "Featured Collection",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "16232937433dca4bc9": {
+      "type": "custom-content",
+      "blocks": {
+        "1398b42f-e490-4e43-ab92-a806c3e40e2d": {
+          "type": "social",
+          "settings": {
+            "heading": "Follow Us On",
+            "description": "<p>Shapes and proportions are for your intellect. I’ve treated the waistcoat as if it were a corset.<\/p>",
+            "width": "50%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "811af90c-61c6-4828-a559-b66d9083f471": {
+          "type": "newsletter",
+          "settings": {
+            "heading": "Let’s Stay In Touch",
+            "text_size": "h3",
+            "description": "<p>We’ll shout you $10 off your first order.<\/p>",
+            "form_design": "1",
+            "placeholder": "Enter your email address",
+            "submit_button": "Subscribe",
+            "width": "50%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1398b42f-e490-4e43-ab92-a806c3e40e2d",
+        "811af90c-61c6-4828-a559-b66d9083f471"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 50,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-content-section"
+      }
+    }
+  },
+  "order": [
+    "16232926423298a4de",
+    "1623293128ea15b64a",
+    "16232932164704bbe7",
+    "162329352596f1ff1c",
+    "16232937433dca4bc9"
+  ]
+}

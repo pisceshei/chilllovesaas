@@ -1,0 +1,69 @@
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+<div class="hdt-newsletter hdt-section-inner hdt-s-gradient hdt-section-spacing hdt-section-spacing-{{ section.id }}" color-scheme="{{ section.settings.color_scheme }}" hdt-reveal="fade-in">
+  <div class="hdt-container {%- if section.settings.section_layout == "full_width" -%}-full{%- endif %} hdt-section--custom--{{ section.id }} hdt-flex hdt-flex-{{ section.settings.direction }} hdt-flex-wrap {%- if section.settings.direction == 'row' %} hdt-justify-{{ section.settings.justify_content }}{%- else  %} hdt-align-{{ section.settings.justify_content }}{% endif %}">
+    {% content_for "blocks" %}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Newsletter",
+    "class": "hdt-newsletter",
+    "blocks": [
+      {
+        "type": "@theme"
+      },
+      {
+        "type": "@app"
+      }
+    ],
+    "settings": [
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "full_width",
+        "label": "t:sections.all.full_width.label",
+        "default": false
+        },
+      {
+        "type": "header",
+        "content": "t:sections.all.padding.section_spacing"
+      },
+      {
+        "type": "text",
+        "id": "mg",
+        "label": "Margin",
+        "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+        "default": ",,50px,",
+        "placeholder": ",,50px,"
+      },
+      {
+        "type": "text",
+        "id": "mg_mb",
+        "label": "Margin (Mobile)",
+        "default": ",,30px,",
+        "placeholder": ",,50px,",
+        "visible_if": "{{ section.settings.mg != blank }}"
+      },
+      {
+        "type": "text",
+        "id": "pd",
+        "label": "Padding",
+        "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+        "placeholder": "50px,,50px,"
+      },
+      {
+        "type": "text",
+        "id": "pd_mb",
+        "label": "Padding (Mobile)",
+        "placeholder": ",,50px,",
+        "visible_if": "{{ section.settings.pd != blank }}"
+      },
+    ]
+  }
+{% endschema %}

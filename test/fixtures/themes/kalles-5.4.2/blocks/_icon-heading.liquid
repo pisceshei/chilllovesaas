@@ -1,0 +1,61 @@
+{%- comment %} Check sizes image when Shopify update API {%- endcomment %}
+<div class="hdt_icon_heading">
+  <div class="hdt_icon__header">
+    {% content_for 'blocks' %}
+  </div>
+</div>
+
+<style>
+  .hdt_icon_heading {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .hdt_icon_heading > .hdt_icon__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .hdt_icon__header > .hdt-heading-block.hdt-s-text {
+    line-height: normal;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .hdt_icon__header > .hdt-icon-block.hdt-s-text {
+    color: rgb(var(--color-accent));
+    margin-inline-end: 30px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "t:blocks.icon_heading.name",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "icon"
+    },
+    {
+      "type": "heading"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Icon Heading",
+      "blocks": [
+        {
+          "type": "icon"
+        },
+        {
+          "type": "heading"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,52 @@
+{%- liquid
+  if comment.status == 'pending' 
+    assign number_of_comments = article.comments_count | plus: 1 
+  else 
+    assign number_of_comments = article.comments_count 
+  endif
+-%}
+<div class="hdt-article-tag-comments" {{ block.shopify_attributes }}>
+  {%- liquid
+    if number_of_comments > 0
+      assign cm_link = '#comments'
+    else
+      assign cm_link = '#comment_form'
+    endif
+  -%}
+  {%- if article.tags.size > 0 or blog.comments_enabled? -%}
+  <div class="hdt-article-tags" timeline hdt-reveal="slide-in">
+    <div class="hdt-row-flex hdt-align-center hdt-justify-center hdt-s-text2">
+      <div class="hdt-flex hdt-align-center hdt-article-tags-list hdt-font-normal hdt-text-base">
+        {%- if article.tags.size > 0 -%}
+          <div class="hdt-row-flex hdt-align-center md:hdt-justify-start hdt-justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20"><path d="M80 136C80 122.7 90.75 112 104 112C117.3 112 128 122.7 128 136C128 149.3 117.3 160 104 160C90.75 160 80 149.3 80 136zM204.1 32C216.8 32 229.1 37.06 238.1 46.06L410.7 218.7C435.7 243.7 435.7 284.3 410.7 309.3L277.3 442.7C252.3 467.7 211.7 467.7 186.7 442.7L14.06 270.1C5.057 261.1 0 248.8 0 236.1V80C0 53.49 21.49 32 48 32H204.1zM36.69 247.4L209.4 420.1C221.9 432.6 242.1 432.6 254.6 420.1L388.1 286.6C400.6 274.1 400.6 253.9 388.1 241.4L215.4 68.69C212.4 65.69 208.4 64 204.1 64H48C39.16 64 32 71.16 32 80V236.1C32 240.4 33.69 244.4 36.69 247.4V247.4zM308.4 36.95C314.5 30.56 324.7 30.33 331.1 36.43L472.4 171.5C525.1 221.9 525.1 306.1 472.4 356.5L347.8 475.6C341.4 481.7 331.3 481.4 325.2 475.1C319.1 468.7 319.3 458.5 325.7 452.4L450.3 333.4C489.8 295.6 489.8 232.4 450.3 194.6L308.9 59.57C302.6 53.46 302.3 43.34 308.4 36.95V36.95z"></path></svg>
+            {% for tag in article.tags %} <a href="{{ blog.url }}/tagged/{{ tag | handle }}" rel="tag">{{ tag | remove : 'category_' | strip }}</a>{% unless forloop.last %}, {% endunless %}{% endfor %}
+          </div>
+        {%- endif -%}
+      </div>
+      {%- if blog.comments_enabled? -%}
+        <div class="hdt-comment-link">
+          <div class="hdt-row-flex hdt-align-center md:hdt-justify-end hdt-justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20"><path d="M256 31.1c-141.4 0-255.1 93.13-255.1 208c0 47.62 19.91 91.25 52.91 126.3c-14.87 39.5-45.87 72.88-46.37 73.25c-6.623 7-8.373 17.25-4.623 26C5.816 474.3 14.38 480 24 480c61.49 0 109.1-25.75 139.1-46.25c28.1 9 60.16 14.25 92.9 14.25c141.4 0 255.1-93.13 255.1-207.1S397.4 31.1 256 31.1zM256 416c-28.25 0-56.24-4.25-83.24-12.75c-9.516-3.068-19.92-1.461-28.07 4.338c-22.1 16.25-58.54 35.29-102.7 39.66c11.1-15.12 29.75-40.5 40.74-69.63l.1289-.3398c4.283-11.27 1.791-23.1-6.43-32.82C47.51 313.1 32.06 277.6 32.06 240c0-97 100.5-176 223.1-176c123.5 0 223.1 79 223.1 176S379.5 416 256 416zM272 272h-128c-8.801 0-16 7.199-16 15.1C127.1 296.8 135.2 304 144 304h128c8.801 0 15.1-7.204 15.1-16C287.1 279.2 280.8 272 272 272zM368 176h-224c-8.801 0-16 7.199-16 15.1C127.1 200.8 135.2 208 144 208h224c8.801 0 15.1-7.204 15.1-16C383.1 183.2 376.8 176 368 176z"/></svg>
+            <a href="{{ article.url }}{{ cm_link }}">{{ 'blogs.article.comments_html' | t: count: article.comments_count }}</a>
+          </div>
+        </div>
+      {%- endif -%}
+    </div> 
+  </div>
+  {%- endif -%}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.main-article.tag-comment_name",
+    "tag": null,
+    "settings": [
+    
+    ],
+    "presets":[
+      {
+        "name":"t:sections.main-article.tag-comment_name"
+      }
+    ]
+  }
+{% endschema %}

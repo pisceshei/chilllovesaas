@@ -1,0 +1,34 @@
+{%- if block.settings.discount != blank -%}
+    <div class="hdt-discount hdt-flex hdt-justify-center hdt-align-center" {{ block.shopify_attributes }}>
+      <div class="hdt-dc_wrap hdt-relative hdt-s-text hdt-font-bold hdt-text-lg hdt-flex hdt-justify-center hdt-align-center">
+        <input is="discount" readonly type="text" class="sr-only" value="{{ block.settings.discount | truncate: 20, "" }}" />
+        <span class="hdt-code_discount hdt-radius-xs">{{ block.settings.discount | truncate: 20, "" }}</span>
+        <button is="discount_copy" class="hdt-discount_copy hdt-inline-flex hdt-align-center hdt-justify-center hdt-radius-xs">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span class="hdt-tooltip-text hdt-inline-flex hdt-align-center hdt-justify-center hdt-pe-none hdt-text-base hdt-font-normal hdt-radius-xs">{{ 'general.aria.exit_popup.copy' | t }}</span>
+        </button>
+      </div>
+    </div>
+  {%- endif -%}
+  {% schema %}
+    {
+      "name": "t:sections.exit_popup.blocks.discount.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "discount",
+          "label": "t:sections.exit_popup.blocks.discount.label",
+          "default": "CODE20OFF",
+          "info": "t:sections.exit_popup.blocks.discount.info"
+        }
+      ],
+      "presets": [
+        {
+          "name": "t:sections.exit_popup.blocks.discount.name",
+          "settings": {
+            "discount": "CODE20OFF"
+          }
+        }
+      ]
+    }
+  {% endschema %}

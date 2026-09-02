@@ -1,0 +1,136 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "5c43b91a-9667-429c-8fb8-d9dd208a5ea9": {
+          "type": "custom_text",
+          "settings": {
+            "title": "",
+            "image_max": "140px",
+            "description": "",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "f9f68495-d8c9-4920-baf5-fb7aaa818b27": {
+          "type": "newsletter",
+          "settings": {
+            "title": "Good emails.",
+            "description": "Give your inbox some love with new products, tips, & more.",
+            "email_placeholder": "Enter your email",
+            "form_style": "bordered",
+            "show_social": true,
+            "show_agree_checkbox": false,
+            "width": "50%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "7be8d43e-ecc5-411e-90cd-e21b5dee4cfc": {
+          "type": "spacing",
+          "settings": {
+            "width": "16%"
+          }
+        },
+        "49e72833-c68f-4a7b-ab64-3ef0cae99bcb": {
+          "type": "menu",
+          "settings": {
+            "title": "Information",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "b58e37df-7e6d-4803-948b-1fe15535bedf": {
+          "type": "menu",
+          "settings": {
+            "title": "Contact",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "5c43b91a-9667-429c-8fb8-d9dd208a5ea9",
+        "f9f68495-d8c9-4920-baf5-fb7aaa818b27",
+        "7be8d43e-ecc5-411e-90cd-e21b5dee4cfc",
+        "49e72833-c68f-4a7b-ab64-3ef0cae99bcb",
+        "b58e37df-7e6d-4803-948b-1fe15535bedf"
+      ],
+      "settings": {
+        "color_scheme": "scheme-ac6267a5-b373-4bf0-a361-3eca20e9376a",
+        "design": "footer-1",
+        "container": "container-fluid",
+        "bordered": false,
+        "copyright": "© E.Space 2024",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "scheme-ac6267a5-b373-4bf0-a361-3eca20e9376a"
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

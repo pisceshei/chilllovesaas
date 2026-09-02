@@ -1,0 +1,364 @@
+{
+  "sections": {
+    "1659926191a36ed220": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-richtext__subtitle {\n  letter-spacing: 1px;\n  font-weight: 600;\n}\n.m-icon-box--home .m-icon-box__heading {\n  font-size: 20px;\n  margin-bottom: 15px;\n}\n.m-video--home .m-video__inner {\n  border-radius: 10px;\n}\n\nbody .m-testimonial--home .m-testimonial__wrapper {\n  background-color: transparent;\n  font-size: 18px;\n  padding-top: 0;\n  padding-bottom: 0;\n}\nbody .m-testimonial--home .m-testimonial__description {\n  color: rgba(255,255,255, .8);\n}\n.m-testimonial--home .m-testimonial__name {\n  color: var(--color-primary);\n  font-weight: 600;\n}\n.sf-custom__product-form .main-product__block-vendor {\n  font-size: 15px;\n  letter-spacing: 1px;\n  text-transform: uppercase;\n}\n.sf-custom__product-form .m-product-title { \n  text-transform: uppercase; \n  font-weight: 600; \n}\n.sf-custom__product-form .m-custom-content__wrapper {\n  background-image: url('https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/kb_image_3.png?v=1660186193');\n  background-size: cover;\n  background-repeat: no-repeat;\n  background-position: center;\n  padding: 30px 15px;\n  border-radius: 10px;\n}\n\n.m-newsletter--home {\n  --color-border: #4B4B4B;\n}\n.m-newsletter--home .m-newsletter-section__description {\n  opacity: 1;\n}\n\n@media (min-width:1280px) {\n  .m-richtext__subtitle {\n    font-size: 18px;\n  }\n  .sf-custom__product-form .m-product-title {\n    font-size: 42px;\n  }\n  .sf-custom__product-form .m-custom-content__wrapper {\n    padding: 100px;\n    border-radius: 40px;\n  }\n  .m-video--home .m-video__inner {\n    border-radius: 40px;\n  }\n}\n\n@media (max-width: 767px) {\n  br {\n    display: none !important;\n  }\n}"
+      }
+    },
+    "16601307297f2f2367": {
+      "type": "custom-content",
+      "blocks": {
+        "1660130728d941c169-0": {
+          "type": "text",
+          "settings": {
+            "title": "THE POWER OF <br>OUR COMMUNITY",
+            "subheading": "CREATOR BOARD",
+            "text": "",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "white",
+            "button_label": "Shop Now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "1660130728d941c169-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "100%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1660130728d941c169-0",
+        "1660130728d941c169-1"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom--01"
+      }
+    },
+    "16601830099eb708cf": {
+      "type": "icon-box",
+      "blocks": {
+        "1660183009130ca544-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "236 programable keys",
+            "description": "<p>Spread across 4 separate key layers <br\/>means you have ~3x the keys as a<br\/> fullsized keyboard.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1660183009130ca544-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Ortholinear grid layout",
+            "description": "<p>will allow you to install all modules that <br\/>will be developed in the future.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1660183009130ca544-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Up to 5 rotary dials",
+            "description": "<p>Giving you precise control over<br\/> essentially any parameter that could <br\/>be increased or decreased.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "de116fc8-4feb-4ba0-8269-82806c4287b4": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Compact 60% footprint",
+            "description": "<p>gives you more breathing room on<br\/> your physical desktop.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1660183009130ca544-0",
+        "1660183009130ca544-1",
+        "1660183009130ca544-2",
+        "de116fc8-4feb-4ba0-8269-82806c4287b4"
+      ],
+      "settings": {
+        "heading": "CREATIVE. VERSATILE.<br> POWERFUL.",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "54px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-icon-box--home",
+        "animations": "inherit"
+      }
+    },
+    "166018339222fcdc75": {
+      "type": "custom-content",
+      "blocks": {
+        "1660183391f6c03927-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "1660183391f6c03927-0": {
+          "type": "text",
+          "settings": {
+            "title": "HARNESS THE POWER OF <br>YOU INNER SHORT-CUT",
+            "subheading": "CREATOR BOARD",
+            "text": "<p>Blaze through design iterations by easily assigning a completely custom <br\/>keyboard layout for your short-cuts and macros, or modify an existing<br\/> default layout for any of our supported software.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "button_label": "Shop Now",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1660183391f6c03927-1",
+        "1660183391f6c03927-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "gap": 120,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom--02"
+      }
+    },
+    "1660183718fe36b2af": {
+      "type": "video",
+      "settings": {
+        "container": "container",
+        "color_scheme": "dark",
+        "video_type": "shopify",
+        "ratio": "21:9",
+        "video_title": "",
+        "text_size": "medium",
+        "text_color": "white",
+        "play_style": "solid",
+        "play_size": "large",
+        "width": "",
+        "autoplay": false,
+        "loop": false,
+        "muted": false,
+        "show_controls": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-video--home",
+        "animations": "inherit"
+      }
+    },
+    "1660183795d847fcb0": {
+      "type": "testimonials",
+      "blocks": {
+        "16601837956464e536-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Very very satisfied. Huge congrats! Amazing product, terrific quality from what I’ve seen so far. Can’t wait to figure out how to code on it!\"<\/p>",
+            "footer": "<p>@ADILSULTAN<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16601837956464e536-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Just received the board and wanted to say that from the packaging to the keyboard itself everything is super high quality. Well done!\"<\/p>",
+            "footer": "<p>@ADILSULTAN<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16601837956464e536-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Most impressive keyboard I've seen and I'm quite obsessed haha Happy to have ordered one.\"<\/p>",
+            "footer": "<p>@ADILSULTAN<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "16601837956464e536-0",
+        "16601837956464e536-1",
+        "16601837956464e536-3"
+      ],
+      "settings": {
+        "heading": "OUR REVIEWS",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "design": "testimonials-2",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": false,
+        "show_pagination": false,
+        "star_color": "#ffffff",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-testimonial--home",
+        "animations": "inherit"
+      }
+    },
+    "166018547602679bf2": {
+      "type": "custom-content",
+      "blocks": {
+        "26978e10-cf44-43ac-805f-b8b01bc083fa": {
+          "type": "product_form",
+          "settings": {
+            "product": "heroboard-key",
+            "show_quantity_selector": false,
+            "show_vendor": true,
+            "show_price": true,
+            "show_add_to_cart": true,
+            "show_product_review": true,
+            "enable_payment_button": false,
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "26978e10-cf44-43ac-805f-b8b01bc083fa"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom__product-form"
+      }
+    },
+    "1660188320aa06bbce": {
+      "type": "newsletter",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "dark",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "INTERESTED IN <br>\nSTAYING IN THE LOOP",
+        "description": "<p>Sfor our announcement updates. We won't <br\/>spam you, that sh*t is lame.<\/p>",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email",
+        "submit_button": "Subscribe",
+        "text_color": "white",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-newsletter--home",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1659926191a36ed220",
+    "16601307297f2f2367",
+    "16601830099eb708cf",
+    "166018339222fcdc75",
+    "1660183718fe36b2af",
+    "1660183795d847fcb0",
+    "166018547602679bf2",
+    "1660188320aa06bbce"
+  ]
+}

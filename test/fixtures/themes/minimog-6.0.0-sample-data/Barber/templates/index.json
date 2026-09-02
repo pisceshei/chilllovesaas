@@ -1,0 +1,350 @@
+{
+  "sections": {
+    "16602891919093b9de": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-slider--home .m-richtext__subtitle {\n  letter-spacing: 1px;\n}\n\n@media (min-width: 1536px) {\n\t.m-slider--home .m-richtext__title {\n\t  font-size: 100px;\n\t}\n  .m-slider--home .m-richtext__subtitle {\n    font-size: 20px;\n  }\n}\n\n@media (max-width: 767px) {\n  .m-slider--home.m-slider--content-stack .m-slider-controls {\n    --swiper-controls-color: #000 !important;\n  }\n}"
+      }
+    },
+    "1623223002c02c7263": {
+      "type": "slider",
+      "blocks": {
+        "1623223002c02c7263-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "THE BEST QUALITY",
+            "title": "BABER SHOP",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1623223002c02c7263-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "NEW COLLECTION",
+            "title": "AUTHENTIC PEACE",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1623223002c02c7263-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "STAY STYLISH",
+            "title": "BE OUR CUSTOMER",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1623223002c02c7263-0",
+        "1623223002c02c7263-1",
+        "1623223002c02c7263-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "162322539058f7ea8a": {
+      "type": "custom-content",
+      "settings": {
+        "heading": "QUALITY, PASSION, PRECISION",
+        "heading_size": "h3",
+        "subheading": "ABOUT US",
+        "description": "We work closely with our team of artisan shoemakers in Italy, utilizing sustainable materials and processes to <br>develop a new kind of luxury - a luxury that seeks to slow the fashion cycle, a luxury that focuses on <br>craftsmanship and a luxury that helps to increase",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1623225671e61658ef": {
+      "type": "custom-content",
+      "blocks": {
+        "e100312a-df35-44a9-a7cd-352896db0433": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "bottom_left",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "white",
+            "link": "",
+            "title": "ESSENSITALS",
+            "subtitle": "",
+            "button_label": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "98da5699-651f-4d5a-b9be-28ece4e96404": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "bottom_left",
+            "content_alignment": "center",
+            "text_size": "small",
+            "text_color": "white",
+            "link": "",
+            "title": "GROOMING",
+            "subtitle": "",
+            "button_label": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "e100312a-df35-44a9-a7cd-352896db0433",
+        "98da5699-651f-4d5a-b9be-28ece4e96404"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 40,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1623225908b15e81fb": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "CUSTOMER FAVORITES",
+        "heading_size": "h3",
+        "subheading": "HOT THIS WEEK",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 10,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "1",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162322613280170962": {
+      "type": "custom-content",
+      "blocks": {
+        "162322613280170962-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "162322613280170962-0": {
+          "type": "text",
+          "settings": {
+            "title": "CALIFORNIA’S FAVORITE<br>\nHAIR STYLIST.",
+            "subheading": "MEET JAMES",
+            "text": "<p>We work closely with our team of artisan shoemakers in Italy, utilizing sustainable materials and processes to develop a new kind of luxury - a luxury that seeks to slow the fashion cycle, a luxury that focuses on craftsmanship and a luxury that helps to increase <\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "ABOUT US",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "m-custom-content-block-text",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "162322613280170962-1",
+        "162322613280170962-0"
+      ],
+      "custom_css": [
+        ".m-custom-content__wrapper {background-color: #f1efe8;}",
+        ".m-custom-content__block-text {padding: 48px 120px;}",
+        "@media (max-width: 1279px) {.m-custom-content__block-text {padding: 48px 60px; }}",
+        "@media (max-width: 1023px) {.m-custom-content__block-text {padding: 32px 30px; }}",
+        "@media (max-width: 767px) {.m-custom-content__block-text {padding: 32px 15px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "default",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 0,
+        "padding_top": 100,
+        "padding_bottom": 20,
+        "custom_class": "sf-custom--cta"
+      }
+    },
+    "1623230332326b7443": {
+      "type": "newsletter",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "GET THE GIFT CARD",
+        "description": "<p>Sign up to our mailing list and get a 10% discount code for your purchase<\/p>",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email",
+        "submit_button": "Subscribe",
+        "text_color": "black",
+        "show_icon": true,
+        "icon_img_width": "60",
+        "show_agreement": true,
+        "padding_top": 100,
+        "padding_bottom": 20,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1623226617a345e352": {
+      "type": "blog-posts",
+      "custom_css": [
+        ".m-article-card__tags {font-size: 12px;}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "limit": 4,
+        "column": 4,
+        "column_gap": 30,
+        "mobile_gap": 10,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-left",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "16602891919093b9de",
+    "1623223002c02c7263",
+    "162322539058f7ea8a",
+    "1623225671e61658ef",
+    "1623225908b15e81fb",
+    "162322613280170962",
+    "1623230332326b7443",
+    "1623226617a345e352"
+  ]
+}

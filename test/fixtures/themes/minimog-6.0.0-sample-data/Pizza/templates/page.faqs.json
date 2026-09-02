@@ -1,0 +1,70 @@
+{
+  "sections": {
+    "main": {
+      "type": "page-faqs",
+      "blocks": {
+        "2802736b-f08f-4510-a4f7-4ad7d748992d": {
+          "type": "content",
+          "settings": {
+            "content": "<div class=\"mb-10\"><img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/faqs.jpg?v=1620784288\"><\/div>\n<h3 class=\"font-medium text-xl mb-4\">Awkwardness gives me great comfort. I’ve never been cool, but I’ve felt cool. I’ve been in the cool place, but I wasn’t really cool – I was trying to pass for hip or cool.<\/h3>\n<p>A girl should be two things: classy and fabulous. I am convinced that there can be luxury in simplicity. I wanted to dress the woman who lives and works, not the woman in a painting. It’s hard to balance everything. It’s always challenging. My relationships with producers or photographers – these are relationships that took years. I can’t get sucked into that celebrity thing, because I think it’s just crass. My aim is to make the poor look rich.<\/p>"
+          }
+        },
+        "4e151238-4480-4122-b893-7f4a19886e4c": {
+          "type": "accordion",
+          "settings": {
+            "title": "What shipping methods are availbale?",
+            "content": "<p>Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat.<br\/><br\/>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit.<\/p>",
+            "open": true
+          }
+        },
+        "c5d4d04d-f6c1-4d1e-99f0-3c221393a3cf": {
+          "type": "accordion",
+          "settings": {
+            "title": "How long will it take to get my package?",
+            "content": "<p>Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.<\/p>",
+            "open": false
+          }
+        },
+        "0131747b-8b40-432f-b634-b1289ec41911": {
+          "type": "accordion",
+          "settings": {
+            "title": "Do you ship internationally?",
+            "content": "<p>Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.<\/p>",
+            "open": false
+          }
+        },
+        "5d7206e9-5375-4da6-9a1f-24e1c46230b0": {
+          "type": "accordion",
+          "settings": {
+            "title": "What payment methods are accepted?",
+            "content": "<p>Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat.<\/p>",
+            "open": false
+          }
+        },
+        "4008f61e-055e-42ba-8969-cb3715c0aece": {
+          "type": "accordion",
+          "settings": {
+            "title": "Is buying on-line safe?",
+            "content": "<p>Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.<\/p>",
+            "open": false
+          }
+        }
+      },
+      "block_order": [
+        "2802736b-f08f-4510-a4f7-4ad7d748992d",
+        "4e151238-4480-4122-b893-7f4a19886e4c",
+        "c5d4d04d-f6c1-4d1e-99f0-3c221393a3cf",
+        "0131747b-8b40-432f-b634-b1289ec41911",
+        "5d7206e9-5375-4da6-9a1f-24e1c46230b0",
+        "4008f61e-055e-42ba-8969-cb3715c0aece"
+      ],
+      "settings": {
+        "container": "container",
+        "menu": "faqs-menu"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

@@ -1,0 +1,389 @@
+{
+  "sections": {
+    "16608098393aae309a": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-button.m-button--link {\n  color: #F3BB2E;\n  border-color: #F3BB2E;\n}\nbody .m-quantity {\n  border-radius: 0;\n  border-width: 2px;\n  background: transparent;\n  height: 50px;\n}\n.m-icon-box--home .m-icon-box__heading,\n.h5,\n.h6 {\n  font-family: \"M-Body-Font\";\n}\n\n.m-single-product--home .m-price {\n  font-weight: 600;\n  color: #F3BB2E;\n}\n.m-single-product--home .m-product-option--label {\n  font-weight: 600;\n}\n.m-single-product--home .m-product-title {\n  font-family: \"M-Heading-Font\";\n}\n.m-single-product--home .m-main-product--info {\n  display: flex;\n  align-items: center;\n}\n\n.m-testimonial--home .m-testimonial__name {\n  font-weight: 600;\n}\n.m-testimonial--home .swiper-container {\n  padding-bottom: 75px;\n  margin-bottom: -75px;\n}\n.m-testimonial--home .m-testimonial__wrapper {\n  box-shadow: 30px 30px 70px 0px rgba(0,0,0,0.06);\n  background-color: #fff !important;\n}\n\n@media (min-width: 1536px) {\n  body .m-hero--main .m-hero__title {\n    font-size: 100px;\n    line-height: 110px;\n  }\n  body .m-hero--main .m-hero__text {\n    font-size: 30px;\n    line-height: 1;\n  }\n  body .m-hero--main .m-hero__btn {\n    margin-top: 50px;\n  }\n  body .m-hero--home .m-hero__title {\n    font-size: 80px;\n    line-height: 94px;\n  }\n  .m-richtext__title,\n  body .main-product__block .m-product-title {\n    font-size: 50px;\n    line-height: 1.28;\n  }\n}\n@media (max-width: 767px) {\n  .m-instagram--home .m-section-my {\n    margin-bottom: 20px;\n  }\n.m-hero--content-stack {\n    background-color: transparent !important;\n  }\n}"
+      }
+    },
+    "1623204222008a877b": {
+      "type": "image-with-text-2",
+      "custom_css": [
+
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "top",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "Brain-Wellness<br> Supplement.",
+        "subtitle": "",
+        "text": "<p>The all-natural, brain-wellness supplement <\/p>",
+        "button_label": "Exprole Now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--main",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1623205002e95bf455": {
+      "type": "icon-box",
+      "blocks": {
+        "1623205002e95bf455-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-body font-semibold\">Boost memory<\/span>",
+            "description": "<p>Get complimentary ground shipping on every order.Don’t love it? Send it back, on us.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1623205002e95bf455-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-body font-semibold\">Find your focus<\/span>",
+            "description": "<p>Join Minimog Rewards to earn gift cards<br\/>and enjoy exclusive member benefits.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1623205002e95bf455-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-body font-semibold\">Manage stress<\/span>",
+            "description": "<p>We believe getting dressed should be the<br\/> easiest part of your day.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1623205002e95bf455-0",
+        "1623205002e95bf455-1",
+        "1623205002e95bf455-2"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "scheme-b52dcc00-3fed-4575-998c-822e5342a32f",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "60px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 66,
+        "padding_bottom": 66,
+        "custom_class": "m-icon-box--home",
+        "animations": "inherit"
+      }
+    },
+    "16232061662f1fee46": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 160,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "Brain-wellness<br> supplement that<br> boosts focus.",
+        "sub_title": "",
+        "text": "<p>Roughly half a cup of coffee's worth of natural caffeine,<br\/> extracted from green coffee beans which promote<br\/> energy, brain function, and mood.A mushroom shown to<br\/> promote healthy cognitive function.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "View Details",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--image-width-text",
+        "animations": "inherit"
+      }
+    },
+    "16232064303897e8c9": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 160,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "right",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "A natural boost in<br> focus, memory &<br> mood.",
+        "sub_title": "",
+        "text": "<p>Roughly half a cup of coffee's worth of natural caffeine,<br\/> extracted from green coffee beans which promote<br\/> energy, brain function, and mood.A mushroom shown to<br\/> promote healthy cognitive function.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "View Details",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom--image-width-text",
+        "animations": "inherit"
+      }
+    },
+    "162320668556343b26": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "top",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "Vegetarian Ingredients",
+        "subtitle": "",
+        "text": "",
+        "button_label": "See Ingredients",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--home",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "new_featured_product_aEHPYP": {
+      "type": "new-featured-product",
+      "blocks": {
+        "title_Jqr7XA": {
+          "type": "title",
+          "settings": {
+          }
+        },
+        "price_pcNzeC": {
+          "type": "price",
+          "settings": {
+            "show_saving": false,
+            "sale_badge_type": "percentage"
+          }
+        },
+        "description_JJLF6m": {
+          "type": "description",
+          "settings": {
+          }
+        },
+        "variant_picker_EKnmjw": {
+          "type": "variant_picker",
+          "settings": {
+          }
+        },
+        "buy_buttons_WeNbgT": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_quantity_selector": true,
+            "show_atc_button": true,
+            "show_dynamic_checkout": false
+          }
+        }
+      },
+      "block_order": [
+        "title_Jqr7XA",
+        "price_pcNzeC",
+        "description_JJLF6m",
+        "variant_picker_EKnmjw",
+        "buy_buttons_WeNbgT"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "column_gap": 100,
+        "column_gap_mobile": 30,
+        "image_placement": "left",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-single-product--home",
+        "animations": "inherit"
+      }
+    },
+    "1623207871a03c2ccd": {
+      "type": "testimonials",
+      "blocks": {
+        "1623207871a03c2ccd-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love my new purchase",
+            "description": "<p>\"I've been getting good wear out of the shirt. It's very light and soft, comfortable to wear.\"<\/p>",
+            "footer": "<p>Fernanda K<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1623207871a03c2ccd-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "What a delight to find you",
+            "description": "<p>\"I just wanted to thank you for the impeccable service from you and your staff...\"<\/p>",
+            "footer": "<p>Gloria T<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1623207871a03c2ccd-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Thank you for your help!",
+            "description": "<p>\"I was thrilled to be able to visit your store again! Love my new purchase.\"<\/p>",
+            "footer": "<p>Shane T<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1623207871a03c2ccd-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Thanks for being so fabulous!",
+            "description": "<p>\"I was recently at your store, what a delight to find you!\"<\/p>",
+            "footer": "<p>Zeferino G<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1623207871a03c2ccd-4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "I will certainly recommend to others.",
+            "description": "<p>\"Thanks for being so fabulous...and continuing to provide such a wonderful service\"<\/p>",
+            "footer": "<p>Denzil A<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1623207871a03c2ccd-5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "A great store you can find.",
+            "description": "<p>\"Thank you so much for your help in finding some new clothes that I needed desperately.\"<\/p>",
+            "footer": "<p>Adelia C<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "1623207871a03c2ccd-1",
+        "1623207871a03c2ccd-2",
+        "1623207871a03c2ccd-0",
+        "1623207871a03c2ccd-3",
+        "1623207871a03c2ccd-4",
+        "1623207871a03c2ccd-5"
+      ],
+      "settings": {
+        "heading": "Happy Customers",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "default",
+        "design": "testimonials-3",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#f3bb2e",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-testimonial--home",
+        "animations": "inherit"
+      }
+    },
+    "16232089845f4b6f6c": {
+      "type": "instagram",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 10,
+        "mobile_gap": 10,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-instagram--home section__flush-bottom"
+      }
+    }
+  },
+  "order": [
+    "16608098393aae309a",
+    "1623204222008a877b",
+    "1623205002e95bf455",
+    "16232061662f1fee46",
+    "16232064303897e8c9",
+    "162320668556343b26",
+    "new_featured_product_aEHPYP",
+    "1623207871a03c2ccd",
+    "16232089845f4b6f6c"
+  ]
+}
