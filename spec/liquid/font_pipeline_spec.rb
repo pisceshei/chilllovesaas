@@ -54,9 +54,11 @@ RSpec.describe "Theme engine font pipeline" do
     expect(sys.system?).to be(true)
     expect(harness.font_face(sys)).to eq("")
 
-    unknown = ThemeEngine::FontLibrary.drop("helvetica_n4")
+    # 樣本 handle 原為 helvetica_n4——引擎缺口 PR-5 依官方字庫表把 Helvetica 收進 library 段後
+    # 它不再是「未知」；改用永不入表的鍵（keyset_cursor_spec 同款教訓），斷言語義不變。
+    unknown = ThemeEngine::FontLibrary.drop("nope_font_n4")
     expect(unknown.system?).to be(true)
-    expect(unknown.family).to eq("Helvetica")
+    expect(unknown.family).to eq("Nope Font")
     expect(harness.font_face(unknown)).to eq("")
   end
 

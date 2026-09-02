@@ -1608,6 +1608,23 @@ module ThemeEngine
       symbol = { "HKD" => "HK$" }.fetch(@shop.store_currency, "#{@shop.store_currency} ")
       "#{symbol}{{amount}}"
     end
+
+    # ---- 引擎缺口 PR-5（objects/shop 逐字，取證 2026-09-02）------------------------
+    # money_with_currency_format："The money format of the store with the currency included."
+    #   ——形照 filters/money_with_currency 官方例 `$10.00 CAD`（"HTML with currency" 設定）
+    #   ⇒ money_format＋空白＋幣別碼。
+    def money_with_currency_format = "#{money_format} #{@shop.store_currency}"
+
+    # description："The description of the store."——shops 表無對應欄（`grep -n description db/schema.rb`
+    #   於 shops 段零命中）⇒ 宣告 nil、不計 miss；欄位隨店家設定線補。
+    def description = nil
+
+    # features：官方 objects/shop 屬性表**無**此鍵（未文檔化）；Ella／Kalles 以
+    #   `shop.features.login_with_shop_classic_customer_accounts?`／`follow_on_shop?` 守 Shop 登入／
+    #   追蹤按鈕（filters/login_button）。我方無 Shop 登入 ⇒ 兩旗標 false（＝功能未啟用的本尊形），
+    #   宣告以免計 miss；本尊 runtime 實際值形＝未取得（登記）。
+    def features = ShopFeaturesDrop.new
+
     def enabled_currencies = [ @shop.store_currency ]
     def published_locales = []
     def customer_accounts_enabled = false
@@ -1638,6 +1655,13 @@ module ThemeEngine
     def liquid_method_missing(name)
       ThemeEngine.count_miss("ShopDrop.#{name}")
       nil
+    end
+  end
+
+  # `shop.features`（未文檔化；見 ShopDrop#features 註）——兩旗標 false，未知鍵計 miss。
+  class ShopFeaturesDrop < BaseDrop
+    def initialize
+      super({ "login_with_shop_classic_customer_accounts?" => false, "follow_on_shop?" => false })
     end
   end
 
