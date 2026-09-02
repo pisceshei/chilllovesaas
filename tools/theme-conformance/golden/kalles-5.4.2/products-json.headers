@@ -1,0 +1,37 @@
+HTTP/1.1 200 OK
+Date: Wed, 02 Sep 2026 18:33:40 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 436
+Connection: keep-alive
+X-Download-Options: noopen
+cf-cache-status: DYNAMIC
+set-cookie: _shopify_y=86d80bc9-a2d7-47eb-86fb-34dc7ecc1238; domain=hoko.vip; path=/; expires=Fri, 03 Sep 2027 00:33:40 GMT; SameSite=Lax
+set-cookie: _shopify_s=6c90ec74-d055-4c34-a920-b0f5ecaecd05; domain=hoko.vip; path=/; expires=Wed, 02 Sep 2026 19:03:40 GMT; SameSite=Lax
+set-cookie: _shopify_essential=:AaBjZfFFAAEAKU9-vNDONetme0LkhKTZlUAebTrneK9S3WcsP1tMzuwCMClDcNEU_6KgdwnSc9seZI3ODn62MPsTy-ivQmfwy0Og3qZwCydxmBa0EhO2wpJgiTPkY8AAf1cjaqSxXUuZGWc64uM4NTVIs418DZI2-Aqoka5O2HagJ9AUGj7aqYL5C2eoXAFCokfbjmGGZpGlmG6dZALwgVAhpsFamP36-qHNsR2xiIWPaxE2j0jbLWwvxTWfJydAB1VseTPWWj6wQQzUcDHgCnw0UvcM5wx7XVEJ5zgDiIteDYCE1wVlPUqvOSosjS7XRA748WWtZxJQ8E1JME52uMVqCALpXOgUXZzQe5I2SlerZLsrts2YvAeH42dJ2Dd8oQ4NgzaCbBbZW9HfcgiRChlwLaxlCpDm_tBEKGsXKbYJuSmPsqZKdz0j_huanYg0rvajzX1RD32KJEinPko:; Max-Age=31536000; Path=/; HttpOnly; Secure; Priority=High; SameSite=Lax
+set-cookie: _shopify_analytics=:AaBjZfFnAAEA4PC9zOmUtYJ-TbaG7jxTdv5CwmfKa5a9cLCNY1VbfW0vbPDqaPEHV_wsYyp0_PbKwTYaLWYYkVm7Qj1Pi9Q38xsKnKN7bg_FzohXxkyZ-s5rUz4:; Max-Age=31536000; Path=/; HttpOnly; Secure; Priority=High; SameSite=Lax
+set-cookie: _shopify_marketing=:AaBjZfFnAAEAyPrDwyjRt0GmyXnMzcNTmXPWEBOVC_59rfYlwWqejgibOgLRPpt23rrSeZhCysGUTIsw707UdaCC4aGjKnVFBegZQRCFzO0oVq9M73VtpBjZB4s:; Max-Age=31536000; Path=/; HttpOnly; Secure; Priority=High; SameSite=Lax
+etag: "page_cache:68893507687:ProductListController:ad06e67037040b7d5eadf7ee5a8a4a31"
+content-encoding: br
+Nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+shopify-complexity-score: 360
+shopify-complexity-score-v2: 36
+x-frame-options: DENY
+content-security-policy: block-all-mixed-content; frame-ancestors 'none'; upgrade-insecure-requests;
+access-control-allow-origin: *
+strict-transport-security: max-age=7889238
+X-Permitted-Cross-Domain-Policies: none
+vary: Accept
+vary: accept-encoding
+cdn-cache-control: no-cache, no-store
+content-language: zh-CN
+powered-by: Shopify
+server-timing: processing;dur=41, db;dur=9, db_async;dur=6.037, asn;desc="209854", edge;desc="TPE", country;desc="TW", servedBy;desc="98xp", requestID;desc="4f2fbe2c-cae3-4117-ae4d-bd1884a408c7-1788374020", _y;desc="86d80bc9-a2d7-47eb-86fb-34dc7ecc1238", _s;desc="6c90ec74-d055-4c34-a920-b0f5ecaecd05", _cmp;desc="3.AMPS_TWTNN_f_f_N1kx8XDiRMipGdUWEscuhA", compressionLevel;desc="5", compressionTime;dur=0.122
+x-dc: gcp-asia-southeast1,gcp-asia-southeast1,gcp-asia-southeast1
+X-XSS-Protection: 1; mode=block
+Alt-Svc: h3=":443"; ma=86400
+server: cloudflare
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=FcdpDCTfE89S3mK9Dfgl33jIO5ct8yFWyKFCTf%2B3%2B2HznU7IVM0VmU%2FagvWP%2FPNSF84%2BTogzIbBwNPqWp5IiPABPsf6pzQO%2FNYaF3FpLr%2BCyv2mQcmCojU3q"}]}
+X-Content-Type-Options: nosniff
+x-request-id: 4f2fbe2c-cae3-4117-ae4d-bd1884a408c7-1788374020
+CF-RAY: a34e9abb3e774a93-TPE
+

@@ -1,0 +1,40 @@
+HTTP/1.1 200 OK
+Date: Wed, 02 Sep 2026 18:33:43 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 46285
+Connection: keep-alive
+X-Download-Options: noopen
+set-cookie: _shopify_y=7b7fc1be-8da8-43cf-b525-6d30dee2b00a; domain=hoko.vip; path=/; expires=Fri, 03 Sep 2027 00:33:43 GMT; SameSite=Lax
+set-cookie: _shopify_s=64bf0289-f06b-4c59-9ba8-ee62ee3917a3; domain=hoko.vip; path=/; expires=Wed, 02 Sep 2026 19:03:43 GMT; SameSite=Lax
+set-cookie: localization=TW; path=/; expires=Thu, 02 Sep 2027 18:33:43 GMT; SameSite=Lax
+set-cookie: _shopify_essential=:AaBjZf3kAAEA679ZlKlyW8j4zlx3t3P5yshYJj7prvH4Se9gUtk5LSV7Gtc1LfOZBhYDDEwWKpRXeMRuWWEivEf-o78rE3M3N-tAhdgmJ2mG8i1dQF9UR_nGe6fRvKmFmUMBsGluTUeTTcRnYeEEZZuARii4nQnouOzLFdRVYYI23rI5b8j4qu-JyLFm0T8A_ifWkaG3_t_e07eP_HC_Z7AQzrlnn3p_7Dgh3-9UKEMAeASNKZmHA4sEMpxKdVViVK_cODEqEXsojRYUAwk7DnR6WokPpyC291QqHU8aFON-NoXgDCq5IAwe92Pgw1tlmbeCOiKuLNrkOJY2U01pCDJ6G3TQSDwUzuNEgV05eqM_xegrAb4iU6F1thyDv3sYD6mUdXWk50jkltgkjuZf9Pvx8QiERzWIcawFdoTv4mTio0yrh1QdtAzX6zf_g5Zaz-g2YQmZL288M9xkQFLVUxC3J5Ire1mcoYo-dhSFYsLBrgDE98AKwDhlryCavLY6D9g-ZahjghCglA:; Max-Age=31536000; Path=/; HttpOnly; Secure; Priority=High; SameSite=Lax
+set-cookie: _shopify_analytics=:AaBjZf7kAAEAHLkai6wd379NJ9reibVaeXSRlE_56qQ8cMOTtXZATmbNkUKeh9e7TiJXaVf6wEwYaPWir-TdkAnL5VeAM-maRGvEsaY-GDGqqn58IxCR7fJXjgE:; Max-Age=31536000; Path=/; HttpOnly; Secure; Priority=High; SameSite=Lax
+set-cookie: _shopify_marketing=:AaBjZf7pAAEAdHZJqczr3UeWRgHoIz4lwtCmPtW8ciBl-RqF4DwGM-QPPYzI2x8NUHgLqy3YgqzPVAqaLbe4xd20gxu6l2Kzvi3MLmMXC_2WpaIlZCfCIAO2lTA:; Max-Age=31536000; Path=/; HttpOnly; Secure; Priority=High; SameSite=Lax
+cf-cache-status: DYNAMIC
+link: <https://cdn.shopify.com>; rel="preconnect", <https://cdn.shopify.com>; rel="preconnect"; crossorigin, <//hoko.vip/cdn/shop/t/5/assets/base.css?v=2765023557136013461788327909>; as="style"; rel="preload", <//hoko.vip/cdn/shop/t/5/assets/theme.css?v=88640621933610640861788327909>; as="style"; rel="preload", <//hoko.vip/cdn/shop/t/5/assets/product-card.css?v=162785857012769187091788327909>; as="style"; rel="preload", <//hoko.vip/cdn/shop/t/5/assets/collection-products.css?v=144129750708259572661788327909>; as="style"; rel="preload"
+etag: "page_cache:68893507687:ProductDetailsController:af4a1a9b768d00825faef55abcef6571:038eb81c61efc2c911b0b2cdcbf391a1"
+content-encoding: br
+Nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+shopify-complexity-score: 2630
+shopify-complexity-score-v2: 263
+x-frame-options: DENY
+content-security-policy: block-all-mixed-content; frame-ancestors 'none'; upgrade-insecure-requests;
+access-control-allow-origin: *
+strict-transport-security: max-age=7889238
+X-Permitted-Cross-Domain-Policies: none
+vary: Accept
+vary: accept-encoding
+cdn-cache-control: no-cache, no-store
+content-language: zh-CN
+accept-ch: Sec-CH-Viewport-Width
+powered-by: Shopify
+server-timing: processing;dur=280;desc="gc:15", db;dur=65, db_async;dur=25.688, render;dur=85, asn;desc="209854", edge;desc="TPE", country;desc="TW", theme;desc="143475343463", pageType;desc="product", servedBy;desc="7h84", requestID;desc="497fec77-bb1c-425a-8c8a-366c10ba2a10-1788374023", _y;desc="7b7fc1be-8da8-43cf-b525-6d30dee2b00a", _s;desc="64bf0289-f06b-4c59-9ba8-ee62ee3917a3", _cmp;desc="3.AMPS_TWTNN_f_f_Kg*pdkIzRsO0Y3N9E*DSZw", compressionLevel;desc="5", compressionTime;dur=6.969
+x-dc: gcp-asia-southeast1,gcp-asia-southeast1,gcp-asia-southeast1
+X-XSS-Protection: 1; mode=block
+Alt-Svc: h3=":443"; ma=86400
+server: cloudflare
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=DJBgmkLe4UdvUcjtNulYrsecq1l85paaiAY9OwZ%2FaoWjHpZOyn9AkXrJr1pf9YnPgaOUv2jtD4FJmZxiFE95jeWCrQY%2Fk2a21NcKXsJJx0hnYcD3D2QUrEUU"}]}
+X-Content-Type-Options: nosniff
+x-request-id: 497fec77-bb1c-425a-8c8a-366c10ba2a10-1788374023
+CF-RAY: a34e9acf6eb0fb5a-TPE
+

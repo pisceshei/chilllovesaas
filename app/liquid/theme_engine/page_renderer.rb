@@ -288,10 +288,11 @@ module ThemeEngine
       page_type, assigns, = resolve(path)
       runtime = build_runtime(page_type, assigns)
       sid = @params["section_id"].to_s
-      data = section_data_for(runtime, page_type, sid)
+      data, scope = section_data_for(runtime, page_type, sid)
       return Result.new(status: 404, html: "", page_type: page_type) if data.nil?
 
-      Result.new(status: 200, html: runtime.render_section(sid, data), page_type: page_type)
+      Result.new(status: 200, html: runtime.render_section(Runtime.section_key_from_id(sid), data, scope: scope),
+                 page_type: page_type)
     end
 
     def render_sections_json(path)
@@ -302,8 +303,8 @@ module ThemeEngine
       page_type, assigns, = resolve(path)
       runtime = build_runtime(page_type, assigns)
       map = ids.to_h do |sid|
-        data = section_data_for(runtime, page_type, sid)
-        [ sid, data && runtime.render_section(sid, data) ]
+        data, scope = section_data_for(runtime, page_type, sid)
+        [ sid, data && runtime.render_section(Runtime.section_key_from_id(sid), data, scope: scope) ]
       end
       Result.new(status: 200, html: JSON.generate(map), page_type: page_type, content_type: :json)
     end
@@ -336,25 +337,29 @@ module ThemeEngine
     # id 解析：①請求頁 template 的 sections ②layout 引用的各群組 JSON 的 sections。
     # 找不到 ⇒ nil（呼叫端依端點轉 404／null）。?view= 語境下先查替代模板
     # （section 請求繼承請求頁 context——83 §12.3；替代模板頁的 section 也要找得到）。
+    # @return [Array(Hash, Hash)|nil] [section data, scope]——scope 供 wrapper 前綴（引擎缺口 PR-7）；
+    #   sid 可為裸 key 或完整 id（`template--index__hero`，主題 JS 常拿 `section.id` 來請求）。
     def section_data_for(runtime, page_type, sid)
+      key = Runtime.section_key_from_id(sid)
+      template_key = template_key_for(runtime, page_type)
       # PR-7：編輯器 draft 覆蓋最優先（未儲存的即時預覽）
-      return @draft_sections[sid] if @draft_sections&.key?(sid)
+      return [ @draft_sections[key], Runtime.template_scope(template_key) ] if @draft_sections&.key?(key)
 
-      tj = runtime.template_json(template_key_for(runtime, page_type))
-      data = tj && (tj["sections"] || {})[sid]
-      return data if data
+      tj = runtime.template_json(template_key)
+      data = tj && (tj["sections"] || {})[key]
+      return [ data, Runtime.template_scope(template_key) ] if data
 
       layout_group_names(runtime).each do |name|
         g = runtime.load_json("sections/#{name}.json") or next
-        found = (g["sections"] || {})[sid]
-        return found if found
+        found = (g["sections"] || {})[key]
+        return [ found, { kind: "sections", name: name } ] if found
       end
       # ③檔名直渲染（步 12b）：Ajax API 的 section_id＝**section 檔名**（官方
       # "the section file that you want render"；Dawn/Ella 實際請求 predictive-search
       # ／related-products／cart-drawer 全是檔名——25 §5＋96 §4.3 live 200 實證）。
-      # 檔存在 ⇒ 合成空設定 data（schema defaults 生效）；名限 [\w-]（防路徑逃逸）。
-      if sid.match?(/\A[\w-]+\z/) && runtime.read("sections/#{sid}.liquid")
-        return { "type" => sid, "settings" => {} }
+      # 檔存在 ⇒ 合成空設定 data（schema defaults 生效）；名限 [\w-]（防路徑逃逸）；靜態形無前綴。
+      if key.match?(/\A[\w-]+\z/) && runtime.read("sections/#{key}.liquid")
+        return [ { "type" => key, "settings" => {} }, nil ]
       end
       nil
     end
@@ -405,10 +410,11 @@ module ThemeEngine
       return runtime.comment("缺 template #{key}") if tj.nil?
 
       order = tj["order"] || tj.dig("sections") && tj["sections"].keys || []
+      scope = Runtime.template_scope(key) # PR-7：`template--{template}__{key}` 前綴
       Array(order).map do |k|
         # PR-11：draft 覆蓋最優先（編輯器整頁草稿）——與 section_data_for 同序
         data = @draft_sections[k] || (tj["sections"] || {})[k] or next ""
-        data["disabled"] ? "" : runtime.render_section(k, data)
+        data["disabled"] ? "" : runtime.render_section(k, data, scope: scope)
       end.join
     end
 
