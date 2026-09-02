@@ -97,42 +97,116 @@ module ThemeEngine
       def render(_context) = ""
     end
 
-    # {% form 'type', obj, attr: val %} → 最小 <form> 包裹（action 表隨結帳線擴充）。
+    # {% form 'type'[, resource][, key: value …] %}（官方 tags/form，取證 2026-09-02）。
+    #
+    # ①opening tag **逐型固定**（TYPES）：action／預設 id／class／enctype／型別 data-* 與
+    #   型別專屬隱藏欄（`product-id`／`guest`／`_method`／`return_to`）。
+    # ②主題參數：key 允許 `[\w-]+`（`data-*`／`aria-*`／`novalidate`／`style`／`is`），
+    #   值可為字串字面或**變數**（Ella `id: formId`、Kalles `id: form_id`、`style: form_styles`）
+    #   ——渲染期求值，nil 值的參數不輸出。原實作只吃引號字串 ⇒ 變數 id 整個被丟
+    #   （hoko 稽核候選「`{% form %}` 丟變數 `id:`」）。主題給的 id／class **取代**預設：
+    #   真店 hoko.vip（2026-09-02）`customer` 型預設 class `contact-form`，Ella 傳
+    #   `class: 'email-signup__form'` 後輸出只剩後者。
+    # ③contact／customer 的 action fragment 跟隨**生效 id**（真店逐字
+    #   `action="/contact#EmailSignup-…" id="EmailSignup-…"`）；new_comment 走該文章的
+    #   comment_post_url（98 §2 真店抓包形 `/blogs/{blog}/{article}/comments`，無 fragment）。
+    # ④屬性序照真店：method, action, id, accept-charset, 型別 data-*, class, enctype,
+    #   其餘主題參數；隱藏欄 `<input type="hidden" … />` 自閉形、每個獨立一行（真店逐字）。
+    # ⑤`return_to`：官方 "Accepts `back`, relative paths, or routes attributes"；currency／
+    #   localization 型未給時預設當前路徑（registers[:request_path]）。`back` 的伺服端展開
+    #   形＝未取得，先原樣輸出。
+    # ⑥`form` 物件依型別宣告屬性——見 FormDrop。
     class FormTag < Liquid::Block
-      ACTIONS = { "product" => "/cart/add", "contact" => "/contact", "customer_login" => "/account/login",
-                  "create_customer" => "/account", "recover_customer_password" => "/account/recover",
-                  "currency" => "/cart/update", "localization" => "/localization",
-                  "customer" => "/contact", "new_comment" => "/blogs" }.freeze
+      # 官方每型的固定形；缺鍵者不輸出該屬性。product 的 id 官方形 `product_form_[id]`，
+      # customer_address 新地址 `address_form_new`（既有地址形＝`address_form_{id}`，未取得
+      # 官方逐字，依 new 形類推並登記）。
+      TYPES = {
+        "activate_customer_password" => { action: "/account/activate" },
+        "cart" => { action: "/cart", id: "cart_form", class: "shopify-cart-form", enctype: "multipart/form-data" },
+        "contact" => { action: "/contact", fragment: true, id: "contact_form", class: "contact-form" },
+        "create_customer" => { action: "/account", id: "create_customer",
+                               data: { "login-with-shop-sign-up" => "true" } },
+        "currency" => { action: "/cart/update", id: "currency_form", class: "shopify-currency-form",
+                        enctype: "multipart/form-data", return_to: true },
+        "customer" => { action: "/contact", fragment: true, id: "contact_form", class: "contact-form" },
+        "customer_address" => { action: "/account/addresses", id: "address_form_new" },
+        "customer_login" => { action: "/account/login", id: "customer_login",
+                              data: { "login-with-shop-sign-in" => "true" } },
+        "guest_login" => { action: "/account/login", id: "customer_login_guest", hidden: { "guest" => "true" } },
+        "localization" => { action: "/localization", id: "localization_form", class: "shopify-localization-form",
+                            enctype: "multipart/form-data", hidden: { "_method" => "put" }, return_to: true },
+        "new_comment" => { action: "/blogs", id: "comment_form", class: "comment-form" },
+        "product" => { action: "/cart/add", id: "product_form_%{id}", class: "shopify-product-form",
+                       enctype: "multipart/form-data", resource_hidden: "product-id" },
+        "recover_customer_password" => { action: "/account/recover" },
+        "reset_customer_password" => { action: "/account/reset" },
+        "storefront_password" => { action: "/password", id: "login_form", class: "storefront-password-form" }
+      }.freeze
+
+      # `key: 'str'`／`key: "str"`／`key: expr`（expr＝到下一個逗號為止的裸運算式）。
+      PARAM = /([\w-]+)\s*:\s*(?:(['"])(.*?)\2|([^,]+?))\s*(?=,|\z)/
 
       def initialize(tag_name, markup, options)
         super
         @type = markup[/\A\s*(['"])(\w+)\1/, 2] || "contact"
-        # 位置參數（官方 `{% form 'new_comment', article %}`——步 14c）：
-        # 逗號後第一個裸識別字＝資源變數，渲染期求值。
-        @resource_expr = markup[/\A\s*(?:['"])\w+(?:['"])\s*,\s*([a-zA-Z_][\w.]*)/, 1]
-          &.then { |raw| Liquid::Expression.parse(raw) }
-        @attrs = markup.scan(/(?:,|\s)(\w+)\s*:\s*(['"])(.*?)\2/).map { |k, _q, v| [ k, v ] }.to_h
+        rest = markup.sub(/\A\s*(['"])\w+\1/, "")
+        # 位置參數（官方 `{% form 'new_comment', article %}`／`{% form 'product', product %}`）：
+        # 型別後第一個**不帶冒號**的裸識別字＝資源變數，渲染期求值。
+        if (m = rest.match(/\A\s*,\s*([a-zA-Z_][\w.]*)\s*(?=,|\z)/))
+          @resource_expr = Liquid::Expression.parse(m[1])
+          rest = m.post_match
+        end
+        @params = rest.scan(PARAM).to_h { |k, _q, str, expr| [ k, str || Liquid::Expression.parse(expr) ] }
       end
 
       def render(context)
+        spec = TYPES.fetch(@type, { action: "/" })
+        resource = @resource_expr && context.evaluate(@resource_expr)
+        params = @params.transform_values { |v| v.is_a?(String) ? v : context.evaluate(v) }.compact
+        id = params.delete("id") || default_id(spec, resource)
+        klass = params.delete("class") || spec[:class]
+        return_to = params.delete("return_to")
+        return_to ||= (context.registers[:request_path] || "/") if spec[:return_to]
+
         inner = nil
         context.stack do
-          context["form"] = ThemeEngine::FormDrop.new
+          context["form"] = ThemeEngine::FormDrop.new(@type, id: id)
           inner = super
         end
-        extra = @attrs.map { |k, v| %(#{k.tr('_', '-')}="#{v}") }.join(" ")
-        action = form_action(context)
-        %(<form method="post" action="#{action}" accept-charset="UTF-8" #{extra}><input type="hidden" name="form_type" value="#{@type}"><input type="hidden" name="utf8" value="✓">#{inner}</form>)
+
+        attrs = [ %(method="post"), %(action="#{form_action(context, spec, resource, id)}") ]
+        attrs << %(id="#{h(id)}") if id
+        attrs << %(accept-charset="UTF-8")
+        (spec[:data] || {}).each { |k, v| attrs << %(data-#{k}="#{v}") }
+        attrs << %(class="#{h(klass)}") if klass
+        attrs << %(enctype="#{spec[:enctype]}") if spec[:enctype]
+        params.each { |k, v| attrs << %(#{k}="#{h(v)}") }
+
+        hidden = [ [ "form_type", @type ], [ "utf8", "✓" ] ]
+        (spec[:hidden] || {}).each { |k, v| hidden << [ k, v ] }
+        hidden << [ spec[:resource_hidden], resource.id ] if spec[:resource_hidden] && resource.respond_to?(:id)
+        hidden << [ "return_to", return_to ] if return_to
+        inputs = hidden.map { |k, v| %(<input type="hidden" name="#{k}" value="#{h(v)}" />) }.join("\n")
+        %(<form #{attrs.join(' ')}>\n#{inputs}\n#{inner}</form>)
       end
 
-      # new_comment 的 action＝該文章的 comment_post_url（98 §2 真店抓包形：
-      # /blogs/{blog}/{article}/comments）；其餘型維持靜態表。
-      def form_action(context)
-        if @type == "new_comment" && @resource_expr
-          target = context.evaluate(@resource_expr)
-          return target.comment_post_url if target.respond_to?(:comment_post_url)
+      private
+
+      def h(value) = CGI.escapeHTML(value.to_s)
+
+      def default_id(spec, resource)
+        template = spec[:id] or return nil
+        return template unless template.include?("%{id}")
+
+        resource.respond_to?(:id) ? format(template, id: resource.id) : nil
+      end
+
+      def form_action(context, spec, resource, id)
+        if @type == "new_comment" && resource.respond_to?(:comment_post_url)
+          return resource.comment_post_url
         end
-        ACTIONS.fetch(@type, "/")
+        action = spec[:action]
+        spec[:fragment] && id ? "#{action}##{id}" : action
       end
     end
 

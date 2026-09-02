@@ -1867,9 +1867,38 @@ module ThemeEngine
     end
   end
 
+  # `form`（官方 objects/form，取證 2026-09-02）：**屬性依 `{% form %}` 型別宣告**，
+  # 只有未宣告的鍵才計 miss（D78 conformance 的 `FormDrop.*` 假缺口由此消失）。
+  # ①值＝上次提交失敗後的回填（v1 無提交回填 ⇒ 一律 nil；主題以 `{% if form.email %}` 守）。
+  # ②`password_needed`：官方逐字 "Returns `true`."（customer_login 專屬）——
+  #   原實作未宣告 ⇒ nil ⇒ Ella／Kalles 登入表單的 `{%- if form.password_needed -%}`
+  #   整段密碼欄不渲染（triage 已驗證缺口）。
+  # ③`posted_successfully?`：官方 "Returns `true` if the form was submitted successfully.
+  #   Returns `false` if there were errors."；純 GET 渲染時為 false——真店 hoko.vip
+  #   `/pages/contact`（2026-09-02）Ella `{%- if form.posted_successfully? -%}` 的成功訊息
+  #   未輸出。官方另逐字 "`customer_address` form always returns `true`"。
+  # ④`errors`：官方 "If there are no errors, then `nil` is returned."
+  # ⑤`set_as_default_checkbox` 官方語義是「渲染一個 checkbox」，其 HTML 形＝未取得
+  #   （customers/* 未路由、真店走新版帳戶不出主題表單）⇒ 先宣告為 nil，不猜 markup。
   class FormDrop < BaseDrop
-    def initialize
-      super({ "errors" => nil, "posted_successfully?" => true, "id" => "cl-form" })
+    # 官方 objects/form 每個屬性的「Exclusive to … forms」逐字對映。
+    FIELDS = {
+      "contact" => %w[email body],
+      "create_customer" => %w[email first_name last_name],
+      "customer" => %w[email],
+      "customer_address" => %w[address1 address2 city company country first_name last_name phone
+                               province zip set_as_default_checkbox],
+      "customer_login" => %w[email password_needed],
+      "new_comment" => %w[author body email],
+      "product" => %w[email message name],
+      "recover_customer_password" => %w[email]
+    }.freeze
+
+    def initialize(type = "contact", id: nil)
+      attrs = { "errors" => nil, "posted_successfully?" => type == "customer_address", "id" => id }
+      FIELDS.fetch(type, []).each { |field| attrs[field] = nil }
+      attrs["password_needed"] = true if type == "customer_login"
+      super(attrs)
     end
   end
 
