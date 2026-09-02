@@ -83,7 +83,7 @@ RSpec.describe ThemeEngine::PageRenderer do
     sellable(handle: "engine-frag")
     result = renderer.render("/products/engine-frag", params: { "section_id" => "main" })
     expect(result.status).to eq(200)
-    expect(result.html).to start_with(%(<div id="shopify-section-main"))
+    expect(result.html).to start_with(%(<div id="shopify-section-template--product__main"))
     expect(result.html).to include("引擎測試商品")
     expect(result.html).not_to include("<!doctype html>")
     expect(result.content_type).not_to eq(:json)
@@ -103,7 +103,7 @@ RSpec.describe ThemeEngine::PageRenderer do
     expect(result.content_type).to eq(:json)
     map = JSON.parse(result.html)
     expect(map.keys).to eq(%w[main no-such])
-    expect(map["main"]).to start_with(%(<div id="shopify-section-main"))
+    expect(map["main"]).to start_with(%(<div id="shopify-section-template--product__main"))
     expect(map["no-such"]).to be_nil
   end
 

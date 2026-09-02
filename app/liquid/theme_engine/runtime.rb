@@ -355,19 +355,46 @@ module ThemeEngine
     end
 
     # ---- section 渲染 -------------------------------------------------------
-    def render_section(key, data, page_type: nil)
+    # scope（引擎缺口 PR-7；真店三套主題金標本逐字，2026-09-03）：section 的 DOM id 與 Liquid
+    # `section.id` 帶來源前綴——JSON 模板的 section＝`template--{template}__{key}`、section group 的
+    # section＝`sections--{group}__{key}`、靜態 `{% section %}`＝裸名（官方頁對此未逐字，真店形＝
+    # `shopify-section-template--19765269299303__main`／`shopify-section-sections--19765270577255__header_default`；
+    # 數字段是本尊內部 id，我方以模板鍵／群組名代之——形同、值為 ours，登記）。主題 CSS／JS 以
+    # `#shopify-section-{{ section.id }}` 定位，故 wrapper id 與 `section.id` 必須同一個值。
+    # group section 另帶 class `shopify-section-group-{group}`（真店逐字，緊接 `shopify-section` 之後）。
+    # 編輯器橋（EDITOR_BRIDGE_JS）與 data-shopify-editor-section 仍用裸 key（編輯器 op 以 key 定址）。
+    def render_section(key, data, page_type: nil, scope: nil)
       c = compiled("sections/#{data['type']}.liquid") or return comment("缺 section #{data['type']}")
       merged = schema_defaults(c[:schema]["settings"] || []).merge(data["settings"] || {})
-      sdrop = SectionDrop.new(id: key, data: data.merge("settings" => merged), types: c[:types],
+      full_id = section_full_id(key, scope)
+      sdrop = SectionDrop.new(id: full_id, data: data.merge("settings" => merged), types: c[:types],
                               blocks: ordered_block_drops(data, local_defs: c[:schema]["blocks"]),
                               schemes: schemes_drop)
       assigns = @global_assigns.merge("section" => sdrop, "closest" => @closest)
       html = c[:tpl].render(build_context(assigns, base_registers.merge(frame: data, section_drop: sdrop)))
       collect_errors("sections/#{data['type']}", c[:tpl])
       tag = c[:schema]["tag"] || "div"
-      cls = [ "shopify-section", c[:schema]["class"] ].compact.join(" ")
+      group_class = scope && scope[:kind] == "sections" ? "shopify-section-group-#{scope[:name]}" : nil
+      cls = [ "shopify-section", group_class, c[:schema]["class"].presence ].compact.join(" ")
       editor_attr = @design_mode ? %( data-shopify-editor-section='#{JSON.generate(id: key, type: data['type'])}') : ""
-      %(<#{tag} id="shopify-section-#{key}" class="#{cls}"#{editor_attr}>#{html}</#{tag}>#{custom_css_style(key, data)})
+      %(<#{tag} id="shopify-section-#{full_id}" class="#{cls}"#{editor_attr}>#{html}</#{tag}>#{custom_css_style(full_id, data)})
+    end
+
+    # @param scope [Hash, nil] { kind: "template"|"sections", name: String }
+    def section_full_id(key, scope)
+      scope ? "#{scope[:kind]}--#{scope[:name]}__#{key}" : key.to_s
+    end
+
+    # 模板鍵 → scope 名（`product.alt` ⇒ `product-alt`：id 進 CSS 選擇器不得帶點）。
+    def self.template_scope(template_key)
+      { kind: "template", name: template_key.to_s.tr(".", "-") }
+    end
+
+    # SRA／編輯器可能傳完整 id（`template--index__hero`）或裸 key（`hero`）——取 `__` 之後。
+    def self.section_key_from_id(sid)
+      s = sid.to_s
+      i = s.rindex("__")
+      i ? s[(i + 2)..] : s
     end
 
     # PR-19：theme 級 Custom CSS（官方：Theme settings → Custom CSS、1500 字、
@@ -513,10 +540,14 @@ module ThemeEngine
         @warnings << "section group 不存在（寬容跳過）: #{name}"
         return comment("group #{name} 缺檔")
       end
-      (g["order"] || []).map do |k|
+      # 真店逐字（三套主題金標本，2026-09-03）：群組輸出前後各一行 `<!-- BEGIN sections: {name} -->`／
+      # `<!-- END sections: {name} -->`；群組內 section 帶 `sections--{name}__` 前綴與群組 class。
+      scope = { kind: "sections", name: name }
+      body = (g["order"] || []).map do |k|
         s = @draft_sections[k] || g["sections"][k] or next ""
-        s["disabled"] ? "" : render_section(k, s)
+        s["disabled"] ? "" : render_section(k, s, scope: scope)
       end.join
+      "<!-- BEGIN sections: #{name} -->#{body}<!-- END sections: #{name} -->"
     end
 
     def render_static_section(name)
@@ -539,6 +570,9 @@ module ThemeEngine
     EDITOR_BRIDGE_JS = <<~JS.freeze
       <script>(function(){
         var current=null;
+        // PR-7（引擎缺口）：wrapper id 帶 `template--x__`／`sections--x__` 前綴，編輯器仍以裸 key 定址
+        function sectionKey(domId){ var raw=domId.replace("shopify-section-",""); var i=raw.lastIndexOf("__"); return i>=0 ? raw.slice(i+2) : raw; }
+        function findSection(key){ return document.getElementById("shopify-section-"+key) || document.querySelector("[id^='shopify-section-'][id$='__"+key+"']"); }
         // PR-28：hover 工具列（四 op 直達；視覺自有——鐵律 9）
         var bar=document.createElement("div");
         bar.id="cl-preview-toolbar";
@@ -555,7 +589,7 @@ module ThemeEngine
         document.addEventListener("mouseover",function(ev){
           var host=ev.target.closest("[id^='shopify-section-']");
           if(!host){ if(!bar.contains(ev.target)){ bar.style.display="none"; barTarget=null; } return; }
-          barTarget=host.id.replace("shopify-section-","");
+          barTarget=sectionKey(host.id);
           var r=host.getBoundingClientRect();
           bar.style.display="flex";
           bar.style.top=(window.scrollY+r.top+4)+"px";
@@ -572,7 +606,7 @@ module ThemeEngine
           if(ev.origin !== location.origin) return;
           var d=ev.data||{};
           if(d.type==="cl:highlight"){
-            var el=document.getElementById("shopify-section-"+d.id);
+            var el=findSection(d.id);
             if(d.blockId && el){
               var hit=null;
               el.querySelectorAll("[data-shopify-editor-block]").forEach(function(b){
@@ -584,7 +618,7 @@ module ThemeEngine
             if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
           }
           if(d.type==="cl:replace"){
-            var target=document.getElementById("shopify-section-"+d.id);
+            var target=findSection(d.id);
             if(target && typeof d.html==="string"){
               var tpl=document.createElement("template");
               tpl.innerHTML=d.html;
@@ -605,7 +639,7 @@ module ThemeEngine
           }
           var host=ev.target.closest("[id^='shopify-section-']");
           if(!host) return;
-          var msg={type:"cl:select",id:host.id.replace("shopify-section-","")};
+          var msg={type:"cl:select",id:sectionKey(host.id)};
           var blockEl=ev.target.closest("[data-shopify-editor-block]");
           if(blockEl && host.contains(blockEl)){
             try{ msg.blockId=JSON.parse(blockEl.getAttribute("data-shopify-editor-block")).id; }catch(e){}

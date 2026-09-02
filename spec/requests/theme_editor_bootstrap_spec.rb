@@ -171,7 +171,7 @@ RSpec.describe "Theme editor bootstrap", type: :request do
          headers: { "CONTENT_TYPE" => "application/json" }
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("草稿即時值")           # 🔴 draft 覆蓋生效
-    expect(response.body).to include(%(id="shopify-section-hero")) # 片段含 wrapper（cl:replace 錨）
+    expect(response.body).to include(%(id="shopify-section-template--index__hero")) # 片段含 wrapper（cl:replace 錨；PR-7 前綴形）
     expect(ActsAsTenant.with_tenant(shop) { Template.count }).to eq(0) # 不落 DB
 
     post "/admin/store/preview/#{theme.id}/draft_section",
@@ -216,7 +216,7 @@ RSpec.describe "Theme editor bootstrap", type: :request do
                                            custom_css: "p { color: red; }" } } }.to_json,
          headers: { "CONTENT_TYPE" => "application/json" }
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("<style data-shopify-custom-css>#shopify-section-hero {")
+    expect(response.body).to include("<style data-shopify-custom-css>#shopify-section-template--index__hero {")
     expect(response.body).to include("p { color: red; }") # 官方「scoped to that section」
 
     post "/admin/store/preview/#{theme.id}/draft_page",

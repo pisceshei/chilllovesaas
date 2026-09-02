@@ -45,17 +45,17 @@ RSpec.describe "Storefront liquid view templates", type: :request do
     expect(response.body).not_to include("群組頁首") # bare layout 無群組帶
 
     get "/en-hk/cart"
-    expect(response.body).to include("shopify-section-main") # 預設 JSON 模板照舊
+    expect(response.body).to include("shopify-section-template--cart__main") # 預設 JSON 模板照舊
     expect(response.body).not_to include("side-cart")
   end
 
   it "LV3 🔴 view 片段與整頁互不污染（頁快取鍵含 view——既有 CACHE_PARAMS 面）" do
     get "/en-hk/cart" # cart 本就 no-store；用 collection 驗快取面不適用——
     # cart no-store ⇒ 本格改驗兩請求形態彼此正確（回歸護欄）
-    expect(response.body).to include("shopify-section-main")
+    expect(response.body).to include("shopify-section-template--cart__main")
     get "/en-hk/cart?view=ajax_side_cart"
     expect(response.body).to include(%(id="side-cart"))
     get "/en-hk/cart"
-    expect(response.body).to include("shopify-section-main")
+    expect(response.body).to include("shopify-section-template--cart__main")
   end
 end

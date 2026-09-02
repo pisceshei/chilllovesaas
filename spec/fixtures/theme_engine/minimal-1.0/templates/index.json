@@ -120,6 +120,9 @@
     }
    }
   },
+  "probe": {
+   "type": "sid-probe"
+  },
   "iter": {
    "type": "blocks-iter",
    "block_order": [
@@ -151,6 +154,7 @@
   "demo",
   "local",
   "sd",
+  "probe",
   "iter"
  ]
 }
