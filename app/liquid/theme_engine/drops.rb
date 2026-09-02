@@ -652,9 +652,14 @@ module ThemeEngine
     # translations：同 ProductDrop 的 overlay 契約（包 34）。
     # publication/locale/sort_param：步 12 商品出口（96 §1/§2）的渲染語境；
     #   publication nil＝無管道語境（products 回 nil——舊呼叫面行為不變）。
+    # current_tags：系列 tag 路徑 `/collections/{handle}/{tag1+tag2}` 的 tag handle 陣列（引擎缺口 PR-9；
+    #   help.shopify.com url-redirect 逐字 "URLs that use collection tag filtering (such as
+    #   yourstore.com/collections/collection-name/tag-name)… Even if no products exist with that tag, the URL
+    #   path is still considered valid"；make-collections-findable 逐字 "display only the products that match
+    #   all of the tags that you enter" ⇒ 多 tag AND）。URL 段是 handle 形，對系列內實際 tag 以 handleize 相等解析。
     def initialize(collection, url_prefix: "", published_at: nil, translations: {},
                    publication: nil, locale: nil, sort_param: nil,
-                   filter_query: nil, request_path: nil)
+                   filter_query: nil, request_path: nil, current_tags: [])
       super()
       @c = collection
       @url_prefix = url_prefix
@@ -665,6 +670,7 @@ module ThemeEngine
       @sort_param = sort_param
       @filter_query = filter_query
       @request_path = request_path
+      @current_tags = Array(current_tags).map(&:to_s).reject(&:blank?)
     end
 
     # 前台 sort_by 參數值 ↔ Collection.SORT_ORDERS 內部值（96 §2 真店 9 值 select；
@@ -687,7 +693,8 @@ module ThemeEngine
       return nil if @publication.nil? || @filter_query.nil?
 
       @facets ||= ThemeEngine::Facets.new(
-        base_relation: CollectionProductsDrop.base_relation(collection: @c, publication: @publication),
+        base_relation: CollectionProductsDrop.base_relation(collection: @c, publication: @publication,
+                                                            tags: resolved_tags),
         query_string: @filter_query, path: @request_path || url)
     end
 
@@ -710,7 +717,7 @@ module ThemeEngine
 
       @products ||= CollectionProductsDrop.new(
         collection: @c, publication: @publication, url_prefix: @url_prefix,
-        locale: @locale, sort_key: STOREFRONT_SORT[sort_by], facets: facets
+        locale: @locale, sort_key: STOREFRONT_SORT[sort_by], facets: facets, tags: resolved_tags
       )
     end
 
@@ -767,14 +774,35 @@ module ThemeEngine
       @metafields ||= @c.respond_to?(:virtual_all?) ? {} : MetafieldsRootDrop.new(@c)
     end
 
+    # 未過濾全集（all_tags／all_types／all_vendors／all_products_count 的資料面）：不含 tag 路徑過濾。
     def unfiltered_relation
       return Product.none if @publication.nil?
 
       CollectionProductsDrop.base_relation(collection: @c, publication: @publication)
     end
 
+    # 當前檢視（tags）：tag 路徑＋storefront filter 都算「過濾」。
     def filtered_relation
-      facets ? facets.apply(unfiltered_relation) : unfiltered_relation
+      return Product.none if @publication.nil?
+
+      base = CollectionProductsDrop.base_relation(collection: @c, publication: @publication, tags: resolved_tags)
+      facets ? facets.apply(base) : base
+    end
+
+    # URL 的 tag handle → 系列內實際 tag 字串（handleize 相等）；查無者保留原字串（⇒ 空結果，
+    # 官方：路徑仍有效、不 404）。
+    def resolved_tags
+      return [] if @current_tags.empty?
+
+      @resolved_tags ||= begin
+        pool = all_tags.index_by { |tag| CollectionDrop.tag_handle(tag) }
+        @current_tags.map { |raw| pool[raw] || pool[CollectionDrop.tag_handle(raw)] || raw }
+      end
+    end
+
+    # 與 filters#handleize 同一規則（tag 段是 handle 形）。
+    def self.tag_handle(value)
+      value.to_s.downcase.gsub(/[^a-z0-9\p{Han}]+/, "-").gsub(/\A-|-\z/, "")
     end
 
     def distinct_values(column, relation)
@@ -862,7 +890,7 @@ module ThemeEngine
     }.freeze
 
     def initialize(collection:, publication:, url_prefix: "", locale: nil, sort_key: nil,
-                   facets: nil)
+                   facets: nil, tags: [])
       super()
       @collection = collection
       @publication = publication
@@ -870,12 +898,15 @@ module ThemeEngine
       @locale = locale
       @sort_key = sort_key
       @facets = facets
+      @tags = Array(tags)
       @page, @per = 1, nil
     end
 
     # PR-20：base 集合抽成類方法——Facets 與列表共用同一定義（雙處漂移即
     # 「篩選器數字對不上列表」型 bug）
-    def self.base_relation(collection:, publication:)
+    # tags：系列 tag 路徑（PR-9）——逐 tag AND（help："match all of the tags"），與 BlogArticlesDrop 同一
+    #   JSON_SEARCH 形；空陣列＝不過濾。
+    def self.base_relation(collection:, publication:, tags: [])
       base = Product.discoverable(publication: publication)
       if collection.respond_to?(:virtual_all?)
         base = base.where(vendor: collection.vendor) if collection.vendor.present?
@@ -883,6 +914,9 @@ module ThemeEngine
       else
         base = base.joins(:collection_products)
                    .where(collection_products: { collection_id: collection.id })
+      end
+      Array(tags).each do |tag|
+        base = base.where("JSON_SEARCH(products.tags, 'one', ?) IS NOT NULL", tag)
       end
       base
     end
@@ -912,7 +946,7 @@ module ThemeEngine
     def virtual_all? = @collection.respond_to?(:virtual_all?)
 
     def relation
-      base = self.class.base_relation(collection: @collection, publication: @publication)
+      base = self.class.base_relation(collection: @collection, publication: @publication, tags: @tags)
       base = @facets.apply(base) if @facets # PR-20：storefront filter 過濾
       base
     end
