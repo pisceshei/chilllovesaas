@@ -28,7 +28,8 @@
 - `test/fixtures/themes/kalles-5.4.2/templates/page.store-locator.json`＋
   `kalles-5.4.2-template-demo/page.store-locator.json`：廠商夾帶的 Mapbox `access_token`
   （`pk.eyJ…`）改為 `REDACTED-MAPBOX-TOKEN`（GitHub push protection GH013 拒收原值）。
-- 刪除：`spec/liquid/theme_conformance_minimog_spec.rb`（未入庫）、`test/fixtures/themes/minimog-5.9.0*`（未入庫）。
+- 刪除（兩者只存在過本分支工作樹、從未進 main，樹上本無此路徑）：Minimog 專用的舊 spec
+  `theme_conformance_minimog_spec.rb`（已由上列共用 spec 取代）、`test/fixtures/themes/minimog-5.9.0*`。
 
 ## 尚未完成或需注意的風險 (Pending / TODO)
 - 🔴 真店 Publish 未完成（Chrome 跨域 iframe 操作失敗、renderer 卡死），Minimog／Kalles 金標本 0 頁；
