@@ -72,6 +72,8 @@ module ThemeEngine
       end
       assigns.each { |k, v| runtime.assign(k, v) }
       @extra_assigns&.each { |k, v| runtime.assign(k, v) }
+      # 引擎缺口 PR-8：page_title 各頁型（值形見 PageTitles 檔頭；全域預設＝店名只剩首頁沿用）
+      runtime.assign("page_title", PageTitles.for(page_type:, assigns:, status:, shop: @shop, locale: @locale))
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
       end
@@ -218,7 +220,7 @@ module ThemeEngine
         if collection.nil? && %w[vendors types].include?(handle.downcase)
           kind = handle.downcase
           q = @params["q"].to_s.strip.presence
-          virtual = VirtualAllCollection.new(q || "Products", kind, "title_asc", nil, nil,
+          virtual = VirtualAllCollection.new(q || PageTitles.products_title(@locale), kind, "title_asc", nil, nil,
                                              kind == "vendors" ? q : nil, kind == "types" ? q : nil)
           return [ "collection", { "collection" => CollectionDrop.new(
             virtual, url_prefix: @url_prefix, publication: @publication,
@@ -230,7 +232,8 @@ module ThemeEngine
         # 96 §2：/collections/all 虛擬全商品系列（真店實證 title=Products、字母序）；
         # 商家自建 handle=all 的真系列優先（上面已查、命中即走真系列分支）。
         if collection.nil? && handle.downcase == "all"
-          virtual = VirtualAllCollection.new("Products", "all", "title_asc", nil, nil)
+          # 標題依語言（真店：英文店 "Products"、中文店「商品」——PageTitles）
+          virtual = VirtualAllCollection.new(PageTitles.products_title(@locale), "all", "title_asc", nil, nil)
           return [ "collection", { "collection" => CollectionDrop.new(
             virtual, url_prefix: @url_prefix, publication: @publication,
             locale: @locale, sort_param: @params["sort_by"],
