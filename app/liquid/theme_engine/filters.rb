@@ -404,11 +404,12 @@ module ThemeEngine
       else
         d = max - min
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-        h = case max
-            when rf then (gf - bf) / d + (gf < bf ? 6 : 0)
-            when gf then (bf - rf) / d + 2
-            else (rf - gf) / d + 4
-            end * 60
+        sector = case max
+        when rf then (gf - bf) / d + (gf < bf ? 6 : 0)
+        when gf then (bf - rf) / d + 2
+        else (rf - gf) / d + 4
+        end
+        h = sector * 60
       end
       [ h.round, (s * 100).round, (l * 100).round ]
     end
