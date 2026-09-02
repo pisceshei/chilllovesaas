@@ -26,3 +26,19 @@ system:
   serif: { display_name: serif, fallback: serif }
   mono: { display_name: monospace, fallback: monospace }
   monospace: { display_name: monospace, fallback: monospace }
+  # 官方 system fonts 表（settings/fonts，取證 2026-09-02）："System UI `system_ui_n4 system_ui_i4 …`"
+  system_ui: { display_name: system-ui, fallback: sans-serif }
+# 引擎缺口 PR-5：官方字庫表列中**尚未自 host 檔**的家族（settings/fonts 頁逐字 handle 表，取證
+# 2026-09-02）。只登記顯示名／fallback／官方 handle 碼（style 字元 n／i／o＋weight/100）；
+# 解析出 system?=false、file=nil 的 drop——font_face／font_url 空輸出，瀏覽器退 fallback
+# （登記形；woff2 檔隨 OFL 授權逐家族補進 families 段後自動改走真檔）。
+# fallback 依官方表的分類（Sans-serif／Serif）；Helvetica 官方列於 deprecated 表（替代建議 Sans-serif）。
+library:
+  assistant: { display_name: Assistant, fallback: sans-serif, handles: [n2, n3, n4, n5, n6, n7, n8] }
+  karla: { display_name: Karla, fallback: sans-serif, handles: [n2, i2, n3, i3, n4, i4, n5, i5, n6, i6, n7, i7, n8, i8] }
+  libre_baskerville: { display_name: Libre Baskerville, fallback: serif, handles: [n4, i4, n7] }
+  lora: { display_name: Lora, fallback: serif, handles: [n4, i4, n5, i5, n6, i6, n7, i7] }
+  roboto_condensed: { display_name: Roboto Condensed, fallback: sans-serif, handles: [n1, i1, n2, i2, n3, i3, n4, i4, n5, i5, n6, i6, n7, i7, n8, i8, n9, i9] }
+  arial: { display_name: Arial, fallback: sans-serif, handles: [n4, i4, n7, i7] }
+  times_new_roman: { display_name: Times New Roman, fallback: serif, handles: [n4, i4, n7, i7] }
+  helvetica: { display_name: Helvetica, fallback: sans-serif, handles: [n3, o3, n4, o4, n7, o7, n9, o9] }
