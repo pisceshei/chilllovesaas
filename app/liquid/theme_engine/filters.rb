@@ -209,8 +209,104 @@ module ThemeEngine
     def url_for_vendor(input) = "/collections/vendors?q=#{ERB::Util.url_encode(input.to_s)}"
     def url_for_type(input) = "/collections/types?q=#{ERB::Util.url_encode(input.to_s)}"
     def link_to_type(input) = %(<a href="#{url_for_type(input)}">#{input}</a>)
-    def link_to_tag(input, tag) = %(<a href="#{tag}">#{input}</a>)
-    def within(input, _c) = input.to_s
+    # ---- tag／sort／within 連結（引擎缺口 PR-6；官方 filters/* 逐字，取證 2026-09-02）------
+    # link_to_tag："Generates an HTML `<a>` tag with an `href` attribute linking to the current blog or
+    #   collection, filtered to show only articles or products that have a given tag."；官方例
+    #   `<a href="/services/liquid_rendering/extra-potent" title="Show products matching tag extra-potent">extra-potent</a>`
+    #   ⇒ href＝當前系列 URL＋"/"＋tag；部落格 title "Show articles tagged X"、路徑形 `/tagged/X`（98 §2）。
+    # link_to_add_tag：title "Narrow selection to products matching tag X"、href＝current_tags＋X（`+` 連接）；
+    #   官方："Tags already in `current_tags` display as plain text, while unused tags become clickable links"。
+    # link_to_remove_tag："…filtered to show only articles or products that have any currently active
+    #   tags, except the provided tag."⇒ href＝current_tags 去掉 X（最後一個 ⇒ 系列根）；title 官方例
+    #   未示 ⇒ "Remove tag X"（登記）。
+    # sort_by："Generates a collection URL with the provided `sort_by` parameter appended."
+    #   例 `/collections/sale-potions?sort_by=best-selling`（既有 query ⇒ `&`）。
+    # within："Generates a product URL within the context of the provided collection."
+    #   例 `/collections/sale-potions/products/draught-of-immortality`；非系列物件 ⇒ 原樣。
+    def link_to_tag(input, tag) = tag_link(input, [ tag.to_s ], :show)
+
+    def link_to_add_tag(input, tag)
+      active = current_tags
+      return input.to_s if active.include?(tag.to_s)
+
+      tag_link(input, active + [ tag.to_s ], :add, tag)
+    end
+
+    def link_to_remove_tag(input, tag) = tag_link(input, current_tags - [ tag.to_s ], :remove, tag)
+
+    def sort_by(input, value)
+      url = input.to_s
+      "#{url}#{url.include?('?') ? '&' : '?'}sort_by=#{ERB::Util.url_encode(value.to_s)}"
+    end
+
+    def within(input, collection)
+      url = input.to_s
+      return url unless collection.respond_to?(:url) && (m = url.match(%r{/products/([^/?#]+)(.*)\z}))
+
+      "#{collection.url}/products/#{m[1]}#{m[2]}"
+    end
+
+    private def tag_link(input, tags, mode, tag = nil)
+      path = @context.registers[:request_path].to_s.presence || "/collections/all"
+      blog = path.start_with?("/blogs/") || path.match?(%r{\A/[a-z]{2}(?:-[a-z]{2})?/blogs/})
+      base = tag_base_path(path, blog)
+      href = if tags.empty? then base
+      elsif blog then "#{base}/tagged/#{tags.join('+')}"
+      else "#{base}/#{tags.join('+')}"
+      end
+      title = case mode
+      when :show then blog ? "Show articles tagged #{tags.first}" : "Show products matching tag #{tags.first}"
+      when :add then "Narrow selection to products matching tag #{tag}"
+      else "Remove tag #{tag}"
+      end
+      %(<a href="#{href}" title="#{CGI.escapeHTML(title)}">#{input}</a>)
+    end
+
+    private def current_tags
+      Array(@context["current_tags"]).map(&:to_s).reject(&:blank?)
+    end
+
+    # 去掉當前路徑尾端的 tag 段：部落格 `/tagged/…`；系列＝（locale 前綴＋）`/collections/{handle}` 以後全部。
+    private def tag_base_path(path, blog)
+      p = path.split("?").first.to_s
+      return p.sub(%r{/tagged/[^/]*\z}, "") if blog
+
+      m = p.match(%r{\A((?:/[a-z]{2}(?:-[a-z]{2})?)?/collections/[^/]+)})
+      m ? m[1] : p
+    end
+
+    # default_pagination："Generates HTML for a set of links for paginated results. Must be applied to
+    #   the `paginate` object."；參數 previous／next＝連結文字。官方例逐字：
+    #   `<span class="page current">1</span> <span class="page"><a href="…?page=2" title="">2</a></span> <span class="next"><a href="…?page=2" title="">Next &raquo;</a></span>`
+    #   previous 側官方例未示 ⇒ 對稱形 `<span class="prev">…&laquo; Previous</span>`（登記）；
+    #   窗式省略號 `<span class="deco">&hellip;</span>`（登記）。
+    def default_pagination(input, opts = {})
+      return "" unless input.is_a?(ThemeEngine::PaginateDrop)
+
+      opts = {} unless opts.is_a?(Hash)
+      next_text = opts["next"] || opts[:next] || "Next &raquo;"
+      prev_text = opts["previous"] || opts[:previous] || "&laquo; Previous"
+      pieces = []
+      if (prev = input["previous"])
+        pieces << %(<span class="prev"><a href="#{prev['url']}" title="">#{prev_text}</a></span>)
+      end
+      Array(input["parts"]).each do |part|
+        pieces << if part["is_link"]
+          %(<span class="page"><a href="#{part['url']}" title="">#{part['title']}</a></span>)
+        elsif part["title"].to_s == "&hellip;"
+          %(<span class="deco">&hellip;</span>)
+        else
+          %(<span class="page current">#{part['title']}</span>)
+        end
+      end
+      if (nxt = input["next"])
+        pieces << %(<span class="next"><a href="#{nxt['url']}" title="">#{next_text}</a></span>)
+      end
+      pieces.join(" ")
+    end
+
+    # md5："Converts a string into an MD5 hash."（例 `'' | md5` ⇒ d41d8cd98f00b204e9800998ecf8427e）
+    def md5(input) = Digest::MD5.hexdigest(input.to_s)
 
     # ---- fonts（步 13a 真實作；97 §1）--------------------------------------
     # 輸出形對齊真店實測（97 §1.2）：family 無引號＋weight＋style＋（有傳才出）
@@ -269,7 +365,54 @@ module ThemeEngine
     rescue StandardError
       input.to_s
     end
-    def color_to_rgb(input) = input
+    # 引擎缺口 PR-6（官方 filters/color_to_hsl／color_to_rgb，取證 2026-09-02）：
+    #   color_to_hsl "Converts a CSS color string to `HSL` format."，例 '#EA5AB9' ⇒ 'hsl(320, 77%, 64%)'，
+    #   "If a color with an alpha component is provided, the color is converted to `HSLA` format."；
+    #   color_to_rgb 例 ⇒ 'rgb(234, 90, 185)'（alpha ⇒ RGBA）。輸入收 #RGB／#RRGGBB／#RRGGBBAA／rgb(a)()；
+    #   解析不出 ⇒ 原樣（不炸頁）。
+    def color_to_hsl(input)
+      parsed = parse_css_color(input) or return input.to_s
+      r, g, b, a = parsed
+      h, s, l = rgb_to_hsl(r, g, b)
+      a < 1 ? "hsla(#{h}, #{s}%, #{l}%, #{a})" : "hsl(#{h}, #{s}%, #{l}%)"
+    end
+
+    def color_to_rgb(input)
+      parsed = parse_css_color(input) or return input.to_s
+      r, g, b, a = parsed
+      a < 1 ? "rgba(#{r}, #{g}, #{b}, #{a})" : "rgb(#{r}, #{g}, #{b})"
+    end
+
+    private def parse_css_color(input)
+      s = input.to_s.strip
+      if (m = s.match(/\A#(\h{3}|\h{4}|\h{6}|\h{8})\z/))
+        hex = m[1]
+        hex = hex.chars.map { |c| c * 2 }.join if hex.size <= 4
+        alpha = hex.size == 8 ? (hex[6, 2].to_i(16) / 255.0).round(2) : 1
+        [ hex[0, 2].to_i(16), hex[2, 2].to_i(16), hex[4, 2].to_i(16), alpha ]
+      elsif (m = s.match(/\Argba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)\z/i))
+        [ m[1].to_i, m[2].to_i, m[3].to_i, m[4] ? m[4].to_f : 1 ]
+      end
+    end
+
+    private def rgb_to_hsl(r, g, b)
+      rf, gf, bf = r / 255.0, g / 255.0, b / 255.0
+      max, min = [ rf, gf, bf ].max, [ rf, gf, bf ].min
+      l = (max + min) / 2
+      if max == min
+        h = s = 0
+      else
+        d = max - min
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+        h = case max
+            when rf then (gf - bf) / d + (gf < bf ? 6 : 0)
+            when gf then (bf - rf) / d + 2
+            else (rf - gf) / d + 4
+            end * 60
+      end
+      [ h.round, (s * 100).round, (l * 100).round ]
+    end
+
     def color_lighten(input, _p = 0) = input
     def color_darken(input, _p = 0) = input
     def color_mix(input, _o = nil, _p = 0) = input
