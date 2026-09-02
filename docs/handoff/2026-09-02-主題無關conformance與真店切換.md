@@ -124,7 +124,9 @@
 
 ## ③ 還有什麼沒解決（斷點在這裡）
 
-1. 🔴 **本分支尚未 commit／push**（截至本檔寫成時）。§④ 第 1 步就是提交。
+1. 本工作包已 commit＋push：分支 `theme/minimog-fixture`、
+   **PR #292**（https://github.com/pisceshei/chilllovesaas/pull/292）。CI（`quality`＋`test`）
+   在本檔寫成時**尚未看到結果**；合併與部署都還沒做（§④ 第 1 步）。
 2. 🔴 **真店 Publish 未完成**：兩次座標點擊都沒打到 Publish（一次誤開了 Ella 編輯器），
    後改用 JS 操作頂層文件的捲動容器（可行，見 §④ 步驟 A），捲到 `scrollTop=1050` 後截圖時
    Chrome renderer 卡死（`Page.captureScreenshot` 30s 逾時）。**沒有任何主題被發布、沒有任何
@@ -153,10 +155,12 @@
 ```bash
 cd "/c/Users/pisce/Documents/ChatGPT/CHILL LOVE SYSTEM/worktrees/p2-claim-index-r6" && git status --short | head
 ```
-若還沒 commit：`git add -A && git commit`（訊息：Minimog 6.0.0＋Kalles 5.4.2 入倉、conformance
-harness／TC-M1／TC-K1、D78、tools/theme-conformance）→ push → `gh pr create` → CI `quality`＋`test`
-綠 → `gh pr merge --squash --match-head-commit <sha>` → 部署 bt3（`ssh bt3-wan "cd /www/wwwroot/chilllove/app && bash scripts/deploy.sh origin/main"`）。
-合併前 `git fetch origin main`（記憶 fetch-before-branch）。
+PR #292 已開（head 見 `gh pr view 292 --json headRefOid`）。接手動作：
+`gh pr checks 292 --json name,bucket` 直到 `quality`＋`test` 都 `pass`（pending 時 gh 退出碼 8，
+不是失敗）→ `gh pr merge 292 --squash --match-head-commit <headRefOid>` → `git fetch origin main`
+→ 部署 bt3（`ssh bt3-wan "cd /www/wwwroot/chilllove/app && bash scripts/deploy.sh origin/main"`）
+→ production smoke。CI 若紅：本 PR 沒改引擎，紅多半是 fixture 體積／rubocop 對 `tools/`／
+doc-claims 對新 handoff 的行號或計數宣稱——先看 job log 再改，不要順手擴修。
 
 ### 步驟 A：真店 Publish（唯一可靠路徑＝JS 捲頂層容器＋座標點擊＋截圖驗證）
 1. 用使用者的 Chrome（claude-in-chrome）**前景分頁**開 `https://admin.shopify.com/store/pnrjnw-sy/themes`，
