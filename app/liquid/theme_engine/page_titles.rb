@@ -12,10 +12,12 @@ module ThemeEngine
   # 其他語言＝未取得 ⇒ 退英文。原實作恆＝店名（hoko 稽核候選）。
   module PageTitles
     STRINGS = {
-      "en" => { products: "Products", collections: "Collections", search: "Search",
+      "en" => { products: "Products", products_tagged: "Products", collections: "Collections", search: "Search",
                 search_results: 'Search: %<count>d results found for "%<terms>s"',
                 cart: "Your Shopping Cart", not_found: "404 Not Found" },
-      "zh" => { products: "商品", collections: "产品系列", search: "搜索",
+      # products_tagged：`/collections/all/{tag}` 的標題（hoko `/collections/all/red` 逐字「产品」，與
+      # `/collections/all` 的「商品」不同字；英文店對應形未取得 ⇒ 沿用 Products）。
+      "zh" => { products: "商品", products_tagged: "产品", collections: "产品系列", search: "搜索",
                 search_results: "搜尋：找到「%<terms>s」的結果，共 %<count>d 筆",
                 cart: "您的購物車", not_found: "404 找不到" }
     }.freeze
@@ -46,8 +48,15 @@ module ThemeEngine
         else
           t[:search]
         end
+      when "collection"
+        collection = assigns["collection"]
+        if assigns["current_tags"].present? && collection.respond_to?(:handle) && collection.handle == "all"
+          t[:products_tagged]
+        else
+          collection.respond_to?(:title) ? collection.title.to_s : shop.name
+        end
       else
-        resource = assigns["product"] || assigns["collection"] || assigns["page"] || assigns["article"] || assigns["blog"]
+        resource = assigns["product"] || assigns["page"] || assigns["article"] || assigns["blog"]
         resource.respond_to?(:title) ? resource.title.to_s : shop.name
       end
     end

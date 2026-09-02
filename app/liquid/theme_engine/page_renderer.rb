@@ -156,7 +156,9 @@ module ThemeEngine
         # （cart_json 由 pages controller 對本路徑**繞過頁快取**注入；14 §F1-4
         # 個人化不進快取的紀律不變——是「不快取」，不是「快取空車」）。
         [ "cart", {}, 200 ]
-      when %r{\A/products/([^/]+)\z}
+      # 引擎缺口 PR-9：`/collections/{handle}/products/{p}`（`within` filter 官方例的系列語境商品 URL）
+      # 同商品頁（系列語境 v1 不入 assigns——登記）。
+      when %r{\A(?:/collections/[^/]+)?/products/([^/]+)\z}
         product = ActsAsTenant.with_tenant(@shop) do
           found = Storefront::Lookup.product_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
           # preload 面＝drops 的讀取契約（缺口分析 A′）：庫存鏈（available/
@@ -208,8 +210,13 @@ module ThemeEngine
           shop: @shop, publication: @publication, url_prefix: @url_prefix,
           locale: @locale, params: @params
         ) }, 200 ]
-      when %r{\A/collections/([^/]+)\z}
+      when %r{\A/collections/([^/]+)(?:/([^/]+))?\z}
+        # 引擎缺口 PR-9：第二段＝tag 路徑（`/collections/{handle}/{tag1+tag2}`，help url-redirect 逐字；
+        # 真店 hoko.vip `/collections/all/red`／`/collections/frontpage/red` 無此 tag 仍 200）。
+        # `/collections/{handle}/products/{p}` 由上方 within 形分支處理（另包）。
         handle = Regexp.last_match(1)
+        tags = Regexp.last_match(2).to_s.split("+").map { |raw| CGI.unescape(raw) }.reject(&:blank?)
+        tag_suffix = tags.empty? ? "" : "/#{Regexp.last_match(2)}"
         collection = ActsAsTenant.with_tenant(@shop) do
           Storefront::Lookup.collection_by_handle(publication: @publication, handle:, at: at)
         end
@@ -226,8 +233,8 @@ module ThemeEngine
             virtual, url_prefix: @url_prefix, publication: @publication,
             locale: @locale, sort_param: @params["sort_by"],
             filter_query: @params["_facets_qs"].to_s,
-            request_path: "#{@url_prefix}/collections/#{kind}"
-          ) }, 200 ]
+            request_path: "#{@url_prefix}/collections/#{kind}#{tag_suffix}", current_tags: tags
+          ), "current_tags" => tags.presence }, 200 ]
         end
         # 96 §2：/collections/all 虛擬全商品系列（真店實證 title=Products、字母序）；
         # 商家自建 handle=all 的真系列優先（上面已查、命中即走真系列分支）。
@@ -238,8 +245,8 @@ module ThemeEngine
             virtual, url_prefix: @url_prefix, publication: @publication,
             locale: @locale, sort_param: @params["sort_by"],
             filter_query: @params["_facets_qs"].to_s,
-            request_path: "#{@url_prefix}/collections/all"
-          ) }, 200 ]
+            request_path: "#{@url_prefix}/collections/all#{tag_suffix}", current_tags: tags
+          ), "current_tags" => tags.presence }, 200 ]
         end
         collection ? [ "collection", { "collection" => CollectionDrop.new(
           collection, url_prefix: @url_prefix,
@@ -250,8 +257,8 @@ module ThemeEngine
           translations: translations_for(collection),
           publication: @publication, locale: @locale, sort_param: @params["sort_by"],
           filter_query: @params["_facets_qs"].to_s,
-          request_path: "#{@url_prefix}/collections/#{collection.handle}"
-        ) }, 200, collection ] : not_found
+          request_path: "#{@url_prefix}/collections/#{collection.handle}#{tag_suffix}", current_tags: tags
+        ), "current_tags" => tags.presence }, 200, collection ] : not_found
       when %r{\A/pages/([^/]+)\z}
         page = ActsAsTenant.with_tenant(@shop) do
           Page.visible(at: at).find_by(shop_id: @shop.id, handle: Regexp.last_match(1))
