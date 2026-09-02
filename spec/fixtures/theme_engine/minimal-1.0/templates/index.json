@@ -12,7 +12,10 @@
     "color_scheme": "scheme-2"
    },
    "block_order": [
-    "p1"
+    "p1",
+    "b1",
+    "b2",
+    "b3"
    ],
    "blocks": {
     "p1": {
@@ -37,6 +40,59 @@
         "label": "子二"
        }
       }
+     }
+    },
+    "b1": {
+     "type": "_bare",
+     "settings": {
+      "label": "裸"
+     }
+    },
+    "b2": {
+     "type": "_boxed",
+     "settings": {
+      "label": "盒"
+     }
+    },
+    "b3": {
+     "type": "_leaf",
+     "disabled": true,
+     "settings": {
+      "label": "隱藏塊"
+     }
+    }
+   }
+  },
+  "local": {
+   "type": "blocks-local",
+   "block_order": [
+    "t1",
+    "t2",
+    "t3",
+    "x1"
+   ],
+   "blocks": {
+    "t1": {
+     "type": "text",
+     "settings": {
+      "body": "一"
+     }
+    },
+    "t2": {
+     "type": "text",
+     "settings": {}
+    },
+    "t3": {
+     "type": "text",
+     "disabled": true,
+     "settings": {
+      "body": "藏"
+     }
+    },
+    "x1": {
+     "type": "_leaf",
+     "settings": {
+      "label": "主題塊"
      }
     }
    }
@@ -70,6 +126,7 @@
  "order": [
   "hero",
   "demo",
+  "local",
   "iter"
  ]
 }
