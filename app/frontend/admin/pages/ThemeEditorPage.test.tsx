@@ -52,7 +52,7 @@ const BOOTSTRAP = {
           { id: "heading", type: "text", label: "標題" },
           { id: "spacing", type: "range", label: "間距", min: 0, max: 100, step: 4, unit: "px", default: 24 },
           { id: "align", type: "select", label: "對齊",
-            options: [ { value: "left", label: "靠左" }, { value: "center", label: "置中" } ], default: "left" },
+            options: [ { value: "left", label: "靠左" }, { value: "center", label: "居中" } ], default: "left" }, // 2 個短選項 ⇒ 分段（E10）
           { id: "image", type: "image_picker", label: "圖片" },
         ] },
       },
@@ -265,7 +265,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(settings.getByText("圖片", { selector: "label" })).toBeInTheDocument(); // image_picker：標籤＋Select 虛線框（E4）
     expect(settings.getByRole("button", { name: "圖片" })).toHaveTextContent("選取"); // label for ⇒ 可及名稱＝圖片
 
-    fireEvent.change(settings.getByLabelText("對齊"), { target: { value: "center" } });
+    fireEvent.click(settings.getByRole("radio", { name: "居中" })); // E10：短選項 select＝分段控制（官方三條件）
 
     fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
     await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
@@ -1233,6 +1233,19 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(settings.getByRole("toolbar")).toBeInTheDocument(); // richtext 工具列
     const sections = await savedTemplate(fetchMock);
     expect(sections.hero.settings).toMatchObject({ size: "l", pos: "bottom", spacing: 48, ta: "center", video: "https://youtu.be/abc" });
+  });
+
+  it("ED44b 🔴 E10：range／radio／checkbox 為「標籤｜控件」單列（.cl-panel__row--inline）；video_url／text 仍上下排；短選項 select＝分段", async () => {
+    stubFetch([], e4Boot());
+    renderEditor();
+    const { settings } = await openHero();
+    const rowOf = (label: string) => settings.getByText(label, { selector: "label" }).closest(".cl-panel__row") as HTMLElement;
+    expect(rowOf("間距").className).toContain("cl-panel__row--inline");
+    expect(rowOf("位置").className).toContain("cl-panel__row--inline");
+    expect(rowOf("影片").className).not.toContain("cl-panel__row--inline");
+    // 單列：滑桿與數字框同在 .cl-panel__inline 內（本尊：標籤｜滑桿｜數字＋單位）
+    expect(rowOf("間距").querySelector(".cl-panel__inline .cl-ctl-range__slider")).not.toBeNull();
+    expect(rowOf("間距").querySelector(".cl-panel__inline .cl-ctl-range__number")).not.toBeNull();
   });
 
   it("ED45 🔴 color：色票鈕顯示 HEX；popover 內 HEX／色相／透明度（alpha:true 才有）；alpha 改 ⇒ rgba 寫回", async () => {

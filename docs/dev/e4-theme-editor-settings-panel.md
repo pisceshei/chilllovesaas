@@ -82,3 +82,13 @@ font_picker 整面選字型；image_picker 檔案庫 modal。給商家在後台�
   customCssHelp／systemFonts／systemFontsNote／otherFonts／otherFontsNote／fontWeight／searchFiles／noResults／noResultsHint／
   files／schemeLabel）與 `common.edit`／`common.copy`／`common.back`。
 - CSS：`.cl-panel__*`／`.cl-ctl-*`／`.cl-colorpicker__*`／`.cl-fontpicker__*`／`.cl-imagepicker__*`（tokens）。
+
+## §E10 追加（2026-09-03）：單列形與 select 分段規則
+
+- 本尊右欄的 range／select／radio／checkbox／color／color_background／color_scheme／text_alignment 為「標籤｜控件」**同一列**
+  （真店量測：列高 48、控件欄 ≈158px、數字框 ≈60×30），文字／富文本／代碼／圖片／資源仍標籤在上。實作＝`SettingRow` 的 `INLINE_TYPES`
+  ＋`.cl-panel__row--inline`／`.cl-panel__inline`（`app/assets/stylesheets/admin.css`）。
+- `select` 依官方三條件（無 group、2–5 項、放得進容器）渲染分段控制，否則下拉——`segmentFits`（`SettingControls.tsx`）；
+  「放得進」以估寬（拉丁 6.2px、全形 12.4px／字＋每段 16px 內距＋4px 框）對 158px 判定，六個真店實例校準（external-facts §G16）。
+- section schema 的 `blocks: [{type: "_x"}]` 引用形由後端解析成 theme block 定義（`Types::ThemeType#block_defs_for`），
+  面板／樹／picker 因此拿到 `blocks/_x.liquid` 的 name／settings／category（preset 分類退路）。全文 `docs/dev/e10-theme-editor-announcement-bar.md`。

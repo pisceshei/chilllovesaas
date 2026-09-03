@@ -1510,7 +1510,7 @@ export function ThemeEditorPage() {
               onRenameCancel={() => setRenaming(false)}
               onRenameChange={setRenameValue}
               onRenameCommit={commitRename}
-              removeLabel={selectedBlock ? t("editor.blockRemove", { id: selectedBlockId ?? "" }) : t("editor.removeSection")}
+              removeLabel={selectedBlock ? t("editor.blockRemove") : t("editor.removeSection")}
               renameValue={renameValue}
               renaming={renaming}
               scope={{ block: selectedBlock?.settings, section: selected.settings ?? {}, settings: settingsDraft ?? {} }}

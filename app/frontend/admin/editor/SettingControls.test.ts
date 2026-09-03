@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { effectiveValue, formatColor, parseColor } from "./SettingControls";
+import { effectiveValue, formatColor, parseColor, segmentFits } from "./SettingControls";
 
 // E4：官方 default 規則（input-settings 逐字，external-facts §F7）與色彩值形
 describe("effectiveValue", () => {
@@ -28,5 +28,27 @@ describe("parseColor / formatColor", () => {
     expect(parseColor("nonsense")).toBeNull();
     expect(formatColor({ r: 255, g: 0, b: 0, a: 1 })).toBe("#ff0000");
     expect(formatColor({ r: 255, g: 0, b: 0, a: 0.5 })).toBe("rgba(255, 0, 0, 0.5)");
+  });
+});
+
+// E10：select 分段 vs 下拉（官方三條件；真店六個實例校準，external-facts §G16）
+describe("segmentFits", () => {
+  const opts = (...labels: string[]) => labels.map((label) => ({ value: label.toLowerCase(), label }));
+  it("S4 🔴 真店分段實例：Direction／Wrap／Align items／Text alignment on mobile ⇒ true", () => {
+    expect(segmentFits(opts("Vertical", "Horizontal"))).toBe(true);
+    expect(segmentFits(opts("No", "Yes"))).toBe(true);
+    expect(segmentFits(opts("Top", "Center", "Bottom"))).toBe(true);
+    expect(segmentFits(opts("Left", "Center", "Right"))).toBe(true);
+  });
+  it("S5 🔴 真店下拉實例：Font（Heading／Subheading／Body）、Text weight（Default／400／600／700）放不進；Justify 6 項；帶 group", () => {
+    expect(segmentFits(opts("Heading", "Subheading", "Body"))).toBe(false);
+    expect(segmentFits(opts("Default", "400", "600", "700"))).toBe(false);
+    expect(segmentFits(opts("Start", "Center", "End", "Between", "Around", "Evenly"))).toBe(false);
+    expect(segmentFits([ { value: "a", label: "A", group: "G" }, { value: "b", label: "B" } ])).toBe(false);
+    expect(segmentFits(opts("Only"))).toBe(false);
+  });
+  it("S6 🔴 全形字算 2 單位：三個 2 字中文標籤放得進；三個 4 字中文標籤放不進（拉丁估寬會誤判放得進——突變 M111）", () => {
+    expect(segmentFits(opts("靠左", "居中", "靠右"))).toBe(true);
+    expect(segmentFits(opts("靠左對齊", "置中對齊", "靠右對齊"))).toBe(false); // 12 全形字 ×12.4＋3×16＋4 ＝ 201 > 158；若當 1 單位 ＝ 126 ⇒ 假綠
   });
 });

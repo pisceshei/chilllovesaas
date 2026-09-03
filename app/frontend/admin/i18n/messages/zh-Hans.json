@@ -1126,7 +1126,7 @@
   "settings.webhooks.secretOnce": "签章密钥（只显示这一次，请立即保存）：",
   "settings.webhooks.secretDismiss": "我已保存",
   "editor.templateBand": "模板",
-  "editor.blockRemove": "移除 block {id}",
+  "editor.blockRemove": "移除 block",
   "editor.exit": "退出",
   "editor.leaveTitle": "离开页面并放弃未保存的更改？",
   "editor.leaveMessage": "离开此页会删除所有未保存的更改。",

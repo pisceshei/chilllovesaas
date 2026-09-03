@@ -267,10 +267,18 @@ module Types
     # 展開 blocks/*.liquid 全集（24 §2.4：presets 必須有才進 picker——但
     # add-block 白名單是 blocks 定義本身，不看 preset）。@app 先跳過（無 app 層）。
     def block_defs_for(schema, theme_blocks, translate)
+      by_type = theme_blocks.to_h { |tdef| [ tdef["type"], tdef ] }
       Array(schema["blocks"]).flat_map do |bdef|
         next [] unless bdef.is_a?(Hash)
         next theme_blocks if bdef["type"] == "@theme"
         next [] if bdef["type"] == "@app"
+
+        # E10：`{"type": "_x"}`（無 name／settings）是對 blocks/_x.liquid 的**引用**（官方 theme blocks：section schema 以
+        # type 列舉可接受的 theme block），名稱／設定／分類取自該 theme block；本地定義（帶 name 或 settings）照舊。
+        # 真店實測（2026-09-03，Ella `announcement-bar` 引用 `_group-announcement-bar`）：本尊樹列名「Announcement」、面板為完整
+        # 設定；先前我方把引用當本地定義 ⇒ 顯示原始 type、面板退成原始鍵文字框（91 §3.78）。`limit` 屬引用處。
+        referenced = by_type[bdef["type"]]
+        next [ referenced.merge("limit" => bdef["limit"]) ] if referenced && bdef["name"].nil? && bdef["settings"].nil?
 
         [ { "type" => bdef["type"],
             "name" => translate.call(bdef["name"] || bdef["type"]),
@@ -305,7 +313,9 @@ module Types
         end
         { "type" => type, "name" => translate.call(schema["name"] || type),
           # E5：block picker 的分類收合區（Ella theme block schema 帶 `category`：product／layout／basic／decorative…）
-          "category" => schema["category"].present? ? translate.call(schema["category"]) : nil,
+          # E10：分類＝schema `category`，缺時退 presets[0].category——本尊 add-block 選擇器把 Ella `_group-announcement-bar`
+          # 歸在「Header」群，而它的 category 只寫在 preset（`"presets":[{"name":"t:names.announcement","category":"t:categories.header"}]`）。
+          "category" => (cat = schema["category"].presence || Array(schema["presets"]).first&.dig("category").presence) ? translate.call(cat) : nil,
           "settings" => translate_defs(Array(schema["settings"]), translate),
           "blocks" => accepts }
       end

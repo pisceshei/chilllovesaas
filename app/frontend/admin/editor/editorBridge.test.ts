@@ -52,7 +52,9 @@ describe("editor-bridge", () => {
     fromParent({ type: "cl:names", sections: { hero: "英雄橫幅" }, blocks: { hero: { b1: "文字塊" } }, labels: { addSection: "新增區段", duplicate: "建立副本", hide: "隱藏", remove: "移除" } });
     hero().querySelector("h1")!.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
     expect((document.querySelector(".cl-ov-insert") as HTMLElement).title).toBe("新增區段"); // 文字跟 admin 語系
-    expect([ ...document.querySelectorAll(".cl-ov-bar button") ].map((x) => x.textContent)).toEqual([ "建立副本", "隱藏", "移除" ]);
+    // E10：圖示鈕，文字在 aria-label／title
+    expect([ ...document.querySelectorAll(".cl-ov-bar button") ].map((x) => x.getAttribute("aria-label"))).toEqual([ "建立副本", "隱藏", "移除" ]);
+    expect(document.querySelectorAll(".cl-ov-bar button svg").length).toBe(3);
     const chip = overlay(".cl-ov-chip");
     expect(chip.style.display).toBe("flex");
     expect(chip.textContent).toBe("英雄橫幅");
@@ -63,6 +65,18 @@ describe("editor-bridge", () => {
     expect(posted.at(-1)).toEqual({ type: "cl:insert", id: "hero", position: "after" });
     hero().querySelector("[data-shopify-editor-block] p")!.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
     expect(chip.textContent).toBe("文字塊");
+  });
+
+  it("B1b 🔴 E10：cl:highlight ⇒ 選中元素左上 chip（名稱同 cl:names）；點工具列鈕內的 svg 仍發 cl:op；清選取即隱藏", () => {
+    fromParent({ type: "cl:names", sections: { hero: "英雄橫幅" }, blocks: { hero: { b1: "文字塊" } } });
+    fromParent({ type: "cl:highlight", id: "hero", blockId: "b1" });
+    const selChip = overlay(".cl-ov-chip.is-selected");
+    expect(selChip.style.display).toBe("flex");
+    expect(selChip.textContent).toBe("文字塊");
+    (document.querySelector('.cl-ov-bar [data-cl-op="remove"] svg') as SVGElement).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(posted.at(-1)).toEqual({ type: "cl:op", op: "remove", id: "hero", blockId: "b1" });
+    fromParent({ type: "cl:highlight", id: null, blockId: null });
+    expect(selChip.style.display).toBe("none");
   });
 
   it("B2 🔴 點選 ⇒ cl:select（帶 blockId）；站內連結攔截 ⇒ cl:navigate；右鍵 ⇒ cl:contextmenu 帶座標", () => {

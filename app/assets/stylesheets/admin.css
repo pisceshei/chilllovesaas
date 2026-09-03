@@ -2847,8 +2847,9 @@ a {
 /* E3：static block 的鎖 icon 佔 grip 的位置（hover 才顯示，與 grip 同規則），灰階 */
 .cl-tree__lock { color: var(--text-3); }
 .cl-tree__label { flex: 1; min-width: 0; display: inline-flex; align-items: baseline; gap: var(--sp-100); min-height: 28px; padding: 0 var(--sp-100) 0 7px; border: 0; background: transparent; color: var(--text); text-align: start; cursor: pointer; font-size: var(--t-350); line-height: var(--lh-500); font-weight: var(--fw-regular); }
-.cl-tree__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cl-tree__summary { color: var(--text-3); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* E10：本尊列名不截（「Announcement text – End …」），只截摘要；名稱單獨過長才截。 */
+.cl-tree__name { flex: 0 0 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-tree__summary { flex: 1 1 0; min-width: 0; color: var(--text-3); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cl-tree__actions { display: none; align-items: center; gap: 2px; }
 .cl-tree__row:hover .cl-tree__actions, .cl-tree__row.is-active .cl-tree__actions { display: inline-flex; }
 .cl-tree__op { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; background: transparent; color: var(--icon); cursor: pointer; border-radius: var(--r-100); }
@@ -2887,6 +2888,14 @@ a {
 .cl-panel__paragraph, .cl-panel__info { margin: var(--sp-100) 0; font-size: var(--t-325); line-height: var(--lh-500); color: var(--text-2); }
 .cl-panel__row { display: grid; gap: var(--sp-100); min-height: 48px; padding: var(--sp-100) 0; align-content: center; }
 .cl-panel__labelrow { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-200); min-height: 20px; }
+/* E10：本尊面板「標籤｜控件」單列形（range／select／分段／toggle／color／color_scheme／text_alignment）。
+   真店面板量測 2026-09-03（Chrome 前景分頁，zoom 換算）：列高 48、控件欄 ≈158px、數字框 ≈60×30、分段／下拉高 ≈30。 */
+.cl-panel__row--inline .cl-panel__labelrow { display: grid; grid-template-columns: minmax(0, 1fr) 158px; align-items: center; gap: var(--sp-200); }
+.cl-panel__row--inline .cl-panel__label { overflow-wrap: anywhere; }
+.cl-panel__inline { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-200); min-width: 0; }
+.cl-panel__inline > .cl-ctl-range__slider { flex: 1 1 auto; min-width: 0; width: auto; }
+.cl-panel__inline .cl-ctl-range__number { width: 60px; }
+.cl-panel__inline > .cl-ctl-select, .cl-panel__inline > .cl-ctl-seg, .cl-panel__inline > .cl-ctl-color, .cl-panel__inline > .cl-ctl-scheme { flex: 1 1 auto; min-width: 0; }
 .cl-panel__label { font-size: var(--t-325); line-height: var(--lh-500); font-weight: var(--fw-regular); color: var(--text); }
 .cl-panel__control { min-width: 0; }
 .cl-panel__acc { margin-top: var(--sp-300); border-top: var(--hairline) solid var(--border); }
