@@ -2593,3 +2593,14 @@ Kalles 的 section／block schema 有 194 檔帶尾逗號（非嚴格 JSON），
 - 落地（2026-09-03 同日）：`docs/dev/d81-shop-money-format.md`；真店 admin 四欄實讀＝HTML with `HK${{amount}} HKD`／
   HTML without `${{amount}}`／Email 兩欄同值（external-facts §G15）⇒ HKD 種子取這組；既有 HKD 店回填同值
   （demo 前台自此顯示 `$1,480.00`）。未取得項登記 91 §3.77。
+
+## D82（2026-09-04）渲染 1:1 升格鐵律 22（live preview 與買家前台必須與本尊完全一樣，含尺寸與全部參數）
+
+使用者裁定原文：「所有的步驟出來的實際預覽和買家前台的實際渲染效果都要和shopify本尊完全一樣，包括尺寸大小等等，這要寫入規範和鐵律中」。
+
+- 前情：2026-09-03 同義裁定已驅動 E8（渲染對表工具＋首頁 18/21 段位元組相同）、E9、D80、D81、E10／E11；本裁定把它從包級要求
+  升為鐵律 22（`CLAUDE.md`），並在 `AGENTS.md` 摘要。判準與例外見鐵律 22 本文；規範落點 `docs/dev/e8-render-parity.md`
+  （工具與流程）、`docs/dev/e10-theme-editor-announcement-bar.md`（編輯器逐控件方法）。
+- 現況登記（2026-09-04）：首頁 18/21 段相同；其餘頁首輪（本機 mirror vs hoko 快照）：cart 12/15、collections/frontpage 11/15、
+  collections/all 10/15、search 8/12、product 7/15，差異分析進行中；computed CSS 量測尚未開始（本機 Chrome 有 font-weight 注入
+  污染，須消融或用乾淨 profile）。
