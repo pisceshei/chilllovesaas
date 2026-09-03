@@ -1870,24 +1870,73 @@ module ThemeEngine
     def to_s = @attrs["name"]
   end
 
+  # 官方 `color` 物件（objects/color，取證 2026-09-03）：alpha＝0.0–1.0 小數；red／green／blue 0–255；hue 0–360；
+  # saturation／lightness 0–100；`rgb`＝空白分隔；`rgba`＝空白分隔＋斜線後 alpha（官方例 "51 79 180 / 1.0"）；
+  # 直接輸出＝設定原值（官方例為 hex）。
+  # 渲染 1:1 對表（2026-09-03，hoko.vip 首頁 86 處 `rgb(0 0 0 / 0.0)`）：Ella settings_data 的透明色存成
+  # `rgba(0,0,0,0)`（arrow_background 70／arrow_border 64／primary_button_background 49／background 33…），本尊照樣
+  # 給 color 物件（alpha 0.0）；舊實作只認 hex ⇒ 這些值以字串進主題，`.rgba` 為 nil、`.alpha != 0.0` 判斷全錯。
   class ColorDrop < Liquid::Drop
-    def initialize(hex)
+    HEX_RE = /\A#?(\h\h)(\h\h)(\h\h)(\h\h)?\z/
+    SHORT_HEX_RE = /\A#?(\h)(\h)(\h)\z/
+    RGB_RE = /\Argba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)\z/i
+
+    def self.color_like?(value)
+      s = value.to_s.strip
+      s.match?(HEX_RE) || s.match?(SHORT_HEX_RE) || s.match?(RGB_RE) || s.casecmp?("transparent")
+    end
+
+    def initialize(value)
       super()
-      @hex = hex.to_s
-      m = @hex.match(/#?(\h\h)(\h\h)(\h\h)/)
-      @r, @g, @b = m ? m.captures.map { |x| x.to_i(16) } : [ 0, 0, 0 ]
+      @raw = value.to_s
+      s = @raw.strip
+      @r, @g, @b, @a = 0, 0, 0, 1.0
+      if (m = s.match(HEX_RE))
+        @r, @g, @b = m.captures.first(3).map { |x| x.to_i(16) }
+        @a = m[4] ? (m[4].to_i(16) / 255.0).round(2) : 1.0
+      elsif (m = s.match(SHORT_HEX_RE))
+        @r, @g, @b = m.captures.map { |x| (x * 2).to_i(16) }
+      elsif (m = s.match(RGB_RE))
+        @r, @g, @b = m.captures.first(3).map(&:to_i)
+        @a = m[4] ? m[4].to_f : 1.0
+      elsif s.casecmp?("transparent")
+        @a = 0.0
+      end
     end
 
     def red = @r
     def green = @g
     def blue = @b
-    def alpha = 1.0
+    def alpha = @a
     def rgb = "#{@r} #{@g} #{@b}"
-    def rgba = "#{@r} #{@g} #{@b} / 1.0"
-    def hue = 0
-    def saturation = 0
-    def lightness = ((@r * 0.299 + @g * 0.587 + @b * 0.114) / 2.55).round
-    def to_s = @hex
+    def rgba = "#{@r} #{@g} #{@b} / #{@a.to_f}"
+    def hex = format("#%02x%02x%02x", @r, @g, @b)
+    def hue = hsl[0]
+    def saturation = hsl[1]
+    def lightness = hsl[2]
+    def to_s = @raw
+
+    private
+
+    # HSL（0–360／0–100／0–100，四捨五入）——官方屬性語義；舊實作 hue／saturation 為 0 的佔位已換掉。
+    def hsl
+      @hsl ||= begin
+        r, g, b = @r / 255.0, @g / 255.0, @b / 255.0
+        max, min = [ r, g, b ].max, [ r, g, b ].min
+        l = (max + min) / 2.0
+        if max == min
+          [ 0, 0, (l * 100).round ]
+        else
+          d = max - min
+          sat = l > 0.5 ? d / (2.0 - max - min) : d / (max + min)
+          h = if max == r then ((g - b) / d) % 6
+          elsif max == g then (b - r) / d + 2
+          else (r - g) / d + 4
+          end
+          [ ((h * 60) % 360).round, (sat * 100).round, (l * 100).round ]
+        end
+      end
+    end
   end
 
   # 色階（步 13b；97 §3——official `color_scheme`：`id`＋`settings`；直接輸出＝id，
@@ -2126,7 +2175,8 @@ module ThemeEngine
       when "color", "color_background"
         return nil if val.nil? || val == ""
 
-        val.to_s.start_with?("#") ? ColorDrop.new(val) : val
+        # hex／rgba()／transparent 都是 color 物件（Ella 透明色存 `rgba(0,0,0,0)`）；漸層字串（color_background）原樣
+        ColorDrop.color_like?(val) ? ColorDrop.new(val) : val
       when "image_picker"
         # 空值＝nil（官方契約：blank image setting 回 nil——除零診斷實錘，勿改）。
         # 非空 ⇒ 先解析檔案庫（shopify://shopify/files/{name} 或裸檔名 →

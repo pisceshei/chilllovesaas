@@ -40,12 +40,18 @@ module ThemeEngine
     def shopify_asset_url(input) = asset_url(input)
     def global_asset_url(input) = asset_url(input)
 
+    # 官方逐字（filters/stylesheet_tag，取證 2026-09-03）：`<link href="…" rel="stylesheet" type="text/css" media="all" />`
+    # ——rel／href 由 filter 管、media 預設 all、可加其他屬性；渲染 1:1 對表：舊實作 `<link rel="stylesheet" href="…">` 與
+    # 本尊逐字不同（hoko.vip header section diff 實錘）。
     def stylesheet_tag(input, opts = {})
-      media = opts.is_a?(Hash) ? opts["media"] : opts
-      %(<link rel="stylesheet" href="#{input}"#{media.is_a?(String) ? %( media="#{media}") : ''}>)
+      extra = opts.is_a?(Hash) ? opts.reject { |k, _| %w[href rel].include?(k.to_s) } : {}
+      media = extra.delete("media") || (opts.is_a?(String) ? opts : nil) || "all"
+      attrs = extra.map { |k, v| %( #{k}="#{CGI.escapeHTML(v.to_s)}") }.join
+      %(<link href="#{input}" rel="stylesheet" type="text/css" media="#{CGI.escapeHTML(media.to_s)}"#{attrs} />)
     end
 
-    def script_tag(input) = %(<script src="#{input}" defer></script>)
+    # 官方逐字（filters/script_tag）：`<script src="…" type="text/javascript"></script>`（無 defer）。
+    def script_tag(input) = %(<script src="#{input}" type="text/javascript"></script>)
 
     def inline_asset_content(input)
       rt = @context.registers[:runtime]
