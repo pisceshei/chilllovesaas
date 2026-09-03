@@ -151,9 +151,8 @@ module ThemeEngine
                                             h: (h.positive? ? h : (w.positive? ? w : 800))).url
     end
 
-    def placeholder_svg_tag(input, cls = nil)
-      %(<svg class="#{cls} placeholder-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#e8ded2"/><title>#{CGI.escapeHTML(input.to_s)}</title></svg>)
-    end
+    # 官方名稱表的整張插圖（我方自繪；形態與 class 規則見 PlaceholderSvg 檔頭）。
+    def placeholder_svg_tag(input, cls = nil) = PlaceholderSvg.tag(input, cls)
 
     # ---- money（integer cents → 字串）--------------------------------------
     def money(input) = format_money(input, "%<sym>s%<amt>s")
@@ -420,7 +419,9 @@ module ThemeEngine
 
     # ---- 平台雜項（stub 到不炸為止；miss 由 drops 層遙測）-------------------
     def structured_data(_input) = ""
-    def payment_type_svg_tag(input, _o = {}) = placeholder_svg_tag(input, "payment-icon")
+    def payment_type_svg_tag(input, _o = {})
+      %(<svg class="payment-icon placeholder-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#e8ded2"/><title>#{CGI.escapeHTML(input.to_s)}</title></svg>)
+    end
     def payment_type_img_url(_input) = ""
     def payment_button(_input, _o = {}) = ""
     def payment_terms(_input) = ""

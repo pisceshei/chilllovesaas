@@ -6,7 +6,17 @@
       "type": "hero",
       "settings": {
         "heading": "群組頁尾"
-      }
+      },
+      "name": "t:names.promo",
+      "blocks": {
+        "b1": {
+          "type": "_leaf",
+          "name": "t:names.nope"
+        }
+      },
+      "block_order": [
+        "b1"
+      ]
     }
   },
   "order": [

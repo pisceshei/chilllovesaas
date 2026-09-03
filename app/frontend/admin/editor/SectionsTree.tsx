@@ -37,6 +37,8 @@ export interface TreeSelection {
 export interface SectionsTreeProps {
   bands: TreeBand[];
   sectionName: (type: string) => string;
+  /** 實例 `name` 的 `t:` 鍵翻譯（E3b）；未給＝原樣顯示。 */
+  translateName?: (value: string | undefined) => string | undefined;
   /** 依容器（section 或 block）解析某 block 的定義（名稱／設定／可接受子型別）。 */
   blockDef: (sectionType: string, path: BlockPath, blockType: string) => BlockDefLite | undefined;
   /** 某容器可新增的 block 定義（空陣列＝不顯示 Add block）。 */
@@ -138,7 +140,7 @@ export function SectionsTree(props: SectionsTreeProps) {
           const path = [ ...prefix, blockId ];
           const key = rowKey(band, sectionId, path);
           const def = props.blockDef(sectionType, path, block.type);
-          const label = block.name ?? def?.name ?? block.type;
+          const label = (props.translateName ? props.translateName(block.name) : block.name) ?? def?.name ?? block.type;
           const summary = summaryOf(block, def?.settings);
           const hasChildren = visibleBlockIds(block).length > 0 || props.addBlockOptions(band, sectionId, path).length > 0;
           const isOpen = props.expanded.has(key);
@@ -225,7 +227,7 @@ export function SectionsTree(props: SectionsTreeProps) {
           const entry = item.tpl?.sections?.[sectionId];
           if (!entry) return null;
           const key = rowKey(item.band, sectionId, []);
-          const label = entry.name ?? props.sectionName(entry.type);
+          const label = (props.translateName ? props.translateName(entry.name) : entry.name) ?? props.sectionName(entry.type);
           const isOpen = props.expanded.has(key);
           const isActive = props.selection?.band === item.band && props.selection.sectionId === sectionId && props.selection.path.length === 0;
           const hasChildren = visibleBlockIds(entry).length > 0 || props.addBlockOptions(item.band, sectionId, []).length > 0;

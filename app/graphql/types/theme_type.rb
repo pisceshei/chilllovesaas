@@ -47,6 +47,8 @@ module Types
     # E3：theme blocks 全表（type → {name, settings, blocks: 可接受子型別}）——巢狀 block 的
     # 樹列與設定面板資料源；`section_schemas[type].blocks` 只覆蓋 section 直屬那層。
     field :theme_blocks, GraphQL::Types::JSON, null: false
+    # E3b：實例 `name` 的 `t:` 鍵翻譯表（只含實際出現的鍵）
+    field :name_translations, GraphQL::Types::JSON, null: false
     # PR-11：模板→預覽路徑對映（資源語境——product 模板編輯帶真商品）。
     # 取各型第一個已發布資源；無資源的型不出鍵（前端回落首頁）。
     field :preview_paths, GraphQL::Types::JSON, null: false
@@ -135,7 +137,9 @@ module Types
       # E3：群組相對於 `content_for_layout` 的位置——之前的群組列在樹的 Template 帶上方、
       # 之後的列在下方（本尊樹形 100 §2：Header／Popup／General group 在上、Footer group 在下）。
       layout_index = layout.index(/\{\{-?\s*content_for_layout\s*-?\}\}/) || layout.length
-      layout.scan(/\{%-?\s*sections\s+'([^']+)'/).flatten.uniq.filter_map do |name|
+      # 🔴 兩種語法都要認：`{% sections 'x' %}` 與 `{% liquid … sections 'x' … %}` 行內形（Ella 的
+      # popup-group／general-group 走後者；只認前者會讓兩個帶從樹上消失——2026-09-03 使用者對照截圖點名）。
+      layout_group_refs(layout).map(&:first).uniq.filter_map do |name|
         raw = source.read("sections/#{name}.json")
         json = begin
           raw ? ThemeEngine::Runtime.tolerant_json(raw) : nil
@@ -145,7 +149,7 @@ module Types
         next if json.nil?
 
         path = "sections/#{name}.json"
-        tag_index = layout.index(/\{%-?\s*sections\s+'#{Regexp.escape(name)}'/) || 0
+        tag_index = layout_group_refs(layout).find { |n, _| n == name }&.last || 0
         { "name" => name, "path" => path, "json" => json.slice("sections", "order"),
           # E3：群組 JSON 自帶 `name`（"Header group"）／`type`（"header"）——本尊小標與
           # `enabled_on.groups` 的比對鍵；無 `name` 時以檔名人性化（"header-group" → "Header group"）。
@@ -155,6 +159,48 @@ module Types
           "lockVersion" => ThemeFileOverlay.where(shop_id: object.shop_id, theme_id: object.id,
                                                   path:).pick(:lock_version) }
       end
+    end
+
+    # layout 內 `sections` 引用（名稱＋字元位置）：`{% sections 'x' %}` 或 liquid 標籤區塊內的 `sections 'x'` 行。
+    def layout_group_refs(layout)
+      layout.to_enum(:scan, /(?:\{%-?\s*|^\s*)sections\s+'([^']+)'/).map do
+        [ Regexp.last_match(1), Regexp.last_match.begin(0) ]
+      end
+    end
+
+    # E3b：模板／群組 JSON 實例 `name` 若是 `t:` 鍵（Ella 匯出的 section／block 都帶 preset 名），
+    # 樹與面板標題要顯示翻譯後文字（本尊顯示 "Announcement bar"，不顯示 `t:names.announcement_bar`）。
+    # 只回實際出現的鍵 ⇒ 小表；缺鍵者不列（前端 fail-open 顯示原鍵）。
+    def name_translations
+      source = ThemeEngine::Sources.resolve(object)
+      return {} if source.nil?
+
+      translate = ThemeEngine::SchemaLocale.resolver_for(source)
+      keys = Set.new
+      collect = lambda do |node|
+        next unless node.is_a?(Hash)
+
+        keys << node["name"] if node["name"].is_a?(String) && node["name"].start_with?("t:")
+        node["sections"]&.each_value { |entry| collect.call(entry) }
+        node["blocks"]&.each_value { |entry| collect.call(entry) }
+      end
+      source.list.each do |rel|
+        next unless rel.match?(%r{\A(templates/[\w.\-]+|sections/[\w\-]+)\.json\z})
+
+        raw = source.read(rel)
+        json = begin
+          raw ? ThemeEngine::Runtime.tolerant_json(raw) : nil
+        rescue JSON::ParserError
+          nil
+        end
+        collect.call(json)
+      end
+      Template.where(shop_id: object.shop_id, theme_id: object.id).find_each do |template|
+        collect.call(template.respond_to?(:content_json) ? template.content_json : template.content)
+      rescue StandardError
+        next
+      end
+      keys.to_h { |key| [ key, translate.call(key) ] }.reject { |key, value| value == key }
     end
 
     def section_schemas

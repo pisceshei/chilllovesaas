@@ -1113,4 +1113,24 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(sent.variables.content.sections.demo.blocks.sb).toMatchObject({ type: "_parent", static: true, disabled: true });
   });
 
+  it("ED42 🔴 實例 name 是 t: 鍵 ⇒ 樹列／面板標題／改名預設值顯示翻譯；無翻譯鍵 fail-open 顯示原鍵", async () => {
+    const boot = JSON.parse(JSON.stringify(BOOTSTRAP)) as typeof BOOTSTRAP;
+    const theme = boot.data.theme as unknown as Record<string, unknown>;
+    theme.nameTranslations = { "t:names.hero": "英雄橫幅" };
+    (theme.sectionGroups as { json: { sections: Record<string, { name?: string }> } }[])[0].json.sections.gh.name = "t:names.hero";
+    (theme.templateJson as { sections: Record<string, { name?: string }> }).sections.hero.name = "t:names.unknown";
+    stubFetch([], boot);
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    expect(tree.getByRole("button", { name: "英雄橫幅" })).toBeInTheDocument(); // 頁首帶 gh：翻譯
+    expect(tree.getByRole("button", { name: "t:names.unknown" })).toBeInTheDocument(); // 範本帶 hero：無翻譯 ⇒ 原鍵
+
+    fireEvent.click(tree.getByRole("button", { name: "英雄橫幅" }));
+    expect(screen.getByRole("heading", { name: "英雄橫幅" })).toBeInTheDocument(); // 面板標題同源
+    fireEvent.contextMenu(tree.getByRole("button", { name: "英雄橫幅" }));
+    fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "重新命名" }));
+    expect((screen.getByLabelText("名稱") as HTMLInputElement).value).toBe("英雄橫幅"); // 改名預設值＝翻譯後文字
+  });
+
 });
