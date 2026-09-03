@@ -2825,6 +2825,53 @@ a {
 .cl-editor__customcss { margin-top: var(--sp-300); }
 .cl-editor__empty { color: var(--text-3); font-size: var(--type-body-sm-size); margin: var(--sp-300) 0; }
 
+/* 左樹（E3；100 §2 列解剖：chevron／type icon／名稱＋摘要／hover 動作／隱藏態／右鍵選單） */
+.cl-tree__band + .cl-tree__band { margin-top: var(--sp-300); padding-top: var(--sp-200); border-top: var(--hairline) solid var(--border); }
+.cl-tree__heading { margin: var(--sp-200) 0 var(--sp-100); color: var(--text-2); font-size: var(--type-body-sm-size); font-weight: var(--fw-medium); }
+.cl-tree__sections, .cl-tree__children { list-style: none; margin: 0; padding: 0; }
+.cl-tree__item { margin: 0; }
+.cl-tree__row { position: relative; display: flex; align-items: center; gap: var(--sp-100); min-height: var(--editor-row-h); padding-right: var(--sp-100); border-radius: var(--r-200); }
+.cl-tree__row:hover { background: var(--surface-row-hover); }
+.cl-tree__row.is-active { background: var(--surface-selected); }
+.cl-tree__row.is-active .cl-tree__name { font-weight: var(--fw-medium); }
+.cl-tree__row.is-hidden .cl-tree__name, .cl-tree__row.is-hidden .cl-tree__typeicon { color: var(--text-disabled); }
+.cl-tree__chevron { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none; border: 0; background: transparent; color: var(--icon); cursor: pointer; border-radius: var(--r-100); }
+.cl-tree__chevron:hover { background: var(--surface-hover); }
+.cl-tree__chevron--empty { cursor: default; }
+.cl-tree__icon { position: relative; display: inline-flex; width: 18px; height: 18px; flex: none; align-items: center; justify-content: center; color: var(--icon); }
+.cl-tree__grip { display: none; cursor: grab; }
+.cl-tree__row:hover .cl-tree__typeicon { display: none; }
+.cl-tree__row:hover .cl-tree__grip { display: inline; }
+.cl-tree__label { flex: 1; min-width: 0; display: inline-flex; align-items: baseline; gap: var(--sp-100); min-height: var(--editor-row-h); padding: 0 var(--sp-100); border: 0; background: transparent; color: var(--text); text-align: start; cursor: pointer; font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); }
+.cl-tree__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-tree__summary { color: var(--text-3); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-tree__actions { display: none; align-items: center; gap: 2px; }
+.cl-tree__row:hover .cl-tree__actions, .cl-tree__row.is-active .cl-tree__actions { display: inline-flex; }
+.cl-tree__op { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; background: transparent; color: var(--icon); cursor: pointer; border-radius: var(--r-100); }
+.cl-tree__op:hover { background: var(--surface-hover); color: var(--text); }
+.cl-tree__op.is-persistent { display: inline-flex; }
+.cl-tree__row .cl-tree__actions:has(.is-persistent) { display: inline-flex; }
+.cl-tree__addrow { list-style: none; }
+.cl-tree__add { display: inline-flex; align-items: center; gap: var(--sp-150); min-height: var(--editor-row-h); padding: 0 var(--sp-200) 0 26px; border: 0; background: transparent; color: var(--link); cursor: pointer; font-size: var(--type-body-sm-size); font-weight: var(--fw-medium); border-radius: var(--r-200); }
+.cl-tree__add:hover { background: var(--surface-row-hover); }
+.cl-tree__addsection { padding-left: 26px; }
+.cl-tree__addlist { list-style: none; margin: var(--sp-100) 0 var(--sp-200) 26px; padding: var(--sp-100); border: var(--hairline) solid var(--border); border-radius: var(--r-200); background: var(--surface); }
+.cl-tree__addoption { display: block; width: 100%; padding: var(--sp-100) var(--sp-200); border: 0; background: transparent; text-align: start; cursor: pointer; border-radius: var(--r-100); font-size: var(--type-body-sm-size); color: var(--text); }
+.cl-tree__addoption:hover { background: var(--surface-row-hover); }
+.cl-tree__menu { position: fixed; z-index: var(--z-popover); list-style: none; margin: 0; padding: var(--sp-100); min-width: 220px; background: var(--surface); border: var(--hairline) solid var(--border); border-radius: var(--r-200); box-shadow: var(--sh-pop); }
+.cl-tree__menuitem { display: flex; align-items: center; gap: var(--sp-200); width: 100%; min-height: 32px; padding: 0 var(--sp-200); border: 0; background: transparent; color: var(--text); text-align: start; cursor: pointer; border-radius: var(--r-100); font-size: var(--type-body-sm-size); }
+.cl-tree__menuitem:hover:not(:disabled) { background: var(--surface-hover); }
+.cl-tree__menuitem:disabled { color: var(--text-disabled); cursor: default; }
+.cl-tree__menuitem kbd { margin-left: auto; font-size: var(--t-275); color: var(--text-3); }
+.cl-tree__menuitem kbd + kbd { margin-left: 2px; }
+.cl-tree__menusep { height: var(--hairline); margin: var(--sp-100) 0; background: var(--border); }
+.cl-tree__previewrow { display: flex; align-items: center; gap: var(--sp-100); margin: 0 0 var(--sp-200); padding: var(--sp-100) var(--sp-200); border-radius: var(--r-200); background: var(--surface-2); }
+.cl-tree__previewbtn { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--sp-100) 0; border: 0; background: transparent; text-align: start; cursor: pointer; color: var(--text); }
+.cl-tree__previewlabel { color: var(--text-3); font-size: var(--t-275); }
+.cl-tree__previewtitle { font-size: var(--type-body-sm-size); font-weight: var(--fw-medium); }
+.cl-tree__previewstep { position: absolute; right: 36px; color: var(--text-3); }
+.cl-tree__previewrow { position: relative; }
+
 /* 快捷鍵對話框（兩欄四組） */
 .cl-editor__shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-400); }
 .cl-editor__shortcut-group + .cl-editor__shortcut-group { margin-top: 0; }

@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Search, Trash2, X } from "lucide-react";
+import { Search, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
@@ -7,30 +7,35 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { CreateTemplateDialog } from "../editor/CreateTemplateDialog";
 import { EditorTopBar, type EditorPanel } from "../editor/EditorTopBar";
 import { isTypingTarget, shortcutFor } from "../editor/editorShortcuts";
+import { PreviewResourceRow } from "../editor/PreviewResourceRow";
+import { SectionsTree, type BlockDefLite } from "../editor/SectionsTree";
 import { ShortcutsDialog } from "../editor/ShortcutsDialog";
 import { splitTemplateKey } from "../editor/TemplateSwitcher";
+import {
+  allExpandableKeys, blockOrderOf, decodeBlockPath, encodeBlockPath, findBlockPath, flattenRows, getBlock,
+  getContainer, orderOf, rowKey, sectionAllowedIn, type BlockPath, type SectionEntry, type TemplateJson,
+  type TreeBand,
+} from "../editor/treeModel";
 import { useT } from "../i18n/I18nContext";
 import { useToast } from "../lib/ToastContext";
 
 /**
- * 主題編輯器（步 16a shell＋16b op-stack 編輯管線；E2／D79 shell＋頂欄依本尊重做）。
+ * 主題編輯器（步 16a shell＋16b op-stack 編輯管線；E2 shell＋頂欄、E3 左樹依本尊重做）。
  *
  * 編輯語義（24 §3 原子 op 對照表）：set-setting／toggle-disabled（眼睛＝隱藏
- * 不是刪除）／move（上下移＝改 order）／remove（移除 entry＋order 引用）／
+ * 不是刪除）／move（拖放＝改 order）／remove（移除 entry＋order 引用）／
  * duplicate（深拷貝＋新 ID）。add-section（picker＋preset）＝16c。
  * Undo/Redo＝JSON 快照棧（14 §F3：不做 op-based——僅未儲存變更、Save 後清空）。
  * 儲存＝themeTemplateUpsert 整份 JSON＋樂觀鎖（STALE ⇒ 提示重載）；成功後
  * iframe 重載（後端已 touch theme——頁快取鍵旋轉紅線在 server 端）。
  *
- * E2 shell（`docs/research/100` §1／§5／§6／§7 實測對位）：
- * - 頂欄＝`EditorTopBar`（Exit＋面板切換器＋主題 chip＋市場＋模板選擇器＋工具＋Undo/Redo
- *   ＋「…」＋Publish＋Save）；面板切換器再點已啟用者 ⇒ 全寬預覽（`previewMode=fullscreen`）。
- * - 左欄依 `panel` 切換：sections（樹）／theme（佈景設定手風琴）／apps（app embeds 空態）。
- * - 右欄只在選中 section／block 時掛載（本尊：無選取 ⇒ 兩欄）。
- * - URL 狀態：`template`／`section`／`block`／`context=theme|apps`／`previewMode`／
- *   `previewPath`／`category`（本尊同名參數；`section` 值用我方 section 鍵）。
- * - 快捷鍵單一表 `editorShortcuts.ts`；離開有未存變更 ⇒ 確認框；Publish ⇒ 確認框 →
- *   先存再 `themePublish`。
+ * E2 shell（`docs/research/100` §1／§5／§6／§7）：頂欄＝`EditorTopBar`；面板切換器再點已啟用者 ⇒ 全寬
+ * 預覽；左欄依 `panel` 切換；右欄只在選取時掛載；URL 狀態 `template`／`section`／`block`／`context`／
+ * `previewMode`／`previewPath`／`category`；快捷鍵單一表；離開／發布確認框。
+ *
+ * E3 左樹（100 §2）：`SectionsTree` 遞迴 block（路徑 `BlockPath`，URL `block=` 以 `__` 串接）；群組帶依
+ * layout 位置排在 Template 上／下；每帶 "Add section"（依 `enabled_on`／`limit` 過濾）；列 hover 動作、
+ * 右鍵選單、鍵盤 Shift+↑↓／Ctrl+Shift+O／P／Shift+Enter；就地改名寫 JSON `name`；資源模板的 Preview 列。
  */
 const EDITOR_QUERY = `
   query themeEditorBootstrap($id: ID!, $key: String!) {
@@ -45,6 +50,7 @@ const EDITOR_QUERY = `
       sectionGroups
       sectionCatalog
       sectionSchemas
+      themeBlocks
       settingsSchema
       themeSettingsJson
       themeSettingsLockVersion
@@ -96,20 +102,6 @@ const SAVE_MUTATION = `
   }
 `;
 
-interface SectionEntry {
-  type: string;
-  disabled?: boolean;
-  custom_css?: string;
-  settings?: Record<string, unknown>;
-  blocks?: Record<string, { type: string; settings?: Record<string, unknown> }>;
-  block_order?: string[];
-}
-
-interface TemplateJson {
-  sections?: Record<string, SectionEntry>;
-  order?: string[];
-}
-
 /** 26 §5 型別子集：16d 先接 T0 純值控件；資源選擇器唯讀（16e 射程）。 */
 interface SettingDef {
   id?: string;
@@ -126,11 +118,16 @@ interface SettingDef {
   options?: { value: string; label: string }[];
 }
 
-interface BlockDef {
-  type: string;
-  name?: string;
-  limit?: number;
+interface BlockDef extends BlockDefLite {
   settings?: SettingDef[];
+  /** theme block 可接受的子型別（"@theme"＝全部；E3 `themeBlocks`） */
+  blocks?: string[];
+}
+
+interface Availability {
+  enabled_on?: { templates?: string[]; groups?: string[] } | null;
+  disabled_on?: { templates?: string[]; groups?: string[] } | null;
+  limit?: number | null;
 }
 
 interface EditorData {
@@ -147,9 +144,11 @@ interface EditorData {
                       preset: { settings: Record<string, unknown>;
                                 blocks: Record<string, unknown> | null } }[];
     previewPaths: Record<string, string>;
-    sectionGroups: { name: string; path: string; json: TemplateJson; lockVersion: number | null }[];
+    sectionGroups: { name: string; path: string; json: TemplateJson; lockVersion: number | null;
+                     label?: string; type?: string; position?: "before" | "after" }[];
     sectionSchemas: Record<string, { name: string; settings: SettingDef[];
-                                     max_blocks?: number | null; blocks?: BlockDef[] }>;
+                                     max_blocks?: number | null; blocks?: BlockDef[] } & Availability>;
+    themeBlocks?: Record<string, BlockDef>;
     settingsSchema: { name: string; settings: SettingDef[] }[];
     themeSettingsJson: Record<string, unknown>;
     themeSettingsLockVersion: number | null;
@@ -175,7 +174,15 @@ function cloneTpl(tpl: TemplateJson): TemplateJson {
   return JSON.parse(JSON.stringify(tpl)) as TemplateJson;
 }
 
+/** 群組檔名人性化（"header-group" → "Header group"）；群組 JSON 自帶 name 時不用。 */
+function humanize(name: string): string {
+  const spaced = name.replace(/[-_]+/g, " ").trim();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+const RESOURCE_TEMPLATE_TYPES = new Set([ "product", "collection", "page", "blog", "article" ]);
+const GROUP_TEMPLATE_TYPES = RESOURCE_TEMPLATE_TYPES;
 
 /** schema 驅動控件（26 §5 對映）：T0 純值型可編輯；資源選擇器唯讀（16e）。 */
 function SettingControl({ def, value, onChange }: {
@@ -320,8 +327,6 @@ function FallbackControl({ name, value, onChange }: {
   );
 }
 
-const GROUP_TEMPLATE_TYPES = new Set([ "product", "collection", "page", "blog", "article" ]);
-
 export function ThemeEditorPage() {
   const t = useT();
   const { showToast } = useToast();
@@ -332,10 +337,13 @@ export function ThemeEditorPage() {
   const [data, setData] = useState<EditorData["theme"]>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  // E3：選中 block 以路徑定位（`[]`＝section 本身）；葉 id 供橋（cl:highlight）用
+  const [selectedPath, setSelectedPath] = useState<BlockPath>([]);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [renaming, setRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
   const [draft, setDraft] = useState<TemplateJson | null>(null);
-  // PR-5：三帶（24 §1 本尊樹形＝Header group／Template／Footer group）——
-  // 群組 draft 與模板同語義（{sections, order}），寫回走 themeFileUpsert。
+  // PR-5：群組帶（24 §1 本尊樹形）——群組 draft 與模板同語義（{sections, order}），寫回走 themeFileUpsert。
   const [groupDrafts, setGroupDrafts] = useState<Record<string, TemplateJson>>({});
   const [groupLocks, setGroupLocks] = useState<Record<string, number | null>>({});
   const [dirtyGroups, setDirtyGroups] = useState<string[]>([]);
@@ -348,8 +356,9 @@ export function ThemeEditorPage() {
   const [lockVersion, setLockVersion] = useState<number | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerQuery, setPickerQuery] = useState(""); // PR-19：⑤a picker 搜尋
+  // E3：Add section 的目標帶與插入位置（null＝關）；PR-19 picker 搜尋
+  const [pickerFor, setPickerFor] = useState<{ band: string; atIndex: number | null } | null>(null);
+  const [pickerQuery, setPickerQuery] = useState("");
   // E2：左欄面板（sections／theme／apps；本尊面板切換器）＋全寬預覽＋inspector＋手機檢視
   const [panel, setPanel] = useState<EditorPanel>("sections");
   const [fullscreen, setFullscreen] = useState(false);
@@ -379,11 +388,13 @@ export function ThemeEditorPage() {
   const themeMode = panel === "theme";
   const gid = `gid://chilllove/Theme/${themeId}`;
   const dirtyAny = dirty || settingsDirty || dirtyGroups.length > 0;
+  const templateType = splitTemplateKey(templateKey).type;
+  const selectedBlockId = selectedPath.length > 0 ? selectedPath[selectedPath.length - 1] : null;
 
   // PR-11 資源語境：模板型 → 樣本路徑（product 模板帶真商品）；無樣本回落首頁。
-  // E2：URL `previewPath`（預覽內導航寫入）優先——本尊同名參數（100 §6）。
+  // E2：URL `previewPath`（預覽內導航／Preview 列寫入）優先——本尊同名參數（100 §6）。
   const previewPath = searchParams.get("previewPath")
-    ?? data?.previewPaths?.[splitTemplateKey(templateKey).type] ?? "/";
+    ?? data?.previewPaths?.[templateType] ?? "/";
 
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -416,6 +427,55 @@ export function ThemeEditorPage() {
     return () => controller.abort();
   }, [load]);
 
+  // ── E3：帶（群組依 layout 位置排在 Template 上／下）與 schema 解析 helpers ──
+  const themeBlocks = useMemo(() => data?.themeBlocks ?? {}, [data]);
+  const bands = useMemo<TreeBand[]>(() => {
+    const groups = (data?.sectionGroups ?? []).map((g) => ({
+      band: g.name,
+      label: g.label ?? humanize(g.name),
+      groupType: g.type ?? g.name.replace(/-group$/, ""),
+      position: (g.position ?? (g.name.includes("footer") ? "after" : "before")) as "before" | "after",
+      tpl: groupDrafts[g.name] ?? null,
+    }));
+    return [
+      ...groups.filter((g) => g.position === "before"),
+      { band: "template", label: t("editor.templateBand"), position: "template" as const, tpl: draft },
+      ...groups.filter((g) => g.position === "after"),
+    ];
+  }, [data, groupDrafts, draft, t]);
+
+  const tplOf = (band: string) => (band === "template" ? draftRef.current : groupDraftsRef.current[band] ?? null);
+  const sectionOf = (band: string, sectionId: string): SectionEntry | null => tplOf(band)?.sections?.[sectionId] ?? null;
+  const sectionName = (type: string) => data?.sectionSchemas?.[type]?.name ?? type;
+  const blockDef = (sectionType: string, path: BlockPath, blockType: string): BlockDef | undefined => {
+    const local = data?.sectionSchemas?.[sectionType]?.blocks?.find((d) => d.type === blockType);
+    return path.length === 1 ? (local ?? themeBlocks[blockType]) : (themeBlocks[blockType] ?? local);
+  };
+  const expandAccepts = (accepts: string[]): BlockDef[] => accepts.flatMap((type) =>
+    type === "@theme" ? Object.values(themeBlocks) : themeBlocks[type] ? [ themeBlocks[type] ] : []);
+  const addBlockOptions = (band: string, sectionId: string, parentPath: BlockPath): BlockDef[] => {
+    const section = sectionOf(band, sectionId);
+    if (!section) return [];
+    if (parentPath.length === 0) {
+      const schema = data?.sectionSchemas?.[section.type];
+      const max = schema?.max_blocks ?? 50;
+      return blockOrderOf(section).length < max ? (schema?.blocks ?? []) : [];
+    }
+    if (parentPath.length >= 8) return []; // help："Eight levels maximum"
+    const container = getBlock(section, parentPath);
+    return container ? expandAccepts(themeBlocks[container.type]?.blocks ?? []) : [];
+  };
+
+  /** 展開到某路徑（選中 block 時祖先必須展開，樹才看得到它）。 */
+  const expandTo = (band: string, sectionId: string, path: BlockPath) => {
+    setExpanded((current) => {
+      const next = new Set(current);
+      next.add(rowKey(band, sectionId, []));
+      for (let depth = 1; depth < path.length; depth += 1) next.add(rowKey(band, sectionId, path.slice(0, depth)));
+      return next;
+    });
+  };
+
   // PR-15／E2：編輯器狀態 URL 化（本尊 100 §6：section／block／context／previewMode／
   // category 皆為 query 參數，可重載還原）。初載還原一次。
   const restoredRef = useRef(false);
@@ -423,20 +483,20 @@ export function ThemeEditorPage() {
     if (restoredRef.current || !data) return;
     restoredRef.current = true;
     const section = searchParams.get("section");
-    const block = searchParams.get("block");
+    const block = decodeBlockPath(searchParams.get("block"));
     const context = searchParams.get("context");
     if (searchParams.get("previewMode") === "fullscreen") setFullscreen(true);
     if (searchParams.get("category")) setOpenCategory(searchParams.get("category"));
     if (context === "theme" || context === "apps") {
       setPanel(context);
     } else if (section) {
+      const band = draftRef.current?.sections?.[section]
+        ? "template"
+        : Object.entries(groupDraftsRef.current).find(([ , tpl ]) => tpl.sections?.[section])?.[0] ?? "template";
       setSelectedId(section);
-      setSelectedBlockId(block);
-      setSelectedBand(
-        draftRef.current?.sections?.[section]
-          ? "template"
-          : Object.entries(groupDraftsRef.current).find(([ , tpl ]) => tpl.sections?.[section])?.[0] ?? "template",
-      );
+      setSelectedPath(block ?? []);
+      setSelectedBand(band);
+      expandTo(band, section, block ?? []);
     }
   }, [data, searchParams]);
 
@@ -451,18 +511,21 @@ export function ThemeEditorPage() {
     }, { replace: true });
   };
 
-  /** 選中 section（＋block）：三處同步——state、URL、面板回 sections。 */
-  const selectNode = (band: string, sectionId: string, blockId: string | null) => {
+  /** 選中 section（＋block 路徑）：state、URL、面板回 sections、展開祖先。 */
+  const selectNode = (band: string, sectionId: string, path: BlockPath) => {
     setSelectedBand(band);
     setSelectedId(sectionId);
-    setSelectedBlockId(blockId);
+    setSelectedPath(path);
     setPanel("sections");
-    syncStateParams({ section: sectionId, block: blockId, context: null });
+    setRenaming(false);
+    if (path.length > 0) expandTo(band, sectionId, path);
+    syncStateParams({ section: sectionId, block: path.length > 0 ? encodeBlockPath(path) : null, context: null });
   };
 
   const deselect = () => {
     setSelectedId(null);
-    setSelectedBlockId(null);
+    setSelectedPath([]);
+    setRenaming(false);
     syncStateParams({ section: null, block: null });
   };
 
@@ -473,7 +536,7 @@ export function ThemeEditorPage() {
     if (next !== "sections") {
       // 本尊：切到佈景設定／app embeds 即取消選取（右欄收起）
       setSelectedId(null);
-      setSelectedBlockId(null);
+      setSelectedPath([]);
       patch.section = null;
       patch.block = null;
     }
@@ -514,17 +577,14 @@ export function ThemeEditorPage() {
         return;
       }
       if (payload?.type === "cl:select" && payload.id) {
-        setSelectedId(payload.id);
-        setSelectedBlockId(payload.blockId ?? null); // PR-17：預覽點 block ⇒ 直開 block 面板
-        // PR-5：預覽點選可能是群組 section——跨帶定位
-        setSelectedBand((current) => {
-          if (draftRef.current?.sections?.[payload.id!]) return "template";
-          const hit = Object.entries(groupDraftsRef.current)
-            .find(([ , tpl ]) => tpl.sections?.[payload.id!]);
-          return hit ? hit[0] : current;
-        });
-        setPanel("sections");
-        syncStateParams({ section: payload.id, block: payload.blockId ?? null, context: null });
+        const id = payload.id;
+        const band = draftRef.current?.sections?.[id]
+          ? "template"
+          : Object.entries(groupDraftsRef.current).find(([ , tpl ]) => tpl.sections?.[id])?.[0] ?? "template";
+        const section = tplOf(band)?.sections?.[id];
+        // PR-17／E3：預覽點 block 只回葉 id ⇒ 在 section 樹裡找完整路徑
+        const path = payload.blockId && section ? (findBlockPath(section, payload.blockId) ?? [ payload.blockId ]) : [];
+        selectNode(band, id, path);
       }
     };
     window.addEventListener("message", onMessage);
@@ -672,11 +732,17 @@ export function ThemeEditorPage() {
     bumpDrafts();
   };
 
-  const orderOf = (tpl: TemplateJson) => tpl.order ?? Object.keys(tpl.sections ?? {});
+  /** 對某帶某 section 做變更（applyOp 的 section 級便捷形）。 */
+  const withSection = (band: string, sectionId: string, fn: (section: SectionEntry, tpl: TemplateJson) => void) =>
+    applyOp(band, (tpl) => {
+      const section = tpl.sections?.[sectionId];
+      if (section) fn(section, tpl);
+    });
 
-  const toggleDisabled = (band: string, sectionId: string) => applyOp(band, (tpl) => {
-    const entry = tpl.sections?.[sectionId];
-    if (entry) entry.disabled = !entry.disabled; // 隱藏不是刪除（24 §3）
+  // E3：section／block 同語義的 op（路徑 `[]`＝section）
+  const toggleNodeDisabled = (band: string, sectionId: string, path: BlockPath) => withSection(band, sectionId, (section) => {
+    const node = getBlock(section, path);
+    if (node) node.disabled = !node.disabled; // 隱藏不是刪除（24 §3）
   });
 
   const removeSection = (band: string, sectionId: string) => applyOp(band, (tpl) => {
@@ -685,7 +751,25 @@ export function ThemeEditorPage() {
     if (selectedId === sectionId) setSelectedId(null);
   });
 
-  // PR-26：拖放的任意位置插入（同帶；applyOp ⇒ undo/改即見/儲存全繼承）
+  const removeNode = (band: string, sectionId: string, path: BlockPath) => {
+    if (path.length === 0) {
+      removeSection(band, sectionId);
+      if (selectedBand === band && selectedId === sectionId) deselect();
+      return;
+    }
+    const id = path[path.length - 1];
+    withSection(band, sectionId, (section) => {
+      const container = getContainer(section, path);
+      if (!container?.blocks) return;
+      delete container.blocks[id];
+      container.block_order = blockOrderOf(container).filter((x) => x !== id);
+    });
+    if (selectedBand === band && selectedId === sectionId && selectedPath.join("/").startsWith(path.join("/"))) {
+      selectNode(band, sectionId, path.slice(0, -1));
+    }
+  };
+
+  // PR-26／E3：拖放的任意位置插入（section 同帶；block 同容器；applyOp ⇒ undo/改即見/儲存全繼承）
   const moveSectionTo = (band: string, sectionId: string, targetIndex: number) => applyOp(band, (tpl) => {
     const order = [ ...orderOf(tpl) ];
     const from = order.indexOf(sectionId);
@@ -696,7 +780,20 @@ export function ThemeEditorPage() {
     tpl.order = order;
   });
 
-  const dragRef = useRef<{ band: string; sectionId: string } | null>(null);
+  const moveNode = (band: string, sectionId: string, path: BlockPath, targetIndex: number) => {
+    if (path.length === 0) { moveSectionTo(band, sectionId, targetIndex); return; }
+    const id = path[path.length - 1];
+    withSection(band, sectionId, (section) => {
+      const container = getContainer(section, path);
+      if (!container) return;
+      const order = [ ...blockOrderOf(container) ];
+      const from = order.indexOf(id);
+      if (from < 0) return;
+      order.splice(from, 1);
+      order.splice(Math.max(0, Math.min(targetIndex, order.length)), 0, id);
+      container.block_order = order;
+    });
+  };
 
   const moveSection = (band: string, sectionId: string, direction: -1 | 1) => applyOp(band, (tpl) => {
     const order = [ ...orderOf(tpl) ];
@@ -719,13 +816,15 @@ export function ThemeEditorPage() {
     tpl.order = order;
   });
 
-  /** add-section（24 §3：新 entry 內容取 preset；插到尾端＋order）。 */
+  /** add-section（24 §3：新 entry 內容取 preset；E3：插到指定帶的指定位置，預設尾端）。 */
   const addSection = (catalogEntry: NonNullable<EditorData["theme"]>["sectionCatalog"][number]) => {
-    applyOp("template", (tpl) => {
+    const target = pickerFor ?? { band: "template", atIndex: null };
+    const tplNow = tplOf(target.band);
+    let newId = catalogEntry.type;
+    let n = 1;
+    while (tplNow?.sections?.[newId]) newId = `${catalogEntry.type}-${n++}`;
+    applyOp(target.band, (tpl) => {
       tpl.sections ??= {};
-      let newId = catalogEntry.type;
-      let n = 1;
-      while (tpl.sections[newId]) newId = `${catalogEntry.type}-${n++}`;
       const entry: SectionEntry = {
         type: catalogEntry.type,
         settings: JSON.parse(JSON.stringify(catalogEntry.preset.settings)) as Record<string, unknown>,
@@ -735,70 +834,56 @@ export function ThemeEditorPage() {
         entry.block_order = Object.keys(entry.blocks ?? {});
       }
       tpl.sections[newId] = entry;
-      tpl.order = [ ...orderOf(tpl), newId ];
-      setSelectedId(newId);
-      setSelectedBand("template");
+      const order = [ ...orderOf(tpl) ];
+      order.splice(target.atIndex ?? order.length, 0, newId);
+      tpl.order = order;
     });
-    setPickerOpen(false);
+    setPickerFor(null);
+    selectNode(target.band, newId, []);
   };
 
-  // ── PR-6：block 級操作（24 §3 同語義向下一層；全部走 applyOp 快照棧）──
-  const addBlock = (band: string, sectionId: string, def: BlockDef) => applyOp(band, (tpl) => {
-    const entry = tpl.sections?.[sectionId];
-    if (!entry) return;
-    entry.blocks ??= {};
-    entry.block_order ??= [];
+  // ── PR-6／E3：block 級操作（任意深度；全部走 applyOp 快照棧）──
+  const addBlockAt = (band: string, sectionId: string, parentPath: BlockPath, def: BlockDefLite) => {
+    const containerNow = sectionOf(band, sectionId);
+    const parentNow = containerNow ? getBlock(containerNow, parentPath) : null;
     let newId = def.type;
     let n = 1;
-    while (entry.blocks[newId]) newId = `${def.type}-${n++}`;
-    const defaults = Object.fromEntries((def.settings ?? [])
-      .filter((d) => d.id && d.default !== undefined)
-      .map((d) => [ d.id as string, d.default ]));
-    entry.blocks[newId] = { type: def.type, settings: defaults };
-    entry.block_order = [ ...entry.block_order, newId ];
-    setSelectedBand(band);
-    setSelectedId(sectionId);
-    setSelectedBlockId(newId);
-  });
+    while (parentNow?.blocks?.[newId]) newId = `${def.type}-${n++}`;
+    withSection(band, sectionId, (section) => {
+      const container = getBlock(section, parentPath);
+      if (!container) return;
+      container.blocks ??= {};
+      container.block_order ??= [];
+      const defaults = Object.fromEntries(((def as BlockDef).settings ?? [])
+        .filter((d) => d.id && d.default !== undefined)
+        .map((d) => [ d.id as string, d.default ]));
+      container.blocks[newId] = { type: def.type, settings: defaults };
+      container.block_order = [ ...blockOrderOf(container), newId ];
+    });
+    selectNode(band, sectionId, [ ...parentPath, newId ]);
+  };
 
-  const removeBlock = (band: string, sectionId: string, blockId: string) => applyOp(band, (tpl) => {
-    const entry = tpl.sections?.[sectionId];
-    if (!entry?.blocks) return;
-    delete entry.blocks[blockId];
-    entry.block_order = (entry.block_order ?? []).filter((id) => id !== blockId);
-    if (selectedBlockId === blockId) setSelectedBlockId(null);
-  });
+  const setBlockSetting = (settingKey: string, value: unknown) => {
+    if (!selectedId || selectedPath.length === 0) return;
+    withSection(selectedBand, selectedId, (section) => {
+      const block = getBlock(section, selectedPath);
+      if (!block) return;
+      block.settings = { ...(block.settings ?? {}), [settingKey]: value };
+    });
+  };
 
-  // PR-27：block 拖放任意位置（同 section；applyOp 全繼承——PR-26 同構）
-  const moveBlockTo = (band: string, sectionId: string, blockId: string, targetIndex: number) => applyOp(band, (tpl) => {
-    const entry = tpl.sections?.[sectionId];
-    const order = [ ...(entry?.block_order ?? []) ];
-    const from = order.indexOf(blockId);
-    if (!entry || from < 0) return;
-    order.splice(from, 1);
-    const bounded = Math.max(0, Math.min(targetIndex, order.length));
-    order.splice(bounded, 0, blockId);
-    entry.block_order = order;
-  });
-
-  const blockDragRef = useRef<{ band: string; sectionId: string; blockId: string } | null>(null);
-
-  const moveBlock = (band: string, sectionId: string, blockId: string, direction: -1 | 1) => applyOp(band, (tpl) => {
-    const entry = tpl.sections?.[sectionId];
-    const order = [ ...(entry?.block_order ?? []) ];
-    const index = order.indexOf(blockId);
-    const target = index + direction;
-    if (!entry || index < 0 || target < 0 || target >= order.length) return;
-    [ order[index], order[target] ] = [ order[target], order[index] ];
-    entry.block_order = order;
-  });
-
-  const setBlockSetting = (settingKey: string, value: unknown) => applyOp(selectedBand, (tpl) => {
-    const block = selectedId && selectedBlockId
-      ? tpl.sections?.[selectedId]?.blocks?.[selectedBlockId] : null;
-    if (!block) return;
-    block.settings = { ...(block.settings ?? {}), [settingKey]: value };
-  });
+  /** E3 Rename：就地改名寫進 JSON `name`（本尊語義；Ella 匯出的 block `name` 即此）；空值＝清掉。 */
+  const commitRename = () => {
+    if (!selectedId) return;
+    const value = renameValue.trim();
+    withSection(selectedBand, selectedId, (section) => {
+      const node = getBlock(section, selectedPath);
+      if (!node) return;
+      if (value) node.name = value;
+      else delete node.name;
+    });
+    setRenaming(false);
+  };
 
   /** 佈景設定寫值（16d2）：獨立 draft，不進模板快照棧（undo 整合＝16e）。 */
   const setThemeSetting = (settingKey: string, value: unknown) => {
@@ -945,10 +1030,33 @@ export function ThemeEditorPage() {
     else navigate("/admin/store");
   };
 
-  // E2：快捷鍵——單一表 `editorShortcuts`；effect 只掛一次，經 ref 取最新動作。
-  // 輸入控件內不攔 undo/redo/remove/hide/deselect（讓瀏覽器原生文字編輯先行）；
-  // modal 開著（#admin-root inert）時全部不攔——對話框自己管 Escape。
+  const openCode = (band: string, sectionId: string, path: BlockPath) => {
+    const section = sectionOf(band, sectionId);
+    if (!section) return;
+    const node = getBlock(section, path);
+    const file = path.length === 0 ? `sections/${section.type}.liquid` : `blocks/${node?.type ?? ""}.liquid`;
+    window.open(`/admin/themes/${themeId}/code?file=${encodeURIComponent(file)}`, "_blank", "noopener");
+  };
+
+  const startRename = (band: string, sectionId: string, path: BlockPath) => {
+    const section = sectionOf(band, sectionId);
+    const node = section ? getBlock(section, path) : null;
+    if (!node || !section) return;
+    const def = path.length > 0 ? blockDef(section.type, path, node.type) : undefined;
+    selectNode(band, sectionId, path);
+    setRenameValue(node.name ?? (path.length === 0 ? sectionName(node.type) : (def?.name ?? node.type)));
+    setRenaming(true);
+  };
+
+  // E2／E3：快捷鍵——單一表 `editorShortcuts`；effect 只掛一次，經 ref 取最新動作。
+  // 輸入控件內不攔 undo/redo/remove/hide/deselect/導航（讓瀏覽器原生文字編輯先行）；
+  // modal 開著（#admin-root inert 或 role=dialog）時全部不攔——對話框自己管 Escape。
   const actionsRef = useRef<Record<string, () => void>>({});
+  const currentRowIndex = () => {
+    const rows = flattenRows(bands, expanded);
+    return { rows, index: rows.findIndex((row) => row.band === selectedBand && row.sectionId === selectedId
+      && row.path.join("/") === selectedPath.join("/")) };
+  };
   actionsRef.current = {
     undo, redo,
     save: () => { void save(); },
@@ -958,13 +1066,24 @@ export function ThemeEditorPage() {
     sections: () => switchPanel("sections"),
     themeSettings: () => switchPanel("theme"),
     appEmbeds: () => switchPanel("apps"),
-    hideShow: () => { if (selectedId) toggleDisabled(selectedBand, selectedId); },
-    remove: () => {
-      if (!selectedId) return;
-      if (selectedBlockId) removeBlock(selectedBand, selectedId, selectedBlockId);
-      else { removeSection(selectedBand, selectedId); deselect(); }
+    hideShow: () => { if (selectedId) toggleNodeDisabled(selectedBand, selectedId, selectedPath); },
+    remove: () => { if (selectedId) removeNode(selectedBand, selectedId, selectedPath); },
+    deselect: () => { if (renaming) setRenaming(false); else if (selectedId) deselect(); },
+    selectPrev: () => {
+      const { rows, index } = currentRowIndex();
+      const target = rows[index < 0 ? 0 : Math.max(0, index - 1)];
+      if (target) selectNode(target.band, target.sectionId, target.path);
     },
-    deselect: () => { if (selectedId) deselect(); },
+    selectNext: () => {
+      const { rows, index } = currentRowIndex();
+      const target = rows[index < 0 ? 0 : Math.min(rows.length - 1, index + 1)];
+      if (target) selectNode(target.band, target.sectionId, target.path);
+    },
+    openSelected: () => {
+      (document.querySelector(".cl-editor__settings input, .cl-editor__settings select, .cl-editor__settings textarea") as HTMLElement | null)?.focus();
+    },
+    expandAll: () => setExpanded(new Set(allExpandableKeys(bands))),
+    collapseAll: () => setExpanded(new Set()),
   };
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -975,7 +1094,7 @@ export function ThemeEditorPage() {
       const id = shortcutFor(event);
       if (!id) return;
       if (isTypingTarget(event.target) &&
-          [ "undo", "redo", "remove", "hideShow", "deselect" ].includes(id)) return;
+          [ "undo", "redo", "remove", "hideShow", "deselect", "selectPrev", "selectNext", "openSelected" ].includes(id)) return;
       event.preventDefault();
       actionsRef.current[id]?.();
     };
@@ -1004,8 +1123,26 @@ export function ThemeEditorPage() {
 
   const activeDraft = selectedBand === "template" ? draft : groupDrafts[selectedBand] ?? null;
   const selected = selectedId && activeDraft?.sections ? activeDraft.sections[selectedId] : null;
+  const selectedBlock = selected && selectedPath.length > 0 ? getBlock(selected, selectedPath) : null;
+  const selectedBlockDef = selected && selectedBlock ? blockDef(selected.type, selectedPath, selectedBlock.type) : undefined;
   const previewSrc = `/admin/store/preview/${themeId}${previewPath === "/" ? "" : previewPath}?editor=1`;
-  const hasRightPanel = panel === "sections" && Boolean(selected && selectedId);
+  const hasRightPanel = panel === "sections" && Boolean(selected && selectedId) && (selectedPath.length === 0 || Boolean(selectedBlock));
+  const panelTitle = selected
+    ? (selectedBlock ? (selectedBlock.name ?? selectedBlockDef?.name ?? selectedBlock.type) : (selected.name ?? sectionName(selected.type)))
+    : "";
+
+  // E3：Add section picker 的候選（依帶過濾 enabled_on／disabled_on；limit 達標灰化並標 (n/limit)）
+  const pickerBand = pickerFor ? bands.find((b) => b.band === pickerFor.band) : null;
+  const pickerEntries = (data?.sectionCatalog ?? []).map((entry) => {
+    const schema = data?.sectionSchemas?.[entry.type];
+    const allowed = sectionAllowedIn(schema, pickerBand?.position === "template" ? { templateType } : { groupType: pickerBand?.groupType });
+    const used = pickerBand?.tpl ? orderOf(pickerBand.tpl).filter((id) => pickerBand.tpl?.sections?.[id]?.type === entry.type).length : 0;
+    const limit = schema?.limit ?? null;
+    return { entry, allowed, used, limit, full: limit !== null && used >= limit };
+  }).filter(({ entry, allowed }) => {
+    const q = pickerQuery.trim().toLowerCase();
+    return allowed && (!q || entry.name.toLowerCase().includes(q) || entry.type.toLowerCase().includes(q));
+  });
 
   if (error) {
     return (
@@ -1060,177 +1197,58 @@ export function ThemeEditorPage() {
           <aside aria-label={t("editor.sectionsTree")} className="cl-editor__sidebar cl-editor__tree">
             <div className="cl-editor__paneltitle"><h3>{templateLabel}</h3></div>
             <div className="cl-editor__panelbody">
-              <Button onClick={() => setPickerOpen((open) => !open)} size="small">
-                {t("editor.addSection")}
-              </Button>
-              {pickerOpen ? (
+              {RESOURCE_TEMPLATE_TYPES.has(templateType) && themeId ? (
+                <PreviewResourceRow
+                  currentPath={previewPath}
+                  onPick={(path) => syncStateParams({ previewPath: path, section: null, block: null })}
+                  templateType={templateType as "product" | "collection" | "page" | "blog" | "article"}
+                  themeId={themeId}
+                />
+              ) : null}
+              {pickerFor ? (
                 <ul aria-label={t("editor.sectionPicker")} className="cl-editor__picker">
                   <li>
                     <input
                       aria-label={t("editor.pickerSearch")}
                       className="cl-field__input"
+                      data-autofocus
                       onChange={(event) => setPickerQuery(event.target.value)}
                       placeholder={t("editor.pickerSearch")}
                       value={pickerQuery}
                     />
                   </li>
-                  {(data?.sectionCatalog ?? []).length === 0 ? (
+                  {pickerEntries.length === 0 ? (
                     <li className="cl-card-note">{t("editor.pickerEmpty")}</li>
-                  ) : (
-                    (data?.sectionCatalog ?? [])
-                      .filter((entry) => {
-                        const q = pickerQuery.trim().toLowerCase();
-                        return !q || entry.name.toLowerCase().includes(q) || entry.type.toLowerCase().includes(q);
-                      })
-                      .map((entry) => (
-                      <li key={entry.type}>
-                        <button className="cl-editor__node" onClick={() => addSection(entry)} type="button">
-                          {entry.name}
-                        </button>
-                      </li>
-                    ))
-                  )}
+                  ) : pickerEntries.map(({ entry, full, used, limit }) => (
+                    <li key={entry.type}>
+                      <button className="cl-editor__node" disabled={full} onClick={() => addSection(entry)} type="button">
+                        {entry.name}{full ? ` (${used}/${limit})` : ""}
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               ) : null}
-              {(() => {
-                // PR-5 三帶（24 §1 本尊樹形）：header 群組帶 → 範本帶 → 其餘群組帶
-                const groups = data?.sectionGroups ?? [];
-                const headerGroups = groups.filter((g) => g.name.includes("header"));
-                const otherGroups = groups.filter((g) => !g.name.includes("header"));
-
-                const renderRows = (band: string, tpl: TemplateJson | null) => {
-                  const rows = tpl ? (tpl.order ?? Object.keys(tpl.sections ?? {})) : [];
-                  if (rows.length === 0) return <p className="cl-card-note">{t("editor.noSections")}</p>;
-                  return (
-                    <ul>
-                      {rows.map((sectionId, index) => {
-                        const entry = tpl?.sections?.[sectionId];
-                        if (!entry) return null;
-                        const isActive = selectedBand === band && selectedId === sectionId;
-                        return (
-                          <li
-                            draggable
-                            key={`${band}:${sectionId}`}
-                            onDragOver={(event) => {
-                              if (dragRef.current?.band === band) event.preventDefault();
-                            }}
-                            onDragStart={() => { dragRef.current = { band, sectionId }; }}
-                            onDrop={(event) => {
-                              event.preventDefault();
-                              const drag = dragRef.current;
-                              dragRef.current = null;
-                              if (!drag || drag.band !== band || drag.sectionId === sectionId) return;
-                              moveSectionTo(band, drag.sectionId, index); // 放到目標列位置
-                            }}
-                          >
-                            <div className="cl-editor__noderow">
-                              <button
-                                aria-pressed={isActive}
-                                className={isActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                                onClick={() => selectNode(band, sectionId, null)}
-                                type="button"
-                              >
-                                {entry.type}
-                              </button>
-                              <button aria-label={t("editor.moveUp", { id: sectionId })} className="cl-editor__op" disabled={index === 0} onClick={() => moveSection(band, sectionId, -1)} type="button"><ArrowUp size={13} /></button>
-                              <button aria-label={t("editor.moveDown", { id: sectionId })} className="cl-editor__op" disabled={index === rows.length - 1} onClick={() => moveSection(band, sectionId, 1)} type="button"><ArrowDown size={13} /></button>
-                              <button aria-label={entry.disabled ? t("editor.show", { id: sectionId }) : t("editor.hide", { id: sectionId })} className="cl-editor__op" onClick={() => toggleDisabled(band, sectionId)} type="button">
-                                {entry.disabled ? <EyeOff size={13} /> : <Eye size={13} />}
-                              </button>
-                              <button aria-label={t("editor.duplicateOp", { id: sectionId })} className="cl-editor__op" onClick={() => duplicateSection(band, sectionId)} type="button"><Copy size={13} /></button>
-                              <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-editor__op" onClick={() => removeSection(band, sectionId)} type="button"><Trash2 size={13} /></button>
-                            </div>
-                            {(() => {
-                              const blockDefs = data?.sectionSchemas?.[entry.type]?.blocks ?? [];
-                              const maxBlocks = data?.sectionSchemas?.[entry.type]?.max_blocks ?? 50;
-                              const blockOrder = entry.block_order ?? [];
-                              return (
-                                <ul>
-                                  {blockOrder.map((blockId, blockIndex) => {
-                                    const blockActive = selectedBand === band && selectedId === sectionId && selectedBlockId === blockId;
-                                    return (
-                                      <li
-                                        className="cl-editor__block"
-                                        draggable
-                                        key={blockId}
-                                        onDragOver={(event) => {
-                                          const drag = blockDragRef.current;
-                                          if (drag && drag.band === band && drag.sectionId === sectionId) {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                          }
-                                        }}
-                                        onDragStart={(event) => {
-                                          event.stopPropagation(); // 別讓 section li 也進入拖曳
-                                          blockDragRef.current = { band, sectionId, blockId };
-                                        }}
-                                        onDrop={(event) => {
-                                          event.preventDefault();
-                                          event.stopPropagation();
-                                          const drag = blockDragRef.current;
-                                          blockDragRef.current = null;
-                                          if (!drag || drag.band !== band || drag.sectionId !== sectionId ||
-                                              drag.blockId === blockId) return;
-                                          moveBlockTo(band, sectionId, drag.blockId, blockIndex);
-                                        }}
-                                      >
-                                        <button
-                                          aria-pressed={blockActive}
-                                          className={blockActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                                          onClick={() => selectNode(band, sectionId, blockId)}
-                                          type="button"
-                                        >
-                                          {entry.blocks?.[blockId]?.type ?? blockId}
-                                        </button>
-                                        <button aria-label={t("editor.blockUp", { id: blockId })} className="cl-editor__op" disabled={blockIndex === 0} onClick={() => moveBlock(band, sectionId, blockId, -1)} type="button"><ArrowUp size={12} /></button>
-                                        <button aria-label={t("editor.blockDown", { id: blockId })} className="cl-editor__op" disabled={blockIndex === blockOrder.length - 1} onClick={() => moveBlock(band, sectionId, blockId, 1)} type="button"><ArrowDown size={12} /></button>
-                                        <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-editor__op" onClick={() => removeBlock(band, sectionId, blockId)} type="button"><Trash2 size={12} /></button>
-                                      </li>
-                                    );
-                                  })}
-                                  {blockDefs.length > 0 && blockOrder.length < maxBlocks ? (
-                                    <li className="cl-editor__block">
-                                      {blockDefs.map((def) => (
-                                        <button
-                                          className="cl-editor__addblock"
-                                          key={def.type}
-                                          onClick={() => addBlock(band, sectionId, def)}
-                                          type="button"
-                                        >
-                                          ＋ {def.name ?? def.type}
-                                        </button>
-                                      ))}
-                                    </li>
-                                  ) : null}
-                                </ul>
-                              );
-                            })()}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  );
-                };
-
-                return (
-                  <>
-                    {headerGroups.map((g) => (
-                      <section key={g.name}>
-                        <h4 className="cl-editor__band">{t("editor.headerBand")}</h4>
-                        {renderRows(g.name, groupDrafts[g.name] ?? null)}
-                      </section>
-                    ))}
-                    <h4 className="cl-editor__band">{t("editor.templateBand")}</h4>
-                    {renderRows("template", draft)}
-                    {otherGroups.map((g) => (
-                      <section key={g.name}>
-                        <h4 className="cl-editor__band">{g.name.includes("footer") ? t("editor.footerBand") : g.name}</h4>
-                        {renderRows(g.name, groupDrafts[g.name] ?? null)}
-                      </section>
-                    ))}
-                  </>
-                );
-              })()}
+              <SectionsTree
+                addBlockOptions={addBlockOptions}
+                bands={bands}
+                blockDef={blockDef}
+                expanded={expanded}
+                onAddBlock={addBlockAt}
+                onAddSection={(band, atIndex) => { setPickerQuery(""); setPickerFor((current) => (current?.band === band && current.atIndex === atIndex ? null : { band, atIndex })); }}
+                onEditCode={openCode}
+                onMove={moveNode}
+                onRemove={removeNode}
+                onRename={startRename}
+                onSelect={selectNode}
+                onToggleDisabled={toggleNodeDisabled}
+                onToggleExpand={(key) => setExpanded((current) => {
+                  const next = new Set(current);
+                  if (next.has(key)) next.delete(key); else next.add(key);
+                  return next;
+                })}
+                sectionName={sectionName}
+                selection={selectedId ? { band: selectedBand, sectionId: selectedId, path: selectedPath } : null}
+              />
             </div>
           </aside>
         ) : panel === "theme" ? (
@@ -1305,36 +1323,54 @@ export function ThemeEditorPage() {
         {!fullscreen && hasRightPanel && selected && selectedId ? (
           <aside aria-label={t("editor.settingsPanel")} className="cl-editor__settings">
             <div className="cl-editor__paneltitle">
-              <h3>{selectedBlockId ? (selected.blocks?.[selectedBlockId]?.type ?? selectedBlockId) : (data?.sectionSchemas?.[selected.type]?.name ?? selected.type)}</h3>
+              {renaming ? (
+                <input
+                  aria-label={t("editor.renamePrompt")}
+                  autoFocus
+                  className="cl-field__input"
+                  onBlur={commitRename}
+                  onChange={(event) => setRenameValue(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") { event.preventDefault(); commitRename(); }
+                    if (event.key === "Escape") { event.preventDefault(); setRenaming(false); }
+                  }}
+                  value={renameValue}
+                />
+              ) : (
+                <h3>{panelTitle}</h3>
+              )}
               <button aria-label={t("common.close")} className="cl-editor__iconbtn" onClick={deselect} type="button">
                 <X aria-hidden="true" size={16} />
               </button>
             </div>
             <div className="cl-editor__panelbody">
-              {selectedBlockId ? (
+              {selectedBlock ? (
                 (() => {
-                  const block = selected.blocks?.[selectedBlockId];
-                  const blockDef = (data?.sectionSchemas?.[selected.type]?.blocks ?? [])
-                    .find((d) => d.type === block?.type);
-                  if (!block) return <p className="cl-card-note">{t("editor.selectHint")}</p>;
-                  const defs = blockDef?.settings ?? [];
+                  const defs = selectedBlockDef?.settings ?? [];
                   const covered = new Set(defs.map((d) => d.id).filter(Boolean));
-                  const extras = Object.entries(block.settings ?? {}).filter(([ key ]) => !covered.has(key));
+                  const extras = Object.entries(selectedBlock.settings ?? {}).filter(([ key ]) => !covered.has(key));
                   return (
                     <>
-                      <p className="cl-card-note"><code>{block.type}</code>（block）</p>
+                      <p className="cl-card-note"><code>{selectedBlock.type}</code>（block）{selectedBlock.disabled ? ` — ${t("editor.hidden")}` : ""}</p>
                       {defs.map((def, index) => (
                         <SettingControl
                           def={def}
                           key={def.id ?? `static-${index}`}
                           onChange={(value) => def.id && setBlockSetting(def.id, value)}
-                          value={def.id ? (block.settings ?? {})[def.id] : undefined}
+                          value={def.id ? (selectedBlock.settings ?? {})[def.id] : undefined}
                         />
                       ))}
                       {extras.map(([ key, value ]) => (
                         <FallbackControl key={key} name={key}
                           onChange={(next) => setBlockSetting(key, next)} value={value} />
                       ))}
+                      <Button
+                        onClick={() => removeNode(selectedBand, selectedId, selectedPath)}
+                        size="small"
+                        variant="critical"
+                      >
+                        <Trash2 aria-hidden="true" size={13} /> {t("editor.blockRemove", { id: selectedBlockId ?? "" })}
+                      </Button>
                     </>
                   );
                 })()

@@ -16,7 +16,8 @@ export type ShortcutId =
   | "undo" | "redo" | "save" | "seeAll"
   | "previewInspector" | "previewMode"
   | "sections" | "themeSettings" | "appEmbeds"
-  | "hideShow" | "remove" | "deselect";
+  | "hideShow" | "remove" | "deselect"
+  | "selectPrev" | "selectNext" | "openSelected" | "expandAll" | "collapseAll";
 
 export interface ShortcutDef {
   id: ShortcutId;
@@ -39,6 +40,11 @@ export const EDITOR_SHORTCUTS: ShortcutDef[] = [
   { id: "appEmbeds", group: "navigation", labelKey: "editor.panelApps", keys: [ "Ctrl", "Alt", "3" ] },
   { id: "hideShow", group: "sections", labelKey: "editor.shortcuts.hideShow", keys: [ "Ctrl", "Shift", "H" ] },
   { id: "remove", group: "sections", labelKey: "editor.shortcuts.remove", keys: [ "Shift", "⌫" ] },
+  { id: "selectPrev", group: "sections", labelKey: "editor.shortcuts.selectPrev", keys: [ "Shift", "↑" ] },
+  { id: "selectNext", group: "sections", labelKey: "editor.shortcuts.selectNext", keys: [ "Shift", "↓" ] },
+  { id: "openSelected", group: "sections", labelKey: "editor.shortcuts.openSelected", keys: [ "Shift", "Enter" ] },
+  { id: "expandAll", group: "sections", labelKey: "editor.shortcuts.expandAll", keys: [ "Ctrl", "Shift", "O" ] },
+  { id: "collapseAll", group: "sections", labelKey: "editor.shortcuts.collapseAll", keys: [ "Ctrl", "Shift", "P" ] },
   { id: "deselect", group: "sections", labelKey: "editor.shortcuts.deselect", keys: [ "Esc" ] },
 ];
 
@@ -70,7 +76,12 @@ export function shortcutFor(event: KeyboardEvent): ShortcutId | null {
   const mod = event.ctrlKey || event.metaKey;
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   if (key === "Escape" && !mod && !event.altKey) return "deselect";
-  if (key === "Backspace" && event.shiftKey && !mod && !event.altKey) return "remove";
+  if (!mod && !event.altKey && event.shiftKey) {
+    if (key === "Backspace") return "remove";
+    if (key === "ArrowUp") return "selectPrev";
+    if (key === "ArrowDown") return "selectNext";
+    if (key === "Enter") return "openSelected";
+  }
   if (!mod) return null;
   if (event.altKey) {
     if (key === "1") return "sections";
@@ -83,6 +94,8 @@ export function shortcutFor(event: KeyboardEvent): ShortcutId | null {
     if (key === "z") return "redo";
     if (key === "i") return "previewInspector";
     if (key === "h") return "hideShow";
+    if (key === "o") return "expandAll";
+    if (key === "p") return "collapseAll";
     return null;
   }
   if (key === "z") return "undo";

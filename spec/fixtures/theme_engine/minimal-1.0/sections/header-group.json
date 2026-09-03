@@ -1,6 +1,15 @@
 {
+  "name": "Header group",
+  "type": "header",
   "sections": {
-    "header": { "type": "hero", "settings": { "heading": "群組頁首" } }
+    "header": {
+      "type": "hero",
+      "settings": {
+        "heading": "群組頁首"
+      }
+    }
   },
-  "order": [ "header" ]
+  "order": [
+    "header"
+  ]
 }

@@ -44,6 +44,9 @@ module Types
     # 16d：全部區段的 settings 定義（schema 驅動控件；26 §5 型別全表）。
     # 與 catalog 不同：**不過濾 presets**——樹上選中的 main-* 也要有控件。
     field :section_schemas, GraphQL::Types::JSON, null: false
+    # E3：theme blocks 全表（type → {name, settings, blocks: 可接受子型別}）——巢狀 block 的
+    # 樹列與設定面板資料源；`section_schemas[type].blocks` 只覆蓋 section 直屬那層。
+    field :theme_blocks, GraphQL::Types::JSON, null: false
     # PR-11：模板→預覽路徑對映（資源語境——product 模板編輯帶真商品）。
     # 取各型第一個已發布資源；無資源的型不出鍵（前端回落首頁）。
     field :preview_paths, GraphQL::Types::JSON, null: false
@@ -129,6 +132,9 @@ module Types
       return [] if source.nil?
 
       layout = source.read("layout/theme.liquid").to_s
+      # E3：群組相對於 `content_for_layout` 的位置——之前的群組列在樹的 Template 帶上方、
+      # 之後的列在下方（本尊樹形 100 §2：Header／Popup／General group 在上、Footer group 在下）。
+      layout_index = layout.index(/\{\{-?\s*content_for_layout\s*-?\}\}/) || layout.length
       layout.scan(/\{%-?\s*sections\s+'([^']+)'/).flatten.uniq.filter_map do |name|
         raw = source.read("sections/#{name}.json")
         json = begin
@@ -139,7 +145,13 @@ module Types
         next if json.nil?
 
         path = "sections/#{name}.json"
+        tag_index = layout.index(/\{%-?\s*sections\s+'#{Regexp.escape(name)}'/) || 0
         { "name" => name, "path" => path, "json" => json.slice("sections", "order"),
+          # E3：群組 JSON 自帶 `name`（"Header group"）／`type`（"header"）——本尊小標與
+          # `enabled_on.groups` 的比對鍵；無 `name` 時以檔名人性化（"header-group" → "Header group"）。
+          "label" => json["name"].presence || name.tr("-_", "  ").capitalize,
+          "type" => json["type"].presence || name.sub(/-group\z/, ""),
+          "position" => tag_index < layout_index ? "before" : "after",
           "lockVersion" => ThemeFileOverlay.where(shop_id: object.shop_id, theme_id: object.id,
                                                   path:).pick(:lock_version) }
       end
@@ -155,8 +167,24 @@ module Types
         [ type, { "name" => translate.call(schema["name"] || type),
                   "settings" => translate_defs(Array(schema["settings"]), translate),
                   "max_blocks" => schema["max_blocks"],
+                  # E3／E5：官方 section schema 的可用性三鍵（`enabled_on`／`disabled_on` 的
+                  # `templates`／`groups` 清單、`limit`）——群組小標下的 "Add section" 只列可加者、
+                  # 已達 limit 的灰化並標 "(1/1)"（100 §4）。
+                  "enabled_on" => schema["enabled_on"],
+                  "disabled_on" => schema["disabled_on"],
+                  "limit" => schema["limit"],
                   "blocks" => block_defs_for(schema, theme_blocks, translate) } ]
       end
+    end
+
+    # E3：theme blocks（`blocks/*.liquid`）全表——巢狀 block 的樹列名稱、設定面板與 add-block
+    # 白名單都由這張表解析（`section_schemas[type].blocks` 只覆蓋 section 直屬那層）。
+    def theme_blocks
+      source = ThemeEngine::Sources.resolve(object)
+      return {} if source.nil?
+
+      translate = ThemeEngine::SchemaLocale.resolver_for(source)
+      theme_block_defs(source, translate).to_h { |bdef| [ bdef["type"], bdef ] }
     end
 
     # PR-6：section schema 的 block 定義面（樹的 add-block 白名單＋block 設定
@@ -190,8 +218,18 @@ module Types
         next if schema.nil?
 
         type = File.basename(rel, ".liquid")
+        # E3：可接受的子 block 型別（官方 theme block schema `blocks`：`{"type": "@theme"}`＝全部
+        # theme blocks、`{"type": "@app"}`＝app blocks（無 app 層，略）、其餘＝具名型別）。
+        # 保留 "@theme" 字面給前端展開（全表在 `theme_blocks`），不在這裡把 N 個 block 各自複製 N 份。
+        accepts = Array(schema["blocks"]).filter_map do |bdef|
+          next unless bdef.is_a?(Hash)
+          next if bdef["type"] == "@app"
+
+          bdef["type"]
+        end
         { "type" => type, "name" => translate.call(schema["name"] || type),
-          "settings" => translate_defs(Array(schema["settings"]), translate) }
+          "settings" => translate_defs(Array(schema["settings"]), translate),
+          "blocks" => accepts }
       end
     end
 
