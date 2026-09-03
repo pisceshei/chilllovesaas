@@ -104,6 +104,5 @@ module Storefront
         Domain.find_by(host: request.host.to_s.downcase) || Domain.primary.first
       end
     end
-
   end
 end
