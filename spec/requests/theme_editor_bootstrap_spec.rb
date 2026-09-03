@@ -409,4 +409,14 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(settings.find { |d| d["id"] == "align" }.dig("options", 0, "group")).to eq("Basic")
   end
 
+  it "E16 sectionSchemas.theme_settings：section liquid 內 `settings.<id>` 引用清單（右欄 Theme Settings 收合區資料源）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas } }
+    GQL
+    schemas = response.parsed_body.dig("data", "theme", "sectionSchemas")
+    expect(schemas.dig("sid-probe", "theme_settings")).to eq([ "brand_color" ])
+    expect(schemas.dig("hero", "theme_settings")).to eq([])
+  end
+
 end

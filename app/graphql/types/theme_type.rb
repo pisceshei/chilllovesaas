@@ -219,6 +219,9 @@ module Types
                   "enabled_on" => schema["enabled_on"],
                   "disabled_on" => schema["disabled_on"],
                   "limit" => schema["limit"],
+                  # E4：section 模板引用到的全域設定 id（本尊右欄底部 "Theme Settings" 收合區列出該 section 用到的
+                  # 全域設定；本尊判定法未取得 ⇒ 我方以 section liquid 內 `settings.<id>` 引用為準，ours）
+                  "theme_settings" => theme_setting_refs(source, type),
                   "blocks" => block_defs_for(schema, theme_blocks, translate) } ]
       end
     end
@@ -378,6 +381,12 @@ module Types
       else
         { "" => relation.count }
       end
+    end
+
+    def theme_setting_refs(source, type)
+      raw = source.read("sections/#{type}.liquid").to_s
+      # 只抓全域 `settings.x`：排除 `section.settings.x`／`block.settings.x`（前面是 `.` 的不算）
+      raw.scan(/(?<![\w.])settings\.([A-Za-z0-9_]+)/).flatten.uniq
     end
 
     def each_section_schema(source)
