@@ -1810,7 +1810,6 @@ a {
   font-weight: var(--fw-medium);
 }
 
-
 /* dropzone 空態（多媒體卡） */
 .cl-dropzone {
   display: flex;
@@ -2676,36 +2675,169 @@ a {
 .cl-order-cost--total { font-weight: 600; border-top: 1px solid var(--border);
   margin-top: var(--sp-100); padding-top: var(--sp-200); }
 
+/* ── 主題編輯器 shell（E2／D79；`docs/research/100` §1–§8 逐面板實測；全部走 tokens） ──
+   幾何取自 100 §8 截圖換算（±2px）取整到 4px 網格：頂欄 56（--topbar-h）、左右欄 300、
+   樹列 32、設定列 48、縮排 16。色值一律 tokens（鐵律 8／9：結構對齊、視覺自有）。 */
+.cl-editor {
+  --editor-sidebar-w: 300px;
+  --editor-panel-w: 300px;
+  --editor-row-h: 32px;
+  --editor-indent: 16px;
+  display: flex; flex-direction: column; height: 100vh; background: var(--bg); color: var(--text);
+}
+.cl-editor--error { align-items: center; justify-content: center; gap: var(--sp-200); }
 
-/* ── 主題編輯器 shell（步 16a；24 §1.1 三面板佈局） ─────────────────────── */
-.cl-editor { display: flex; flex-direction: column; height: 100vh; background: var(--cl-bg, #f6f6f7); }
-.cl-editor__topbar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #1a1a1a; color: #fff; }
-.cl-editor__back { color: #fff; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
-.cl-editor__switcher { max-width: 220px; }
-/* PR-15：作用中 badge（24 §1.1——published 主題的綠色 pill；tokens 23 §1） */
-.cl-editor__badge { background: #d1f7dd; color: #0a4d24; border-radius: 999px; padding: 2px 10px; font-size: 12px; line-height: 1.4; }
-.cl-editor__panels { display: grid; grid-template-columns: 260px 1fr 300px; flex: 1; min-height: 0; }
-.cl-editor__tree, .cl-editor__settings { overflow-y: auto; padding: 12px; background: #fff; }
+/* 頂欄：左（Exit＋面板切換器）／中（主題 chip＋市場＋模板）／右（工具＋Undo/Redo＋…＋Publish＋Save） */
+.cl-editor__topbar {
+  position: relative; z-index: var(--z-topbar);
+  display: grid; grid-template-columns: minmax(max-content, 1fr) minmax(0, max-content) minmax(max-content, 1fr);
+  align-items: center; height: var(--topbar-h); padding: 0 var(--sp-300);
+  background: var(--surface); border-bottom: var(--hairline) solid var(--border);
+}
+.cl-editor__zone { display: flex; align-items: center; gap: var(--sp-100); min-width: 0; }
+.cl-editor__zone--center { justify-content: center; gap: var(--sp-200); }
+.cl-editor__zone--right { justify-content: flex-end; }
+.cl-editor__divider { width: var(--hairline); height: 24px; background: var(--border); margin: 0 var(--sp-200); }
+.cl-editor__progress {
+  position: absolute; left: 0; right: 0; bottom: calc(-1 * var(--hairline)); height: 2px;
+  background: linear-gradient(90deg, var(--link) 0 40%, transparent 40%); background-size: 200% 100%;
+  animation: cl-editor-progress 1s linear infinite;
+}
+@keyframes cl-editor-progress { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* icon 鈕＋tooltip（100 §1：tooltip＝名稱＋鍵帽，hover／focus 顯示於下方） */
+.cl-editor__tip-wrap { position: relative; display: inline-flex; }
+.cl-editor__iconbtn {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  border: 0; border-radius: var(--r-200); background: transparent; color: var(--icon); cursor: pointer;
+  transition: background var(--tr), color var(--tr);
+}
+.cl-editor__iconbtn:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.cl-editor__iconbtn.is-active { background: var(--surface-selected); color: var(--link); }
+.cl-editor__iconbtn:disabled { opacity: .35; cursor: default; }
+.cl-editor__iconbtn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cl-editor__tip {
+  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  display: none; align-items: center; gap: var(--sp-100); padding: var(--sp-100) var(--sp-200);
+  border-radius: var(--r-200); background: var(--surface-inverse); color: var(--text-inverse);
+  font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); white-space: nowrap;
+  z-index: var(--z-popover); pointer-events: none;
+}
+.cl-editor__tip kbd, .cl-editor__keys kbd {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px;
+  padding: 0 var(--sp-100); border-radius: var(--r-100); font: inherit; font-size: var(--t-275);
+  background: rgba(255, 255, 255, .16); color: inherit;
+}
+.cl-editor__keys kbd { background: var(--surface-3); color: var(--text-2); }
+.cl-editor__tip-wrap:hover .cl-editor__tip, .cl-editor__tip-wrap:focus-within .cl-editor__tip { display: inline-flex; }
+
+/* 主題 chip／市場／模板選擇器（中區） */
+.cl-editor__chip, .cl-editor__chipbtn {
+  display: inline-flex; align-items: center; gap: var(--sp-150); height: 32px; padding: 0 var(--sp-200);
+  border: 0; border-radius: var(--r-200); background: transparent; color: var(--text);
+  font-size: var(--type-body-md-size); line-height: var(--type-body-md-lh); font-weight: var(--fw-medium);
+  min-width: 0;
+}
+.cl-editor__chipbtn { cursor: pointer; }
+.cl-editor__chipbtn:hover, .cl-editor__chipbtn[aria-expanded="true"] { background: var(--surface-hover); }
+.cl-editor__chipbtn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cl-editor__chiptext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.cl-editor__badge {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 var(--sp-200); border-radius: var(--r-pill);
+  font-size: var(--t-275); font-weight: var(--fw-medium); background: var(--surface-3); color: var(--text-2);
+}
+.cl-editor__badge--live { background: var(--sem-success-surface); color: var(--sem-success-text); }
+.cl-editor__badge--draft { background: var(--sem-info-surface); color: var(--sem-info-text); }
+
+/* popover 選單（模板／市場／…；100 §1.1 形態：搜尋框＋清單＋分隔線＋子清單返回列） */
+.cl-editor__menu { width: 300px; margin: calc(-1 * var(--sp-400)); }
+.cl-editor__menusearch {
+  display: flex; align-items: center; gap: var(--sp-200); margin: var(--sp-200); padding: 0 var(--sp-200);
+  height: 32px; border: var(--hairline) solid var(--border-strong); border-radius: var(--r-200); background: var(--surface);
+  color: var(--text-3);
+}
+.cl-editor__menusearch input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; color: var(--text); }
+.cl-editor__menulist { list-style: none; margin: 0; padding: var(--sp-100) var(--sp-200) var(--sp-200); max-height: 60vh; overflow-y: auto; }
+.cl-editor__menuitem {
+  display: flex; align-items: center; gap: var(--sp-200); width: 100%; min-height: 32px; padding: var(--sp-100) var(--sp-200);
+  border: 0; border-radius: var(--r-200); background: transparent; color: var(--text); text-align: start; cursor: pointer;
+  font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh);
+}
+.cl-editor__menuitem:hover, .cl-editor__menuitem:focus-visible { background: var(--surface-hover); outline: 0; }
+.cl-editor__menuitem.is-current { background: var(--surface-selected); font-weight: var(--fw-medium); }
+.cl-editor__menutext { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.cl-editor__menutext small { color: var(--text-3); font-size: var(--t-275); }
+.cl-editor__menuback { font-weight: var(--fw-medium); }
+.cl-editor__menuaction { color: var(--link); }
+.cl-editor__menusep { height: var(--hairline); margin: var(--sp-100) 0; background: var(--border); }
+.cl-editor__menuheading { padding: var(--sp-200) var(--sp-200) var(--sp-100); color: var(--text-3); font-size: var(--t-275); }
+.cl-editor__menufoot { padding: var(--sp-200) var(--sp-300); border-top: var(--hairline) solid var(--border); color: var(--text-3); font-size: var(--t-275); }
+
+/* 三欄：左欄（面板）／預覽／右欄（設定，只在有選取時掛載）；全寬預覽＝兩欄都拆掉 */
+.cl-editor__panels { display: grid; grid-template-columns: var(--editor-sidebar-w) minmax(0, 1fr); flex: 1; min-height: 0; }
+.cl-editor--with-panel .cl-editor__panels { grid-template-columns: var(--editor-sidebar-w) minmax(0, 1fr) var(--editor-panel-w); }
+.cl-editor--fullscreen .cl-editor__panels { grid-template-columns: minmax(0, 1fr); }
+.cl-editor__sidebar, .cl-editor__settings { display: flex; flex-direction: column; min-height: 0; background: var(--surface); }
+.cl-editor__sidebar { border-right: var(--hairline) solid var(--border); }
+.cl-editor__settings { border-left: var(--hairline) solid var(--border); }
+.cl-editor__paneltitle {
+  display: flex; align-items: center; gap: var(--sp-200); height: 44px; padding: 0 var(--sp-300); flex: none;
+  border-bottom: var(--hairline) solid var(--border); font-size: var(--type-body-md-size); font-weight: var(--fw-medium);
+}
+.cl-editor__paneltitle h3 { flex: 1; margin: 0; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-editor__panelbody { flex: 1; min-height: 0; overflow-y: auto; padding: var(--sp-200) var(--sp-300) var(--sp-400); }
+.cl-editor__preview { min-width: 0; min-height: 0; background: var(--surface-2); display: flex; justify-content: center; }
+.cl-editor__iframe { width: 100%; height: 100%; border: 0; background: var(--surface); }
+.cl-editor__iframe--mobile { width: 390px; border-left: var(--hairline) solid var(--border); border-right: var(--hairline) solid var(--border); }
+
+/* 左樹（E3 重做前的過渡形；列高與縮排先對齊 100 §8） */
 .cl-editor__tree ul { list-style: none; margin: 0; padding: 0; }
-.cl-editor__node { display: inline-flex; align-items: center; gap: 6px; width: 100%; text-align: start; padding: 6px 8px; border: 0; background: transparent; cursor: pointer; border-radius: 6px; }
-.cl-editor__node--active { background: #e5efff; outline: 1px solid #005bd1; }
-.cl-editor__block { padding: 2px 8px 2px 28px; color: #616161; font-size: 12px; }
-.cl-editor__preview { min-width: 0; }
-.cl-editor__iframe { width: 100%; height: 100%; border: 0; background: #fff; }
-.cl-editor--error { align-items: center; justify-content: center; gap: 8px; }
-
-.cl-editor__spacer { flex: 1; }
-.cl-editor__noderow { display: flex; align-items: center; gap: 2px; }
+.cl-editor__band { margin: var(--sp-300) 0 var(--sp-100); color: var(--text-3); font-size: var(--t-275); }
+.cl-editor__noderow { display: flex; align-items: center; gap: 2px; min-height: var(--editor-row-h); }
 .cl-editor__noderow .cl-editor__node { flex: 1; }
-.cl-editor__op { border: 0; background: transparent; cursor: pointer; padding: 4px; border-radius: 4px; color: #616161; }
-.cl-editor__op:hover { background: #f1f1f1; }
+.cl-editor__node {
+  display: inline-flex; align-items: center; gap: var(--sp-150); width: 100%; min-height: var(--editor-row-h);
+  padding: 0 var(--sp-200); border: 0; border-radius: var(--r-200); background: transparent; color: var(--text);
+  text-align: start; cursor: pointer; font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh);
+}
+.cl-editor__node:hover { background: var(--surface-row-hover); }
+.cl-editor__node--active { background: var(--surface-selected); font-weight: var(--fw-medium); }
+.cl-editor__block { padding: 0 0 0 var(--editor-indent); color: var(--text-2); }
+.cl-editor__op { border: 0; background: transparent; cursor: pointer; padding: var(--sp-100); border-radius: var(--r-100); color: var(--icon); }
+.cl-editor__op:hover { background: var(--surface-hover); }
 .cl-editor__op:disabled { opacity: .35; cursor: default; }
+.cl-editor__addblock { border: var(--hairline) dashed var(--border-strong); background: none; border-radius: var(--r-200); font-size: var(--t-275); padding: 2px var(--sp-200); margin: 2px var(--sp-100) 2px 0; cursor: pointer; color: var(--text-2); }
+.cl-editor__addblock:hover { border-color: var(--text-3); }
+.cl-editor__picker { list-style: none; margin: var(--sp-200) 0; padding: var(--sp-200); border: var(--hairline) solid var(--border); border-radius: var(--r-200); background: var(--surface-2); }
 
-.cl-editor__picker { list-style: none; margin: 8px 0; padding: 8px; border: 1px solid #e3e3e3; border-radius: 8px; background: #fafafa; }
+/* 右欄設定與佈景設定手風琴 */
+.cl-editor__group { margin: var(--sp-300) 0 var(--sp-100); font-size: var(--type-body-sm-size); font-weight: var(--fw-semibold); }
+.cl-editor__range { display: flex; align-items: center; gap: var(--sp-200); }
+.cl-editor__radio { display: block; font-size: var(--type-body-sm-size); }
+.cl-editor__acc { border-bottom: var(--hairline) solid var(--border); }
+.cl-editor__acc > summary {
+  display: flex; align-items: center; justify-content: space-between; min-height: 40px; cursor: pointer; list-style: none;
+  font-size: var(--type-body-sm-size); font-weight: var(--fw-medium);
+}
+.cl-editor__acc > summary::-webkit-details-marker { display: none; }
+.cl-editor__acc > summary::after { content: "⌄"; color: var(--text-3); }
+.cl-editor__acc[open] > summary::after { content: "⌃"; }
+.cl-editor__customcss { margin-top: var(--sp-300); }
+.cl-editor__empty { color: var(--text-3); font-size: var(--type-body-sm-size); margin: var(--sp-300) 0; }
 
-.cl-editor__group { margin: 12px 0 4px; font-size: 13px; }
-.cl-editor__range { display: flex; align-items: center; gap: 8px; }
-.cl-editor__radio { display: block; font-size: 13px; }
+/* 快捷鍵對話框（兩欄四組） */
+.cl-editor__shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-400); }
+.cl-editor__shortcut-group + .cl-editor__shortcut-group { margin-top: 0; }
+.cl-editor__shortcut-title { margin: 0 0 var(--sp-200); font-size: var(--type-body-sm-size); font-weight: var(--fw-semibold); }
+.cl-editor__shortcut-list { list-style: none; margin: 0; padding: 0; }
+.cl-editor__shortcut { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-200); min-height: 32px; padding: 0 var(--sp-200); border-radius: var(--r-200); font-size: var(--type-body-sm-size); }
+.cl-editor__shortcut:nth-child(odd) { background: var(--surface-2); }
+.cl-editor__keys { display: inline-flex; gap: var(--sp-100); }
+
+/* 建立模板對話框 */
+.cl-editor__namefield { position: relative; }
+.cl-editor__namecount { position: absolute; right: var(--sp-200); top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: var(--t-275); }
+/* PR-15：作用中 badge（24 §1.1——published 主題的綠色 pill；tokens 23 §1） */
 
 .cl-code { display: flex; flex-direction: column; height: 100vh; }
 .cl-code__topbar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; border-bottom: 1px solid #e3e3e3; background: #fff; }
@@ -2730,7 +2862,3 @@ a {
 .cl-webhook-secret { background: #fff8ec; border: 1px solid #f0dcb8; border-radius: 8px; padding: 8px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cl-webhook-secret code { word-break: break-all; }
 
-.cl-editor__band { margin: 10px 0 2px; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: #6d6d6d; }
-
-.cl-editor__addblock { border: 1px dashed #c9c9c9; background: none; border-radius: 6px; font-size: 12px; padding: 2px 8px; margin: 2px 4px 2px 0; cursor: pointer; color: #444; }
-.cl-editor__addblock:hover { border-color: #888; }

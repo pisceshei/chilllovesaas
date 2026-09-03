@@ -1,13 +1,19 @@
-import { ArrowDown, ArrowLeft, ArrowUp, Copy, Eye, EyeOff, Redo2, Smartphone, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Search, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
 import { Button } from "../components/Button";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { CreateTemplateDialog } from "../editor/CreateTemplateDialog";
+import { EditorTopBar, type EditorPanel } from "../editor/EditorTopBar";
+import { isTypingTarget, shortcutFor } from "../editor/editorShortcuts";
+import { ShortcutsDialog } from "../editor/ShortcutsDialog";
+import { splitTemplateKey } from "../editor/TemplateSwitcher";
 import { useT } from "../i18n/I18nContext";
 import { useToast } from "../lib/ToastContext";
 
 /**
- * 主題編輯器（步 16a shell＋16b op-stack 編輯管線）。
+ * 主題編輯器（步 16a shell＋16b op-stack 編輯管線；E2／D79 shell＋頂欄依本尊重做）。
  *
  * 編輯語義（24 §3 原子 op 對照表）：set-setting／toggle-disabled（眼睛＝隱藏
  * 不是刪除）／move（上下移＝改 order）／remove（移除 entry＋order 引用）／
@@ -15,12 +21,24 @@ import { useToast } from "../lib/ToastContext";
  * Undo/Redo＝JSON 快照棧（14 §F3：不做 op-based——僅未儲存變更、Save 後清空）。
  * 儲存＝themeTemplateUpsert 整份 JSON＋樂觀鎖（STALE ⇒ 提示重載）；成功後
  * iframe 重載（後端已 touch theme——頁快取鍵旋轉紅線在 server 端）。
+ *
+ * E2 shell（`docs/research/100` §1／§5／§6／§7 實測對位）：
+ * - 頂欄＝`EditorTopBar`（Exit＋面板切換器＋主題 chip＋市場＋模板選擇器＋工具＋Undo/Redo
+ *   ＋「…」＋Publish＋Save）；面板切換器再點已啟用者 ⇒ 全寬預覽（`previewMode=fullscreen`）。
+ * - 左欄依 `panel` 切換：sections（樹）／theme（佈景設定手風琴）／apps（app embeds 空態）。
+ * - 右欄只在選中 section／block 時掛載（本尊：無選取 ⇒ 兩欄）。
+ * - URL 狀態：`template`／`section`／`block`／`context=theme|apps`／`previewMode`／
+ *   `previewPath`／`category`（本尊同名參數；`section` 值用我方 section 鍵）。
+ * - 快捷鍵單一表 `editorShortcuts.ts`；離開有未存變更 ⇒ 確認框；Publish ⇒ 確認框 →
+ *   先存再 `themePublish`。
  */
 const EDITOR_QUERY = `
   query themeEditorBootstrap($id: ID!, $key: String!) {
     theme(id: $id) {
       id name role
       templates: files(filenames: ["templates/*.json"]) { filename }
+      templateKeys
+      templateAssignments
       templateJson(key: $key)
       templateLockVersion(key: $key)
       previewPaths
@@ -30,6 +48,21 @@ const EDITOR_QUERY = `
       settingsSchema
       themeSettingsJson
       themeSettingsLockVersion
+    }
+  }
+`;
+
+const BASE_TEMPLATE_QUERY = `
+  query themeEditorBaseTemplate($id: ID!, $key: String!) {
+    theme(id: $id) { templateJson(key: $key) }
+  }
+`;
+
+const PUBLISH_MUTATION = `
+  mutation themePublish($id: ID!) {
+    themePublish(id: $id) {
+      theme { id role }
+      userErrors { field message code }
     }
   }
 `;
@@ -106,6 +139,8 @@ interface EditorData {
     name: string;
     role: string;
     templates: { filename: string }[];
+    templateKeys?: string[];
+    templateAssignments?: Record<string, Record<string, number>>;
     templateJson: TemplateJson | null;
     templateLockVersion: number | null;
     sectionCatalog: { type: string; name: string;
@@ -285,9 +320,12 @@ function FallbackControl({ name, value, onChange }: {
   );
 }
 
+const GROUP_TEMPLATE_TYPES = new Set([ "product", "collection", "page", "blog", "article" ]);
+
 export function ThemeEditorPage() {
   const t = useT();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const { themeId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const templateKey = searchParams.get("template") ?? "index";
@@ -312,10 +350,19 @@ export function ThemeEditorPage() {
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerQuery, setPickerQuery] = useState(""); // PR-19：⑤a picker 搜尋
-  // 16d2：佈景設定（settings_data current）——獨立 draft；undo 整合＝16e（91 §3.70）
-  const [themeMode, setThemeMode] = useState(false);
-  // PR-15：📱 行動版預覽切換（24 §1.1 頂列實測；iframe 收窄 390px 置中）
+  // E2：左欄面板（sections／theme／apps；本尊面板切換器）＋全寬預覽＋inspector＋手機檢視
+  const [panel, setPanel] = useState<EditorPanel>("sections");
+  const [fullscreen, setFullscreen] = useState(false);
+  const [inspector, setInspector] = useState(true);
   const [mobilePreview, setMobilePreview] = useState(false);
+  // E2：對話框（快捷鍵／離開／發布／建立模板）與佈景設定手風琴展開分類
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [createType, setCreateType] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [settingsDraft, setSettingsDraft] = useState<Record<string, unknown> | null>(null);
   const [settingsLock, setSettingsLock] = useState<number | null>(null);
   const [settingsDirty, setSettingsDirty] = useState(false);
@@ -329,10 +376,14 @@ export function ThemeEditorPage() {
   activeDraftRef.current = selectedBand === "template" ? draft : groupDrafts[selectedBand] ?? null;
   settingsDraftRef.current = settingsDraft;
 
+  const themeMode = panel === "theme";
   const gid = `gid://chilllove/Theme/${themeId}`;
+  const dirtyAny = dirty || settingsDirty || dirtyGroups.length > 0;
 
-  // PR-11 資源語境：模板型 → 樣本路徑（product 模板帶真商品）；無樣本回落首頁
-  const previewPath = data?.previewPaths?.[templateKey.split(".")[0]] ?? "/";
+  // PR-11 資源語境：模板型 → 樣本路徑（product 模板帶真商品）；無樣本回落首頁。
+  // E2：URL `previewPath`（預覽內導航寫入）優先——本尊同名參數（100 §6）。
+  const previewPath = searchParams.get("previewPath")
+    ?? data?.previewPaths?.[splitTemplateKey(templateKey).type] ?? "/";
 
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -365,17 +416,22 @@ export function ThemeEditorPage() {
     return () => controller.abort();
   }, [load]);
 
-  // PR-15：編輯器狀態 URL 化（24 §1.1——本尊選中帶 ?section=、佈景設定帶
-  // ?context=theme；我方同形但 section 值用我方 section 鍵）。初載還原一次。
+  // PR-15／E2：編輯器狀態 URL 化（本尊 100 §6：section／block／context／previewMode／
+  // category 皆為 query 參數，可重載還原）。初載還原一次。
   const restoredRef = useRef(false);
   useEffect(() => {
     if (restoredRef.current || !data) return;
     restoredRef.current = true;
     const section = searchParams.get("section");
-    if (searchParams.get("context") === "theme") {
-      setThemeMode(true);
+    const block = searchParams.get("block");
+    const context = searchParams.get("context");
+    if (searchParams.get("previewMode") === "fullscreen") setFullscreen(true);
+    if (searchParams.get("category")) setOpenCategory(searchParams.get("category"));
+    if (context === "theme" || context === "apps") {
+      setPanel(context);
     } else if (section) {
       setSelectedId(section);
+      setSelectedBlockId(block);
       setSelectedBand(
         draftRef.current?.sections?.[section]
           ? "template"
@@ -395,21 +451,41 @@ export function ThemeEditorPage() {
     }, { replace: true });
   };
 
-  // PR-15：undo/redo 鍵盤快捷鍵（Cmd/Ctrl+Z／Cmd/Ctrl+Shift+Z；24 §1.1 頂列
-  // ↺↻ 的鍵盤面）。輸入控件內不攔——讓瀏覽器原生文字 undo 先行。
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") return;
-      const target = event.target as HTMLElement | null;
-      const tag = target?.tagName ?? "";
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target?.isContentEditable) return;
-      event.preventDefault();
-      if (event.shiftKey) redoRef.current();
-      else undoRef.current();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  /** 選中 section（＋block）：三處同步——state、URL、面板回 sections。 */
+  const selectNode = (band: string, sectionId: string, blockId: string | null) => {
+    setSelectedBand(band);
+    setSelectedId(sectionId);
+    setSelectedBlockId(blockId);
+    setPanel("sections");
+    syncStateParams({ section: sectionId, block: blockId, context: null });
+  };
+
+  const deselect = () => {
+    setSelectedId(null);
+    setSelectedBlockId(null);
+    syncStateParams({ section: null, block: null });
+  };
+
+  const switchPanel = (next: EditorPanel) => {
+    setPanel(next);
+    setFullscreen(false);
+    const patch: Record<string, string | null> = { context: next === "sections" ? null : next, previewMode: null };
+    if (next !== "sections") {
+      // 本尊：切到佈景設定／app embeds 即取消選取（右欄收起）
+      setSelectedId(null);
+      setSelectedBlockId(null);
+      patch.section = null;
+      patch.block = null;
+    }
+    syncStateParams(patch);
+  };
+
+  const toggleFullscreen = () => {
+    setFullscreen((on) => {
+      syncStateParams({ previewMode: on ? null : "fullscreen" });
+      return !on;
+    });
+  };
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -420,7 +496,8 @@ export function ThemeEditorPage() {
         const frame = iframeRef.current;
         if (frame) frame.src = `/admin/store/preview/${themeId}${path}?editor=1`;
         const inferred = templateForPath(path);
-        if (inferred !== templateKey) syncStateParams({ template: inferred, section: null });
+        syncStateParams({ previewPath: path, section: null, block: null,
+                          ...(inferred !== templateKey ? { template: inferred } : {}) });
         return;
       }
       if (payload?.type === "cl:op" && payload.id) {
@@ -446,7 +523,8 @@ export function ThemeEditorPage() {
             .find(([ , tpl ]) => tpl.sections?.[payload.id!]);
           return hit ? hit[0] : current;
         });
-        setThemeMode(false);
+        setPanel("sections");
+        syncStateParams({ section: payload.id, block: payload.blockId ?? null, context: null });
       }
     };
     window.addEventListener("message", onMessage);
@@ -458,6 +536,12 @@ export function ThemeEditorPage() {
     iframeRef.current?.contentWindow?.postMessage(
       { type: "cl:highlight", id: selectedId, blockId: selectedBlockId }, window.location.origin);
   }, [selectedId, selectedBlockId]);
+
+  // E2：inspector 開關送進預覽（E6 的橋消費 `cl:inspector`；本包只維持狀態與訊息形）
+  useEffect(() => {
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: "cl:inspector", active: inspector }, window.location.origin);
+  }, [inspector]);
 
   // PR-7 即時預覽：選中 section 的 entry 一變（設定/block 操作），debounce 400ms
   // 以未儲存 entry 渲染片段 → cl:replace 換進 iframe（本尊「改即見」對位）。
@@ -566,10 +650,6 @@ export function ThemeEditorPage() {
   // undo/redo 也驅動預覽（fleet editor-live 軸③）
   const bumpDrafts = () => setDraftsVersion((v) => v + 1);
 
-  // PR-15：快捷鍵 effect 只掛一次，經 ref 取最新 undo/redo
-  const undoRef = useRef<() => void>(() => {});
-  const redoRef = useRef<() => void>(() => {});
-
   const undo = () => {
     setUndoStack((stack) => {
       if (stack.length === 0) return stack;
@@ -589,11 +669,8 @@ export function ThemeEditorPage() {
       if (previous) setUndoStack((undoS) => [ ...undoS, { band, snap: cloneTpl(previous) } ]);
       return stack.slice(0, -1);
     });
-  bumpDrafts();
+    bumpDrafts();
   };
-
-  undoRef.current = undo;
-  redoRef.current = redo;
 
   const orderOf = (tpl: TemplateJson) => tpl.order ?? Object.keys(tpl.sections ?? {});
 
@@ -736,8 +813,9 @@ export function ThemeEditorPage() {
     entry.settings = { ...(entry.settings ?? {}), [settingKey]: value };
   });
 
-  const save = async () => {
-    if (saving || (!dirty && !settingsDirty && dirtyGroups.length === 0)) return;
+  /** 儲存三面（模板／佈景設定／群組）；回傳是否全部成功（Publish 先存再發布要看這個）。 */
+  const save = async (): Promise<boolean> => {
+    if (saving || !dirtyAny) return !dirtyAny;
     setSaving(true);
     try {
       if (dirty && draft) {
@@ -751,7 +829,7 @@ export function ThemeEditorPage() {
         if (payload.userErrors.length > 0) {
           const firstError = payload.userErrors[0];
           showToast(firstError.code === "STALE_OBJECT" ? t("editor.staleConflict") : firstError.message);
-          return;
+          return false;
         }
         setLockVersion(payload.lockVersion);
         setUndoStack([]); // Save 後清空（24 §3 Undo 僅未儲存變更）
@@ -770,7 +848,7 @@ export function ThemeEditorPage() {
         if (payload.userErrors.length > 0) {
           const firstError = payload.userErrors[0];
           showToast(firstError.code === "STALE_OBJECT" ? t("editor.staleConflict") : firstError.message);
-          return;
+          return false;
         }
         setSettingsLock(payload.lockVersion);
         setSettingsDirty(false);
@@ -791,7 +869,7 @@ export function ThemeEditorPage() {
         if (payload.userErrors.length > 0) {
           const firstError = payload.userErrors[0];
           showToast(firstError.code === "STALE_OBJECT" ? t("editor.staleConflict") : firstError.message);
-          return;
+          return false;
         }
         setGroupLocks((locks) => ({ ...locks, [name]: payload.lockVersion }));
       }
@@ -799,21 +877,135 @@ export function ThemeEditorPage() {
       showToast(t("editor.saved"));
       // 後端已 touch theme（頁快取鍵旋轉）；重載 iframe 看到存檔後渲染
       iframeRef.current?.contentWindow?.location.reload();
+      return true;
     } catch (reason: unknown) {
       showToast(reason instanceof Error ? reason.message : t("editor.saveFailed"));
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
-  const templateNames = useMemo(() => (data?.templates ?? [])
-    .map((file) => file.filename.replace(/^templates\//, "").replace(/\.json$/, ""))
-    .sort(), [data]);
+  /** E2 Publish（本尊 "Save and publish …?"）：先存（有變更時）再 themePublish；成功重載資料。 */
+  const publish = async () => {
+    setPublishing(true);
+    try {
+      if (dirtyAny) {
+        const ok = await save();
+        if (!ok) return;
+      }
+      const result = await requestAdminGraphQL<{
+        themePublish: { theme: { id: string; role: string } | null;
+                        userErrors: { message: string; code: string }[] };
+      }, { id: string }>(PUBLISH_MUTATION, { id: gid });
+      const firstError = result.themePublish.userErrors[0];
+      if (firstError) {
+        showToast(firstError.message || t("editor.publishFailed"));
+        return;
+      }
+      setData((current) => (current ? { ...current, role: "published" } : current));
+      showToast(t("editor.published"));
+      setPublishOpen(false);
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("editor.publishFailed"));
+    } finally {
+      setPublishing(false);
+    }
+  };
 
-  const order = draft ? orderOf(draft) : [];
+  /** E2 Create template：base 模板 JSON → themeTemplateUpsert(`type.name`) → 切到新模板。 */
+  const createTemplate = async (name: string, baseKey: string) => {
+    if (!createType) return;
+    setCreating(true);
+    try {
+      const base = await requestAdminGraphQL<{ theme: { templateJson: TemplateJson | null } | null },
+        { id: string; key: string }>(BASE_TEMPLATE_QUERY, { id: gid, key: baseKey });
+      const content = base.theme?.templateJson ?? { sections: {}, order: [] };
+      const key = `${createType}.${name}`;
+      const result = await requestAdminGraphQL<{
+        themeTemplateUpsert: { templateKey: string | null; userErrors: { message: string; code: string }[] };
+      }, Record<string, unknown>>(SAVE_MUTATION, { themeId: gid, key, content, lockVersion: null });
+      const firstError = result.themeTemplateUpsert.userErrors[0];
+      if (firstError) {
+        showToast(firstError.message);
+        return;
+      }
+      showToast(t("editor.templateCreated"));
+      setCreateType(null);
+      syncStateParams({ template: key, section: null, block: null, previewPath: null });
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("editor.saveFailed"));
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const requestExit = () => {
+    if (dirtyAny) setLeaveOpen(true);
+    else navigate("/admin/store");
+  };
+
+  // E2：快捷鍵——單一表 `editorShortcuts`；effect 只掛一次，經 ref 取最新動作。
+  // 輸入控件內不攔 undo/redo/remove/hide/deselect（讓瀏覽器原生文字編輯先行）；
+  // modal 開著（#admin-root inert）時全部不攔——對話框自己管 Escape。
+  const actionsRef = useRef<Record<string, () => void>>({});
+  actionsRef.current = {
+    undo, redo,
+    save: () => { void save(); },
+    seeAll: () => setShortcutsOpen(true),
+    previewInspector: () => setInspector((on) => !on),
+    previewMode: () => setMobilePreview((on) => !on),
+    sections: () => switchPanel("sections"),
+    themeSettings: () => switchPanel("theme"),
+    appEmbeds: () => switchPanel("apps"),
+    hideShow: () => { if (selectedId) toggleDisabled(selectedBand, selectedId); },
+    remove: () => {
+      if (!selectedId) return;
+      if (selectedBlockId) removeBlock(selectedBand, selectedId, selectedBlockId);
+      else { removeSection(selectedBand, selectedId); deselect(); }
+    },
+    deselect: () => { if (selectedId) deselect(); },
+  };
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      // modal 開著 ⇒ 不攔（Modal 原語：#admin-root inert＋role=dialog aria-modal；兩個訊號任一成立即停）
+      if (document.getElementById("admin-root")?.hasAttribute("inert")) return;
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      const id = shortcutFor(event);
+      if (!id) return;
+      if (isTypingTarget(event.target) &&
+          [ "undo", "redo", "remove", "hideShow", "deselect" ].includes(id)) return;
+      event.preventDefault();
+      actionsRef.current[id]?.();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const templateKeys = useMemo(() => {
+    const fromFiles = (data?.templates ?? [])
+      .map((file) => file.filename.replace(/^templates\//, "").replace(/\.json$/, ""))
+      .filter((key) => !key.includes("/"));
+    return [ ...new Set([ ...(data?.templateKeys ?? []), ...fromFiles ]) ].sort();
+  }, [data]);
+
+  // Create template 的 base 候選（預設＋同型替代）；memo 以免對話框每 render 收到新陣列
+  const createBaseKeys = useMemo(
+    () => (createType ? templateKeys.filter((key) => splitTemplateKey(key).type === createType) : []),
+    [ createType, templateKeys ],
+  );
+
+  const templateLabel = (() => {
+    const { type, suffix } = splitTemplateKey(templateKey);
+    if (suffix) return suffix;
+    return GROUP_TEMPLATE_TYPES.has(type) ? t(`editor.tplDefault.${type}`) : t(`editor.tpl.${type}`);
+  })();
+
   const activeDraft = selectedBand === "template" ? draft : groupDrafts[selectedBand] ?? null;
   const selected = selectedId && activeDraft?.sections ? activeDraft.sections[selectedId] : null;
   const previewSrc = `/admin/store/preview/${themeId}${previewPath === "/" ? "" : previewPath}?editor=1`;
+  const hasRightPanel = panel === "sections" && Boolean(selected && selectedId);
 
   if (error) {
     return (
@@ -824,272 +1016,240 @@ export function ThemeEditorPage() {
     );
   }
 
+  const rootClass = [
+    "cl-editor",
+    fullscreen ? "cl-editor--fullscreen" : "",
+    !fullscreen && hasRightPanel ? "cl-editor--with-panel" : "",
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className="cl-editor">
-      <header className="cl-editor__topbar">
-        <Link className="cl-editor__back" to="/admin/store">
-          <ArrowLeft aria-hidden="true" size={16} /> {data?.name ?? t("common.loading")}
-        </Link>
-        {data?.role === "published" ? (
-          <span className="cl-editor__badge">{t("editor.active")}</span>
-        ) : null}
-        <select
-          aria-label={t("editor.templateSwitcher")}
-          className="cl-field__input cl-editor__switcher"
-          onChange={(event) => setSearchParams({ template: event.target.value })}
-          value={templateKey}
-        >
-          {(templateNames.length > 0 ? templateNames : [ templateKey ]).map((name) => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-        </select>
-        <span className="cl-editor__spacer" />
-        <Button
-          aria-pressed={mobilePreview}
-          onClick={() => setMobilePreview((on) => !on)}
-          size="small"
-          variant={mobilePreview ? "primary" : "ghost"}
-        >
-          <Smartphone aria-hidden="true" size={14} /> {t("editor.mobilePreview")}
-        </Button>
-        <Button disabled={undoStack.length === 0} onClick={undo} size="small" variant="ghost">
-          <Undo2 aria-hidden="true" size={14} /> {t("editor.undo")}
-        </Button>
-        <Button disabled={redoStack.length === 0} onClick={redo} size="small" variant="ghost">
-          <Redo2 aria-hidden="true" size={14} /> {t("editor.redo")}
-        </Button>
-        <Button
-          disabled={(!dirty && !settingsDirty && dirtyGroups.length === 0) || saving}
-          onClick={() => void save()}
-          variant="primary"
-        >
-          {t("common.save")}{dirty || settingsDirty || dirtyGroups.length > 0 ? " •" : ""}
-        </Button>
-      </header>
+    <div className={rootClass}>
+      <EditorTopBar
+        assignments={data?.templateAssignments ?? {}}
+        canRedo={redoStack.length > 0}
+        canUndo={undoStack.length > 0}
+        codeHref={`/admin/themes/${themeId}/code`}
+        dirty={dirtyAny}
+        fullscreen={fullscreen}
+        inspector={inspector}
+        mobile={mobilePreview}
+        onCreateTemplate={(type) => setCreateType(type)}
+        onExit={requestExit}
+        onFullscreen={toggleFullscreen}
+        onInspector={() => setInspector((on) => !on)}
+        onMobile={() => setMobilePreview((on) => !on)}
+        onPanel={switchPanel}
+        onPublish={() => setPublishOpen(true)}
+        onRedo={redo}
+        onSave={() => { void save(); }}
+        onShortcuts={() => setShortcutsOpen(true)}
+        onTemplate={(key) => syncStateParams({ template: key, section: null, block: null, previewPath: null })}
+        onUndo={undo}
+        panel={panel}
+        previewHref={`/?preview_theme_id=${themeId}`}
+        role={data?.role ?? "draft"}
+        saving={saving}
+        templateKey={templateKey}
+        templateKeys={templateKeys}
+        themeName={data?.name ?? t("common.loading")}
+      />
+      {saving ? <div aria-hidden="true" className="cl-editor__progress" /> : null}
 
       <div className="cl-editor__panels">
-        <aside aria-label={t("editor.sectionsTree")} className="cl-editor__tree">
-          <h3>{t("editor.sectionsTree")}</h3>
-          <Button onClick={() => setPickerOpen((open) => !open)} size="small">
-            {t("editor.addSection")}
-          </Button>
-          <Button onClick={() => { setThemeMode(true); setSelectedId(null); syncStateParams({ context: "theme", section: null }); }} size="small" variant="ghost">
-            {t("editor.themeSettings")}
-          </Button>
-          {pickerOpen ? (
-            <ul aria-label={t("editor.sectionPicker")} className="cl-editor__picker">
-              <li>
-                <input
-                  aria-label={t("editor.pickerSearch")}
-                  className="cl-field__input"
-                  onChange={(event) => setPickerQuery(event.target.value)}
-                  placeholder={t("editor.pickerSearch")}
-                  value={pickerQuery}
-                />
-              </li>
-              {(data?.sectionCatalog ?? []).length === 0 ? (
-                <li className="cl-card-note">{t("editor.pickerEmpty")}</li>
-              ) : (
-                (data?.sectionCatalog ?? [])
-                  .filter((entry) => {
-                    const q = pickerQuery.trim().toLowerCase();
-                    return !q || entry.name.toLowerCase().includes(q) || entry.type.toLowerCase().includes(q);
-                  })
-                  .map((entry) => (
-                  <li key={entry.type}>
-                    <button className="cl-editor__node" onClick={() => addSection(entry)} type="button">
-                      {entry.name}
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          ) : null}
-          {(() => {
-            // PR-5 三帶（24 §1 本尊樹形）：header 群組帶 → 範本帶 → 其餘群組帶
-            const groups = data?.sectionGroups ?? [];
-            const headerGroups = groups.filter((g) => g.name.includes("header"));
-            const otherGroups = groups.filter((g) => !g.name.includes("header"));
-
-            const renderRows = (band: string, tpl: TemplateJson | null) => {
-              const rows = tpl ? (tpl.order ?? Object.keys(tpl.sections ?? {})) : [];
-              if (rows.length === 0) return <p className="cl-card-note">{t("editor.noSections")}</p>;
-              return (
-                <ul>
-                  {rows.map((sectionId, index) => {
-                    const entry = tpl?.sections?.[sectionId];
-                    if (!entry) return null;
-                    const isActive = selectedBand === band && selectedId === sectionId;
-                    return (
-                      <li
-                        draggable
-                        key={`${band}:${sectionId}`}
-                        onDragOver={(event) => {
-                          if (dragRef.current?.band === band) event.preventDefault();
-                        }}
-                        onDragStart={() => { dragRef.current = { band, sectionId }; }}
-                        onDrop={(event) => {
-                          event.preventDefault();
-                          const drag = dragRef.current;
-                          dragRef.current = null;
-                          if (!drag || drag.band !== band || drag.sectionId === sectionId) return;
-                          moveSectionTo(band, drag.sectionId, index); // 放到目標列位置
-                        }}
-                      >
-                        <div className="cl-editor__noderow">
-                          <button
-                            aria-pressed={isActive}
-                            className={isActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                            onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(null); setThemeMode(false); syncStateParams({ section: sectionId, context: null }); }}
-                            type="button"
-                          >
-                            {entry.type}
-                          </button>
-                          <button aria-label={t("editor.moveUp", { id: sectionId })} className="cl-editor__op" disabled={index === 0} onClick={() => moveSection(band, sectionId, -1)} type="button"><ArrowUp size={13} /></button>
-                          <button aria-label={t("editor.moveDown", { id: sectionId })} className="cl-editor__op" disabled={index === rows.length - 1} onClick={() => moveSection(band, sectionId, 1)} type="button"><ArrowDown size={13} /></button>
-                          <button aria-label={entry.disabled ? t("editor.show", { id: sectionId }) : t("editor.hide", { id: sectionId })} className="cl-editor__op" onClick={() => toggleDisabled(band, sectionId)} type="button">
-                            {entry.disabled ? <EyeOff size={13} /> : <Eye size={13} />}
-                          </button>
-                          <button aria-label={t("editor.duplicateOp", { id: sectionId })} className="cl-editor__op" onClick={() => duplicateSection(band, sectionId)} type="button"><Copy size={13} /></button>
-                          <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-editor__op" onClick={() => removeSection(band, sectionId)} type="button"><Trash2 size={13} /></button>
-                        </div>
-                        {(() => {
-                          const blockDefs = data?.sectionSchemas?.[entry.type]?.blocks ?? [];
-                          const maxBlocks = data?.sectionSchemas?.[entry.type]?.max_blocks ?? 50;
-                          const blockOrder = entry.block_order ?? [];
-                          return (
-                            <ul>
-                              {blockOrder.map((blockId, blockIndex) => {
-                                const blockActive = selectedBand === band && selectedId === sectionId && selectedBlockId === blockId;
-                                return (
-                                  <li
-                                    className="cl-editor__block"
-                                    draggable
-                                    key={blockId}
-                                    onDragOver={(event) => {
-                                      const drag = blockDragRef.current;
-                                      if (drag && drag.band === band && drag.sectionId === sectionId) {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                      }
-                                    }}
-                                    onDragStart={(event) => {
-                                      event.stopPropagation(); // 別讓 section li 也進入拖曳
-                                      blockDragRef.current = { band, sectionId, blockId };
-                                    }}
-                                    onDrop={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      const drag = blockDragRef.current;
-                                      blockDragRef.current = null;
-                                      if (!drag || drag.band !== band || drag.sectionId !== sectionId ||
-                                          drag.blockId === blockId) return;
-                                      moveBlockTo(band, sectionId, drag.blockId, blockIndex);
-                                    }}
-                                  >
-                                    <button
-                                      aria-pressed={blockActive}
-                                      className={blockActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                                      onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(blockId); setThemeMode(false); syncStateParams({ section: sectionId, context: null }); }}
-                                      type="button"
-                                    >
-                                      {entry.blocks?.[blockId]?.type ?? blockId}
-                                    </button>
-                                    <button aria-label={t("editor.blockUp", { id: blockId })} className="cl-editor__op" disabled={blockIndex === 0} onClick={() => moveBlock(band, sectionId, blockId, -1)} type="button"><ArrowUp size={12} /></button>
-                                    <button aria-label={t("editor.blockDown", { id: blockId })} className="cl-editor__op" disabled={blockIndex === blockOrder.length - 1} onClick={() => moveBlock(band, sectionId, blockId, 1)} type="button"><ArrowDown size={12} /></button>
-                                    <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-editor__op" onClick={() => removeBlock(band, sectionId, blockId)} type="button"><Trash2 size={12} /></button>
-                                  </li>
-                                );
-                              })}
-                              {blockDefs.length > 0 && blockOrder.length < maxBlocks ? (
-                                <li className="cl-editor__block">
-                                  {blockDefs.map((def) => (
-                                    <button
-                                      className="cl-editor__addblock"
-                                      key={def.type}
-                                      onClick={() => addBlock(band, sectionId, def)}
-                                      type="button"
-                                    >
-                                      ＋ {def.name ?? def.type}
-                                    </button>
-                                  ))}
-                                </li>
-                              ) : null}
-                            </ul>
-                          );
-                        })()}
-                      </li>
-                    );
-                  })}
-                </ul>
-              );
-            };
-
-            return (
-              <>
-                {headerGroups.map((g) => (
-                  <section key={g.name}>
-                    <h4 className="cl-editor__band">{t("editor.headerBand")}</h4>
-                    {renderRows(g.name, groupDrafts[g.name] ?? null)}
-                  </section>
-                ))}
-                <h4 className="cl-editor__band">{t("editor.templateBand")}</h4>
-                {renderRows("template", draft)}
-                {otherGroups.map((g) => (
-                  <section key={g.name}>
-                    <h4 className="cl-editor__band">{g.name.includes("footer") ? t("editor.footerBand") : g.name}</h4>
-                    {renderRows(g.name, groupDrafts[g.name] ?? null)}
-                  </section>
-                ))}
-              </>
-            );
-          })()}
-        </aside>
-
-        <main className="cl-editor__preview">
-          <iframe
-            className="cl-editor__iframe"
-            ref={iframeRef}
-            src={previewSrc}
-            style={mobilePreview ? { display: "block", margin: "0 auto", width: 390 } : undefined}
-            title={t("editor.previewTitle")}
-          />
-        </main>
-
-        <aside aria-label={themeMode ? t("editor.themeSettings") : t("editor.settingsPanel")} className="cl-editor__settings">
-          <h3>{themeMode ? t("editor.themeSettings") : t("editor.settingsPanel")}</h3>
-          {!themeMode && selected && selectedId && selectedBlockId ? (
-            (() => {
-              const block = selected.blocks?.[selectedBlockId];
-              const blockDef = (data?.sectionSchemas?.[selected.type]?.blocks ?? [])
-                .find((d) => d.type === block?.type);
-              if (!block) return <p className="cl-card-note">{t("editor.selectHint")}</p>;
-              const defs = blockDef?.settings ?? [];
-              const covered = new Set(defs.map((d) => d.id).filter(Boolean));
-              const extras = Object.entries(block.settings ?? {}).filter(([ key ]) => !covered.has(key));
-              return (
-                <>
-                  <p className="cl-card-note"><code>{block.type}</code>（block）</p>
-                  {defs.map((def, index) => (
-                    <SettingControl
-                      def={def}
-                      key={def.id ?? `static-${index}`}
-                      onChange={(value) => def.id && setBlockSetting(def.id, value)}
-                      value={def.id ? (block.settings ?? {})[def.id] : undefined}
+        {fullscreen ? null : panel === "sections" ? (
+          <aside aria-label={t("editor.sectionsTree")} className="cl-editor__sidebar cl-editor__tree">
+            <div className="cl-editor__paneltitle"><h3>{templateLabel}</h3></div>
+            <div className="cl-editor__panelbody">
+              <Button onClick={() => setPickerOpen((open) => !open)} size="small">
+                {t("editor.addSection")}
+              </Button>
+              {pickerOpen ? (
+                <ul aria-label={t("editor.sectionPicker")} className="cl-editor__picker">
+                  <li>
+                    <input
+                      aria-label={t("editor.pickerSearch")}
+                      className="cl-field__input"
+                      onChange={(event) => setPickerQuery(event.target.value)}
+                      placeholder={t("editor.pickerSearch")}
+                      value={pickerQuery}
                     />
-                  ))}
-                  {extras.map(([ key, value ]) => (
-                    <FallbackControl key={key} name={key}
-                      onChange={(next) => setBlockSetting(key, next)} value={value} />
-                  ))}
-                </>
-              );
-            })()
-          ) : themeMode ? (
-            <>
+                  </li>
+                  {(data?.sectionCatalog ?? []).length === 0 ? (
+                    <li className="cl-card-note">{t("editor.pickerEmpty")}</li>
+                  ) : (
+                    (data?.sectionCatalog ?? [])
+                      .filter((entry) => {
+                        const q = pickerQuery.trim().toLowerCase();
+                        return !q || entry.name.toLowerCase().includes(q) || entry.type.toLowerCase().includes(q);
+                      })
+                      .map((entry) => (
+                      <li key={entry.type}>
+                        <button className="cl-editor__node" onClick={() => addSection(entry)} type="button">
+                          {entry.name}
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              ) : null}
+              {(() => {
+                // PR-5 三帶（24 §1 本尊樹形）：header 群組帶 → 範本帶 → 其餘群組帶
+                const groups = data?.sectionGroups ?? [];
+                const headerGroups = groups.filter((g) => g.name.includes("header"));
+                const otherGroups = groups.filter((g) => !g.name.includes("header"));
+
+                const renderRows = (band: string, tpl: TemplateJson | null) => {
+                  const rows = tpl ? (tpl.order ?? Object.keys(tpl.sections ?? {})) : [];
+                  if (rows.length === 0) return <p className="cl-card-note">{t("editor.noSections")}</p>;
+                  return (
+                    <ul>
+                      {rows.map((sectionId, index) => {
+                        const entry = tpl?.sections?.[sectionId];
+                        if (!entry) return null;
+                        const isActive = selectedBand === band && selectedId === sectionId;
+                        return (
+                          <li
+                            draggable
+                            key={`${band}:${sectionId}`}
+                            onDragOver={(event) => {
+                              if (dragRef.current?.band === band) event.preventDefault();
+                            }}
+                            onDragStart={() => { dragRef.current = { band, sectionId }; }}
+                            onDrop={(event) => {
+                              event.preventDefault();
+                              const drag = dragRef.current;
+                              dragRef.current = null;
+                              if (!drag || drag.band !== band || drag.sectionId === sectionId) return;
+                              moveSectionTo(band, drag.sectionId, index); // 放到目標列位置
+                            }}
+                          >
+                            <div className="cl-editor__noderow">
+                              <button
+                                aria-pressed={isActive}
+                                className={isActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
+                                onClick={() => selectNode(band, sectionId, null)}
+                                type="button"
+                              >
+                                {entry.type}
+                              </button>
+                              <button aria-label={t("editor.moveUp", { id: sectionId })} className="cl-editor__op" disabled={index === 0} onClick={() => moveSection(band, sectionId, -1)} type="button"><ArrowUp size={13} /></button>
+                              <button aria-label={t("editor.moveDown", { id: sectionId })} className="cl-editor__op" disabled={index === rows.length - 1} onClick={() => moveSection(band, sectionId, 1)} type="button"><ArrowDown size={13} /></button>
+                              <button aria-label={entry.disabled ? t("editor.show", { id: sectionId }) : t("editor.hide", { id: sectionId })} className="cl-editor__op" onClick={() => toggleDisabled(band, sectionId)} type="button">
+                                {entry.disabled ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                              <button aria-label={t("editor.duplicateOp", { id: sectionId })} className="cl-editor__op" onClick={() => duplicateSection(band, sectionId)} type="button"><Copy size={13} /></button>
+                              <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-editor__op" onClick={() => removeSection(band, sectionId)} type="button"><Trash2 size={13} /></button>
+                            </div>
+                            {(() => {
+                              const blockDefs = data?.sectionSchemas?.[entry.type]?.blocks ?? [];
+                              const maxBlocks = data?.sectionSchemas?.[entry.type]?.max_blocks ?? 50;
+                              const blockOrder = entry.block_order ?? [];
+                              return (
+                                <ul>
+                                  {blockOrder.map((blockId, blockIndex) => {
+                                    const blockActive = selectedBand === band && selectedId === sectionId && selectedBlockId === blockId;
+                                    return (
+                                      <li
+                                        className="cl-editor__block"
+                                        draggable
+                                        key={blockId}
+                                        onDragOver={(event) => {
+                                          const drag = blockDragRef.current;
+                                          if (drag && drag.band === band && drag.sectionId === sectionId) {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                          }
+                                        }}
+                                        onDragStart={(event) => {
+                                          event.stopPropagation(); // 別讓 section li 也進入拖曳
+                                          blockDragRef.current = { band, sectionId, blockId };
+                                        }}
+                                        onDrop={(event) => {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          const drag = blockDragRef.current;
+                                          blockDragRef.current = null;
+                                          if (!drag || drag.band !== band || drag.sectionId !== sectionId ||
+                                              drag.blockId === blockId) return;
+                                          moveBlockTo(band, sectionId, drag.blockId, blockIndex);
+                                        }}
+                                      >
+                                        <button
+                                          aria-pressed={blockActive}
+                                          className={blockActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
+                                          onClick={() => selectNode(band, sectionId, blockId)}
+                                          type="button"
+                                        >
+                                          {entry.blocks?.[blockId]?.type ?? blockId}
+                                        </button>
+                                        <button aria-label={t("editor.blockUp", { id: blockId })} className="cl-editor__op" disabled={blockIndex === 0} onClick={() => moveBlock(band, sectionId, blockId, -1)} type="button"><ArrowUp size={12} /></button>
+                                        <button aria-label={t("editor.blockDown", { id: blockId })} className="cl-editor__op" disabled={blockIndex === blockOrder.length - 1} onClick={() => moveBlock(band, sectionId, blockId, 1)} type="button"><ArrowDown size={12} /></button>
+                                        <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-editor__op" onClick={() => removeBlock(band, sectionId, blockId)} type="button"><Trash2 size={12} /></button>
+                                      </li>
+                                    );
+                                  })}
+                                  {blockDefs.length > 0 && blockOrder.length < maxBlocks ? (
+                                    <li className="cl-editor__block">
+                                      {blockDefs.map((def) => (
+                                        <button
+                                          className="cl-editor__addblock"
+                                          key={def.type}
+                                          onClick={() => addBlock(band, sectionId, def)}
+                                          type="button"
+                                        >
+                                          ＋ {def.name ?? def.type}
+                                        </button>
+                                      ))}
+                                    </li>
+                                  ) : null}
+                                </ul>
+                              );
+                            })()}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
+                };
+
+                return (
+                  <>
+                    {headerGroups.map((g) => (
+                      <section key={g.name}>
+                        <h4 className="cl-editor__band">{t("editor.headerBand")}</h4>
+                        {renderRows(g.name, groupDrafts[g.name] ?? null)}
+                      </section>
+                    ))}
+                    <h4 className="cl-editor__band">{t("editor.templateBand")}</h4>
+                    {renderRows("template", draft)}
+                    {otherGroups.map((g) => (
+                      <section key={g.name}>
+                        <h4 className="cl-editor__band">{g.name.includes("footer") ? t("editor.footerBand") : g.name}</h4>
+                        {renderRows(g.name, groupDrafts[g.name] ?? null)}
+                      </section>
+                    ))}
+                  </>
+                );
+              })()}
+            </div>
+          </aside>
+        ) : panel === "theme" ? (
+          <aside aria-label={t("editor.themeSettings")} className="cl-editor__sidebar">
+            <div className="cl-editor__paneltitle"><h3>{t("editor.themeSettings")}</h3></div>
+            <div className="cl-editor__panelbody">
+              {/* E2：本尊佈景設定＝左欄手風琴分類（100 §7）；展開分類寫進 URL `category` */}
               {(data?.settingsSchema ?? []).map((group) => (
-                <section key={group.name}>
-                  <h4 className="cl-editor__group">{group.name}</h4>
+                <details
+                  className="cl-editor__acc"
+                  key={group.name}
+                  onToggle={(event) => {
+                    const open = (event.currentTarget as HTMLDetailsElement).open;
+                    setOpenCategory((current) => (open ? group.name : current === group.name ? null : current));
+                    syncStateParams({ category: open ? group.name : null });
+                  }}
+                  open={openCategory === group.name}
+                >
+                  <summary>{group.name}</summary>
                   {group.settings.map((def, index) => (
                     <SettingControl
                       def={def}
@@ -1098,11 +1258,11 @@ export function ThemeEditorPage() {
                       value={def.id ? (settingsDraft ?? {})[def.id] : undefined}
                     />
                   ))}
-                </section>
+                </details>
               ))}
               {/* PR-19：theme 級 Custom CSS（官方 Theme settings → Custom CSS；
                   1500 字上限；存 platform_customizations 對位） */}
-              <details className="cl-editor__customcss">
+              <details className="cl-editor__acc cl-editor__customcss">
                 <summary>{t("editor.customCss")}</summary>
                 <textarea
                   aria-label={t("editor.customCss")}
@@ -1117,70 +1277,160 @@ export function ThemeEditorPage() {
                   )}
                 />
               </details>
-            </>
-          ) : selected && selectedId ? (
-            <>
-              <p className="cl-card-note"><code>{selected.type}</code>{selected.disabled ? ` — ${t("editor.hidden")}` : ""}</p>
-              {(() => {
-                const schema = data?.sectionSchemas?.[selected.type];
-                const defs = schema?.settings ?? [];
-                const covered = new Set(defs.map((def) => def.id).filter(Boolean));
-                const extras = Object.entries(selected.settings ?? {}).filter(([ key ]) => !covered.has(key));
-                return (
-                  <>
-                    {defs.map((def, index) => (
-                      <SettingControl
-                        def={def}
-                        key={def.id ?? `static-${index}`}
-                        onChange={(value) => def.id && setSetting(selectedId, def.id, value)}
-                        value={def.id ? (selected.settings ?? {})[def.id] : undefined}
-                      />
-                    ))}
-                    {extras.map(([ key, value ]) => (
-                      <FallbackControl
-                        key={key}
-                        name={key}
-                        onChange={(next) => setSetting(selectedId, key, next)}
-                        value={value}
-                      />
-                    ))}
-                  </>
-                );
-              })()}
-              {/* PR-18：官方「At the bottom of section properties, click Custom CSS」；
-                  section 級上限 500 字（help add-css 逐字） */}
-              <details className="cl-editor__customcss">
-                <summary>{t("editor.customCss")}</summary>
-                <textarea
-                  aria-label={t("editor.customCss")}
-                  className="cl-field__input"
-                  maxLength={500}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    applyOp(selectedBand, (tpl) => {
-                      const entry = tpl.sections?.[selectedId];
-                      if (!entry) return;
-                      if (value) entry.custom_css = value;
-                      else delete entry.custom_css;
-                    });
-                  }}
-                  rows={4}
-                  value={selected.custom_css ?? ""}
-                />
-              </details>
-              <Button
-                onClick={() => { removeSection(selectedBand, selectedId); setSelectedId(null); syncStateParams({ section: null }); }}
-                size="small"
-                variant="critical"
-              >
-                <Trash2 aria-hidden="true" size={13} /> {t("editor.removeSection")}
-              </Button>
-            </>
-          ) : (
-            <p className="cl-card-note">{t("editor.selectHint")}</p>
-          )}
-        </aside>
+            </div>
+          </aside>
+        ) : (
+          <aside aria-label={t("editor.panelApps")} className="cl-editor__sidebar">
+            <div className="cl-editor__paneltitle"><h3>{t("editor.panelApps")}</h3></div>
+            <div className="cl-editor__panelbody">
+              <div className="cl-editor__menusearch">
+                <Search aria-hidden="true" size={14} />
+                <input aria-label={t("editor.appsSearch")} placeholder={t("editor.appsSearch")} />
+              </div>
+              <p className="cl-editor__empty">{t("editor.appsEmpty")}</p>
+            </div>
+          </aside>
+        )}
+
+        <main className="cl-editor__preview">
+          <iframe
+            className={mobilePreview ? "cl-editor__iframe cl-editor__iframe--mobile" : "cl-editor__iframe"}
+            ref={iframeRef}
+            src={previewSrc}
+            style={mobilePreview ? { width: 390 } : undefined}
+            title={t("editor.previewTitle")}
+          />
+        </main>
+
+        {!fullscreen && hasRightPanel && selected && selectedId ? (
+          <aside aria-label={t("editor.settingsPanel")} className="cl-editor__settings">
+            <div className="cl-editor__paneltitle">
+              <h3>{selectedBlockId ? (selected.blocks?.[selectedBlockId]?.type ?? selectedBlockId) : (data?.sectionSchemas?.[selected.type]?.name ?? selected.type)}</h3>
+              <button aria-label={t("common.close")} className="cl-editor__iconbtn" onClick={deselect} type="button">
+                <X aria-hidden="true" size={16} />
+              </button>
+            </div>
+            <div className="cl-editor__panelbody">
+              {selectedBlockId ? (
+                (() => {
+                  const block = selected.blocks?.[selectedBlockId];
+                  const blockDef = (data?.sectionSchemas?.[selected.type]?.blocks ?? [])
+                    .find((d) => d.type === block?.type);
+                  if (!block) return <p className="cl-card-note">{t("editor.selectHint")}</p>;
+                  const defs = blockDef?.settings ?? [];
+                  const covered = new Set(defs.map((d) => d.id).filter(Boolean));
+                  const extras = Object.entries(block.settings ?? {}).filter(([ key ]) => !covered.has(key));
+                  return (
+                    <>
+                      <p className="cl-card-note"><code>{block.type}</code>（block）</p>
+                      {defs.map((def, index) => (
+                        <SettingControl
+                          def={def}
+                          key={def.id ?? `static-${index}`}
+                          onChange={(value) => def.id && setBlockSetting(def.id, value)}
+                          value={def.id ? (block.settings ?? {})[def.id] : undefined}
+                        />
+                      ))}
+                      {extras.map(([ key, value ]) => (
+                        <FallbackControl key={key} name={key}
+                          onChange={(next) => setBlockSetting(key, next)} value={value} />
+                      ))}
+                    </>
+                  );
+                })()
+              ) : (
+                <>
+                  <p className="cl-card-note"><code>{selected.type}</code>{selected.disabled ? ` — ${t("editor.hidden")}` : ""}</p>
+                  {(() => {
+                    const schema = data?.sectionSchemas?.[selected.type];
+                    const defs = schema?.settings ?? [];
+                    const covered = new Set(defs.map((def) => def.id).filter(Boolean));
+                    const extras = Object.entries(selected.settings ?? {}).filter(([ key ]) => !covered.has(key));
+                    return (
+                      <>
+                        {defs.map((def, index) => (
+                          <SettingControl
+                            def={def}
+                            key={def.id ?? `static-${index}`}
+                            onChange={(value) => def.id && setSetting(selectedId, def.id, value)}
+                            value={def.id ? (selected.settings ?? {})[def.id] : undefined}
+                          />
+                        ))}
+                        {extras.map(([ key, value ]) => (
+                          <FallbackControl
+                            key={key}
+                            name={key}
+                            onChange={(next) => setSetting(selectedId, key, next)}
+                            value={value}
+                          />
+                        ))}
+                      </>
+                    );
+                  })()}
+                  {/* PR-18：官方「At the bottom of section properties, click Custom CSS」；
+                      section 級上限 500 字（help add-css 逐字） */}
+                  <details className="cl-editor__acc cl-editor__customcss">
+                    <summary>{t("editor.customCss")}</summary>
+                    <textarea
+                      aria-label={t("editor.customCss")}
+                      className="cl-field__input"
+                      maxLength={500}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        applyOp(selectedBand, (tpl) => {
+                          const entry = tpl.sections?.[selectedId];
+                          if (!entry) return;
+                          if (value) entry.custom_css = value;
+                          else delete entry.custom_css;
+                        });
+                      }}
+                      rows={4}
+                      value={selected.custom_css ?? ""}
+                    />
+                  </details>
+                  <Button
+                    onClick={() => { removeSection(selectedBand, selectedId); deselect(); }}
+                    size="small"
+                    variant="critical"
+                  >
+                    <Trash2 aria-hidden="true" size={13} /> {t("editor.removeSection")}
+                  </Button>
+                </>
+              )}
+            </div>
+          </aside>
+        ) : null}
       </div>
+
+      <ShortcutsDialog onClose={() => setShortcutsOpen(false)} open={shortcutsOpen} />
+      <ConfirmDialog
+        cancelLabel={t("editor.stay")}
+        confirmLabel={t("editor.leave")}
+        danger
+        message={t("editor.leaveMessage")}
+        onCancel={() => setLeaveOpen(false)}
+        onConfirm={() => { setLeaveOpen(false); navigate("/admin/store"); }}
+        open={leaveOpen}
+        title={t("editor.leaveTitle")}
+      />
+      <ConfirmDialog
+        busy={publishing}
+        confirmLabel={t("editor.publish")}
+        message={t("editor.publishMessage")}
+        onCancel={() => setPublishOpen(false)}
+        onConfirm={() => { void publish(); }}
+        open={publishOpen}
+        title={t("editor.publishTitle", { name: data?.name ?? "" })}
+      />
+      <CreateTemplateDialog
+        baseKeys={createBaseKeys}
+        busy={creating}
+        existing={templateKeys}
+        onCancel={() => setCreateType(null)}
+        onCreate={(name, baseKey) => { void createTemplate(name, baseKey); }}
+        open={createType !== null}
+        type={createType}
+      />
     </div>
   );
 }

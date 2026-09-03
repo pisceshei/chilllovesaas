@@ -24,6 +24,9 @@ const BOOTSTRAP = {
       name: "Minimal",
       role: "published",
       templates: [ { filename: "templates/index.json" }, { filename: "templates/product.json" } ],
+      // E2：模板選擇器資料（product.custom 只在 DB；指派計數鍵 ""＝預設）
+      templateKeys: [ "index", "product", "product.custom" ],
+      templateAssignments: { product: { "": 3 }, collection: {}, page: {}, blog: {}, article: {} },
       sectionGroups: [
         { name: "header-group", path: "sections/header-group.json",
           json: { sections: { gh: { type: "hero", settings: { heading: "群組頁首" } } }, order: [ "gh" ] },
@@ -73,6 +76,15 @@ function stubFetch(saveErrors: { message: string; code: string }[] = [], bootstr
         path: "sections/header-group.json", lockVersion: 0, userErrors: [] } } };
       return { json: vi.fn().mockResolvedValue(fileBody), ok: true, status: 200 } as unknown as Response;
     }
+    // E2：發布與「建立模板」的 base 讀取
+    if (request.query.includes("themePublish")) {
+      const publishBody = { data: { themePublish: { theme: { id: "gid://chilllove/Theme/7", role: "published" }, userErrors: [] } } };
+      return { json: vi.fn().mockResolvedValue(publishBody), ok: true, status: 200 } as unknown as Response;
+    }
+    if (request.query.includes("themeEditorBaseTemplate")) {
+      const baseBody = { data: { theme: { templateJson: { sections: { base: { type: "hero", settings: {} } }, order: [ "base" ] } } } };
+      return { json: vi.fn().mockResolvedValue(baseBody), ok: true, status: 200 } as unknown as Response;
+    }
     const body = request.query.includes("themeTemplateUpsert")
       ? { data: { themeTemplateUpsert: {
           templateKey: saveErrors.length > 0 ? null : "index",
@@ -117,8 +129,16 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]);
     expect(tree.getByLabelText("顯示 demo")).toBeInTheDocument(); // disabled ⇒ 眼睛顯示「顯示」op
     expect(tree.getByText("_parent")).toBeInTheDocument(); // block 子層
-    const switcher = screen.getByLabelText("頁面模板") as HTMLSelectElement;
-    expect([ ...switcher.options ].map((o) => o.value)).toEqual([ "index", "product" ]);
+    // E2：模板選擇器＝popover（100 §1.1）：第一層列 Home page／Products ›；Products 進子清單
+    fireEvent.click(screen.getByRole("button", { name: "頁面模板" }));
+    const menu = within(screen.getByRole("menu"));
+    expect(menu.getByRole("menuitem", { name: /首頁/ })).toBeInTheDocument();
+    expect(menu.queryByText("購物車")).toBeNull(); // 主題沒有 cart.json ⇒ 不列
+    fireEvent.click(menu.getByRole("menuitem", { name: /^商品$/ }));
+    expect(menu.getByText("預設商品模板")).toBeInTheDocument();
+    expect(menu.getByText("已指派給 3 個商品")).toBeInTheDocument(); // assignments[product][""]
+    expect(menu.getByText("custom")).toBeInTheDocument();           // DB-only 替代模板
+    expect(menu.getByText("已指派給 0 個商品")).toBeInTheDocument(); // 無指派補 0
   });
 
   it("ED2 🔴 點樹節點 ⇒ 設定面板出值＋向 iframe postMessage cl:highlight", async () => {
@@ -142,11 +162,11 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     renderEditor();
     await screen.findByRole("complementary", { name: "區段" });
 
-    // 異 origin ⇒ 不選中
+    // 異 origin ⇒ 不選中（E2：無選取時右欄不掛載——本尊兩欄形態）
     fireEvent(window, new MessageEvent("message", {
       data: { type: "cl:select", id: "hero" }, origin: "https://evil.example",
     }));
-    expect(screen.getByText("在左欄或預覽中點選一個區段")).toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: "設定" })).toBeNull();
 
     // 同 origin ⇒ 選中 hero
     fireEvent(window, new MessageEvent("message", {
@@ -246,7 +266,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const fetchMock = stubFetch();
     renderEditor();
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
-    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+    fireEvent.click(screen.getByRole("button", { name: "佈景主題設定" })); // E2：頂欄面板切換器
 
     const settings = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
     expect(settings.getByText("Colors")).toBeInTheDocument();
@@ -389,7 +409,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
     Object.defineProperty(iframe, "contentWindow", { value: { postMessage: vi.fn(), scrollY: 0 } });
 
-    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+    fireEvent.click(screen.getByRole("button", { name: "佈景主題設定" })); // E2：頂欄面板切換器
     const settings = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
     fireEvent.change(settings.getByLabelText("品牌色"), { target: { value: "#123456" } });
 
@@ -484,7 +504,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const fetchMock = stubFetch();
     renderEditor();
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
-    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+    fireEvent.click(screen.getByRole("button", { name: "佈景主題設定" })); // E2：頂欄面板切換器
 
     const panel = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
     fireEvent.change(panel.getByLabelText("自訂 CSS"), {
@@ -637,7 +657,9 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
     fireEvent.click(screen.getByRole("button", { name: /行動版/ }));
     expect(iframe.style.width).toBe("390px"); // 24 §1.1 📱 行動版
-    fireEvent.click(screen.getByRole("button", { name: /行動版/ }));
+    expect(iframe.className).toContain("cl-editor__iframe--mobile");
+    // E2：本尊 tooltip 逐字 "Show mobile view"／"Show desktop view" 隨狀態切換（100 §1 右 3）
+    fireEvent.click(screen.getByRole("button", { name: /桌面版/ }));
     expect(iframe.style.width).toBe("");
   });
 
@@ -664,7 +686,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]);
     expect(router.state.location.search).toContain("section=hero");
 
-    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+    fireEvent.click(screen.getByRole("button", { name: "佈景主題設定" })); // E2：頂欄面板切換器
     expect(router.state.location.search).toContain("context=theme");
     expect(router.state.location.search).not.toContain("section=hero");
   });
@@ -680,6 +702,189 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     // 範本帶只剩 blocks-demo（頁首帶的 hero 不受影響）
     const nodes = tree.getAllByRole("button").filter((node) => node.hasAttribute("aria-pressed"));
     expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "blocks-demo", "_parent" ]);
-    expect(screen.getByText("在左欄或預覽中點選一個區段")).toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: "設定" })).toBeNull(); // E2：清選取 ⇒ 右欄收起
+  });
+
+  // ── E2（D79 shell＋頂欄；`docs/research/100` §1／§5／§6／§7 對位）──
+  // 🔴 假綠殺手：
+  //   ED28 面板切換器＝三面板互斥＋再點已啟用者 ⇒ 全寬（殺：fullscreen 不寫 URL／不收兩欄）
+  //   ED29 建立模板＝base 模板 JSON → upsert(`type.name`) → 切到新 key（殺：空內容／不切模板）
+  //   ED30 右欄只在選取時掛載，× 清 URL section（殺：常駐右欄）
+  //   ED31 離開有未存變更必經確認框，Stay 不離開（殺：靜默丟棄）
+  //   ED32 Publish＝先存再 themePublish（殺：未存就發布 ⇒ 顧客看到舊版）
+  //   ED33 快捷鍵單一表：Ctrl+S／Ctrl+/／Ctrl+Alt+2／Ctrl+Alt+I／Ctrl+Shift+H／Esc／Shift+⌫
+  //   ED34 block 選取寫 `block=`；ED35 佈景設定手風琴寫 `category=`
+  it("ED28 🔴 面板切換器：apps 面板＋context=apps；再點已啟用的 Sections ⇒ 全寬預覽（previewMode=fullscreen）", async () => {
+    stubFetch();
+    const router = renderEditor();
+    await screen.findByRole("complementary", { name: "區段" });
+
+    fireEvent.click(screen.getByRole("button", { name: "應用程式嵌入" }));
+    expect(screen.getByRole("complementary", { name: "應用程式嵌入" })).toBeInTheDocument();
+    expect(screen.getByText("尚未安裝任何提供嵌入的應用程式。")).toBeInTheDocument();
+    expect(router.state.location.search).toContain("context=apps");
+    expect(screen.queryByRole("complementary", { name: "區段" })).toBeNull(); // 三面板互斥
+
+    fireEvent.click(screen.getByRole("button", { name: "區段" }));
+    expect(screen.getByRole("complementary", { name: "區段" })).toBeInTheDocument();
+    expect(router.state.location.search).not.toContain("context=");
+
+    fireEvent.click(screen.getByRole("button", { name: "區段" })); // 再點已啟用者 ⇒ 全寬
+    expect(screen.queryByRole("complementary")).toBeNull();
+    expect(router.state.location.search).toContain("previewMode=fullscreen");
+    expect(screen.getByTitle("主題預覽")).toBeInTheDocument(); // 預覽仍在
+
+    fireEvent.click(screen.getByRole("button", { name: "區段" })); // 再點 ⇒ 還原
+    expect(screen.getByRole("complementary", { name: "區段" })).toBeInTheDocument();
+    expect(router.state.location.search).not.toContain("previewMode");
+  });
+
+  it("ED29 🔴 模板選擇器：選替代模板寫 ?template=；Create template ⇒ base JSON → upsert(product.name) → 切到新模板", async () => {
+    const fetchMock = stubFetch();
+    const router = renderEditor();
+    await screen.findByRole("complementary", { name: "區段" });
+
+    fireEvent.click(screen.getByRole("button", { name: "頁面模板" }));
+    fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: /^商品$/ }));
+    fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: /custom/ }));
+    expect(router.state.location.search).toContain("template=product.custom");
+    expect(screen.getByRole("button", { name: "頁面模板" })).toHaveTextContent("custom"); // 觸發鈕文字＝替代名
+
+    fireEvent.click(screen.getByRole("button", { name: "頁面模板" }));
+    fireEvent.click(within(screen.getByRole("menu")).getByRole("button", { name: "建立模板" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "建立模板" }));
+    expect(dialog.getByRole("button", { name: "建立模板" })).toBeDisabled(); // 名稱空 ⇒ 灰
+    fireEvent.change(dialog.getByLabelText("名稱"), { target: { value: "custom" } });
+    expect(dialog.getByRole("alert")).toHaveTextContent("已有同名模板。");          // 同名擋
+    fireEvent.change(dialog.getByLabelText("名稱"), { target: { value: "promo" } });
+    fireEvent.click(dialog.getByRole("button", { name: "建立模板" }));
+
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { key: string; content: { order: string[] }; lockVersion: number | null };
+    };
+    expect(sent.variables.key).toBe("product.promo");
+    expect(sent.variables.content.order).toEqual([ "base" ]); // 🔴 內容＝base 模板 JSON（themeEditorBaseTemplate）
+    expect(sent.variables.lockVersion).toBeNull();
+    await vi.waitFor(() => expect(router.state.location.search).toContain("template=product.promo"));
+  });
+
+  it("ED30 🔴 右欄只在選取時掛載；× 關閉 ⇒ 清選取＋URL 去 section", async () => {
+    stubFetch();
+    const router = renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    expect(screen.queryByRole("complementary", { name: "設定" })).toBeNull();
+
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]);
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    expect(settings.getByRole("heading", { name: "Hero" })).toBeInTheDocument(); // 面板標題＝schema name
+    fireEvent.click(settings.getByRole("button", { name: "關閉" }));
+    expect(screen.queryByRole("complementary", { name: "設定" })).toBeNull();
+    expect(router.state.location.search).not.toContain("section=");
+  });
+
+  it("ED31 🔴 Exit：無變更直接離開；有未存變更 ⇒ 「離開頁面並放棄未儲存的變更？」Stay 留下、Leave page 離開", async () => {
+    stubFetch();
+    const router = renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getByLabelText("隱藏 hero")); // dirty
+    fireEvent.click(screen.getByRole("button", { name: "離開" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "離開頁面並放棄未儲存的變更？" }));
+    expect(dialog.getByText("離開此頁會刪除所有未儲存的變更。")).toBeInTheDocument();
+    fireEvent.click(dialog.getByRole("button", { name: "留在此頁" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(router.state.location.pathname).toBe("/admin/themes/7/editor"); // 沒離開
+
+    fireEvent.click(screen.getByRole("button", { name: "離開" }));
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "離開頁面" }));
+    await vi.waitFor(() => expect(router.state.location.pathname).toBe("/admin/store"));
+  });
+
+  it("ED32 🔴 Publish：「儲存並發布 Minimal？」確認 ⇒ 有變更先 themeTemplateUpsert 再 themePublish", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByLabelText("隱藏 hero"));
+
+    fireEvent.click(screen.getByRole("button", { name: "發布" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "儲存並發布 Minimal？" }));
+    expect(dialog.getByText("顧客造訪線上商店時會看到此主題。")).toBeInTheDocument();
+    fireEvent.click(dialog.getByRole("button", { name: "發布" }));
+
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themePublish")).toHaveLength(1));
+    const order = fetchMock.mock.calls.map((call) => String((call[1] as RequestInit)?.body ?? ""));
+    const saveIndex = order.findIndex((body) => body.includes("themeTemplateUpsert"));
+    const publishIndex = order.findIndex((body) => body.includes("themePublish"));
+    expect(saveIndex).toBeGreaterThan(-1);
+    expect(saveIndex).toBeLessThan(publishIndex); // 🔴 先存再發布
+    expect(await screen.findByText("主題已發布。")).toBeInTheDocument();
+  });
+
+  it("ED33 🔴 快捷鍵（單一表）：Ctrl+S 存、Ctrl+/ 開表、Ctrl+Alt+2 面板、Ctrl+Alt+I 手機、Ctrl+Shift+H 隱藏、Esc 取消選取、Shift+⌫ 移除", async () => {
+    const fetchMock = stubFetch();
+    const router = renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]);
+    fireEvent.keyDown(window, { key: "h", ctrlKey: true, shiftKey: true });
+    expect(tree.getByLabelText("顯示 hero")).toBeInTheDocument(); // Ctrl+Shift+H 隱藏選中
+
+    fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1)); // Ctrl+S
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("complementary", { name: "設定" })).toBeNull(); // Esc 取消選取
+    expect(router.state.location.search).not.toContain("section=");
+
+    fireEvent.keyDown(window, { key: "i", ctrlKey: true, altKey: true });
+    expect(iframe.style.width).toBe("390px"); // Ctrl+Alt+I 手機檢視
+
+    fireEvent.keyDown(window, { key: "2", ctrlKey: true, altKey: true });
+    expect(screen.getByRole("complementary", { name: "佈景主題設定" })).toBeInTheDocument(); // Ctrl+Alt+2
+
+    fireEvent.keyDown(window, { key: "/", ctrlKey: true });
+    const dialog = within(await screen.findByRole("dialog", { name: "鍵盤快捷鍵" }));
+    expect(dialog.getByText("區段與區塊")).toBeInTheDocument();
+    expect(dialog.getByText("查看所有快捷鍵")).toBeInTheDocument();
+
+    // modal 開著時快捷鍵全部不攔（#admin-root inert）：Ctrl+Alt+1 不切面板
+    fireEvent.keyDown(window, { key: "1", ctrlKey: true, altKey: true });
+    expect(screen.getByRole("complementary", { name: "佈景主題設定" })).toBeInTheDocument();
+  });
+
+  it("ED33b 🔴 Shift+⌫ 移除選中 section（輸入框內不攔）", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]);
+
+    // 輸入框內按 Shift+⌫ ⇒ 不移除（原生文字編輯先行）
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    fireEvent.keyDown(settings.getByLabelText("標題"), { key: "Backspace", shiftKey: true });
+    expect(tree.getAllByRole("button", { name: "hero" })).toHaveLength(2);
+
+    fireEvent.keyDown(window, { key: "Backspace", shiftKey: true });
+    expect(tree.getAllByRole("button", { name: "hero" })).toHaveLength(1); // 範本帶 hero 移除
+    expect(screen.queryByRole("complementary", { name: "設定" })).toBeNull();
+  });
+
+  it("ED34 🔴 block 選取寫 ?block=；佈景設定手風琴展開寫 ?category=", async () => {
+    stubFetch();
+    const router = renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getByRole("button", { name: "_parent" }));
+    expect(router.state.location.search).toContain("section=demo");
+    expect(router.state.location.search).toContain("block=p1");
+
+    fireEvent.click(screen.getByRole("button", { name: "佈景主題設定" }));
+    expect(router.state.location.search).not.toContain("block="); // 切面板 ⇒ 清選取
+    const panel = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
+    const details = panel.getByText("Colors").closest("details") as HTMLDetailsElement;
+    details.open = true;
+    fireEvent(details, new Event("toggle"));
+    expect(router.state.location.search).toContain("category=Colors");
   });
 });
