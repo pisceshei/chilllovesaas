@@ -112,12 +112,11 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     end
     zh = ThemeEngine::PageRenderer.new(theme: theme, shop: shop, publication: online_store, source: source, locale: "zh-Hans")
                                   .render("/collections/c1", params: { "_facets_qs" => "" }).html
-    expect(zh).to include("[供貨情況:现货=")
+    expect(zh).to include("[供貨情況:").and include("现货=").and include("缺货=") # 值序見 PP17（count 0 退後）
     expect(zh).to include("[價格:")
-    expect(zh).to include("缺货=")
     en = ThemeEngine::PageRenderer.new(theme: theme, shop: shop, publication: online_store, source: source, locale: "en")
                                   .render("/collections/c1", params: { "_facets_qs" => "" }).html
-    expect(en).to include("[Availability:In stock=")
+    expect(en).to include("[Availability:").and include("In stock=").and include("Out of stock=")
     expect(en).not_to include("Brand") # E8b：預設只出 availability＋price（hoko 新店無 Brand／Type 篩選）
   end
 
