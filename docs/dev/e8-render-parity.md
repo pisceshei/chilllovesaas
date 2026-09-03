@@ -95,7 +95,7 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 | 53 | `url_param_escape`／`url_escape` | 官方例：空白 `%20`、`/` 保留、param 版 `&` ⇒ `%26`；hoko 分享連結 `text=Acme%20Tee` | `ERB::Util.url_encode`＋還原 `/`（url_escape 再還原 `&`）；先前 CGI.escape ⇒ `+`／`%2F` | PP15 |
 | 54 | 集合頁卡片佔位框 | 集合頁四張卡的佔位名＝`collection-apparel-3`（探針實測）⇒ hoko 四張卡皆 448×448 框 | FRAMES 加 `collection-apparel-3`（其餘 collection-apparel-N 未取得，V） | PP15 |
 | 55 | `closest` 依模板資源 | 官方："The currently rendered template resource of the same type"（external-facts §G18）；hoko 集合頁標題塊 `<h1>{{ closest.collection.title }}</h1>` ⇒ `<h1>产品</h1>` | `ClosestDrop.from_template`（product／collection／article／blog／page；先前只填 product ⇒ 標題塊整塊消失） | PP16 |
-| 56 | 動態來源解成 nil | hoko 集合頁描述塊 `{{ closest.collection.description }}` 無描述 ⇒ 整塊不輸出（Ella text `plain_text != blank`） | `resolve_dynamic` 純動態形不再 `\|\| v` 退回裸字串（先前印出 rte-formatter＋collapsible-text 含裸字串） | PP16 |
+| 56 | 動態來源解成 nil | hoko 集合頁描述塊 `{{ closest.collection.description }}` 無描述 ⇒ 整塊不輸出（Ella text `plain_text != blank`） | `resolve_dynamic` 純動態形不再 `\|\| v` 退回裸字串（先前印出 rte-formatter＋collapsible-text 含裸字串；商品頁無 closest.collection ⇒ nil ⇒ blank） | PP16 |
 | 57 | 過濾器啟用清單 | 新店只有 availability＋price；其餘要在 Search & Discovery「Add filter」啟用 | `shops.storefront_filters`（json，nil ⇒ 預設）→ `Facets.enabled_for`；CollectionDrop／SearchDrop 傳入；設定面未做（V） | FA3／FA4（啟用後才有 vendor／選項過濾器）、PP10 |
 | 58 | availability 值排序 | hoko /collections/all「现货(1)、缺货(2)」、/collections/frontpage「缺货(1)、现货(0)」⇒ count 0 退後 | `Facets#zero_count_last`（只套 availability；官方規則未取得 V） | PP17 |
 | 59 | 商品卡數字 id（對表工具） | 本尊 13 碼商品／變體 id 在 `product-grid-{id}`、`data-json-product` 的 `"id":`／`&quot;id&quot;:`、`StandardCardNoMediaLink--{id}` | Normalizer 四條身分規則（只抹數字，handle／title 照留） | RP7 |

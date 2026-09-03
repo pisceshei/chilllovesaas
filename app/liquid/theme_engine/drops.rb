@@ -191,8 +191,9 @@ module ThemeEngine
       end
     end
 
-    # E8b：無選項商品的預設變體 option1＝"Default Title"（hoko.vip 商品頁 `data-subtotal-variants` JSON `"option1":"Default Title"`）
-    def option1 = options.empty? ? "Default Title" : options[0]
+    # E8b：無選項商品的預設變體 option1＝"Default Title"（hoko.vip 商品頁 `data-subtotal-variants` JSON `"option1":"Default Title"`）——
+    # 由 `options` 的 ["Default Title"] 形直接取得（突變 M129 證實原本的 empty? 分支在 #61 之後不可達，已移除）。
+    def option1 = options[0]
     def option2 = options[1]
     def option3 = options[2]
     # A′2：變體專圖（media.product_variant_id）優先，無則回退商品首圖。

@@ -26,14 +26,14 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     files = {
       "layout/theme.liquid" => "<html><body><main>{{ content_for_layout }}</main></body></html>",
       "templates/index.json" => JSON.generate("sections" => { "r" => { "type" => "recsec", "settings" => { "product" => "{{ closest.product }}", "title" => "{{ shop.name }}" } } }, "order" => %w[r]),
-      "templates/product.json" => JSON.generate("sections" => { "r" => { "type" => "recsec", "settings" => { "product" => "{{ closest.product }}", "title" => "{{ shop.name }}" } }, "x" => { "type" => "misc", "settings" => {} }, "y" => { "type" => "misc2", "settings" => {}, "blocks" => { "html_NRR4gL" => { "type" => "html", "settings" => {} } }, "block_order" => %w[html_NRR4gL] } }, "order" => %w[r x y]),
+      "templates/product.json" => JSON.generate("sections" => { "r" => { "type" => "recsec", "settings" => { "product" => "{{ closest.product }}", "title" => "{{ shop.name }}" } }, "x" => { "type" => "misc", "settings" => {} }, "y" => { "type" => "misc2", "settings" => { "cd" => "{{ closest.collection.description }}" }, "blocks" => { "html_NRR4gL" => { "type" => "html", "settings" => {} } }, "block_order" => %w[html_NRR4gL] } }, "order" => %w[r x y]),
       "templates/search.json" => JSON.generate("sections" => { "s" => { "type" => "srch", "settings" => {} } }, "order" => %w[s]),
       "templates/page.json" => JSON.generate("sections" => { "m" => { "type" => "pg", "settings" => {} } }, "order" => %w[m]),
       "templates/page.contact.json" => JSON.generate("sections" => { "m" => { "type" => "pgc", "settings" => {} } }, "order" => %w[m]),
       "templates/collection.json" => JSON.generate("sections" => { "f" => { "type" => "fac", "settings" => { "d" => "{{ closest.collection.description }}", "t" => "<h1>{{ closest.collection.title }}</h1>" } } }, "order" => %w[f]),
       "sections/pg.liquid" => "<pg>default</pg>{% for link in linklists.main-menu.links %}<lk>{{ link.title }}={{ link.current }}</lk>{% endfor %}{% schema %}{ \"name\": \"PG\" }{% endschema %}",
       "sections/misc2.liquid" => "<u>[{{ '<p>Health & Love potions</p>' | url_escape }}][{{ '<p>Health & Love potions</p>' | url_param_escape }}][{{ 'Acme Tee' | url_param_escape }}]</u>" \
-                                 "<ph>{{ 'collection-apparel-3' | placeholder_svg_tag: 'placeholder-svg' }}</ph><vo>{{ product.variants.first.options | join: '/' }}</vo>{% for block in section.blocks %}<cb>{{ block.id }}|{{ block.type }}</cb>{% endfor %}" \
+                                 "<ph>{{ 'collection-apparel-3' | placeholder_svg_tag: 'placeholder-svg' }}</ph><vo>{{ product.variants.first.options | join: '/' }}</vo>{% for block in section.blocks %}<cb>{{ block.id }}|{{ block.type }}</cb>{% endfor %}<pcd>{% if section.settings.cd != blank %}[{{ section.settings.cd }}]{% endif %}</pcd>" \
                                  "{% schema %}{ \"name\": \"M2\", \"blocks\": [ { \"type\": \"html\", \"name\": \"HTML\" } ] }{% endschema %}",
       "sections/misc.liquid" => "<m>[{{ 1700000000 | date: '%Y-%m-%d' }}][{{ '1700000000' | date: '%Y' }}][{{ 'now' | date: '%s' | plus: 31536000 | date: '%Y' }}]" \
                                 "[{{ cart.currency.symbol }}|{{ cart.currency.iso_code }}|{{ cart.currency.name }}][{{ product.selected_or_first_available_variant.option1 }}]" \
@@ -104,9 +104,11 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     expect(html).to include(%(<form method="post" action="/cart/add" id="product_form_#{pid}" accept-charset="UTF-8" class="shopify-product-form" enctype="multipart/form-data"><input type="hidden" name="form_type" value="product" /><input type="hidden" name="utf8" value="✓" />x<input type="hidden" name="product-id" value="#{pid}" /><input type="hidden" name="section-id" value="template--product__r" /></form>))
   end
 
-  it "PP10 🔴 篩選平台字串依語系：zh 為「供貨情況／现货／缺货」，en 為 Availability／In stock／Out of stock；count 隨庫存" do
+  it "PP10 🔴 篩選平台字串依語系：zh 為「供貨情況／现货／缺货」，en 為 Availability／In stock／Out of stock；count 隨庫存；預設不出 Brand" do
     ActsAsTenant.with_tenant(shop) do
-      Collection.create!(shop_id: shop.id, title: "All", handle: "c1", collection_type: "manual", description_html: "", sort_order: "manual")
+      p1 = Product.find_by!(handle: "p1")
+      p1.update!(vendor: "Acme") # 讓 vendor 過濾器有值——預設集合仍不得出 Brand（突變 M132 的判別力）
+      Catalog::SaveCollection.call(shop:, input: { title: "All", handle: "c1", collection_type: "manual", product_ids: [ "gid://chilllove/Product/#{p1.id}" ] })
     end
     zh = ThemeEngine::PageRenderer.new(theme: theme, shop: shop, publication: online_store, source: source, locale: "zh-Hans")
                                   .render("/collections/c1", params: { "_facets_qs" => "" }).html
@@ -148,6 +150,8 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     c1 = r.render("/collections/c1", params: { "_facets_qs" => "" }).html
     expect(c1).to include("<cd></cd><ct><h1>All</h1></ct>")
     expect(c1).not_to include("closest.collection")
+    # 商品頁沒有 closest.collection ⇒ 解成 nil ⇒ blank（先前 `|| v` 會把裸字串印出來；突變 M138 的判別力）
+    expect(render("/products/p1").html).to include("<pcd></pcd>")
     c2 = r.render("/collections/c2", params: { "_facets_qs" => "" }).html
     expect(c2).to include("<cd>[<p>Warm light</p>]</cd><ct><h1>Lamps</h1></ct>")
   end
