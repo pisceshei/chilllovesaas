@@ -45,8 +45,11 @@ RSpec.describe Notifications::Renderer do
     payload = Notifications::Payloads.order_confirmation(order:)
     result = render(kind: "order_confirmation", payload:)
 
-    expect(result.html).to include("$188.00") # total 18800 cents
-    expect(result.html).to include("$168.00") # subtotal 16800 cents
+    # 預設模板：Total 走 money_with_currency（店級 `HK${{amount}} HKD`）、Subtotal 走 money（店級 `${{amount}}`）。
+    expect(result.html).to include("HK$188.00 HKD") # total 18800 cents（with-currency 形）
+    expect(result.html).to include("$168.00")       # subtotal 16800 cents
+    # 🔴 子字串陷阱：`HK$168.00` 也包含 `$168.00`——沒有這條，registers 注入舊 HK$ 表（突變 M103）仍綠。
+    expect(result.html).not_to include("HK$168.00")
   end
 
   it "🔴 N3 overlay 覆寫優先；刪列（revert）後回平台預設" do
