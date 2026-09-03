@@ -63,7 +63,23 @@
 | /products/acme-tee | 1280 | 同上（本包修法前） | 10/15 | recently_viewed（SRA 回整頁）、product_recommendations（無補位 ⇒ skeleton）、footer（上方高度差連動）、main（sticky-atc 多 800px 佔位圖＋countdown＋payment button）、`__root__` |
 | /products/acme-tee | 1280 | 本機 dev（本包修法後，mirror.lvh.me:3000） | 13/15 | `main`：countdown 秒數文字（時間性）＋本尊 `shopify-accelerated-checkout`（平台結帳，91 ⚪）；`__root__` |
 
-其餘頁面的 768／390 兩寬與部署後的公開複驗待本包合併部署後補（§3）。
+| /products/acme-tee | 1280 | mirror.chilling.com.hk（E12 部署 83e85398 後） | 13/15 | template--T__main、__root__（main＝countdown 時間性＋本尊 payment button；`__root__`＝平台注入） |
+| /collections/all | 768 | mirror.chilling.com.hk（83e85398） | 14/15 | __root__ |
+| /collections/frontpage | 768 | mirror.chilling.com.hk（83e85398） | 14/15 | __root__ |
+| /products/acme-tee | 768 | mirror.chilling.com.hk（83e85398） | 13/15 | template--T__main、__root__ |
+| /pages/contact | 768 | mirror.chilling.com.hk（83e85398） | 15/16 | __root__ |
+| /search | 768 | mirror.chilling.com.hk（83e85398） | 11/12 | __root__ |
+| /cart | 768 | mirror.chilling.com.hk（83e85398） | 14/15 | __root__ |
+| /nope（404） | 768 | mirror.chilling.com.hk（83e85398） | 11/12 | __root__ |
+| /collections/all | 390 | mirror.chilling.com.hk（83e85398） | 14/15 | __root__ |
+| /collections/frontpage | 390 | mirror.chilling.com.hk（83e85398） | 14/15 | __root__ |
+| /products/acme-tee | 390 | mirror.chilling.com.hk（83e85398） | 13/15 | template--T__main、__root__ |
+| /pages/contact | 390 | mirror.chilling.com.hk（83e85398） | 15/16 | __root__ |
+| /search | 390 | mirror.chilling.com.hk（83e85398） | 11/12 | __root__ |
+| /cart | 390 | mirror.chilling.com.hk（83e85398） | 14/15 | __root__ |
+| /nope（404） | 390 | mirror.chilling.com.hk（83e85398） | 11/12 | __root__ |
+
+（2026-09-05 部署 83e85398 後追加：上表後半。）
 
 ## §3 未取得／範圍外（登記 91 §3.79）
 
