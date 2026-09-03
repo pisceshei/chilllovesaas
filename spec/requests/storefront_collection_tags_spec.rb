@@ -83,7 +83,8 @@ RSpec.describe "Storefront collection tag paths", type: :request do
     zh = ThemeEngine::PageRenderer.new(theme:, shop:, publication: pub, locale: "zh-Hant",
                                        source: ThemeEngine::FileSource.new(Rails.root.join("spec/fixtures/theme_engine/minimal-1.0")))
     expect(zh.render("/collections/all/blue").html).to include("<title>产品</title>")
-    expect(zh.render("/collections/all").html).to include("<title>商品</title>")
+    # E8b：hoko.vip `/collections/all` 標題「产品」（2026-09-03 快照＋2026-09-04 live；虛擬系列，/collections/all.json 404）
+    expect(zh.render("/collections/all").html).to include("<title>产品</title>")
   end
 
   it "CT6 🔴 /collections/{handle}/products/{p}＝商品頁" do

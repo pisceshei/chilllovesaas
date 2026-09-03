@@ -182,17 +182,22 @@ module ThemeEngine
     # 選項值走 join（product_variant_option_values → option_values）；無 option1..3 欄。
     def options
       @options ||= begin
-        @v.option_values.sort_by { |ov| ov.product_option_id }.map(&:value)
+        vals = @v.option_values.sort_by { |ov| ov.product_option_id }.map(&:value)
+        # E8b：無選項商品的預設變體 options＝["Default Title"]（hoko.vip 集合頁 `data-json-product` 變體 JSON
+        # `&quot;options&quot;:[&quot;Default Title&quot;]`；先前 [] ⇒ `"options":[]`）。
+        vals.empty? ? [ "Default Title" ] : vals
       rescue StandardError
         []
       end
     end
 
-    def option1 = options[0]
+    # E8b：無選項商品的預設變體 option1＝"Default Title"（hoko.vip 商品頁 `data-subtotal-variants` JSON `"option1":"Default Title"`）
+    def option1 = options.empty? ? "Default Title" : options[0]
     def option2 = options[1]
     def option3 = options[2]
     # A′2：變體專圖（media.product_variant_id）優先，無則回退商品首圖。
-    def featured_image = own_image || @product.featured_image
+    # E8b：無專圖 ⇒ 退商品**真實**首圖，商品無圖 ⇒ nil（hoko.vip 商品頁 `data-product-variant-media=""`；先前退佔位 drop ⇒ 印 data: svg）。
+    def featured_image = own_image || @product.images.first
     def featured_media = featured_image
     def image = featured_image
     def requires_shipping = @v.requires_shipping
@@ -530,7 +535,10 @@ module ThemeEngine
     end
 
     def media_count = media.size
-    def featured_image = images.first || PlaceholderImageDrop.new(label: title)
+    # E8b：無圖 ⇒ nil（官方 featured_image＝"The first (featured) image attached to the product."；hoko.vip /collections/all 三張真商品卡
+    # `{% if card_product.featured_media %} card--media{% else %} card--text{% endif %}` 皆 `card--text`、商品頁 `data-product-variant-media=""`）。
+    # 先前退 PlaceholderImageDrop ⇒ 卡片 `card--media`＋data: svg（E8 §3.75 登記的缺口）。首頁 onboarding 佔位卡走 placeholder_svg_tag，不受影響。
+    def featured_image = images.first
     def featured_media = featured_image
 
     def price = variants.filter_map(&:price).min || 0
@@ -679,10 +687,11 @@ module ThemeEngine
       @current_tags = Array(current_tags).map(&:to_s).reject(&:blank?)
     end
 
-    # 前台 sort_by 參數值 ↔ Collection.SORT_ORDERS 內部值（96 §2 真店 9 值 select；
-    # `most-relevant` 只在 filter 語境有意義 ⇒ 對映到預設）。
+    # 前台 sort_by 參數值 ↔ Collection.SORT_ORDERS 內部值（96 §2 真店 9 值 select）。
+    # E8b：`most-relevant` 是真值——本尊自動系列 admin「Default sort: Most relevant」⇒ 前台 default_sort_by＝most-relevant
+    # （hoko.vip 首頁系列，2026-09-04；先前註釋「只在 filter 語境有意義 ⇒ 對映到預設」已證偽）。
     STOREFRONT_SORT = {
-      "manual" => "manual", "best-selling" => "best_selling",
+      "manual" => "manual", "best-selling" => "best_selling", "most-relevant" => "most_relevant",
       "title-ascending" => "title_asc", "title-descending" => "title_desc",
       "price-ascending" => "price_asc", "price-descending" => "price_desc",
       "created-ascending" => "created_asc", "created-descending" => "created_desc"
@@ -701,7 +710,8 @@ module ThemeEngine
       @facets ||= ThemeEngine::Facets.new(
         base_relation: CollectionProductsDrop.base_relation(collection: @c, publication: @publication,
                                                             tags: resolved_tags),
-        query_string: @filter_query, path: @request_path || url)
+        query_string: @filter_query, path: @request_path || url, locale: @locale,
+        enabled: ThemeEngine::Facets.enabled_for(@publication.shop))
     end
 
     def id = @c.id
@@ -770,9 +780,17 @@ module ThemeEngine
       [ "Price, low to high", "price-ascending" ], [ "Price, high to low", "price-descending" ],
       [ "Date, old to new", "created-ascending" ], [ "Date, new to old", "created-descending" ]
     ].freeze
+    # E8b：平台翻譯（hoko.vip zh-CN /collections/all 排序下拉九項逐字，2026-09-03 快照）；其他語系未取得 ⇒ 英文（V）。
+    SORT_OPTION_NAMES = {
+      "zh" => { "manual" => "特色", "most-relevant" => "最相关", "best-selling" => "畅销",
+                "title-ascending" => "按字母顺序排序，A-Z", "title-descending" => "按字母顺序排序，Z-A",
+                "price-ascending" => "价格，从低到高", "price-descending" => "价格，从高到低",
+                "created-ascending" => "日期，从旧到新", "created-descending" => "日期，从新到旧" }
+    }.freeze
 
     def sort_options
-      SORT_OPTIONS.map { |name, value| BaseDrop.new({ "name" => name, "value" => value }) }
+      names = SORT_OPTION_NAMES[@locale.to_s.split(/[-_]/).first.to_s.downcase] || {}
+      SORT_OPTIONS.map { |name, value| BaseDrop.new({ "name" => names.fetch(value, name), "value" => value }) }
     end
 
     # metafields："The metafields applied to the collection."（虛擬系列無 DB 列 ⇒ 空根）
@@ -892,7 +910,9 @@ module ThemeEngine
       "created_desc" => "products.created_at DESC, products.id DESC",
       "created_asc" => "products.created_at ASC, products.id ASC",
       # v1 降級：無銷售排名 rollup ⇒ 以上新代位（91 §3 登記；接分析線後改真排名）
-      "best_selling" => "products.created_at DESC, products.id DESC"
+      "best_selling" => "products.created_at DESC, products.id DESC",
+      # E8b：most_relevant 的排序語義未取得（91 §3.75b V）⇒ 暫同上新代位
+      "most_relevant" => "products.created_at DESC, products.id DESC"
     }.freeze
 
     def initialize(collection:, publication:, url_prefix: "", locale: nil, sort_key: nil,
@@ -1242,10 +1262,12 @@ module ThemeEngine
         base_relation: Storefront::SearchQuery.products(
           shop: @shop, publication: @publication, query: terms),
         query_string: @params["_facets_qs"].to_s,
-        path: "#{@url_prefix}/search")
+        path: "#{@url_prefix}/search", locale: @locale, enabled: ThemeEngine::Facets.enabled_for(@shop))
     end
 
-    def results_count = results.total
+    # E8b：未執行搜尋 ⇒ 0（hoko.vip /search 無 q 時 Ella `search.results_count > 0` 不炸；先前 `results` 回 [] ⇒ `[].total` NoMethodError
+    # ⇒ `Liquid error (blocks/_recently_viewed_products line 70): internal`）。官方對未執行時的值未逐字（V）。
+    def results_count = performed ? results.total : 0
 
     def results
       return [] unless performed
@@ -1734,7 +1756,17 @@ module ThemeEngine
     def current
       return false if @current_path.nil?
 
-      normalize_path(url) == normalize_path(@current_path)
+      # E8b：http 型連結存的是無前綴路徑（hoko 主選單「聯絡我們」＝`/pages/contact`），而 current_path 帶市場前綴
+      # `/zh-hans-tw/pages/contact` ⇒ 兩邊都先去前綴再比（hoko.vip /pages/contact：該項 `aria-current="page"`＋
+      # `header__active-menu-item`，我方先前 false）。資源型連結的 url 自帶前綴，去掉後同樣可比。
+      normalize_path(strip_prefix(url)) == normalize_path(strip_prefix(@current_path))
+    end
+
+    def strip_prefix(path)
+      p = path.to_s
+      return p if @url_prefix.blank?
+
+      p == @url_prefix || p.start_with?("#{@url_prefix}/") ? p.delete_prefix(@url_prefix) : p
     end
     def active = current
     def child_current = links.any?(&:current)
@@ -1797,6 +1829,14 @@ module ThemeEngine
 
     def title = @menu.title
     def handle = @menu.handle
+    # E8b：字串形＝handle（Ella `_blog-post-sidebar-category`：`block.settings.link_list | handleize` 再 `linklists[...]`；
+    # hoko.vip /collections/all 側欄列出 main-menu 三項，我方先前 Drop#to_s 形 ⇒ 查無 ⇒ 空 `<ul>`）。本尊 linklist 的 to_s 是
+    # handle 還是 title 未取得（預設選單兩者 handleize 同值），登記 V。
+    def to_s = handle.to_s
+    # E8b：`linklists[x] == empty`（Ella `_blog-post-sidebar-category`：`{%- if linklists[link.handle] == empty -%}` 決定有無子選單）——
+    # hoko.vip /collections/all 側欄「首頁」無子選單 ⇒ 本尊對不存在 handle（`linklists['首頁']`）`== empty` 為真；Liquid 的 `== empty`
+    # 走 `empty?`，Drop 未定義 ⇒ nil ⇒ 我方誤判有子選單（多出 has-subMenu／icon-dropdown）。無 links ⇒ empty。
+    def empty? = links.empty?
 
     def links
       @links ||= @menu.menu_items.select { |i| i.parent_menu_item_id.nil? }
@@ -1873,20 +1913,22 @@ module ThemeEngine
   class CartDrop < BaseDrop
     # @param taxes_included [Boolean] 官方 cart.taxes_included "Returns true if taxes are included in the prices of
     #   products in the cart."——店級設定（shops.taxes_included；hoko.vip 稅注「已含税」⇒ true）
-    def initialize(currency:, cart_json: nil, taxes_included: false)
+    # E8b：currency 物件帶 symbol／name（Ella price-facet `{{ cart.currency.symbol }}`：hoko.vip 輸出 `$`；先前只有 iso_code ⇒ 空）
+    def initialize(currency:, cart_json: nil, taxes_included: false, money_format: nil)
+      @money_format = money_format
       # 🔴 `duties_included` 必須**顯式 false**（第三包；86 §7 差距 #1）：Ella 的
       # tax-note 四分支用 `== false` 顯式比較（cart-drawer:380 等），Liquid 的
       # `nil == false` 為假 ⇒ 缺鍵時四分支全不命中、整段稅注（含「未含稅」文案）
       # 靜默空白。taxes_included 同理保持顯式（真值接 tax_settings 隨法域包）。
       if cart_json
-        super(cart_json.merge("currency" => { "iso_code" => cart_json["currency"] },
+        super(cart_json.merge("currency" => Currencies.drop_hash(cart_json["currency"], money_format: money_format),
                               "taxes_included" => taxes_included, "duties_included" => false,
                               "discount_applications" => []))
       else
         super({ "item_count" => 0, "items" => [], "total_price" => 0,
                 "items_subtotal_price" => 0, "original_total_price" => 0,
                 "total_discount" => 0, "note" => nil, "attributes" => {},
-                "currency" => { "iso_code" => currency },
+                "currency" => Currencies.drop_hash(currency, money_format: money_format),
                 "cart_level_discount_applications" => [], "requires_shipping" => false,
                 "taxes_included" => taxes_included, "duties_included" => false,
                 "discount_applications" => [] })
@@ -2076,9 +2118,17 @@ module ThemeEngine
   end
 
   class ClosestDrop < Liquid::Drop
-    def initialize(product: nil, collection: nil, article: nil)
+    def initialize(product: nil, collection: nil, article: nil, blog: nil, page: nil)
       super()
-      @h = { "product" => product, "collection" => collection, "article" => article }
+      @h = { "product" => product, "collection" => collection, "article" => article, "blog" => blog, "page" => page }
+    end
+
+    # 官方逐字（objects/closest，取證 2026-09-04，external-facts §G18）：closest 的來源之一＝"The currently rendered
+    # template resource of the same type"，型別 "product, collection, article, blog, page, or metaobject"——由模板 assigns
+    # 取同型資源（metaobject 模板我方未做，V）。先前只填 product ⇒ 集合頁 `<h1>{{ closest.collection.title }}</h1>` 解成空、
+    # `{{ closest.collection.description }}` 留裸字串（e8 §2b #55／#56）。
+    def self.from_template(assigns)
+      new(**%w[product collection article blog page].to_h { |k| [ k.to_sym, assigns[k] ] })
     end
 
     # content_for "block" 的 `closest.*` 覆寫層（步 12a-fix）：base 的既有值保留、

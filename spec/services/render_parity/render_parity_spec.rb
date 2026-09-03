@@ -70,4 +70,17 @@ RSpec.describe RenderParity::Report do
     md = report.to_markdown
     expect(md).to include("| hero |").and include("## Head assets")
   end
+
+  it "RP7 集合頁商品卡的商品／變體數字 id（product-grid-、data-json-product id、&quot;id&quot;:、NoMediaLink--）抹成 ID；handle 照留" do
+    card = %(<li id="template--19774791385191__product-grid-7771796897895"><div data-json-product='{"id": 7771796897895,"handle": "acme-tee","variants": [{&quot;id&quot;:44547877830759,&quot;title&quot;:&quot;Acme Tee&quot;}]}'></div>)
+    link = %(<a id="StandardCardNoMediaLink--7771796897895" aria-labelledby="StandardCardNoMediaLink--7771796897895 NoMediaStandardBadge--7771796897895">acme-tee</a></li>) +
+           %(<span id="ShareMessage-7771796897895"></span><script type="application/json" data-subtotal-variants>[{"id":7,"title":"Default Title"}]</script>)
+    out = normalizer.call(card + link)
+    expect(out).to include(%(id="template--T__product-grid-ID")).and include(%({"id": ID,"handle": "acme-tee"))
+    expect(out).to include(%(&quot;id&quot;:ID,&quot;title&quot;:&quot;Acme Tee&quot;))
+    expect(out).to include(%(id="StandardCardNoMediaLink--ID" aria-labelledby="StandardCardNoMediaLink--ID NoMediaStandardBadge--ID"))
+    expect(out).to include(%(id="ShareMessage-ID")).and include(%([{"id":ID,"title":"Default Title"}]))
+    expect(out).not_to include("7771796897895")
+    expect(out).not_to include("44547877830759")
+  end
 end

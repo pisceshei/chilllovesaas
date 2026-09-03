@@ -185,13 +185,22 @@ module ThemeEngine
 
         hidden = [ [ "form_type", @type ], [ "utf8", "✓" ] ]
         (spec[:hidden] || {}).each { |k, v| hidden << [ k, v ] }
-        hidden << [ spec[:resource_hidden], resource.id ] if spec[:resource_hidden] && resource.respond_to?(:id)
+        # E8b：product 型的 `product-id`／`section-id` 不在開頭——本尊放在 `</form>` 之前（尾端）；見下 tail。
         hidden << [ "return_to", return_to ] if return_to
         # 本尊逐字（hoko.vip 2026-09-03，customer／product／contact／customer_login 四形一致）：
         # `<form …>` 緊接 `<input type="hidden" name="form_type" value="…" /><input type="hidden" name="utf8" value="✓" />`
         # 再緊接內容，隱藏欄位之間與前後**無任何空白**。
         inputs = hidden.map { |k, v| %(<input type="hidden" name="#{k}" value="#{h(v)}" />) }.join
-        %(<form #{attrs.join(' ')}>#{inputs}#{inner}</form>)
+        # E8b：本尊 product 表單尾端逐字（hoko.vip 2026-09-03 商品頁）：
+        # `…</div><input type="hidden" name="product-id" value="{product.id}" /><input type="hidden" name="section-id" value="{section.id}" /></form>`
+        # ——內容與隱藏欄之間無空白；section-id＝當前 section 完整 id（registers[:section_drop]）。
+        tail = ""
+        if spec[:resource_hidden] && resource.respond_to?(:id)
+          tail = %(<input type="hidden" name="#{spec[:resource_hidden]}" value="#{h(resource.id)}" />)
+          section = context.registers[:section_drop]
+          tail += %(<input type="hidden" name="section-id" value="#{h(section.id)}" />) if section.respond_to?(:id) && section.id
+        end
+        %(<form #{attrs.join(' ')}>#{inputs}#{inner}#{tail}</form>)
       end
 
       private

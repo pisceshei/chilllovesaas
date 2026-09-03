@@ -39,7 +39,15 @@ RSpec.describe RenderParity::Mirror do
       expect(Product.find_by!(handle: "acme-tee").product_variants.first.price_cents).to eq(18_800)
       collection = Collection.find_by!(handle: "frontpage")
       expect(collection.title).to eq("首頁")
+      expect(collection.sort_order).to eq("most_relevant") # E8b：本尊 admin 首頁系列 Default sort＝Most relevant
       expect(Page.find_by!(handle: "contact").title).to eq("聯絡我們")
+      expect(Page.find_by!(handle: "contact").published_at).to be_present # E8b：本尊頁面已發布（先前草稿 ⇒ 前台 404）
+      expect(Page.find_by!(handle: "contact").template_suffix).to eq("contact") # E8b：本尊 /pages/contact 用 page.contact 模板
+      # E8b：庫存跟隨快照（本尊 products.json：只有 cosy-lamp available）
+      lamp = Product.find_by!(handle: "cosy-lamp").product_variants.first
+      expect(InventoryLevel.joins(:inventory_item).where(inventory_items: { product_variant_id: lamp.id }).sum(:available)).to eq(10)
+      tee = Product.find_by!(handle: "acme-tee").product_variants.first
+      expect(InventoryLevel.joins(:inventory_item).where(inventory_items: { product_variant_id: tee.id }).sum(:available)).to eq(0)
       expect(Menu.find_by!(handle: "main-menu").menu_items.order(:position).pluck(:title)).to eq(%w[首頁 目錄 聯絡我們])
     end
     expect(result.log).to include(a_string_matching(/\Ashop created/))

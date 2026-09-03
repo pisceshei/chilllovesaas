@@ -63,6 +63,49 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 | 26 | `money` 空值 | `<s class="price-item price-item--regular"> </s>` | 空輸入 ⇒ 空字串 | RF16 |
 | 27 | `{% render <block>, k: v %}` | Ella `_lookbook.liquid` 變數形帶參數（原 SyntaxError ⇒ 整塊「缺 block」） | `RenderTag` 參數進 block 變數 | — |
 
+### §2b 第二批（其餘頁面；E8b，2026-09-04；規格 `spec/liquid/render_parity_pages_spec.rb`）
+
+| # | 形差 | 本尊（hoko.vip 快照 2026-09-03） | 我方修法 | 規格 |
+|---|---|---|---|---|
+| 28 | section 級動態來源 | 商品頁 product-recommendations 的 section 設定 `"product": "{{ closest.product }}"` 解成當頁商品 ⇒ `data-recommendations-performed="false"`＋3 個 skeleton | `Runtime#render_section` 以當頁 closest 解析（先前只在 block 層） | PP1 |
+| 29 | `recommendations` 初次渲染 | 官方：performed? 只在 Product Recommendations API＋Section Rendering API 渲染時 true；Ella 印 `{{ recommendations.performed }}`＝`false` | 全域 stub（performed／performed? false、products []、products_count 0、intent nil）；endpoint 兩鍵同值 | PP1／PP2 |
+| 30 | `search.results_count` 未執行 | /search 無 q：Ella `_recently_viewed_products` line 70 `search.results_count > 0` 不炸 | 未執行 ⇒ 0（先前 `[].total` ⇒ `Liquid error … internal`） | PP3 |
+| 31 | linklist 字串形 | /collections/all 側欄 `block.settings.link_list \| handleize` 後再查 `linklists[...]` 列出 main-menu 三項 | `LinkListDrop#to_s`＝handle（本尊 to_s 為 handle 或 title 未取得，預設選單同值） | PP4 |
+| 32 | `link_to_vendor` | 官方逐字 `<a href="…" title="Polina&#39;s Potent Potions">…</a>`；商品頁 `title="Acme"` | 帶 title（HTML-escape）；`link_to_type` 同形（V） | PP5 |
+| 33 | 全商品集合標題 | /collections/all zh-CN title／h1／JSON-LD 皆「产品」 | `PageTitles` zh `products`＝产品（zh-Hant 值未取得，V） | PP6 |
+| 34 | 商品／變體數字 id | `data-product-id="7771796897895"`、`?variant=44547877830759`（本尊 13 碼） | Normalizer 只抹 id 屬性與 query 數值 | PP7 |
+| 35 | 鏡像店頁面 | 本尊 /pages/contact 200 | `Mirror#ensure_pages` 建頁即發布、既有草稿補發布（先前 404） | MR1 |
+| 36 | 404 頁對表 | 本尊 /nope、/blogs/news 皆 404 模板 | rake `ALLOW_404=1` 允許 404 回應 | — |
+| 37 | `linklists[x] == empty` | /collections/all 側欄「首頁」無子選單（`linklists['首頁'] == empty` 真） | `LinkListDrop#empty?`＝無 links（Drop 未定義 empty? ⇒ nil ⇒ 我方誤出子選單） | PP8 |
+| 38 | 商品頁 id 形（續） | `countdown_{id}`、`data-countdown-id`、`product_inventory(_policy)_array_{id} = { '{variant}': … }`、JSON-LD `https:\/\/host\/prefix\/…` | Normalizer 只抹這些 id／跳脫主機與前綴 | PP7 |
+| 39 | 頁面模板 | /pages/contact 的 section_ApznVq 等只在 `templates/page.contact.json` | 快照帶 `template_suffix`，`Mirror#ensure_pages` 寫入；`PageRenderer#template_key_for` 吃資源 `template_suffix` | MR1／PP11 |
+| 40 | product 表單隱藏欄位置 | `…</div><input name="product-id" …/><input name="section-id" value="template--…__main" /></form>`（尾端） | `FormTag` product 型 tail：product-id＋section-id（先前 product-id 緊接 utf8、無 section-id） | PP9 |
+| 41 | 篩選平台字串 | zh-CN 店 legend「供貨情況」、值「现货 (1 个产品)」「缺货 (2 个产品)」 | `Facets` 依語系字串表（Price／Brand／Type 的 zh 值未取得，V） | PP10 |
+| 42 | 庫存資料 | `/products.json`：cosy-lamp available=true、其餘 false ⇒ 現貨 1／缺貨 2、`facet-checkbox` 無 disabled | 快照 `inventory_quantity`＋`Mirror#align_stock`（數量未取得 ⇒ 10，V） | MR1 |
+| 43 | 商品頁 id 形（續） | `#offer-{variant}`、`{product.id}input-text` 欄位 id、`product-id` 值 | Normalizer 只抹這三形 | PP7 |
+| 44 | `date` 時間戳 | schema.liquid `'now' \| date: '%s' \| plus: 31536000 \| date: '%Y-%m-%d'` ⇒ `"priceValidUntil": "2027-09-03"` | `date` 吃整數／純數字字串（官方未逐字，V） | PP12 |
+| 45 | `cart.currency` | price-facet `{{ cart.currency.symbol }}` ⇒ `$`（HKD） | `ThemeEngine::Currencies`（symbol／name；HKD／CAD 有證，其餘 ISO 通用值 V；退店級 money_format 前綴） | PP12 |
+| 46 | 預設變體 option1 | variants JSON `"option1":"Default Title"` | 無選項 ⇒ "Default Title" | PP12 |
+| 47 | 無圖變體媒體 | `data-product-variant-media=""` | `VariantDrop#featured_image` 不退佔位 drop（商品無圖 ⇒ nil） | PP12 |
+| 48 | 篩選價格標籤 | `<h3>價格</h3>`、`for="Filter-價格-GTE"` | Facets zh price＝價格 | PP10 |
+| 49 | 無圖商品的 featured_media | /collections/all 三張真商品卡 `card--text`、商品頁 `data-product-variant-media=""` | `ProductDrop#featured_image`＝真實首圖或 nil（不退佔位 drop；E8 §3.75 登記缺口收口） | PP13 |
+| 50 | 篩選集合 | 新店只出 `filter.v.availability`／`filter.v.price.*`（Brand／Type／選項要在 Search & Discovery 加） | `Facets` 預設 `enabled`＝availability＋price（設定面未做，V） | PP10 |
+| 51 | 排序選項名稱 | zh-CN 九項「特色／最相关／畅销／按字母顺序排序，A-Z／…／日期，从新到旧」 | `CollectionDrop::SORT_OPTION_NAMES` 依語系（其他語系未取得，V） | PP14 |
+| 52 | `image_url` 對 nil | add-to-cart-button `featured_media.preview_image \| image_url` 無圖 ⇒ `data-product-variant-media=""` | nil ⇒ 空字串（不再退佔位 URL） | PP14 |
+| 53 | `url_param_escape`／`url_escape` | 官方例：空白 `%20`、`/` 保留、param 版 `&` ⇒ `%26`；hoko 分享連結 `text=Acme%20Tee` | `ERB::Util.url_encode`＋還原 `/`（url_escape 再還原 `&`）；先前 CGI.escape ⇒ `+`／`%2F` | PP15 |
+| 54 | 集合頁卡片佔位框 | 集合頁四張卡的佔位名＝`collection-apparel-3`（探針實測）⇒ hoko 四張卡皆 448×448 框 | FRAMES 加 `collection-apparel-3`（其餘 collection-apparel-N 未取得，V） | PP15 |
+| 55 | `closest` 依模板資源 | 官方："The currently rendered template resource of the same type"（external-facts §G18）；hoko 集合頁標題塊 `<h1>{{ closest.collection.title }}</h1>` ⇒ `<h1>产品</h1>` | `ClosestDrop.from_template`（product／collection／article／blog／page；先前只填 product ⇒ 標題塊整塊消失） | PP16 |
+| 56 | 動態來源解成 nil | hoko 集合頁描述塊 `{{ closest.collection.description }}` 無描述 ⇒ 整塊不輸出（Ella text `plain_text != blank`） | `resolve_dynamic` 純動態形不再 `\|\| v` 退回裸字串（先前印出 rte-formatter＋collapsible-text 含裸字串） | PP16 |
+| 57 | 過濾器啟用清單 | 新店只有 availability＋price；其餘要在 Search & Discovery「Add filter」啟用 | `shops.storefront_filters`（json，nil ⇒ 預設）→ `Facets.enabled_for`；CollectionDrop／SearchDrop 傳入；設定面未做（V） | FA3／FA4（啟用後才有 vendor／選項過濾器）、PP10 |
+| 58 | availability 值排序 | hoko /collections/all「现货(1)、缺货(2)」、/collections/frontpage「缺货(1)、现货(0)」⇒ count 0 退後 | `Facets#zero_count_last`（只套 availability；官方規則未取得 V） | PP17 |
+| 59 | 商品卡數字 id（對表工具） | 本尊 13 碼商品／變體 id 在 `product-grid-{id}`、`data-json-product` 的 `"id":`／`&quot;id&quot;:`、`StandardCardNoMediaLink--{id}` | Normalizer 四條身分規則（只抹數字，handle／title 照留） | RP7 |
+| 60 | 自動系列預設排序 | hoko 首頁系列 admin「Default sort: Most relevant」⇒ 前台 select 選中 `most-relevant`（/collections/all 仍 title-ascending）；官方 default_sort_by 值表未列 | `Collection::SORT_ORDERS`＋`STOREFRONT_SORT` 加 `most_relevant`／`most-relevant`；ORDER_SQL 以上新代位（語義 V）；Mirror 對齊 sort_order | PP18／MR1 |
+| 61 | 預設變體 `options` | hoko 集合卡 `data-json-product` 變體 JSON `"options":["Default Title"]` | `VariantDrop#options` 無選項 ⇒ `["Default Title"]`（先前 `[]`） | PP18 |
+| 62 | `NoMediaStandardBadge--{id}`（對表工具） | 本尊商品卡 badge id 帶商品 id | Normalizer 身分規則擴到 `StandardBadge--` | RP7 |
+| 63 | 傳統 block 的 `block.id` | hoko 商品頁 product-tabs `href="#tabs-html_NRR4gL"`（裸 key）；同頁 theme block `shopify-block-AUE9…__radio_f7Eh9J`（前綴）；官方 objects/block 只說 "dynamically generated… subject to change" | `ordered_block_drops` 傳統分支不再給 `instance_id`（theme block 分支照舊） | PP19 |
+| 64 | 商品頁殘餘 id（對表工具） | `ShareMessage-{product.id}`、`data-subtotal-variants` 的 `"id":7`（一位數） | Normalizer：`ShareMessage-`、`"id":\d+` | RP7 |
+| 65 | `link.current` 與市場前綴 | hoko /pages/contact 主選單該項 `aria-current="page"`＋`header__active-menu-item`；我方 http 連結 `/pages/contact` 對 `/zh-hans-tw/pages/contact` 判 false | `LinkDrop#current` 兩邊先去 `url_prefix` 再比 | PP20 |
+
 ## §3 已登記差異（正規化抹掉或報告中保留、不算引擎缺口）
 
 | 類 | 內容 | 落點 |

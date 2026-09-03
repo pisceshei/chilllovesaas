@@ -1376,3 +1376,37 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   （section 級在 header group 複製灰化）；section 邊界「+」。
 - **section schema 引用 theme block**：Ella `announcement-bar` schema `blocks: [{type:"@app"},{type:"_group-announcement-bar"},{type:"_group-sale-banner"}]`
   ⇒ 本尊樹列名「Announcement」「Sale banner」（取 `blocks/*.liquid` 的 `name`）、面板為該 block 的完整設定。
+
+### G17. 頁面批對表的官方逐字與真店觀察（E8b 依據，取證 2026-09-04）
+
+- **官方 objects/recommendations**（<https://shopify.dev/docs/api/liquid/objects/recommendations>）逐字：物件＝"Product recommendations for a
+  specific product based on sales data, product descriptions, and collection relationships."；`performed?`＝"Returns `true` when being referenced
+  inside a section that's been rendered using the Product Recommendations API and the Section Rendering API. Returns `false` if not."；
+  `products`＝"The recommended products. If `performed?` is `false`, then an [EmptyDrop] is returned."；`products_count`＝"The number of recommended
+  products. If `performed?` is `false`, then 0 is returned."；`intent`＝"The recommendation intent. If `performed?` is `false`, then `nil` is returned."；
+  另句 "The recommendations object returns products only when rendered in a section using the Product Recommendations API and the Section Rendering API."
+- **官方 filters/link_to_vendor**（<https://shopify.dev/docs/api/liquid/filters/link_to_vendor>）逐字："Generates an HTML `<a>` tag with an `href`
+  attribute linking to a collection page that lists all products of a given product vendor."；例 `{{ "Polina's Potent Potions" | link_to_vendor }}` ⇒
+  `<a href="/collections/vendors?q=Polina%27s%20Potent%20Potions" title="Polina&#39;s Potent Potions">Polina's Potent Potions</a>`。link_to_type 頁無例（未取得）。
+- **真店 hoko.vip 快照（2026-09-03）觀察**：商品頁 `data-recommendations-performed="false"`＋`product-recommendations__skeleton-item` ×3、
+  `<a href="/collections/vendors?q=Acme" title="Acme">Acme</a>`、`data-product-id="7771796897895"`、`?variant=44547877830759`；
+  /collections/all `<title>产品 &ndash; 我的商店 3</title>`、`<h1>产品</h1>`、JSON-LD `"name": "产品"`，側欄 `blog-post__category-list` 列出 main-menu 三項；
+  /search 無 q 時 multitasking bar 正常（無 Liquid error）；/blogs/news 與 /nope 同為 404 模板（檔案同大小 406479 bytes）。
+
+- **E8b 追加（2026-09-04）——自動系列的預設排序**：hoko.vip admin（pnrjnw-sy）首頁系列頁面文字逐字 "Products / Add condition"、
+  "Default sort:Most relevant"（自動系列）；前台 `/collections/frontpage` 排序 select `<option value="most-relevant" selected="selected">`
+  （快照 2026-09-03 與 live 2026-09-04 皆同），`/collections/all`＝`title-ascending`。官方 objects/collection `default_sort_by`
+  逐字 "The default sort order of the collection. This is set on the collection's page in the Shopify admin."，值表列
+  manual／best-selling／title-ascending／price-ascending／price-descending／created-ascending／created-descending，
+  **未列 most-relevant**（<https://shopify.dev/docs/api/liquid/objects/collection>，2026-09-04）⇒ 以 admin 實測為準登記。
+  未取得：「Default sort」下拉的完整值域（hidden tab 開不出 popover，需前景分頁）、most-relevant 的排序語義。
+
+### G18. `closest` 物件（E8b #55／#56 依據，取證 2026-09-04）
+
+- 來源：<https://shopify.dev/docs/api/liquid/objects/closest>（2026-09-04）。
+- 逐字："A drop that holds resources of different types that are the closest to the current context"；"These resources can be
+  of type `product`, `collection`, `article`, `blog`, `page`, or `metaobject`."；來源順序："The currently rendered section or
+  theme block resource setting of the same type; The currently rendered theme block's ancestor resource setting of the same
+  type; The currently rendered template resource of the same type; Assigned via {% content_for %} tag"。
+- 未取得：無同型資源時各屬性回什麼（官方未逐字）。我方＝nil（Liquid blank）；真店旁證＝hoko.vip /collections/all 無描述時
+  Ella text 區塊（`"text": "{{ closest.collection.description }}"`）整塊不輸出（e8 §2b #56）。metaobject 模板我方未做（V）。

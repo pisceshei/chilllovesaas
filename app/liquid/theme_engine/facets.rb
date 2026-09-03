@@ -51,7 +51,29 @@ module ThemeEngine
     # @param base_relation [ActiveRecord::Relation] 未過濾的系列商品集合
     # @param query_string [String] 原始 query（多值解析＋URL 重建的唯一來源）
     # @param path [String] 帶前綴的當前頁路徑（url_to_add/remove 的 base）
-    def initialize(base_relation:, query_string: "", path: "/")
+    # 平台篩選字串（本尊 `filter.label`／`value.label` 為平台翻譯，非主題字串）：hoko.vip zh-CN 實測 legend「供貨情況」、
+    # 值「现货」「缺货」、Price「價格」（2026-09-03 快照）；Brand／Product type 的 zh 值未取得（V，91 §3.75b）。
+    STRINGS = {
+      "en" => { availability: "Availability", in_stock: "In stock", out_of_stock: "Out of stock", price: "Price", brand: "Brand", product_type: "Product type" },
+      "zh" => { availability: "供貨情況", in_stock: "现货", out_of_stock: "缺货", price: "價格", brand: "Brand", product_type: "Product type" }
+    }.freeze
+
+    # E8b：預設只出 availability＋price（hoko.vip 新店 /collections/all 只有 `filter.v.availability`／`filter.v.price.*`；
+    # 官方 help：Availability／Category／Price／Product type／Tags／Vendor 為 "available to all stores"，由 Search & Discovery
+    # 「Add filter」啟用——我方尚無該設定面，先以 `enabled` 參數控制，預設集合登記 V（91 §3.75b）。
+    DEFAULT_ENABLED = %w[availability price].freeze
+    ALL_FILTERS = %w[availability price options vendor product_type].freeze
+
+    # 啟用清單來源＝`shops.storefront_filters`（Search & Discovery「Add filter」的儲存位；設定面未做，91 §3.75b V）。
+    # nil／空 ⇒ 新店預設 availability＋price（hoko.vip 實測）；未知鍵忽略。
+    def self.enabled_for(shop)
+      list = Array(shop&.storefront_filters).map(&:to_s) & ALL_FILTERS
+      list.presence || DEFAULT_ENABLED
+    end
+
+    def initialize(base_relation:, query_string: "", path: "/", locale: nil, enabled: DEFAULT_ENABLED)
+      @enabled = Array(enabled).map(&:to_s)
+      @strings = STRINGS.fetch(locale.to_s.split(/[-_]/).first.to_s.downcase, STRINGS["en"])
       @base = base_relation
       @path = path
       @pairs = Rack::Utils.parse_query(query_string.to_s)
@@ -116,11 +138,11 @@ module ThemeEngine
 
     def build_filters
       list = []
-      list << availability_filter
-      list << price_filter
-      option_names.each { |name| list << option_filter(name) }
-      list << list_filter(label: "Brand", key: :vendor, param: P_VENDOR, column: :vendor)
-      list << list_filter(label: "Product type", key: :product_type, param: P_TYPE, column: :product_type)
+      list << availability_filter if @enabled.include?("availability")
+      list << price_filter if @enabled.include?("price")
+      option_names.each { |name| list << option_filter(name) } if @enabled.include?("options")
+      list << list_filter(label: @strings[:brand], key: :vendor, param: P_VENDOR, column: :vendor) if @enabled.include?("vendor")
+      list << list_filter(label: @strings[:product_type], key: :product_type, param: P_TYPE, column: :product_type) if @enabled.include?("product_type")
       list.compact
     end
 
@@ -129,20 +151,25 @@ module ThemeEngine
       total = scoped.distinct.count(:id)
       in_stock = scoped.where(AVAILABLE_SQL).distinct.count(:id)
       active = values_for(P_AVAIL).include?("1")
+      values = [
+        FacetValueDrop.new(label: @strings[:in_stock], value: "1", param_name: P_AVAIL,
+                           count: in_stock, active: active, facets: self),
+        FacetValueDrop.new(label: @strings[:out_of_stock], value: "0", param_name: P_AVAIL,
+                           count: total - in_stock, active: false, facets: self)
+      ]
       FacetFilterDrop.new(
-        label: "Availability", param_name: P_AVAIL, type: "boolean", facets: self,
-        values: [
-          FacetValueDrop.new(label: "In stock", value: "1", param_name: P_AVAIL,
-                             count: in_stock, active: active, facets: self),
-          FacetValueDrop.new(label: "Out of stock", value: "0", param_name: P_AVAIL,
-                             count: total - in_stock, active: false, facets: self)
-        ])
+        label: @strings[:availability], param_name: P_AVAIL, type: "boolean", facets: self,
+        values: zero_count_last(values))
     end
+
+    # E8b：count 0 的值排最後——hoko.vip /collections/all 出「现货(1)、缺货(2)」、/collections/frontpage 出「缺货(1)、现货(0)」
+    # （现货 0 個時退到後面，Ella 印成 disabled）；官方排序規則未取得（91 §3.75b V），只套 availability。
+    def zero_count_last(values) = values.each_with_index.sort_by { |v, i| [ v.count.to_i.zero? ? 1 : 0, i ] }.map(&:first)
 
     def price_filter
       range_max = @base.maximum(Arel.sql(MIN_PRICE_SQL)) || 0
       FacetFilterDrop.new(
-        label: "Price", param_name: "filter.v.price", type: "price_range", facets: self,
+        label: @strings[:price], param_name: "filter.v.price", type: "price_range", facets: self,
         range_max: range_max,
         min_value: FacetValueDrop.new(label: "From", value: price_cents(P_PRICE_GTE),
                                       param_name: P_PRICE_GTE, facets: self),

@@ -43,11 +43,14 @@ module RenderParity
         bare = Regexp.escape(@host.sub(/:\d+\z/, "")) # 本機埠形（mirror.localhost:3000）與無埠形（canonical）一併抹
         s.gsub!(%r{https?://#{bare}(?::\d+)?}, "")
         s.gsub!(%r{//#{bare}(?::\d+)?(?=/)}, "")
+        # JSON-LD／`json` filter 的跳脫形 `https:\/\/host`（hoko 商品頁 `"@id": "https:\/\/hoko.vip\/products\/…"`）
+        s.gsub!(%r{https?:\\/\\/#{bare}(?::\d+)?}, "")
       end
       if @url_prefix
         p = Regexp.escape(@url_prefix)
         s.gsub!(/#{p}(?=\/)/, "")            # /zh-hans-tw/collections/all ⇒ /collections/all
         s.gsub!(/#{p}(?=["'?#\s])/, "/")     # href="/zh-hans-tw" ⇒ href="/"
+        s.gsub!(/#{Regexp.escape(@url_prefix.gsub('/', '\\/'))}(?=\\\/)/, "") # JSON 跳脫形 `\/zh-hans-tw\/products`
       end
       s.gsub!(CDN_ASSET_RE, "/theme-assets/")
       s.gsub!(CDN_FONT_RE, "/fonts/\\1/\\2.woff2")
@@ -62,6 +65,26 @@ module RenderParity
       s.gsub!(/Shopify\.cdnHost = "[^"]*"/, 'Shopify.cdnHost = "CDN"')
       s.gsub!(/name="authenticity_token" value="[^"]*"/, 'name="authenticity_token" value="TOKEN"')
       s.gsub!(/"reqid":"[^"]*"/, '"reqid":"REQ"')
+      # E8b：商品／變體數字 id（本尊 13 碼 vs 我方流水號；hoko.vip 商品頁 `data-product-id="7771796897895"`、`?variant=44547877830759`）
+      # ——只抹 id 屬性與 query 的數值，不抹其他數字。
+      s.gsub!(/(data-(?:product|variant|section-product)-id=")\d+"/, '\1ID"')
+      s.gsub!(/([?&]variant=)\d+/, '\1ID')
+      s.gsub!(/("(?:product_id|variant_id|productId|variantId)":\s*)\d+/, '\1ID')
+      s.gsub!(/(name="id"[^>]*value=")\d+"/, '\1ID"')
+      # Ella 商品頁：`countdown_{product.id}`／`data-countdown-id`／`window.product_inventory(_policy)_array_{id} = { '{variant.id}': … }`
+      s.gsub!(/((?:countdown|_array)_)\d+/, '\1ID')
+      s.gsub!(/(data-countdown-id=")\d+"/, '\1ID"')
+      s.gsub!(/'\d+':\s*'/, "'ID': '")
+      s.gsub!(/(#offer-)\d+/, '\1ID')                       # JSON-LD offer @id
+      s.gsub!(/((?:for|id)=")\d+(input-)/, '\1ID\2')       # Ella 自訂欄位 `{product.id}input-text`
+      s.gsub!(/(name="product-id" value=")\d+"/, '\1ID"')
+      # E8b：集合頁商品卡（hoko.vip `template--T__product-grid-7771796897895`、`data-json-product='{"id": 777…`、
+      # 變體 `&quot;id&quot;:4454…`、`StandardCardNoMediaLink--777…`）——只抹數字 id，handle／title 照留
+      s.gsub!(/(product-grid-)\d+(?=")/, '\1ID')
+      s.gsub!(/("id":\s*)\d+/, '\1ID') # 我方流水號可為一位數（`data-subtotal-variants` 的 `"id":7`）
+      s.gsub!(/(ShareMessage-)\d+/, '\1ID') # Ella share-button `id="ShareMessage-{product.id}"`
+      s.gsub!(/(&quot;id&quot;:)\d+/, '\1ID')
+      s.gsub!(/((?:NoMediaLink|StandardBadge)--)\d+/, '\1ID') # `StandardCardNoMediaLink--`／`NoMediaStandardBadge--`
       s.gsub!(/\s+/, " ")
       s
     end

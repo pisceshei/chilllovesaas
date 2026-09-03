@@ -45,7 +45,10 @@ module ThemeEngine
       "hero-apparel-3" => { par: "xMaxYMid slice", view_box: "0 0 1297 729" },
       "product-apparel-1" => { par: "xMidYMid slice", view_box: "0 0 448 448", size: [ 448, 448 ] },
       "product-apparel-2" => { par: "xMidYMid slice", view_box: "0 0 449 448", size: [ 449, 448 ] },
-      "product-apparel-3" => { par: "xMidYMid slice", view_box: "0 0 449 448", size: [ 449, 448 ] }
+      "product-apparel-3" => { par: "xMidYMid slice", view_box: "0 0 449 448", size: [ 449, 448 ] },
+      # E8b：集合頁商品卡（Ella `_card-product-group-media`／card-product-flex 走 `collection-apparel-3`，PlaceholderSvg.tag 探針實測）——
+      # hoko.vip /collections/all 與 /collections/frontpage 四張卡皆 `width="448" height="448" viewBox="0 0 448 448"`；其餘 collection-apparel-N 未取得（V）。
+      "collection-apparel-3" => { par: "xMidYMid slice", view_box: "0 0 448 448", size: [ 448, 448 ] }
     }.freeze
     APPAREL_RE = /\A(?:hero|product|collection|blog|detailed)-apparel-\d\z/
 
