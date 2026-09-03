@@ -82,13 +82,22 @@ module Types
       return [] if source.nil?
 
       translate = ThemeEngine::SchemaLocale.resolver_for(source)
-      each_section_schema(source).filter_map do |type, schema|
-        next if schema["presets"].blank?
+      # E5：本尊 picker 列的是**每個 preset**（同一 section 多 preset ⇒ 多列，名稱＝preset name；Ella `section` 一支
+      # 16 個 preset＝Custom section／FAQ／Video…），並依 preset `category` 分組（100 §4 實測分類收合區）。
+      # 無 name 的 preset 退回 schema name；無 category ⇒ nil（前端歸「其他」）。preset 的 blocks 兩形（hash map＋
+      # block_order／array）原樣帶出，實例化在前端 `addSection`。
+      each_section_schema(source).flat_map do |type, schema|
+        presets = Array(schema["presets"]).select { |preset| preset.is_a?(Hash) }
+        next [] if presets.empty?
 
-        preset = schema["presets"].first || {}
-        { "type" => type,
-          "name" => translate.call(schema["name"] || type),
-          "preset" => { "settings" => preset["settings"] || {}, "blocks" => preset["blocks"] } }
+        presets.each_with_index.map do |preset, index|
+          { "type" => type,
+            "presetIndex" => index,
+            "name" => translate.call(preset["name"] || schema["name"] || type),
+            "category" => preset["category"].present? ? translate.call(preset["category"]) : nil,
+            "preset" => { "settings" => preset["settings"] || {}, "blocks" => preset["blocks"],
+                          "block_order" => preset["block_order"] } }
+        end
       end
     end
 
@@ -265,6 +274,7 @@ module Types
 
         [ { "type" => bdef["type"],
             "name" => translate.call(bdef["name"] || bdef["type"]),
+            "category" => bdef["category"].present? ? translate.call(bdef["category"]) : nil,
             "limit" => bdef["limit"],
             "settings" => translate_defs(Array(bdef["settings"]), translate) } ]
       end
@@ -294,6 +304,8 @@ module Types
           bdef["type"]
         end
         { "type" => type, "name" => translate.call(schema["name"] || type),
+          # E5：block picker 的分類收合區（Ella theme block schema 帶 `category`：product／layout／basic／decorative…）
+          "category" => schema["category"].present? ? translate.call(schema["category"]) : nil,
           "settings" => translate_defs(Array(schema["settings"]), translate),
           "blocks" => accepts }
       end

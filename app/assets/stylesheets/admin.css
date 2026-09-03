@@ -2964,6 +2964,38 @@ a {
 .cl-imagepicker__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--t-275); color: var(--text-2); }
 .cl-imagepicker__empty { display: grid; justify-items: center; padding: var(--sp-600, 32px) 0; text-align: center; }
 
+/* 區段／區塊 picker（E5；100 §4＋§8.1：popover 貼左欄右緣與該列同高；左清單≈250＋右灰預覽欄≈390；搜尋 focus 藍框；
+   Sections|Apps 分段（白底選中）；Generate（紫星芒）；列 icon 16；達上限灰化 "(1/1)"；分類收合區；插入線藍 2px＋⊕） */
+.cl-picker { display: grid; grid-template-columns: 250px 390px; height: 440px; max-height: calc(100vh - 32px); border-radius: var(--r-300); overflow: hidden; }
+.cl-picker__list { display: flex; flex-direction: column; min-height: 0; padding: var(--sp-200); gap: var(--sp-200); background: var(--surface); border-right: var(--hairline) solid var(--border); }
+.cl-picker__search { display: flex; align-items: center; gap: var(--sp-100); height: 32px; padding: 0 var(--sp-200); border: var(--hairline) solid #c9cace; border-radius: var(--r-200); background: var(--surface); color: var(--icon); }
+.cl-picker__search:focus-within { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+.cl-picker__search input { flex: 1; min-width: 0; border: 0; outline: none; font: inherit; font-size: var(--t-325); }
+.cl-picker__tabs { display: inline-flex; padding: 2px; border-radius: var(--r-200); background: var(--surface-selected); }
+.cl-picker__tab { flex: 1; min-height: 28px; border: 0; border-radius: var(--r-100); background: transparent; color: var(--text-2); font-size: var(--t-325); font-weight: var(--fw-medium); cursor: pointer; }
+.cl-picker__tab.is-active { background: var(--surface); color: var(--text); box-shadow: 0 1px 0 0 rgba(26, 26, 26, .07); }
+.cl-picker__scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.cl-picker__generate { display: flex; align-items: center; gap: var(--sp-200); width: 100%; min-height: 32px; padding: 0 var(--sp-200); border: 0; background: transparent; border-radius: var(--r-200); color: var(--text); font-size: var(--t-325); text-align: start; cursor: default; }
+.cl-picker__generate svg { color: #7f56d9; }
+.cl-picker__sep { height: var(--hairline); margin: var(--sp-100) 0; background: var(--border); }
+.cl-picker__items { list-style: none; margin: 0; padding: 0; }
+.cl-picker__item { display: flex; align-items: center; gap: var(--sp-200); width: 100%; min-height: 32px; padding: 0 var(--sp-200); border: 0; background: transparent; border-radius: var(--r-200); color: var(--text); font-size: var(--t-325); text-align: start; cursor: pointer; }
+.cl-picker__item:hover:not(:disabled), .cl-picker__item.is-active { background: var(--surface-selected); }
+.cl-picker__item:disabled { color: var(--text-disabled); cursor: default; }
+.cl-picker__item svg { flex: none; color: var(--icon); }
+.cl-picker__item:disabled svg { color: var(--text-disabled); }
+.cl-picker__group { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 32px; padding: 0 var(--sp-200); border: 0; background: transparent; color: var(--text); font-size: var(--t-325); font-weight: var(--fw-medium); text-align: start; cursor: pointer; }
+.cl-picker__preview { display: flex; align-items: center; justify-content: center; padding: var(--sp-300); background: var(--surface-3); color: var(--text-2); font-size: var(--t-325); }
+.cl-picker__preview iframe { width: 100%; height: 100%; border: 0; background: var(--surface); border-radius: var(--r-200); }
+.cl-picker__empty { padding: var(--sp-300); color: var(--text-2); font-size: var(--t-325); }
+.cl-tree__item[data-insert] { position: relative; }
+.cl-tree__item[data-insert]::before { content: "+"; position: absolute; left: var(--sp-200); right: var(--sp-200); height: 2px; background: var(--link); color: #fff; font-size: 12px; line-height: 16px; text-align: center; z-index: 1; pointer-events: none; }
+.cl-tree__item[data-insert="before"]::before { top: -1px; }
+.cl-tree__item[data-insert="after"]::before { bottom: -1px; }
+.cl-tree__item[data-insert]::after { content: "+"; position: absolute; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--link); color: #fff; font-size: 12px; line-height: 16px; text-align: center; z-index: 2; pointer-events: none; }
+.cl-tree__item[data-insert="before"]::after { top: -8px; }
+.cl-tree__item[data-insert="after"]::after { bottom: -8px; }
+
 /* 快捷鍵對話框（兩欄四組） */
 .cl-editor__shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-400); }
 .cl-editor__shortcut-group + .cl-editor__shortcut-group { margin-top: 0; }

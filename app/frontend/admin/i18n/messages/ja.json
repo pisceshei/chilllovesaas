@@ -1249,5 +1249,15 @@
   "editor.noResults": "結果が見つかりません",
   "editor.noResultsHint": "検索条件を変更するか、新しい画像をアップロードしてください。",
   "editor.files": "ファイル",
-  "editor.schemeLabel": "スキーム {n}"
+  "editor.schemeLabel": "スキーム {n}",
+  "editor.searchSections": "セクションを検索",
+  "editor.searchBlocks": "ブロックを検索",
+  "editor.pickerSections": "セクション",
+  "editor.pickerBlocks": "ブロック",
+  "editor.pickerApps": "アプリ",
+  "editor.generate": "生成",
+  "editor.noPreview": "プレビューはありません",
+  "editor.noAppBlocks": "このセクションで使用できるアプリブロックはありません",
+  "editor.noAppSections": "使用できるアプリセクションはありません",
+  "editor.uncategorized": "その他"
 }

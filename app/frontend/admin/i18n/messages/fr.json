@@ -1249,5 +1249,15 @@
   "editor.noResults": "Aucun résultat",
   "editor.noResultsHint": "Modifiez vos critères de recherche ou importez une nouvelle image.",
   "editor.files": "Fichiers",
-  "editor.schemeLabel": "Schéma {n}"
+  "editor.schemeLabel": "Schéma {n}",
+  "editor.searchSections": "Rechercher des sections",
+  "editor.searchBlocks": "Rechercher des blocs",
+  "editor.pickerSections": "Sections",
+  "editor.pickerBlocks": "Blocs",
+  "editor.pickerApps": "Applications",
+  "editor.generate": "Générer",
+  "editor.noPreview": "Aucun aperçu disponible",
+  "editor.noAppBlocks": "Aucun bloc d’application disponible pour cette section",
+  "editor.noAppSections": "Aucune section d’application disponible",
+  "editor.uncategorized": "Autres"
 }

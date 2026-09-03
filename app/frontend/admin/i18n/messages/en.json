@@ -1249,5 +1249,15 @@
   "editor.noResults": "No results found",
   "editor.noResultsHint": "Edit your search criteria, or upload a new image.",
   "editor.files": "Files",
-  "editor.schemeLabel": "Scheme {n}"
+  "editor.schemeLabel": "Scheme {n}",
+  "editor.searchSections": "Search sections",
+  "editor.searchBlocks": "Search blocks",
+  "editor.pickerSections": "Sections",
+  "editor.pickerBlocks": "Blocks",
+  "editor.pickerApps": "Apps",
+  "editor.generate": "Generate",
+  "editor.noPreview": "No preview available",
+  "editor.noAppBlocks": "No app blocks available for this section",
+  "editor.noAppSections": "No app sections available",
+  "editor.uncategorized": "Other"
 }

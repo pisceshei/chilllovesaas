@@ -236,7 +236,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
 
     fireEvent.click(tree.getByRole("button", { name: "新增區段" }));
-    const picker = within(tree.getByLabelText("可新增的區段"));
+    const picker = within(screen.getByRole("list", { name: "可新增的區段" })); // E5：picker portal 在樹外
     fireEvent.click(picker.getByRole("button", { name: "促銷條" }));
 
     // 插尾＋選中：設定面板出 preset 值
@@ -357,8 +357,8 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.change(labelInput, { target: { value: "改標籤" } });
 
     // add-block（＋父塊）——def default 帶入新 block
-    fireEvent.click(tree.getByRole("button", { name: "新增區塊" })); // E3：先開 Add block 列
-    fireEvent.click(tree.getByRole("button", { name: "＋ 父塊" }));
+    fireEvent.click(tree.getByRole("button", { name: "新增區塊" })); // E3：先開 Add block 列（E5：開 block picker）
+    fireEvent.click(within(screen.getByRole("list", { name: "新增區塊" })).getByRole("button", { name: "父塊" }));
 
     fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
     await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
@@ -552,10 +552,10 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const picker = within(screen.getByRole("list", { name: "可新增的區段" }));
     expect(picker.getByText("促銷條")).toBeInTheDocument();
 
-    fireEvent.change(picker.getByLabelText("搜尋區段"), { target: { value: "zzz" } });
+    fireEvent.change(screen.getByLabelText("搜尋區段"), { target: { value: "zzz" } }); // E5：搜尋框在清單外
     expect(picker.queryByText("促銷條")).toBeNull();
 
-    fireEvent.change(picker.getByLabelText("搜尋區段"), { target: { value: "促銷" } });
+    fireEvent.change(screen.getByLabelText("搜尋區段"), { target: { value: "促銷" } });
     expect(picker.getByText("促銷條")).toBeInTheDocument();
   });
 
@@ -953,7 +953,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     // 容器（父塊）自己的「新增區塊」列只列它接受的子型別
     const p1Li = tree.getByRole("button", { name: "父塊" }).closest("li")!;
     fireEvent.click(within(p1Li).getByRole("button", { name: "新增區塊" }));
-    fireEvent.click(within(p1Li).getByRole("button", { name: "＋ 葉塊" }));
+    fireEvent.click(within(screen.getByRole("list", { name: "新增區塊" })).getByRole("button", { name: "葉塊" })); // E5：picker
     expect(nodeNames(tree)).toEqual([ "Hero", "Hero", "Blocks demo", "父塊", "葉塊", "葉塊" ]);
 
     fireEvent.keyDown(window, { key: "s", ctrlKey: true });

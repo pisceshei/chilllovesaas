@@ -6,5 +6,9 @@
   "blocks": [
     { "type": "badge", "name": "徽章", "settings": [ { "id": "label", "type": "text", "label": "徽章文字", "default": "NEW" } ] }
   ],
-  "presets": [ { "name": "t:names.promo", "settings": { "text": "預設促銷文案" } } ]
+  "presets": [
+    { "name": "t:names.promo", "settings": { "text": "預設促銷文案" } },
+    { "name": "t:names.promo_alt", "category": "t:categories.banners", "settings": { "text": "替代文案" },
+      "blocks": [ { "type": "badge", "settings": { "label": "HOT" } } ] }
+  ]
 }{% endschema %}
