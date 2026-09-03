@@ -581,7 +581,7 @@ function RichTextControl({ id, value, inline, onChange }: { id: string; value: s
   }, [ value ]);
   const exec = (command: string, arg?: string) => {
     ref.current?.focus();
-    document.execCommand(command, false, arg);
+    if (typeof document.execCommand === "function") document.execCommand(command, false, arg);
     onChange(ref.current?.innerHTML ?? "");
   };
   const tools: [ string, ReactNode, () => void ][] = [

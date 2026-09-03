@@ -1,4 +1,4 @@
-import { Box, Layers, Search } from "lucide-react";
+import { Box, ChevronUp, Layers, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
@@ -10,7 +10,7 @@ import { isTypingTarget, shortcutFor } from "../editor/editorShortcuts";
 import { PreviewResourceRow } from "../editor/PreviewResourceRow";
 import { SectionsTree, type BlockDefLite } from "../editor/SectionsTree";
 import { SettingRow, type ControlContext, type FontFamily, type MenuOption, type SchemeOption, type SettingDef } from "../editor/SettingControls";
-import { SettingsPanel } from "../editor/SettingsPanel";
+import { FontPickerPanel, SettingsPanel } from "../editor/SettingsPanel";
 import { evaluateVisibleIf } from "../editor/visibleIf";
 import { ShortcutsDialog } from "../editor/ShortcutsDialog";
 import { splitTemplateKey } from "../editor/TemplateSwitcher";
@@ -224,6 +224,8 @@ export function ThemeEditorPage() {
   const [imagePicker, setImagePicker] = useState<{ def: SettingDef; value: string; onChange: (value: string) => void } | null>(null);
   const [customCssOpen, setCustomCssOpen] = useState(() => searchParams.get("customCss") === "true");
   const [menus, setMenus] = useState<MenuOption[]>([]);
+  // E4：佈景設定面板的 font_picker ⇒ 右欄整面選字型（section／block 面板則由 SettingsPanel 自己承接）
+  const [fontPicker, setFontPicker] = useState<{ def: SettingDef; value: string; onChange: (value: string) => void } | null>(null);
   const [draft, setDraft] = useState<TemplateJson | null>(null);
   // PR-5：群組帶（24 §1 本尊樹形）——群組 draft 與模板同語義（{sections, order}），寫回走 themeFileUpsert。
   const [groupDrafts, setGroupDrafts] = useState<Record<string, TemplateJson>>({});
@@ -1122,6 +1124,7 @@ export function ThemeEditorPage() {
       if (group) { setOpenCategory(group.name); syncStateParams({ category: group.name, colorScheme: schemeId }); }
     },
     onOpenImagePicker: (request) => setImagePicker(request),
+    onOpenFontPicker: (request) => setFontPicker(request),
   }), [ schemes, data?.fontLibrary, data?.settingsSchema, menus ]); // eslint-disable-line react-hooks/exhaustive-deps
   const themeRefDefs = useMemo<SettingDef[]>(() => {
     const refs = selected ? (data?.sectionSchemas?.[selected.type] as { theme_settings?: string[] } | undefined)?.theme_settings ?? [] : [];
@@ -1154,7 +1157,7 @@ export function ThemeEditorPage() {
   const rootClass = [
     "cl-editor",
     fullscreen ? "cl-editor--fullscreen" : "",
-    !fullscreen && hasRightPanel ? "cl-editor--with-panel" : "",
+    !fullscreen && (hasRightPanel || fontPicker !== null) ? "cl-editor--with-panel" : "",
   ].filter(Boolean).join(" ");
 
   return (
@@ -1322,6 +1325,17 @@ export function ThemeEditorPage() {
           />
         </main>
 
+        {!fullscreen && fontPicker && !(hasRightPanel && selected && selectedId) ? (
+          <aside aria-label={t("editor.settingsPanel")} className="cl-editor__settings cl-panel">
+            <div className="cl-panel__title">
+              <button aria-label={t("common.back")} className="cl-editor__iconbtn" onClick={() => setFontPicker(null)} type="button"><ChevronUp aria-hidden="true" size={16} /></button>
+              <h3>{t("editor.selectFont", { label: fontPicker.def.label ?? fontPicker.def.id ?? "" })}</h3>
+            </div>
+            <div className="cl-panel__body">
+              <FontPickerPanel fonts={data?.fontLibrary ?? []} onCancel={() => setFontPicker(null)} onDone={(handle) => { fontPicker.onChange(handle); setFontPicker(null); }} value={fontPicker.value} />
+            </div>
+          </aside>
+        ) : null}
         {!fullscreen && hasRightPanel && selected && selectedId ? (() => {
           const node = selectedBlock ?? selected;
           const defs = selectedBlock ? (selectedBlockDef?.settings ?? []) : (data?.sectionSchemas?.[selected.type]?.settings ?? []);

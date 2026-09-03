@@ -190,7 +190,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
 }
 
 /** font_picker 整面選字型（100 §3.8：搜尋 → SYSTEM FONTS／OTHER FONTS 各帶說明句 → 底部字型名＋字重＋Done）。 */
-function FontPickerPanel({ fonts, value, onDone, onCancel }: {
+export function FontPickerPanel({ fonts, value, onDone, onCancel }: {
   fonts: FontFamily[]; value: string; onDone: (handle: string) => void; onCancel: () => void;
 }) {
   const t = useT();

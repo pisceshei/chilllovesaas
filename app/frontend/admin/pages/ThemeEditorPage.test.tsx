@@ -86,6 +86,14 @@ function stubFetch(saveErrors: { message: string; code: string }[] = [], bootstr
       const productsBody = { data: { products: { nodes: [ { id: "gid://chilllove/Product/1", title: "Acme Tee", handle: "acme-tee" } ] } } };
       return { json: vi.fn().mockResolvedValue(productsBody), ok: true, status: 200 } as unknown as Response;
     }
+    // E4：image_picker 的檔案庫查詢
+    if (request.query.includes("editorImagePicker")) {
+      const filesBody = { data: { files: { edges: [
+        { node: { id: "gid://chilllove/File/1", filename: "hero.png", thumbUrl: "/media/1/hero.png?width=160", previewUrl: null, width: 1200, height: 800 } },
+        { node: { id: "gid://chilllove/File/2", filename: "logo.svg", thumbUrl: null, previewUrl: null, width: null, height: null } },
+      ] } } };
+      return { json: vi.fn().mockResolvedValue(filesBody), ok: true, status: 200 } as unknown as Response;
+    }
     if (request.query.includes("themeEditorBaseTemplate")) {
       const baseBody = { data: { theme: { templateJson: { sections: { base: { type: "hero", settings: {} } }, order: [ "base" ] } } } };
       return { json: vi.fn().mockResolvedValue(baseBody), ok: true, status: 200 } as unknown as Response;
@@ -255,7 +263,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(settings.getByLabelText("標題")).toHaveValue("首頁英雄"); // schema label＋實例值
     expect(settings.getByLabelText("間距")).toHaveValue(24); // 🔴 default 補位（E4：滑桿＋數字框，取數字框）
     expect(settings.getByText("圖片", { selector: "label" })).toBeInTheDocument(); // image_picker：標籤＋Select 虛線框（E4）
-    expect(settings.getByRole("button", { name: /選取/ })).toBeInTheDocument();
+    expect(settings.getByRole("button", { name: "圖片" })).toHaveTextContent("選取"); // label for ⇒ 可及名稱＝圖片
 
     fireEvent.change(settings.getByLabelText("對齊"), { target: { value: "center" } });
 
@@ -1139,6 +1147,228 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.contextMenu(tree.getByRole("button", { name: "英雄橫幅" }));
     fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "重新命名" }));
     expect((screen.getByLabelText("名稱") as HTMLInputElement).value).toBe("英雄橫幅"); // 改名預設值＝翻譯後文字
+  });
+
+  // ── E4：右欄逐控件（docs/research/100 §3）──
+  const e4Boot = () => {
+    const boot = JSON.parse(JSON.stringify(BOOTSTRAP)) as typeof BOOTSTRAP;
+    const theme = boot.data.theme as unknown as Record<string, unknown>;
+    const schemas = theme.sectionSchemas as Record<string, { settings: Record<string, unknown>[]; theme_settings?: string[] }>;
+    schemas.hero.settings.push(
+      { id: "toggle", type: "checkbox", label: "開關", default: false },
+      { id: "dep", type: "text", label: "相依", visible_if: "{{ section.settings.toggle == true }}" },
+      { id: "size", type: "select", label: "尺寸", options: [ { value: "s", label: "小", group: "基本" }, { value: "l", label: "大", group: "基本" } ], default: "s" },
+      { id: "pos", type: "radio", label: "位置", options: [ { value: "top", label: "上" }, { value: "bottom", label: "下" } ], default: "top" },
+      { id: "ta", type: "text_alignment", label: "文字對齊" },
+      { id: "accent", type: "color", label: "強調色", alpha: true, default: "#ff0000" },
+      { id: "scheme", type: "color_scheme", label: "配色", default: "scheme-1" },
+      { id: "menu", type: "link_list", label: "選單", default: "main-menu" },
+      { id: "link", type: "url", label: "連結" },
+      { id: "video", type: "video_url", label: "影片", accept: [ "youtube" ] },
+      { id: "code", type: "liquid", label: "Liquid" },
+      { id: "rich", type: "richtext", label: "內文" },
+    );
+    schemas.hero.theme_settings = [ "brand_color" ];
+    (theme.settingsSchema as { name: string; settings: Record<string, unknown>[] }[]).push({ name: "Typography", settings: [
+      { id: "body_font", type: "font_picker", label: "內文字型", default: "jost_n4" } ] });
+    (theme.settingsSchema as { name: string; settings: Record<string, unknown>[] }[])[0].settings.push(
+      { id: "color_schemes", type: "color_scheme_group", label: "配色方案", definition: [ { id: "background", type: "color", label: "底" }, { id: "foreground", type: "color", label: "字" }, { id: "primary_button_background", type: "color", label: "鈕" } ],
+        role: { background: { solid: "background" }, text: "foreground", primary_button: { solid: "primary_button_background" } } });
+    (theme.themeSettingsJson as Record<string, unknown>).color_schemes = {
+      "scheme-1": { settings: { background: "#ffffff", foreground: "#111111", primary_button_background: "#222222" } },
+      "scheme-2": { settings: { background: "#000000", foreground: "#eeeeee", primary_button_background: "#dddddd" } },
+    };
+    theme.fontLibrary = [
+      { key: "system_ui", name: "system-ui", system: true, handles: [ "n4" ] },
+      { key: "jost", name: "Jost", system: false, handles: [ "n4", "n7" ] },
+    ];
+    (theme.templateJson as { sections: Record<string, { settings: Record<string, unknown> }> }).sections.hero.settings.dep = "保留值";
+    (boot.data as unknown as Record<string, unknown>).menus = [ { handle: "main-menu", title: "Main menu" }, { handle: "footer", title: "Footer" } ];
+    return boot;
+  };
+  const openHero = async () => {
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getAllByRole("button", { name: "Hero" })[1]);
+    return { tree, settings: within(screen.getByRole("complementary", { name: "設定" })) };
+  };
+  const savedTemplate = async (fetchMock: ReturnType<typeof vi.fn>) => {
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    return (JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { settings: Record<string, unknown> }> } } }).variables.content.sections;
+  };
+
+  it("ED43 🔴 visible_if：條件不成立的列不渲染、值仍保留；toggle（switch）開啟後出現並帶保留值", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    renderEditor();
+    const { settings } = await openHero();
+    expect(settings.queryByLabelText("相依")).toBeNull(); // toggle=false ⇒ 隱藏
+    fireEvent.click(settings.getByRole("switch", { name: "開關" }));
+    expect(settings.getByLabelText("相依")).toHaveValue("保留值"); // 出現且值未被清
+    fireEvent.click(settings.getByRole("switch", { name: "開關" }));
+    expect(settings.queryByLabelText("相依")).toBeNull();
+    const sections = await savedTemplate(fetchMock);
+    expect(sections.hero.settings.dep).toBe("保留值"); // 隱藏不清值（官方未說明 ⇒ 我方保留）
+    expect(sections.hero.settings.toggle).toBe(false);
+  });
+
+  it("ED44 🔴 基本控件形態：select optgroup／radio 分段／range 數字框＋滑桿／text_alignment icon 分段／video_url accept 驗證", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    renderEditor();
+    const { settings } = await openHero();
+    expect(settings.getByRole("group", { name: "基本" })).toBeInTheDocument(); // optgroup
+    fireEvent.change(settings.getByLabelText("尺寸"), { target: { value: "l" } });
+    fireEvent.click(settings.getByRole("radio", { name: "下" }));
+    expect(settings.getByRole("radio", { name: "下" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.change(settings.getByLabelText("間距"), { target: { value: "48" } }); // 數字框
+    expect(settings.getByLabelText("間距 slider")).toHaveValue("48"); // 滑桿同步
+    fireEvent.click(settings.getByRole("radio", { name: "置中" }));
+    fireEvent.change(settings.getByLabelText("影片"), { target: { value: "https://vimeo.com/1" } });
+    expect(settings.getByText(/youtube/)).toBeInTheDocument(); // accept 只收 youtube ⇒ 錯誤句
+    fireEvent.change(settings.getByLabelText("影片"), { target: { value: "https://youtu.be/abc" } });
+    expect(settings.queryByText(/youtube.*網址|有效的/)).toBeNull();
+    expect(settings.getByPlaceholderText("貼上連結或搜尋")).toBeInTheDocument(); // url
+    expect(settings.getByRole("toolbar")).toBeInTheDocument(); // richtext 工具列
+    const sections = await savedTemplate(fetchMock);
+    expect(sections.hero.settings).toMatchObject({ size: "l", pos: "bottom", spacing: 48, ta: "center", video: "https://youtu.be/abc" });
+  });
+
+  it("ED45 🔴 color：色票鈕顯示 HEX；popover 內 HEX／色相／透明度（alpha:true 才有）；alpha 改 ⇒ rgba 寫回", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    renderEditor();
+    const { settings } = await openHero();
+    const swatch = settings.getByLabelText("強調色");
+    expect(swatch).toHaveTextContent("#FF0000");
+    fireEvent.click(swatch);
+    expect(screen.getByLabelText("色相")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("不透明度"), { target: { value: "50" } });
+    const sections = await savedTemplate(fetchMock);
+    expect(sections.hero.settings.accent).toBe("rgba(255, 0, 0, 0.5)");
+  });
+
+  it("ED46 🔴 color_scheme：Aa 預覽＋配色名；popover 列全部 scheme（選中打勾）；Edit ⇒ 佈景設定 Colors 分類＋URL colorScheme", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    const router = renderEditor();
+    const { settings } = await openHero();
+    const picker = settings.getByLabelText("配色");
+    expect(picker).toHaveTextContent("配色 1");
+    fireEvent.click(picker);
+    fireEvent.click(screen.getByRole("option", { name: /配色 2/ }));
+    expect(settings.getByLabelText("配色")).toHaveTextContent("配色 2");
+    fireEvent.click(settings.getByLabelText("配色"));
+    fireEvent.click(screen.getByRole("button", { name: "編輯" }));
+    expect(screen.getByRole("complementary", { name: "佈景主題設定" })).toBeInTheDocument();
+    expect(router.state.location.search).toContain("colorScheme=scheme-2");
+    expect(router.state.location.search).toContain("category=Colors");
+    fireEvent.click(screen.getByRole("button", { name: "區段" })); // 回 sections 面板再存
+    fireEvent.click(screen.getAllByRole("button", { name: "Hero" })[1]);
+    const sections = await savedTemplate(fetchMock);
+    expect(sections.hero.settings.scheme).toBe("scheme-2");
+  });
+
+  it("ED47 🔴 font_picker：字型名鈕 ⇒ 右欄整面選字型（系統／其他兩組＋字重＋完成）⇒ 寫回 handle", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    renderEditor();
+    await screen.findByRole("complementary", { name: "區段" });
+    fireEvent.click(screen.getByRole("button", { name: "佈景主題設定" }));
+    const panel = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
+    fireEvent.click(panel.getByText("Typography"));
+    const btn = panel.getByLabelText("內文字型");
+    expect(btn).toHaveTextContent("Jost");
+    fireEvent.click(btn);
+    // 佈景設定面板內沒有右欄殼；font_picker 由頁面接到右欄 ⇒ 標題「選取內文字型」
+    expect(await screen.findByRole("heading", { name: "選取內文字型" })).toBeInTheDocument();
+    expect(screen.getByText("系統字型")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: "system-ui" }));
+    fireEvent.click(screen.getByRole("button", { name: "完成" }));
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeSettingsUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeSettingsUpsert")[0].body)) as { variables: { settings: Record<string, unknown> } };
+    expect(sent.variables.settings.body_font).toBe("system_ui_n4");
+  });
+
+  it("ED48 🔴 link_list：選單名鈕 ⇒ 取代／編輯／移除選單；取代 ⇒ 清單選另一個 ⇒ 寫回 handle；移除 ⇒ 空", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    renderEditor();
+    const { settings } = await openHero();
+    const btn = settings.getByLabelText("選單");
+    expect(btn).toHaveTextContent("Main menu");
+    fireEvent.click(btn);
+    fireEvent.click(screen.getByRole("menuitem", { name: "取代" }));
+    fireEvent.click(screen.getByRole("option", { name: "Footer" }));
+    expect(settings.getByLabelText("選單")).toHaveTextContent("Footer");
+    const sections = await savedTemplate(fetchMock);
+    expect(sections.hero.settings.menu).toBe("footer");
+  });
+
+  it("ED49 🔴 右欄「…」：建立副本（section 與 block）、複製 ⇒ 左樹右鍵貼上、隱藏、移除；static block 無副本／移除", async () => {
+    const boot = e4Boot();
+    const demo = (boot.data.theme!.templateJson!.sections! as Record<string, { blocks?: Record<string, unknown>; block_order?: string[] }>).demo;
+    demo.block_order = [ "p1" ];
+    demo.blocks = { p1: { type: "_parent" }, sb: { type: "_parent", static: true, settings: {} } };
+    stubFetch([], boot);
+    renderEditor();
+    const { tree } = await openHero();
+    const more = () => within(screen.getByRole("complementary", { name: "設定" })).getByRole("button", { name: "更多動作" });
+    fireEvent.click(more());
+    fireEvent.click(screen.getByRole("menuitem", { name: "建立副本" }));
+    expect(tree.getAllByRole("button", { name: "Hero" })).toHaveLength(3); // 範本帶 hero 複本（選取移到複本）
+    fireEvent.click(more());
+    fireEvent.click(screen.getByRole("menuitem", { name: "複製" }));
+    fireEvent.contextMenu(tree.getByRole("button", { name: "Blocks demo" }));
+    const paste = within(screen.getByRole("menu")).getByRole("menuitem", { name: "貼上" });
+    expect(paste).not.toBeDisabled();
+    fireEvent.click(paste);
+    expect(tree.getAllByRole("button", { name: "Hero" })).toHaveLength(4); // 貼在 demo 之後
+    fireEvent.click(more());
+    fireEvent.click(screen.getByRole("menuitem", { name: /隱藏/ }));
+    expect(tree.getAllByLabelText(/^顯示 /).length).toBeGreaterThanOrEqual(1);
+    // block：建立副本
+    fireEvent.click(tree.getByRole("button", { name: "展開 Blocks demo" }));
+    fireEvent.click(tree.getAllByRole("button", { name: "父塊" })[0]);
+    fireEvent.click(more());
+    fireEvent.click(screen.getByRole("menuitem", { name: "建立副本" }));
+    expect(tree.getAllByRole("button", { name: "父塊" })).toHaveLength(3); // p1＋副本＋static
+    // static block：無副本／無移除
+    fireEvent.click(tree.getAllByRole("button", { name: "父塊" })[2]);
+    fireEvent.click(more());
+    expect(screen.queryByRole("menuitem", { name: "建立副本" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "移除" })).toBeNull();
+    expect(screen.getByRole("menuitem", { name: /編輯代碼/ })).toBeInTheDocument();
+  });
+
+  it("ED50 🔴 section 尾部「佈景主題設定」收合區列出該 section 引用的全域設定並可改；Custom CSS 展開寫 URL customCss=true", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    const router = renderEditor();
+    const { settings } = await openHero();
+    fireEvent.click(settings.getByRole("button", { name: "佈景主題設定" }));
+    const brand = settings.getByLabelText("品牌色");
+    expect(brand).toHaveTextContent("#A9502C");
+    fireEvent.click(brand);
+    const hex = screen.getByLabelText("Hex");
+    fireEvent.change(hex, { target: { value: "123456" } });
+    fireEvent.blur(hex);
+    fireEvent.click(settings.getByRole("button", { name: "自訂 CSS" }));
+    expect(router.state.location.search).toContain("customCss=true");
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeSettingsUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeSettingsUpsert")[0].body)) as { variables: { settings: Record<string, unknown> } };
+    expect(sent.variables.settings.brand_color).toBe("#123456");
+  });
+
+  it("ED51 🔴 image_picker：選取 ⇒ 檔案庫 modal（搜尋＋格狀）⇒ 完成 ⇒ 寫 shopify://shopify/files/{filename}；已設值 ⇒ 變更／移除", async () => {
+    const fetchMock = stubFetch([], e4Boot());
+    renderEditor();
+    const { settings } = await openHero();
+    fireEvent.click(settings.getByRole("button", { name: "圖片" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "圖片" }));
+    fireEvent.click(await dialog.findByRole("option", { name: /hero\.png/ }));
+    fireEvent.click(dialog.getByRole("button", { name: "完成" }));
+    expect(settings.getByText("hero.png")).toBeInTheDocument();
+    const sections = await savedTemplate(fetchMock);
+    expect(sections.hero.settings.image).toBe("shopify://shopify/files/hero.png");
+    fireEvent.click(settings.getByRole("button", { name: "移除" }));
+    expect(settings.getByRole("button", { name: "圖片" })).toHaveTextContent("選取");
   });
 
 });
