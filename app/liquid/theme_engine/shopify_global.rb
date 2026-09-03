@@ -23,7 +23,7 @@ module ThemeEngine
         Shopify.shop = #{shop.subdomain.to_s.inspect};
         Shopify.locale = #{locale.to_s.inspect};
         Shopify.currency = { active: #{currency.to_s.inspect}, rate: "1.0" };
-        Shopify.designMode = #{design_mode ? "true" : "false"};
+        #{design_mode ? "Shopify.designMode = true;" : "/* Shopify.designMode: undefined outside the editor (official) */"}
         Shopify.routes = { root: #{root.to_s.inspect} };
         Shopify.theme = { id: #{theme.id}, name: #{theme.name.to_s.inspect}, role: #{theme.role.to_s.inspect} };
         Shopify.formatMoney = function(cents, format) {
