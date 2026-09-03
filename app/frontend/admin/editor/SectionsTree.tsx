@@ -37,6 +37,9 @@ export interface TreeSelection {
 export interface SectionsTreeProps {
   bands: TreeBand[];
   sectionName: (type: string) => string;
+  /** E4：右欄「…」Copy 之後右鍵 Paste 可用（貼在該列之後／容器內） */
+  canPaste?: boolean;
+  onPaste?: (band: string, sectionId: string, path: BlockPath) => void;
   /** 實例 `name` 的 `t:` 鍵翻譯（E3b）；未給＝原樣顯示。 */
   translateName?: (value: string | undefined) => string | undefined;
   /** 依容器（section 或 block）解析某 block 的定義（名稱／設定／可接受子型別）。 */
@@ -324,7 +327,7 @@ export function SectionsTree(props: SectionsTreeProps) {
           role="menu"
           style={{ left: menu.x, top: menu.y }}
         >
-          <li><button className="cl-tree__menuitem" disabled role="menuitem" type="button">{t("editor.paste")}</button></li>
+          <li><button className="cl-tree__menuitem" disabled={!props.canPaste} onClick={() => { props.onPaste?.(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button">{t("editor.paste")}</button></li>
           <li><button className="cl-tree__menuitem" onClick={() => { props.onRename(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button"><Pencil aria-hidden="true" size={16} />{t("editor.rename")}</button></li>
           <li>
             <button className="cl-tree__menuitem" onClick={() => { props.onToggleDisabled(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button">

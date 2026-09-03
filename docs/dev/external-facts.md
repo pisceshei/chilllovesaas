@@ -1177,3 +1177,44 @@ viewBox="0 0 1300 731" fill="none" xmlns="http://www.w3.org/2000/svg">`（Ella `
 ⚠️ 授權：Polaris 為 source-available（`polaris-licence-and-ruling` 裁定：使用者已裁定照用，不再重提）；本檔只記 token
 **數值**供對表，`app/assets/tokens.css` 既有值（111 §14 量測）與此表一致（`--surface-selected` #f1f1f1、`--text` #303030、
 `--link` #005bd3、`--fw-regular` 450／`--fw-medium` 550）。
+
+### F7. input settings 各型的 default 與形態規則（主題編輯器 E4 控件庫的資料源）
+
+官方逐字（<https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings>，取證 2026-09-03）：
+- checkbox："If `default` is unspecified, then the value is `false` by default."
+- number："The `default` attribute is optional. However, the value must be a number and not a string."
+- radio／select："If `default` is unspecified, then the first option is selected by default."；select 的 options 可帶 `group`。
+- range："The `default` attribute is required. The `min`, `max`, `step`, and `default` attributes can't be string values."
+- text_alignment："outputs a `SegmentedControl` field with icons."；"If you don't specify the default attribute, then the
+  `left` option is selected by default."
+- font_picker："The `default` attribute is required. Failing to include it will result in an error."
+- video_url：`accept` 必填（youtube／vimeo 或兩者）；video："`video` settings don't support the `default` attribute."
+- richtext：Bold／Italic／Underline／Link／Paragraph／Unordered list；default 須包在 `<p>` 或 `<ul>`；
+  inline_richtext："outputs HTML markup that isn't wrapped in paragraph tags."、"doesn't support line breaks (`<br />`)
+  or underline in editor."
+- html："Unclosed HTML tags are automatically closed when the setting is saved."；liquid："Content entered in these
+  settings can't exceed 50kb."
+- link_list："Accepted values for the `default` attribute are `main-menu` and `footer`."；url："Accepted values for the
+  `default` attribute are `/collections` and `/collections/all`."
+- image_picker／product／collection／page／blog／article："are not updated when switching presets" 且 "don't support the
+  `default` attribute"；product_list："You can only choose from products that are published to the online store and
+  have an `active` status."；*_list 的 `limit` 預設／上限 50。
+- color_background："do not support image related background properties."；color_palette："A palette supports between
+  2 and 20 colors."；color_scheme："Color scheme settings aren't supported in app blocks."
+- visible_if（settings 總覽頁）：語法 `"visible_if": "{{ block.settings.layout_style == 'flex' }}"`；"Conditional settings
+  cannot access runtime context or resolved data source values. While you can check if a setting with a data source
+  *has a value*, you cannot create conditions based on what that data source *resolves to*."；支援型別＝
+  "All basic input settings"／"All sidebar settings"／color、color_background、color_scheme、font_picker、html、image_picker、
+  inline_richtext、link_list、liquid、richtext、text_alignment、url、video、video_url。運算子清單、隱藏欄位的值是否保留、
+  可引用哪些物件＝**未取得**（頁面只給 `block.settings.*` 一例）；我方值域取 Ella fixture 實測（`docs/research/66` §A.4）。
+⇒ 我方 `effectiveValue`（`SettingControls.tsx`）照上述 default 規則；`visibleIf.ts` 求值器（作用域 block／section／settings）。
+
+### F8. Liquid 運算子：由右往左、無括號、只有 false／nil 為假
+
+官方逐字（<https://shopify.dev/docs/api/liquid/basics/operators>，取證 2026-09-03）："When using more than one operator
+in a tag, the operators are evaluated from right to left, and you can't change this order."；"Parentheses `()` aren't
+valid characters within Liquid tags."；`contains`＝"You can use `contains` to check for the presence of a string within an
+array, or another string."；真假值：只有 `false` 與 `nil` 為假，"empty strings are truthy, so you need to check whether
+they're empty with `blank`."
+⇒ 我方 `evaluateVisibleIf`：`a and b or c` ＝ `a and (b or c)`（不是 JS 優先序，`visibleIf.test.ts` V3 鎖住）；空字串為真；
+`blank`／`empty` 字面量對應空字串比較。

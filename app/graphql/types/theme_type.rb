@@ -49,6 +49,8 @@ module Types
     field :theme_blocks, GraphQL::Types::JSON, null: false
     # E3b：實例 `name` 的 `t:` 鍵翻譯表（只含實際出現的鍵）
     field :name_translations, GraphQL::Types::JSON, null: false
+    # E4：font_picker 的字型清單（平台字典 `config/storefront_fonts.yml`：families／system／library 三段扁平化）
+    field :font_library, GraphQL::Types::JSON, null: false
     # PR-11：模板→預覽路徑對映（資源語境——product 模板編輯帶真商品）。
     # 取各型第一個已發布資源；無資源的型不出鍵（前端回落首頁）。
     field :preview_paths, GraphQL::Types::JSON, null: false
@@ -203,6 +205,21 @@ module Types
       keys.to_h { |key| [ key, translate.call(key) ] }.reject { |key, value| value == key }
     end
 
+    def font_library
+      registry = ThemeEngine::FontLibrary.registry
+      families = (registry["families"] || {}).map do |key, family|
+        { "key" => key, "name" => family["display_name"] || key, "system" => false,
+          "handles" => (family["variants"] || {}).keys }
+      end
+      system = (registry["system"] || {}).map do |key, family|
+        { "key" => key, "name" => family["display_name"] || key, "system" => true, "handles" => [ "n4" ] }
+      end
+      library = ThemeEngine::FontLibrary.library.map do |key, family|
+        { "key" => key, "name" => family["display_name"] || key, "system" => false, "handles" => Array(family["handles"]) }
+      end
+      (system + families + library).uniq { |entry| entry["key"] }
+    end
+
     def section_schemas
       source = ThemeEngine::Sources.resolve(object)
       return {} if source.nil?
@@ -219,6 +236,9 @@ module Types
                   "enabled_on" => schema["enabled_on"],
                   "disabled_on" => schema["disabled_on"],
                   "limit" => schema["limit"],
+                  # E4：section 模板引用到的全域設定 id（本尊右欄底部 "Theme Settings" 收合區列出該 section 用到的
+                  # 全域設定；本尊判定法未取得 ⇒ 我方以 section liquid 內 `settings.<id>` 引用為準，ours）
+                  "theme_settings" => theme_setting_refs(source, type),
                   "blocks" => block_defs_for(schema, theme_blocks, translate) } ]
       end
     end
@@ -350,8 +370,11 @@ module Types
       defs.filter_map do |setting|
         next unless setting.is_a?(Hash)
 
+        # E4：`visible_if`（條件顯示，Ella 44.5% setting 帶它）、`alpha`（color 透明度）、`accept`（video_url）、
+        # `definition`／`role`（color_scheme_group）、`metaobject_type` 一併保留；options 的 `group` 隨 options 原樣進。
         translated = setting.slice("id", "type", "label", "info", "content", "default",
-                                   "placeholder", "min", "max", "step", "unit", "options", "limit")
+                                   "placeholder", "min", "max", "step", "unit", "options", "limit",
+                                   "visible_if", "alpha", "accept", "definition", "role", "metaobject_type")
         %w[label info content].each do |key|
           translated[key] = translate.call(translated[key]) if translated[key]
         end
@@ -375,6 +398,12 @@ module Types
       else
         { "" => relation.count }
       end
+    end
+
+    def theme_setting_refs(source, type)
+      raw = source.read("sections/#{type}.liquid").to_s
+      # 只抓全域 `settings.x`：排除 `section.settings.x`／`block.settings.x`（前面是 `.` 的不算）
+      raw.scan(/(?<![\w.])settings\.([A-Za-z0-9_]+)/).flatten.uniq
     end
 
     def each_section_schema(source)

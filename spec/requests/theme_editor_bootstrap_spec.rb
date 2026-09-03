@@ -398,4 +398,37 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(translations).to eq({ "t:names.promo" => "促銷條" }) # footer-group.json 的 section name ＋ DB 模板同鍵；
     # block 的 t:names.nope 無翻譯 ⇒ 不列（前端 fail-open 顯示原鍵）
   end
+  it "E15 🔴 sectionSchemas 保留 visible_if／alpha／options[].group（E4 控件與條件顯示的資料源）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas } }
+    GQL
+    settings = response.parsed_body.dig("data", "theme", "sectionSchemas", "hero", "settings")
+    accent = settings.find { |d| d["id"] == "accent" }
+    expect(accent.slice("alpha", "visible_if")).to eq({ "alpha" => true, "visible_if" => "{{ section.settings.heading != blank }}" })
+    expect(settings.find { |d| d["id"] == "align" }.dig("options", 0, "group")).to eq("Basic")
+  end
+
+  it "E16 sectionSchemas.theme_settings：section liquid 內 `settings.<id>` 引用清單（右欄 Theme Settings 收合區資料源）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas } }
+    GQL
+    schemas = response.parsed_body.dig("data", "theme", "sectionSchemas")
+    expect(schemas.dig("sid-probe", "theme_settings")).to eq([ "brand_color" ])
+    expect(schemas.dig("hero", "theme_settings")).to eq([])
+  end
+
+  it "E17 fontLibrary：system／自 host／官方表列三段扁平化（key／name／system／handles）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { fontLibrary } }
+    GQL
+    fonts = response.parsed_body.dig("data", "theme", "fontLibrary")
+    jost = fonts.find { |f| f["key"] == "jost" }
+    expect(jost.slice("name", "system")).to eq({ "name" => "Jost", "system" => false })
+    expect(jost["handles"]).to include("n4", "n7")
+    expect(fonts.find { |f| f["key"] == "system_ui" }["system"]).to be(true)
+    expect(fonts.find { |f| f["key"] == "assistant" }["handles"]).to include("n4")
+  end
 end
