@@ -15,6 +15,8 @@ Hide／Remove）；預覽內右鍵 ⇒ 左樹同款選單開在對應座標；in
   `reorder`、`shopify:block:select`／`deselect`、`shopify:inspector:activate`／`deactivate`，bubble、target＝section／block
   元素；block 定位靠 `{{ block.shopify_attributes }}`）。
 - `docs/research/14` §F3（postMessage 契約：同源、origin 嚴格比對）。
+- 佐證（2026-09-03 curl `https://hoko.vip/` 公開頁 HTML）：整份不含 `Shopify.designMode`——與官方「Otherwise, it's set to
+  `undefined`」一致；我方公開頁自本包起同樣不輸出該鍵。
 
 ## 架構與資料流
 - `app/assets/javascripts/editor-bridge.js`（IIFE；契約在檔頭）：
