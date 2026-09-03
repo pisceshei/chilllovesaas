@@ -292,6 +292,9 @@ export function ThemeEditorPage() {
   // E2：URL `previewPath`（預覽內導航／Preview 列寫入）優先——本尊同名參數（100 §6）。
   const previewPath = searchParams.get("previewPath")
     ?? data?.previewPaths?.[templateType] ?? "/";
+  // E9：全頁草稿 token（伺服器端短效草稿）；載入後要還原的捲動位置
+  const [draftToken, setDraftToken] = useState<string | null>(null);
+  const pendingScrollRef = useRef<number | null>(null);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -560,6 +563,12 @@ export function ThemeEditorPage() {
     const win = iframeRef.current?.contentWindow;
     win?.postMessage(namesRef.current, window.location.origin);
     win?.postMessage({ type: "cl:inspector", active: inspectorRef.current }, window.location.origin);
+    // E9：全頁草稿重載後還原捲動位置（同源 iframe）
+    if (pendingScrollRef.current !== null) {
+      const y = pendingScrollRef.current;
+      pendingScrollRef.current = null;
+      win?.scrollTo?.(0, y);
+    }
   };
 
   // E2：inspector 開關送進預覽（E6 的橋消費 `cl:inspector`；本包只維持狀態與訊息形）
@@ -598,9 +607,11 @@ export function ThemeEditorPage() {
   }, [selectedEntryJson, selectedId, selectedBand, themeMode, themeId, previewPath]);
 
   // PR-11：全頁草稿刷新——結構操作/佈景設定/undo/redo 的改即見（fleet
-  // editor-live 軸①②③統一通道）。debounce 600ms；srcdoc 換入（srcdoc 繼承父
-  // origin ⇒ postMessage 橋照常）；保留捲動位置。單 section 設定變更另有
+  // editor-live 軸①②③統一通道）。debounce 600ms；單 section 設定變更另有
   // draft_section 片段 fast-path（400ms）先行，全頁刷新殿後兜底。失敗靜默。
+  // 🔴 E9（2026-09-03 使用者實測）：原本 `iframe.srcdoc` 換入——srcdoc 文件繼承 admin 頁的嚴格 CSP，
+  // 主題 inline style／script 全被擋 ⇒ 預覽整頁錯亂。改為 POST 草稿取 token，
+  // 以真實預覽 URL（`?editor=1&draft=token`）重載 iframe（主題面 CSP＋正確 base URL），捲動位置於 load 後還原。
   useEffect(() => {
     if (draftsVersion === 0) return;
     const handle = window.setTimeout(() => {
@@ -618,14 +629,11 @@ export function ThemeEditorPage() {
                                    settings: settingsDraftRef.current ?? {} }),
           });
           if (!response.ok) return;
-          const html = await response.text();
+          const { token } = (await response.json()) as { token?: string };
+          if (!token) return;
           const frame = iframeRef.current;
-          if (!frame) return;
-          const scrollY = frame.contentWindow?.scrollY ?? 0;
-          frame.srcdoc = html;
-          frame.addEventListener("load", () => {
-            frame.contentWindow?.scrollTo(0, scrollY);
-          }, { once: true });
+          pendingScrollRef.current = frame?.contentWindow?.scrollY ?? 0;
+          setDraftToken(token); // ⇒ previewSrc 變 ⇒ iframe 以真實 URL 重載
         } catch {
           // 靜默：改即見是增強面
         }
@@ -1195,7 +1203,8 @@ export function ThemeEditorPage() {
   const selected = selectedId && activeDraft?.sections ? activeDraft.sections[selectedId] : null;
   const selectedBlock = selected && selectedPath.length > 0 ? getBlock(selected, selectedPath) : null;
   const selectedBlockDef = selected && selectedBlock ? blockDef(selected.type, selectedPath, selectedBlock.type) : undefined;
-  const previewSrc = `/admin/store/preview/${themeId}${previewPath === "/" ? "" : previewPath}?editor=1`;
+  const previewSrc = `/admin/store/preview/${themeId}${previewPath === "/" ? "" : previewPath}?editor=1`
+    + (draftToken ? `&draft=${encodeURIComponent(draftToken)}` : "");
   const hasRightPanel = panel === "sections" && Boolean(selected && selectedId) && (selectedPath.length === 0 || Boolean(selectedBlock));
   const panelTitle = selected
     ? (selectedBlock ? (translateName(selectedBlock.name) ?? selectedBlockDef?.name ?? selectedBlock.type) : (translateName(selected.name) ?? sectionName(selected.type)))

@@ -24,6 +24,8 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     host! "editor-shop.lvh.me"
     https!
     Rack::Attack.cache.store.clear
+    # E9：草稿 token 存 Rails.cache；test 環境是 null_store ⇒ 換記憶體 store（每例獨立）
+    allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new)
     allow(ThemeEngine::Sources).to receive(:key_for).and_call_original
     allow(ThemeEngine::Sources).to receive(:resolve).and_return(
       ThemeEngine::FileSource.new(Rails.root.join("spec/fixtures/theme_engine/minimal-1.0"))
@@ -180,12 +182,20 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
-  it "DP1 🔴 draft_page：未儲存佈景設定＋結構草稿整頁生效（不落 DB；design_mode）" do
-    post "/admin/store/preview/#{theme.id}/draft_page",
-         params: { path: "/",
-                   sections: { "hero" => { type: "hero", settings: { heading: "整頁草稿標題" } } },
-                   settings: { brand_color: "#123456" } }.to_json,
+  # E9：draft_page 改回 `{token}`（srcdoc 繼承 admin 嚴格 CSP 的根因修法）；整頁 HTML 由
+  # `show?editor=1&draft=token` 取得（真實 URL 重載、主題面 CSP）。本 helper 讓既有斷言照舊讀 response.body。
+  def draft_page!(payload)
+    post "/admin/store/preview/#{theme.id}/draft_page", params: payload.to_json,
          headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response).to have_http_status(:ok)
+    token = JSON.parse(response.body).fetch("token")
+    get "/admin/store/preview/#{theme.id}?editor=1&draft=#{token}"
+  end
+
+  it "DP1 🔴 draft_page：未儲存佈景設定＋結構草稿整頁生效（不落 DB；design_mode）" do
+    draft_page!({ path: "/",
+                   sections: { "hero" => { type: "hero", settings: { heading: "整頁草稿標題" } } },
+                   settings: { brand_color: "#123456" } })
     expect(response).to have_http_status(:ok)
     expect(response.body).to include(%(content="#123456")) # 🔴 draft 佈景設定蓋過檔案 current
     expect(response.body).to include("整頁草稿標題")        # 結構草稿同通道生效
@@ -194,9 +204,7 @@ RSpec.describe "Theme editor bootstrap", type: :request do
   end
 
   it "DP2 draft_page 不帶 settings ⇒ 檔案 current 照舊；previewPaths 出樣本路徑" do
-    post "/admin/store/preview/#{theme.id}/draft_page",
-         params: { path: "/", sections: {} }.to_json,
-         headers: { "CONTENT_TYPE" => "application/json" }
+    draft_page!({ path: "/", sections: {} })
     expect(response).to have_http_status(:ok)
     expect(response.body).to include(%(content="#a9502c")) # 檔案 current 不受影響
 
@@ -210,18 +218,14 @@ RSpec.describe "Theme editor bootstrap", type: :request do
   end
 
   it "CC1 🔴 custom_css：section data 帶 custom_css ⇒ scoped style 輸出；未帶 ⇒ 無" do
-    post "/admin/store/preview/#{theme.id}/draft_page",
-         params: { path: "/",
+    draft_page!({ path: "/",
                    sections: { "hero" => { type: "hero", settings: {},
-                                           custom_css: "p { color: red; }" } } }.to_json,
-         headers: { "CONTENT_TYPE" => "application/json" }
+                                           custom_css: "p { color: red; }" } } })
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("<style data-shopify-custom-css>#shopify-section-template--index__hero {")
     expect(response.body).to include("p { color: red; }") # 官方「scoped to that section」
 
-    post "/admin/store/preview/#{theme.id}/draft_page",
-         params: { path: "/", sections: {} }.to_json,
-         headers: { "CONTENT_TYPE" => "application/json" }
+    draft_page!({ path: "/", sections: {} })
     expect(response.body).not_to include("data-shopify-custom-css") # 未設 ⇒ 零殘留
   end
 
@@ -247,10 +251,8 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     end
 
     # 編輯器 draft 路徑同通道
-    post "/admin/store/preview/#{theme.id}/draft_page",
-         params: { path: "/", sections: {},
-                   settings: { platform_customizations: { custom_css: ".draft-x { color: red }" } } }.to_json,
-         headers: { "CONTENT_TYPE" => "application/json" }
+    draft_page!({ path: "/", sections: {},
+                   settings: { platform_customizations: { custom_css: ".draft-x { color: red }" } } })
     expect(response.body).to include(".draft-x { color: red }")
   end
 

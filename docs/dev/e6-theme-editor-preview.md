@@ -63,3 +63,11 @@ Hide／Remove）；預覽內右鍵 ⇒ 左樹同款選單開在對應座標；in
   undefined（主題以 `if (Shopify.designMode)` 判斷者不受影響；以 `=== false` 判斷者會變）。
 - 左樹：`data-insert` 插入線也由預覽「+」觸發；右鍵選單可由預覽開啟。
 - 後續 E7 RWD／視覺細修：picker 錨點貼插入線、手機檢視寬、chip 帶 type icon。
+
+## §E9 全頁草稿改 token 重載（2026-09-03，使用者實測「改設定後預覽整頁錯亂」）
+
+- 根因：srcdoc 文件繼承 admin 頁嚴格 CSP（91 §3.76；external-facts §G13）。
+- 現行流程：改設定 → 400ms `draft_section`（片段 `cl:replace`，不變）→ 600ms `draft_page` **只存草稿回 `{token}`**
+  → `previewSrc` 加 `&draft=token` 重載 iframe（真實 URL、ThemeCsp）→ `onPreviewLoad` 還原捲動與重送 `cl:names`／`cl:inspector`。
+- 契約：`show?editor=1&draft=<token>`；token＝`SecureRandom.urlsafe_base64(18)`，cache 鍵 `editor-draft/v1/{shop}/{theme}/{token}`，
+  TTL 20 分；非 editor、錯 token、跨主題一律不套（DT2–DT4）。
