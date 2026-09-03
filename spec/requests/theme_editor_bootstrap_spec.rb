@@ -301,4 +301,42 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response.body).to include("d.blockId")              # 高亮縮到 block 元素
     expect(response.body).to include("data-shopify-editor-block")
   end
+
+  # E2（D79）：模板選擇器資料。🔴 假綠殺手：
+  #   E9 DB-only 替代模板必須出現在 templateKeys（殺：只讀來源 ⇒ 編輯器建的模板消失）；
+  #      customers/ 不列（殺：regex 放行斜線）
+  #   E10 assignments 依 template_suffix 分組、鍵 ""＝預設（殺：nil 鍵漏算 ⇒ 預設模板恆 0）
+  it "E9 🔴 templateKeys＝來源 templates/*.json ∪ DB Template key；不含 customers/" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    ActsAsTenant.with_tenant(shop) do
+      Template.create!(shop_id: shop.id, theme_id: theme.id, key: "product.custom",
+                       template_type: "product", content: { "sections" => {}, "order" => [] })
+    end
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { templateKeys } }
+    GQL
+    keys = response.parsed_body.dig("data", "theme", "templateKeys")
+    expect(keys).to include("index", "product", "collection.alt", "product.custom")
+    expect(keys.grep(%r{/})).to be_empty
+    expect(keys).to eq(keys.sort)
+  end
+
+  it "E10 🔴 templateAssignments：依 template_suffix 分組，鍵 \"\"＝預設模板；無該欄的型全數計入預設" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    ActsAsTenant.with_tenant(shop) do
+      Page.create!(shop_id: shop.id, title: "TA default", handle: "ta-default", body_html: "<p>x</p>")
+      Page.create!(shop_id: shop.id, title: "TA custom", handle: "ta-custom", body_html: "<p>x</p>",
+                   template_suffix: "custom")
+      Page.create!(shop_id: shop.id, title: "TA custom 2", handle: "ta-custom-2", body_html: "<p>x</p>",
+                   template_suffix: "custom")
+      create(:product, shop:, status: "active", handle: "ta-product", title: "TA product")
+    end
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { templateAssignments } }
+    GQL
+    assignments = response.parsed_body.dig("data", "theme", "templateAssignments")
+    expect(assignments["page"]).to eq("" => 1, "custom" => 2)
+    expect(assignments["product"]).to eq("" => 1) # products 尚無 template_suffix 欄 ⇒ 全計預設
+    expect(assignments.keys).to contain_exactly("product", "collection", "page", "blog", "article")
+  end
 end

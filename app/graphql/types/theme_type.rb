@@ -47,6 +47,13 @@ module Types
     # PR-11：模板→預覽路徑對映（資源語境——product 模板編輯帶真商品）。
     # 取各型第一個已發布資源；無資源的型不出鍵（前端回落首頁）。
     field :preview_paths, GraphQL::Types::JSON, null: false
+    # E2（D79 主題編輯器 shell）：頂欄模板選擇器的兩份資料——
+    #   template_keys＝來源 `templates/*.json` 的 key ∪ DB Template 列的 key（編輯器
+    #   「Create template」建立的替代模板只存在 DB，`files` 讀不到）；不含 `customers/`。
+    #   template_assignments＝各資源型依 `template_suffix` 分組的指派數，鍵 ""＝預設模板
+    #   （本尊逐字 "Assigned to N products"，`docs/research/100` §1.1）。
+    field :template_keys, [ String ], null: false
+    field :template_assignments, GraphQL::Types::JSON, null: false
     # 16d2：佈景設定三件——分組定義（settings_schema.json 去 theme_info）、
     # 生效值（DB 覆寫 → 檔案 current，與 Runtime 同讀序）、樂觀鎖底版。
     field :settings_schema, GraphQL::Types::JSON, null: false
@@ -93,6 +100,28 @@ module Types
       paths["search"] = "/search"
       paths["list-collections"] = "/collections"
       paths
+    end
+
+    # E2：來源模板 key ∪ DB Template key（`product.custom` 這種 DB-only 替代模板也要出現在
+    # 選擇器）。只認 `templates/<key>.json` 一層（`customers/…` 不列——本尊把客戶帳號頁放在
+    # 「Checkout and customer accounts」入口，不在此清單）。
+    def template_keys
+      source = ThemeEngine::Sources.resolve(object)
+      from_source = source ? source.list.filter_map { |rel| rel[%r{\Atemplates/([\w.\-]+)\.json\z}, 1] } : []
+      from_db = Template.where(shop_id: object.shop_id, theme_id: object.id).pluck(:key)
+      (from_source + from_db).uniq.sort
+    end
+
+    # E2：`{ "product" => { "" => 3, "custom" => 0 } }` 形——鍵 ""＝預設模板；只列實際有列的
+    # suffix（前端對沒有指派的替代模板補 0）。五個資源型與 `Template::TEMPLATE_TYPES` 中可指派
+    # 替代模板的型一致（product／collection／page／blog／article）。
+    def template_assignments
+      shop_id = object.shop_id
+      { "product" => suffix_counts(Product.where(shop_id:)),
+        "collection" => suffix_counts(Collection.where(shop_id:)),
+        "page" => suffix_counts(Page.where(shop_id:)),
+        "blog" => suffix_counts(Blog.where(shop_id:)),
+        "article" => suffix_counts(Article.where(shop_id:)) }
     end
 
     def section_groups
@@ -252,6 +281,18 @@ module Types
     end
 
     # @return [Enumerator] (type, parsed schema) —— schema-less 檔跳過
+    # E2：`template_suffix` 分組計數（nil ⇒ ""＝預設模板）。
+    # 🔴 我方 schema 只有 pages／blogs／articles 帶 `template_suffix`（`db/schema.rb`），
+    #   products／collections 尚無指派欄（商品表單的 "Theme template" 選單是後續包）——
+    #   無此欄的資源型全數計入預設模板，不得 raise 把整份 bootstrap 拖垮。
+    def suffix_counts(relation)
+      if relation.klass.column_names.include?("template_suffix")
+        relation.group(:template_suffix).count.transform_keys(&:to_s)
+      else
+        { "" => relation.count }
+      end
+    end
+
     def each_section_schema(source)
       return to_enum(:each_section_schema, source) unless block_given?
 
