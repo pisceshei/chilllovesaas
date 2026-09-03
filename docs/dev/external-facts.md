@@ -1318,3 +1318,36 @@ content_security_policy.rb`），預覽端點自身回應帶 `'unsafe-inline'`�
 French (fr) and German (de), then your store URLs change to `example.com/fr` and `example.com/de`."；主市場預設語言用主網域
 根路徑（頁面以 `example.com` 為例，無語言碼）；市場子資料夾例 `/en-ca/products/shoes`。真店 hoko.vip（未設定額外市場／語言）
 `href="/collections/all"`、`routes.root_url` ＝ `/`。
+
+### G15. 店級貨幣格式（D81 依據，取證 2026-09-03）
+
+- **官方 help「Currency formatting」**（<https://help.shopify.com/en/manual/international/pricing/currency-formatting>，取證 2026-09-03）：
+  佔位符與例值逐字——`{{ amount }}` ⇒ `1,134.65`；`{{ amount_no_decimals }}`（rounded）⇒ `1,135`；
+  `{{ amount_with_comma_separator }}` ⇒ `1.134,65`；`{{ amount_no_decimals_with_comma_separator }}`（rounded）⇒ `1.135`；
+  `{{ amount_with_apostrophe_separator }}` ⇒ `1'134.65`；`{{ amount_no_decimals_with_space_separator }}`（rounded）⇒ `1 135`；
+  `{{ amount_with_space_separator }}` ⇒ `1 134,65`；`{{ amount_with_period_and_space_separator }}` ⇒ `1 134.65`。
+  四個欄位＝"HTML with currency"／"HTML without currency"（線上商店）＋"Email with currency"／"Email without currency"
+  （通知與 order printer）。入口逐字：**Settings > General** › Store defaults › 選單 › **Change currency formatting**。
+  另兩句逐字："Currency formatting settings only apply to your store's base currency."／
+  "The following currencies start with the formatting option amount_no_decimals by default, but you can change them to any
+  other formatting option: BIF, CLP, DJF, GNF, ISK, JPY, KMF, KRW, PYG, RWF, UGX, UYI, VND, VUV, XAF, XOF, XPF."
+  **未取得**：各幣別的預設符號表（官方未逐字公開）、`amount_no_decimals` 的捨入模式（例值 1,134.65 ⇒ 1,135 只證明 .65 進位）。
+- **官方 filters/money 族**（<https://shopify.dev/docs/api/liquid/filters/money> 等四頁，取證 2026-09-03）逐字：
+  `money`＝"Formats a given price based on the store's HTML without currency setting."（例 `product.price` 1000 ⇒ `$10.00`）；
+  `money_with_currency`＝"Formats a given price based on the store's HTML with currency setting."（例 ⇒ `$10.00 CAD`）；
+  `money_without_currency`＝"Formats a given price based on the store's HTML without currency setting, without the currency symbol."（例 ⇒ `10.00`）；
+  `money_without_trailing_zeros`＝"Formats a given price based on the store's HTML without currency setting, excluding the decimal separator and trailing zeros."（例 ⇒ `$10`）。
+  **未取得**：負值、非整數輸入、nil／空值、小數非全零（如 10.50）在 `money_without_trailing_zeros` 的輸出。
+  本輪擬以副本主題 Custom Liquid 探針實測，但本尊編輯器分頁在背景（`document.visibilityState = "hidden"`）時側欄
+  只停在骨架、無法加 section ⇒ 未執行；我方取值登記 V（91 §3.77），待前景分頁可用時補測。
+  已有的前台印證：商品頁 `<meta property="og:price:amount" content="188.00">`（`product.price | money_without_currency`，
+  hoko-products_acme-tee 快照 2026-09-03）⇒ `money_without_currency` 在 `${{amount}}` 下＝`188.00`。
+- **官方 objects/shop**（<https://shopify.dev/docs/api/liquid/objects/shop>，取證 2026-09-03）逐字：
+  `money_format`＝"The money format of the store."；`money_with_currency_format`＝"The money format of the store with the currency included."；
+  `permanent_domain`＝"The `.myshopify.com` domain of the store."；`domain`＝"The primary domain of the store."。
+- **真店 pnrjnw-sy 實讀**（admin Settings › General › Store defaults › ⋯ › Change currency formatting，2026-09-03，店主未改過此設定）：
+  HTML with currency `HK${{amount}} HKD`／HTML without currency `${{amount}}`／Email with currency `HK${{amount}} HKD`／
+  Email without currency `${{amount}}`；對話框說明逐字 "Change how currencies are displayed on your store. {{amount}} and
+  {{amount_no_decimals}} will be replaced with the price of your product."。前台印證：首頁 `window.money_format = "${{amount}}"`
+  （Ella global-script 走 `shop.money_format` 分支）、購物車抽屜總額 `HK$0.00 HKD`（`cart.total_price | money_with_currency`）、
+  商品卡 `$19.99`。⇒ 我方 HKD 種子＝這四值（Email 兩欄我方尚未分欄，共用 HTML 兩欄，91 §3.77）。

@@ -75,7 +75,7 @@ RSpec.describe "Storefront SEO", type: :request do
     expect((offer["price"].to_d * 100).to_i).to eq(variant.price_cents) # 同一 cents 來源
     expect(offer["priceCurrency"]).to eq("HKD")
     expect(offer["availability"]).to eq("https://schema.org/InStock")
-    expect(response.body).to include("HK$148.00") # 可見價（money filter）同 cents、不同格式器
+    expect(response.body).to include("$148.00") # 可見價（money filter，店級 ${{amount}}）同 cents、不同格式器
   end
 
   it "SEO4 🔴 UNLISTED：直連 200＋meta noindex；無 hreflang、無 JSON-LD offer（逐面排除）" do

@@ -60,9 +60,13 @@ module RenderParity
           )
         end
       end
+      # D81：格式兩欄跟隨快照（缺鍵 ⇒ 該幣別種子）。
+      defaults = Shop::MoneyFormatDefaults.for(shop_spec.fetch("currency"))
       shop.update!(name: shop_spec.fetch("name"), store_currency: shop_spec.fetch("currency"),
                    customer_accounts_enabled: shop_spec.fetch("customer_accounts_enabled", true),
-                   taxes_included: shop_spec.fetch("taxes_included", false))
+                   taxes_included: shop_spec.fetch("taxes_included", false),
+                   money_format: shop_spec.fetch("money_format", defaults[0]),
+                   money_with_currency_format: shop_spec.fetch("money_with_currency_format", defaults[1]))
       note("shop #{created ? 'created' : 'aligned'}: #{shop.subdomain} (#{shop.name})")
       shop
     end

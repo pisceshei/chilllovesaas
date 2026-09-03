@@ -69,7 +69,7 @@ RSpec.describe "notifications delivery chain" do
     mail = ActionMailer::Base.deliveries.last
     expect(mail.to).to eq([ "buyer@example.com" ])
     expect(mail.subject).to eq("Order #9101 confirmed")
-    expect(mail.html_part&.body&.to_s || mail.body.to_s).to include("HK$50.00")
+    expect(mail.html_part&.body&.to_s || mail.body.to_s).to include("$50.00")
   end
 
   it "🔴 D5 order.email 空 ⇒ 不寄（靜默跳過，不炸 job）" do

@@ -27,9 +27,9 @@ RSpec.describe "ThemeEngine shop fields & font library gaps" do
     Liquid::Template.parse(src, environment: ThemeEngine::Runtime::ENVIRONMENT).render(assigns, registers: {})
   end
 
-  it "H1 🔴 shop.money_with_currency_format＝money_format＋幣別碼（HKD）" do
+  it "H1 🔴 shop.money_format／money_with_currency_format＝店級兩欄直出（HKD 種子＝真店實讀值；D81）" do
     out = render("{{ shop.money_format }}|{{ shop.money_with_currency_format }}", "shop" => ThemeEngine::ShopDrop.new(shop))
-    expect(out).to eq("HK${{amount}}|HK${{amount}} HKD")
+    expect(out).to eq("${{amount}}|HK${{amount}} HKD")
   end
 
   it "H2 🔴 shop.description 宣告 nil；shop.features 兩旗標 false；皆不計 miss" do

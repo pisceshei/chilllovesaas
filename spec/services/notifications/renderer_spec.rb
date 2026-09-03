@@ -41,12 +41,12 @@ RSpec.describe Notifications::Renderer do
     expect(result.html).to include("護手霜")
   end
 
-  it "🔴 N4 金額經 money filter＝cents 進、HK$ 兩位小數出" do
+  it "🔴 N4 金額經 money filter＝cents 進、店級格式兩位小數出（D81）" do
     payload = Notifications::Payloads.order_confirmation(order:)
     result = render(kind: "order_confirmation", payload:)
 
-    expect(result.html).to include("HK$188.00") # total 18800 cents
-    expect(result.html).to include("HK$168.00") # subtotal 16800 cents
+    expect(result.html).to include("$188.00") # total 18800 cents
+    expect(result.html).to include("$168.00") # subtotal 16800 cents
   end
 
   it "🔴 N3 overlay 覆寫優先；刪列（revert）後回平台預設" do
@@ -98,6 +98,6 @@ RSpec.describe Notifications::Renderer do
 
     expect(result.subject).to eq("Complete your Purchase")
     expect(result.html).to include('href="https://x.example/r/abc"')
-    expect(result.html).to include("面膜").and include("HK$150.00")
+    expect(result.html).to include("面膜").and include("$150.00")
   end
 end

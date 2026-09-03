@@ -9,7 +9,8 @@ module Notifications
   #   錯誤行輸出空字串不炸信）。
   # ③🔴 payload＝**攤平的 hash**（89 §5 官方句：email 模板的 order 屬性不帶
   #   `order.` 前綴；fulfillment 帶前綴）——由 Payloads 建構，本類不讀 DB。
-  # ④money 符號＝runtime.rb 同款 v1 表（91 §3.48 已登記只承諾 HKD）。
+  # ④money 格式＝店級 shops.money_format／money_with_currency_format（D81）。本尊另有
+  #   「Email with／without currency」兩欄（真店預設與 HTML 兩欄同值），我方先共用 HTML 兩欄（91 §3.77）。
   class Renderer
     ENVIRONMENT = Liquid::Environment.build do |e|
       e.error_mode = :lax
@@ -39,13 +40,10 @@ module Notifications
         template = Liquid::Template.parse(source, environment: ENVIRONMENT)
         template.render(
           payload.deep_stringify_keys,
-          registers: { money_symbol: money_symbol(shop), currency: shop.store_currency }
+          registers: { money_format: shop.money_format,
+                       money_with_currency_format: shop.money_with_currency_format,
+                       currency: shop.store_currency }
         )
-      end
-
-      # v1 符號表（與 ThemeEngine::Runtime#money_symbol 同款；91 §3.48）。
-      def money_symbol(shop)
-        { "HKD" => "HK$" }.fetch(shop.store_currency, "#{shop.store_currency} ")
       end
     end
   end

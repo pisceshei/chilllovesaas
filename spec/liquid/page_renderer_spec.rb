@@ -33,11 +33,11 @@ RSpec.describe ThemeEngine::PageRenderer do
     end
   end
 
-  it "E1 首頁：template sections → layout 組裝；settings 預設合併；money 走 HKD 符號；snippet 檔案系統通" do
+  it "E1 首頁：template sections → layout 組裝；settings 預設合併；money 走店級格式（D81：HKD 種子 ${{amount}}）；snippet 檔案系統通" do
     result = renderer.render("/")
     expect(result.status).to eq(200)
     expect(result.html).to include("<h1>首頁英雄</h1>")           # 實例值蓋 schema default
-    expect(result.html).to include("HK$1,480.00")                 # cents → 顯示兩位小數（鐵律 3/10）
+    expect(result.html).to include("$1,480.00")                   # cents → 店級格式兩位小數（鐵律 3；D81）
     expect(result.html).to include(%(data-shop="#{shop.name}"))   # layout 組裝＋ShopDrop
     expect(result.html).to include('href="/cart"')                # RoutesDrop（無前綴形態）
   end
@@ -47,7 +47,7 @@ RSpec.describe ThemeEngine::PageRenderer do
     result = renderer.render("/products/engine-p1")
     expect(result.status).to eq(200)
     expect(result.html).to include('<h1 id="ptitle">引擎測試商品</h1>')
-    expect(result.html).to include('<span id="pprice">HK$1,480.00</span>')
+    expect(result.html).to include('<span id="pprice">$1,480.00</span>')
     expect(result.html).to include('<span id="pstatus"></span>')
     expect(result.html).to include('<em class="badge">HKD</em>') # snippet render
   end

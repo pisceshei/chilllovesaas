@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_121000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_140000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1420,6 +1420,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_121000) do
     t.string "custom_domain", limit: 253
     t.boolean "customer_accounts_enabled", default: true, null: false, comment: "storefront 是否顯示登入連結（官方 shop.customer_accounts_enabled；預設 true＝本尊新店形）"
     t.json "feature_flags", default: -> { "(json_object())" }, null: false
+    t.string "money_format", default: "{{amount}}", null: false, comment: "店級金額格式（HTML without currency；官方八佔位符；D81）"
+    t.string "money_with_currency_format", default: "{{amount}}", null: false, comment: "店級含幣別金額格式（HTML with currency；D81）"
     t.string "name", null: false
     t.bigint "order_counter", default: 1000, null: false, comment: "每店訂單連號計數器（15-F5；取號＝交易內 +1 後讀回，鎖序首位）"
     t.string "payment_capture_method", limit: 40, default: "automatic_at_checkout", null: false, comment: "請款模式（limits capture.modes；86 §2 modal 三值 UI＋enum 四值保留）"
