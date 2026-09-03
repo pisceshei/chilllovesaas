@@ -128,6 +128,7 @@ Recommended products／Add section。）
 - 名稱：block 列可帶摘要「名稱 – 摘要」（摘要斜體灰，如 "Announcement text – End …"、"Heading – Menu"、"Menu item – Home"）。
 - hover：整列淺灰底；出現 drag handle（⋮⋮，取代 type icon）、垃圾桶（Remove）、眼睛（Hide／Show）。
 - 選中：section 列＝藍底白字；用鍵盤 Shift+↓ 選到的列＝藍色外框（非實心）。
+  🔴 **2026-09-03 更正（E3b，1:1 截圖）**：點選中的 section 列＝**淺灰底（#f1f1f1 級）、深色文字、圓角 8、列底 28**，**不是藍底白字**——原句是 E1 在 JPEG 截圖下的誤記（藍色只出現在預覽外框與 chip）。鍵盤選取的藍框形態本輪未複驗，維持原記錄。
 - 隱藏：名稱灰化，眼睛斜線 icon **常駐**顯示（不需 hover）。
 - 展開的 section／容器 block 第一個子列＝"⊕ Add block"（藍字）；巢狀最深實測到四層（section → Collection items →
   Group → Group: Basic）。
@@ -360,6 +361,31 @@ Shopify Forms（4.5★ Free）、Shopify Inbox（4.6★ Free），各帶安裝 i
 
 我方映射原則（E2 動手時對照 `docs/design/23-interaction-css-spec.md` §1 tokens）：尺寸照上表換算取整到 4px 網格
 （頂欄 56、側欄 300、樹列 30→32 或 28 擇一並登記、面板列 48、縮排 16）；色值用我方 tokens（鐵律 8／9：結構對齊、視覺自有）。
+
+### 8.1 2026-09-03 1:1 量測（E3b；取代上表的 ±2px 估值）
+
+量測法：使用者 Chrome 的 admin 分頁為 125% 頁面縮放（DPR 2.1875＝系統 1.75 × 1.25），`innerWidth` 1573；擴充功能截圖
+寬 1254px ⇒ 1573／1254÷1.25 ≈ 1.00 ⇒ **截圖像素≈設計 px**。分頁必須在前景（`visibilityState` visible）才截得到。
+色值仍取 JPEG 目視（V），尺寸誤差 ±1px。
+
+| 元件 | 設計 px | 備註 |
+|---|---|---|
+| 頂欄高 | 56 | 與 §8 一致 |
+| 面板切換 icon 鈕 | 32×32，間距 4，icon 20 | 啟用態淺灰圓角底、藍 icon |
+| 左欄 | 灰底（#f1f1f1 級）上白卡：卡 x 8–290（寬 282）＋兩側 8 邊距＝300；圓角≈12；hairline 邊 | E2 的「白底＋右邊線」形態不符 |
+| 卡片標題列「Home page」 | 高 36、左內距 8、16px 半粗、底 hairline | |
+| 帶小標「Header group」 | 14px 深色 450、列高 30、左內距 0（＝body 8） | 不是灰色小字 |
+| 列距 | 30＝列底 28（圓角 8）＋上下 1 | |
+| 列內排位（相對卡左緣） | body 8 → row 內距 4 → chevron 16 盒（glyph≈8）@12–28 → 2 → type icon 16 @30–46 → 7 → 名稱 @53 | |
+| 名稱 | 14px/20px 450 深色 | 選中列同字重 |
+| 選中列 | 淺灰底（#f1f1f1 級） | hover 更淺 |
+| 分帶分隔線 | hairline 滿卡寬；帶 padding 上 8 下 6 | |
+| Add section | circle-plus 16 與 type icon 同 x；文字 14px 藍 550 | |
+| 區段 picker | popover 貼左欄右緣、與該列同高；清單寬≈250＋灰預覽欄≈390；搜尋框 focus 藍框；Sections｜Apps 分段；Generate（紫星芒）；列 icon 16；達上限灰化 "(1/1)" | E5 |
+| 插入線 | 藍 2px 橫線＋中央 ⊕ 圓標，位於目標插入位 | |
+
+未取得（工具限制）：hover 動作列與右鍵選單（iframe 不吃擴充功能的合成 hover／右鍵）；右欄（本視窗 1258 設計 px 點選
+section 未出右欄，需更寬視窗）。
 
 ## 9. help.shopify.com 雙源對照
 

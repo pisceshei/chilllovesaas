@@ -1151,3 +1151,29 @@ because static blocks can not be re-ordered by merchants"；編輯器內 "Cannot
 ⇒ 我方左樹：static 列以 `visibleBlockIds` 附在 `block_order` 之後顯示、`draggable=false`、無垃圾桶、`removeNode` 直接
 返回；`max_blocks` 只數 `block_order`（static 天然不計）。Ella `templates/product.json` 的 media-gallery／product-details／
 sticky-atc 即此形態（`docs/research/66` §A.5.2 的 fixture 觀察與官方一致）。
+
+### F5. `placeholder_svg_tag`：官方名稱表 30 個；live 輸出＝整張插圖、class 未給時為 `placeholder-svg`
+
+官方逐字："Generates an HTML `<svg>` tag for a given placeholder name."；語法 `string | placeholder_svg_tag` 與
+`string | placeholder_svg_tag: string`（class）；範例輸出含 `viewBox="0 0 525.5 525.5"`。名稱表：outline＝product-1…6、
+collection-1…6、lifestyle-1、lifestyle-2、image；color＝product-apparel-1…4、collection-apparel-1…4、hero-apparel-1…3、
+blog-apparel-1…3、detailed-apparel-1。
+來源：<https://shopify.dev/docs/api/liquid/filters/placeholder_svg_tag>（取證 2026-09-03）。
+live 實測（hoko.vip 首頁 HTML，2026-09-03）：`<svg class="placeholder-svg" preserveAspectRatio="xMidYMin slice"
+viewBox="0 0 1300 731" fill="none" xmlns="http://www.w3.org/2000/svg">`（Ella `background-image` snippet **不帶 class**
+呼叫，仍得到 `class="placeholder-svg"`）；另一處 `preserveAspectRatio="xMaxYMid slice" viewBox="0 0 1300 730"`。
+⇒ 我方 `ThemeEngine::PlaceholderSvg`：class 未給＝`placeholder-svg`、給了逐字用；寬幅 1300×731、方形 525.5；
+`preserveAspectRatio` 逐名值＝未取得，一律 `xMidYMid slice`；插圖自繪（鐵律 9）。
+
+### F6. Polaris design tokens（本尊 admin 的 CSS 變數值；`@shopify/polaris-tokens` 發布檔）
+
+逐字（`dist/css/styles.css`，取證 2026-09-03）：`--p-color-bg:rgba(241, 241, 241, 1)`、`--p-color-bg-surface:rgba(255, 255, 255, 1)`、
+`--p-color-bg-surface-hover:rgba(247, 247, 247, 1)`、`--p-color-bg-surface-selected:rgba(241, 241, 241, 1)`、
+`--p-color-text:rgba(48, 48, 48, 1)`、`--p-color-text-secondary:rgba(97, 97, 97, 1)`、`--p-color-text-link:rgba(0, 91, 211, 1)`、
+`--p-color-icon:rgba(74, 74, 74, 1)`、`--p-color-border:rgba(227, 227, 227, 1)`、`--p-color-bg-fill-brand:rgba(48, 48, 48, 1)`、
+`--p-font-size-325:0.8125rem`、`--p-font-size-350:0.875rem`、`--p-font-weight-regular:450`、`--p-font-weight-medium:550`、
+`--p-font-weight-semibold:650`、`--p-font-line-height-500:1.25rem`、`--p-border-radius-200:0.5rem`、`--p-border-radius-300:0.75rem`。
+來源：<https://cdn.jsdelivr.net/npm/@shopify/polaris-tokens/dist/css/styles.css>（取證 2026-09-03）。
+⚠️ 授權：Polaris 為 source-available（`polaris-licence-and-ruling` 裁定：使用者已裁定照用，不再重提）；本檔只記 token
+**數值**供對表，`app/assets/tokens.css` 既有值（111 §14 量測）與此表一致（`--surface-selected` #f1f1f1、`--text` #303030、
+`--link` #005bd3、`--fw-regular` 450／`--fw-medium` 550）。
