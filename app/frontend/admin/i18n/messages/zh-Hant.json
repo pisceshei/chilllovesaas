@@ -1249,5 +1249,15 @@
   "editor.noResults": "找不到結果",
   "editor.noResultsHint": "修改搜尋條件，或上傳新圖片。",
   "editor.files": "檔案",
-  "editor.schemeLabel": "配色 {n}"
+  "editor.schemeLabel": "配色 {n}",
+  "editor.searchSections": "搜尋區段",
+  "editor.searchBlocks": "搜尋區塊",
+  "editor.pickerSections": "區段",
+  "editor.pickerBlocks": "區塊",
+  "editor.pickerApps": "應用程式",
+  "editor.generate": "生成",
+  "editor.noPreview": "沒有可用的預覽",
+  "editor.noAppBlocks": "此區段沒有可用的應用程式區塊",
+  "editor.noAppSections": "沒有可用的應用程式區段",
+  "editor.uncategorized": "其他"
 }

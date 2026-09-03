@@ -1249,5 +1249,15 @@
   "editor.noResults": "未找到结果",
   "editor.noResultsHint": "修改搜索条件，或上传新图片。",
   "editor.files": "文件",
-  "editor.schemeLabel": "配色 {n}"
+  "editor.schemeLabel": "配色 {n}",
+  "editor.searchSections": "搜索分区",
+  "editor.searchBlocks": "搜索区块",
+  "editor.pickerSections": "分区",
+  "editor.pickerBlocks": "区块",
+  "editor.pickerApps": "应用",
+  "editor.generate": "生成",
+  "editor.noPreview": "没有可用的预览",
+  "editor.noAppBlocks": "此分区没有可用的应用区块",
+  "editor.noAppSections": "没有可用的应用分区",
+  "editor.uncategorized": "其他"
 }

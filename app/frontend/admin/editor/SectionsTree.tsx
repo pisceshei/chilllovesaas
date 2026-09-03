@@ -53,8 +53,12 @@ export interface SectionsTreeProps {
   onToggleDisabled: (band: string, sectionId: string, path: BlockPath) => void;
   onRemove: (band: string, sectionId: string, path: BlockPath) => void;
   onMove: (band: string, sectionId: string, path: BlockPath, targetIndex: number) => void;
-  onAddBlock: (band: string, sectionId: string, parentPath: BlockPath, def: BlockDefLite) => void;
-  onAddSection: (band: string, atIndex: number | null) => void;
+  /** E5：「Add block」列 ⇒ 開 block picker（錨點＝該列） */
+  onOpenBlockPicker: (band: string, sectionId: string, parentPath: BlockPath, anchor: HTMLElement) => void;
+  /** E5：「Add section」／右鍵 before-after ⇒ 開 section picker（錨點＝該列） */
+  onAddSection: (band: string, atIndex: number | null, anchor: HTMLElement) => void;
+  /** E5：picker 開著時的插入線位置（藍 2px＋⊕；100 §8.1） */
+  insertAt?: { band: string; index: number | null } | null;
   onRename: (band: string, sectionId: string, path: BlockPath) => void;
   onEditCode: (band: string, sectionId: string, path: BlockPath) => void;
 }
@@ -79,8 +83,7 @@ function iconFor(kind: IconKind): ReactNode {
 export function SectionsTree(props: SectionsTreeProps) {
   const t = useT();
   const dragRef = useRef<DragState | null>(null);
-  const [ menu, setMenu ] = useState<{ x: number; y: number; band: string; sectionId: string; path: BlockPath; disabled: boolean } | null>(null);
-  const [ addOpen, setAddOpen ] = useState<string | null>(null);
+  const [ menu, setMenu ] = useState<{ x: number; y: number; band: string; sectionId: string; path: BlockPath; disabled: boolean; anchor: HTMLElement | null } | null>(null);
 
   useEffect(() => {
     if (!menu) return;
@@ -93,39 +96,23 @@ export function SectionsTree(props: SectionsTreeProps) {
 
   const openMenu = (event: ReactMouseEvent, band: string, sectionId: string, path: BlockPath, disabled: boolean) => {
     event.preventDefault();
-    setMenu({ x: event.clientX, y: event.clientY, band, sectionId, path, disabled });
+    setMenu({ x: event.clientX, y: event.clientY, band, sectionId, path, disabled, anchor: event.currentTarget as HTMLElement });
   };
 
   const renderAddBlock = (band: string, sectionId: string, parentPath: BlockPath, depth: number) => {
     const options = props.addBlockOptions(band, sectionId, parentPath);
     if (options.length === 0) return null;
-    const key = `${rowKey(band, sectionId, parentPath)}:add`;
     return (
       <li className="cl-tree__addrow" style={{ paddingLeft: depth * 16 }}>
         <button
-          aria-expanded={addOpen === key}
+          aria-haspopup="dialog"
           className="cl-tree__add"
-          onClick={() => setAddOpen((current) => (current === key ? null : key))}
+          onClick={(event) => props.onOpenBlockPicker(band, sectionId, parentPath, event.currentTarget)}
           type="button"
         >
           <CirclePlus aria-hidden="true" size={16} />
           {t("editor.addBlock")}
         </button>
-        {addOpen === key ? (
-          <ul aria-label={t("editor.addBlock")} className="cl-tree__addlist">
-            {options.map((def) => (
-              <li key={def.type}>
-                <button
-                  className="cl-tree__addoption"
-                  onClick={() => { props.onAddBlock(band, sectionId, parentPath, def); setAddOpen(null); }}
-                  type="button"
-                >
-                  ＋ {def.name ?? def.type}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </li>
     );
   };
@@ -222,6 +209,15 @@ export function SectionsTree(props: SectionsTreeProps) {
     );
   };
 
+  /** picker 開著時的插入線：目標 index 的列上緣（before）或最後一列下緣（尾端／超界）。 */
+  const insertFlag = (band: string, index: number, count: number): "before" | "after" | undefined => {
+    const at = props.insertAt;
+    if (!at || at.band !== band) return undefined;
+    if (at.index !== null && at.index === index) return "before";
+    if (index === count - 1 && (at.index === null || at.index >= count)) return "after";
+    return undefined;
+  };
+
   const renderSectionRows = (item: TreeBand) => {
     const rows = item.tpl ? orderOf(item.tpl) : [];
     return (
@@ -238,6 +234,7 @@ export function SectionsTree(props: SectionsTreeProps) {
             <li
               className="cl-tree__item"
               draggable
+              data-insert={insertFlag(item.band, index, rows.length)}
               key={`${item.band}:${sectionId}`}
               onDragOver={(event) => {
                 const drag = dragRef.current;
@@ -298,7 +295,7 @@ export function SectionsTree(props: SectionsTreeProps) {
     <button
       aria-label={item.position === "template" ? t("editor.addSection") : `${t("editor.addSection")}：${item.label}`}
       className="cl-tree__add cl-tree__addsection"
-      onClick={() => props.onAddSection(item.band, null)}
+      onClick={(event) => props.onAddSection(item.band, null, event.currentTarget)}
       type="button"
     >
       <CirclePlus aria-hidden="true" size={16} />
@@ -339,8 +336,8 @@ export function SectionsTree(props: SectionsTreeProps) {
           {menu.path.length === 0 ? (
             <>
               <li className="cl-tree__menusep" role="separator" />
-              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId)); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={16} />{t("editor.addSectionBefore")}</button></li>
-              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId) + 1); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={16} />{t("editor.addSectionAfter")}</button></li>
+              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId), menu.anchor ?? (document.activeElement as HTMLElement)); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={16} />{t("editor.addSectionBefore")}</button></li>
+              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId) + 1, menu.anchor ?? (document.activeElement as HTMLElement)); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={16} />{t("editor.addSectionAfter")}</button></li>
             </>
           ) : null}
           <li className="cl-tree__menusep" role="separator" />

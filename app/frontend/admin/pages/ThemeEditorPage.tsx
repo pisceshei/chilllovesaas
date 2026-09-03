@@ -8,6 +8,7 @@ import { EditorTopBar, type EditorPanel } from "../editor/EditorTopBar";
 import { ImagePickerModal } from "../editor/ImagePickerModal";
 import { isTypingTarget, shortcutFor } from "../editor/editorShortcuts";
 import { PreviewResourceRow } from "../editor/PreviewResourceRow";
+import { SectionPicker, type PickerItem } from "../editor/SectionPicker";
 import { SectionsTree, type BlockDefLite } from "../editor/SectionsTree";
 import { SettingRow, type ControlContext, type FontFamily, type MenuOption, type SchemeOption, type SettingDef } from "../editor/SettingControls";
 import { FontPickerPanel, SettingsPanel } from "../editor/SettingsPanel";
@@ -110,6 +111,8 @@ const SAVE_MUTATION = `
 
 interface BlockDef extends BlockDefLite {
   settings?: SettingDef[];
+  /** E5：block picker 分類收合區（theme block schema `category`） */
+  category?: string | null;
   /** theme block 可接受的子型別（"@theme"＝全部；E3 `themeBlocks`） */
   blocks?: string[];
 }
@@ -130,9 +133,10 @@ interface EditorData {
     templateAssignments?: Record<string, Record<string, number>>;
     templateJson: TemplateJson | null;
     templateLockVersion: number | null;
-    sectionCatalog: { type: string; name: string;
+    sectionCatalog: { type: string; name: string; presetIndex?: number; category?: string | null;
                       preset: { settings: Record<string, unknown>;
-                                blocks: Record<string, unknown> | null } }[];
+                                blocks: Record<string, unknown> | unknown[] | null;
+                                block_order?: string[] | null } }[];
     previewPaths: Record<string, string>;
     sectionGroups: { name: string; path: string; json: TemplateJson; lockVersion: number | null;
                      label?: string; type?: string; position?: "before" | "after" }[];
@@ -241,7 +245,13 @@ export function ThemeEditorPage() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   // E3：Add section 的目標帶與插入位置（null＝關）；PR-19 picker 搜尋
-  const [pickerFor, setPickerFor] = useState<{ band: string; atIndex: number | null } | null>(null);
+  const [pickerFor, setPickerFor] = useState<{ band: string; atIndex: number | null; anchor: HTMLElement | null } | null>(null);
+  const pickerAnchorRef = useRef<HTMLElement | null>(null);
+  pickerAnchorRef.current = pickerFor?.anchor ?? null;
+  // E5：block picker（錨點＝「Add block」列）
+  const [blockPicker, setBlockPicker] = useState<{ band: string; sectionId: string; parentPath: BlockPath; anchor: HTMLElement } | null>(null);
+  const blockPickerAnchorRef = useRef<HTMLElement | null>(null);
+  blockPickerAnchorRef.current = blockPicker?.anchor ?? null;
   const [pickerQuery, setPickerQuery] = useState("");
   // E2：左欄面板（sections／theme／apps；本尊面板切換器）＋全寬預覽＋inspector＋手機檢視
   const [panel, setPanel] = useState<EditorPanel>("sections");
@@ -774,6 +784,44 @@ export function ThemeEditorPage() {
     selectNode(band, sectionId, [ ...containerPath, newId ]);
   };
 
+  /** preset block id（25 §5 生成規則 `{type 底線化}_{6 碼 base62}`）；本尊 id 形未逐字取得，取觀察形。 */
+  const newPresetBlockId = (type: string, taken: Set<string>) => {
+    const base = type.replace(/[^A-Za-z0-9]+/g, "_") || "block"; // 前導底線保留（Ella 私有 block `_parent` ⇒ `_parent_xxxxxx`）
+    const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const rand = () => Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+    let id = `${base}_${rand()}`;
+    while (taken.has(id)) id = `${base}_${rand()}`;
+    taken.add(id);
+    return id;
+  };
+  /**
+   * preset 的 blocks 兩形實例化（E5；官方 preset 可用 array（含巢狀 `blocks`）或 hash map＋`block_order`）：
+   * array ⇒ 逐項生 id、`static` 者不進 block_order；hash ⇒ 原鍵為 id、無 block_order 時依鍵序（static 除外）。
+   */
+  const instantiatePresetBlocks = (blocks: unknown, order: string[] | null): { blocks?: Record<string, BlockEntry>; block_order?: string[] } => {
+    if (!blocks) return {};
+    if (Array.isArray(blocks)) {
+      const out: Record<string, BlockEntry> = {};
+      const ids: string[] = [];
+      const taken = new Set<string>();
+      for (const raw of blocks as { type?: string; id?: string; settings?: Record<string, unknown>; blocks?: unknown; block_order?: string[]; static?: boolean }[]) {
+        if (!raw || typeof raw.type !== "string") continue;
+        const id = raw.id ?? newPresetBlockId(raw.type, taken);
+        const entry: BlockEntry = { type: raw.type, settings: JSON.parse(JSON.stringify(raw.settings ?? {})) as Record<string, unknown>,
+          ...instantiatePresetBlocks(raw.blocks, raw.block_order ?? null) };
+        if (raw.static) entry.static = true;
+        out[id] = entry;
+        if (!raw.static) ids.push(id);
+      }
+      return { blocks: out, block_order: ids };
+    }
+    const map = JSON.parse(JSON.stringify(blocks)) as Record<string, BlockEntry & { blocks?: unknown; block_order?: string[] }>;
+    for (const value of Object.values(map)) {
+      if (Array.isArray(value.blocks)) Object.assign(value, instantiatePresetBlocks(value.blocks, value.block_order ?? null));
+    }
+    return { blocks: map as Record<string, BlockEntry>, block_order: order ?? Object.keys(map).filter((key) => !map[key].static) };
+  };
+
   /** add-section（24 §3：新 entry 內容取 preset；E3：插到指定帶的指定位置，預設尾端）。 */
   const addSection = (catalogEntry: NonNullable<EditorData["theme"]>["sectionCatalog"][number]) => {
     const target = pickerFor ?? { band: "template", atIndex: null };
@@ -787,10 +835,7 @@ export function ThemeEditorPage() {
         type: catalogEntry.type,
         settings: JSON.parse(JSON.stringify(catalogEntry.preset.settings)) as Record<string, unknown>,
       };
-      if (catalogEntry.preset.blocks) {
-        entry.blocks = JSON.parse(JSON.stringify(catalogEntry.preset.blocks)) as SectionEntry["blocks"];
-        entry.block_order = Object.keys(entry.blocks ?? {});
-      }
+      Object.assign(entry, instantiatePresetBlocks(catalogEntry.preset.blocks, catalogEntry.preset.block_order ?? null));
       tpl.sections[newId] = entry;
       const order = [ ...orderOf(tpl) ];
       order.splice(target.atIndex ?? order.length, 0, newId);
@@ -1144,6 +1189,17 @@ export function ThemeEditorPage() {
     const q = pickerQuery.trim().toLowerCase();
     return allowed && (!q || entry.name.toLowerCase().includes(q) || entry.type.toLowerCase().includes(q));
   });
+  // E5：picker 項目（key＝type#presetIndex；灰化＋"(n/limit)" 後綴；分類＝preset category）
+  const pickerItems: PickerItem[] = pickerEntries.map(({ entry, full, used, limit }) => ({
+    key: `${entry.type}#${entry.presetIndex ?? 0}`, name: entry.name, category: entry.category ?? null,
+    disabled: full, suffix: full ? `(${used}/${limit})` : undefined,
+  }));
+  const catalogByKey = new Map((data?.sectionCatalog ?? []).map((entry) => [ `${entry.type}#${entry.presetIndex ?? 0}`, entry ]));
+  const blockPickerItems: PickerItem[] = blockPicker
+    ? addBlockOptions(blockPicker.band, blockPicker.sectionId, blockPicker.parentPath).map((def) => ({
+      // 分類：section 本地 def 多半沒帶 category ⇒ 退回同型 theme block 的 category（Ella header 的 block 即 theme blocks）
+      key: def.type, name: def.name ?? def.type, category: (def as BlockDef).category ?? themeBlocks[def.type]?.category ?? null }))
+    : [];
 
   if (error) {
     return (
@@ -1206,36 +1262,14 @@ export function ThemeEditorPage() {
                   themeId={themeId}
                 />
               ) : null}
-              {pickerFor ? (
-                <ul aria-label={t("editor.sectionPicker")} className="cl-editor__picker">
-                  <li>
-                    <input
-                      aria-label={t("editor.pickerSearch")}
-                      className="cl-field__input"
-                      data-autofocus
-                      onChange={(event) => setPickerQuery(event.target.value)}
-                      placeholder={t("editor.pickerSearch")}
-                      value={pickerQuery}
-                    />
-                  </li>
-                  {pickerEntries.length === 0 ? (
-                    <li className="cl-card-note">{t("editor.pickerEmpty")}</li>
-                  ) : pickerEntries.map(({ entry, full, used, limit }) => (
-                    <li key={entry.type}>
-                      <button className="cl-editor__node" disabled={full} onClick={() => addSection(entry)} type="button">
-                        {entry.name}{full ? ` (${used}/${limit})` : ""}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
               <SectionsTree
                 addBlockOptions={addBlockOptions}
                 bands={bands}
                 blockDef={blockDef}
                 expanded={expanded}
-                onAddBlock={addBlockAt}
-                onAddSection={(band, atIndex) => { setPickerQuery(""); setPickerFor((current) => (current?.band === band && current.atIndex === atIndex ? null : { band, atIndex })); }}
+                insertAt={pickerFor ? { band: pickerFor.band, index: pickerFor.atIndex } : null}
+                onAddSection={(band, atIndex, anchor) => { setPickerQuery(""); setBlockPicker(null); setPickerFor((current) => (current?.band === band && current.atIndex === atIndex ? null : { band, atIndex, anchor })); }}
+                onOpenBlockPicker={(band, sectionId, parentPath, anchor) => { setPickerFor(null); setBlockPicker((current) => (current?.sectionId === sectionId && current.parentPath.join("/") === parentPath.join("/") ? null : { band, sectionId, parentPath, anchor })); }}
                 canPaste={clipboard !== null}
                 onEditCode={openCode}
                 onPaste={pasteNode}
@@ -1252,6 +1286,27 @@ export function ThemeEditorPage() {
                 sectionName={sectionName}
                 translateName={translateName}
                 selection={selectedId ? { band: selectedBand, sectionId: selectedId, path: selectedPath } : null}
+              />
+              <SectionPicker
+                anchorRef={pickerAnchorRef}
+                items={pickerItems}
+                kind="section"
+                onClose={() => setPickerFor(null)}
+                onPick={(item) => { const entry = catalogByKey.get(item.key); if (entry) addSection(entry); }}
+                open={pickerFor !== null}
+              />
+              <SectionPicker
+                anchorRef={blockPickerAnchorRef}
+                items={blockPickerItems}
+                kind="block"
+                onClose={() => setBlockPicker(null)}
+                onPick={(item) => {
+                  if (!blockPicker) return;
+                  const def = addBlockOptions(blockPicker.band, blockPicker.sectionId, blockPicker.parentPath).find((d) => d.type === item.key);
+                  if (def) addBlockAt(blockPicker.band, blockPicker.sectionId, blockPicker.parentPath, def);
+                  setBlockPicker(null);
+                }}
+                open={blockPicker !== null}
               />
             </div>
           </aside>

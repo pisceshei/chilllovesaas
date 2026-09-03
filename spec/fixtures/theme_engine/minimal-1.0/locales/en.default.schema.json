@@ -1,4 +1,12 @@
 {
-  "names": { "promo": "促銷條" },
-  "promo": { "text_label": "促銷文案" }
+  "names": {
+    "promo": "促銷條",
+    "promo_alt": "促銷條（橫幅）"
+  },
+  "promo": {
+    "text_label": "促銷文案"
+  },
+  "categories": {
+    "banners": "橫幅"
+  }
 }

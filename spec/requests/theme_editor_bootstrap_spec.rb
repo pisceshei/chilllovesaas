@@ -431,4 +431,17 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(fonts.find { |f| f["key"] == "system_ui" }["system"]).to be(true)
     expect(fonts.find { |f| f["key"] == "assistant" }["handles"]).to include("n4")
   end
+  it "E18 🔴 sectionCatalog 列出每個 preset（名稱＝preset name、category 翻譯、presetIndex、blocks 原樣）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionCatalog themeBlocks } }
+    GQL
+    catalog = response.parsed_body.dig("data", "theme", "sectionCatalog")
+    promos = catalog.select { |entry| entry["type"] == "promo" }
+    expect(promos.map { |e| e.values_at("presetIndex", "name", "category") })
+      .to eq([ [ 0, "促銷條", nil ], [ 1, "促銷條（橫幅）", "橫幅" ] ])
+    expect(promos[1].dig("preset", "settings", "text")).to eq("替代文案")
+    expect(promos[1].dig("preset", "blocks")).to eq([ { "type" => "badge", "settings" => { "label" => "HOT" } } ]) # array 形原樣
+    expect(catalog.map { |e| e["type"] }).not_to include("hero")
+  end
 end

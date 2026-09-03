@@ -236,7 +236,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
 
     fireEvent.click(tree.getByRole("button", { name: "新增區段" }));
-    const picker = within(tree.getByLabelText("可新增的區段"));
+    const picker = within(screen.getByRole("list", { name: "可新增的區段" })); // E5：picker portal 在樹外
     fireEvent.click(picker.getByRole("button", { name: "促銷條" }));
 
     // 插尾＋選中：設定面板出 preset 值
@@ -357,8 +357,8 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.change(labelInput, { target: { value: "改標籤" } });
 
     // add-block（＋父塊）——def default 帶入新 block
-    fireEvent.click(tree.getByRole("button", { name: "新增區塊" })); // E3：先開 Add block 列
-    fireEvent.click(tree.getByRole("button", { name: "＋ 父塊" }));
+    fireEvent.click(tree.getByRole("button", { name: "新增區塊" })); // E3：先開 Add block 列（E5：開 block picker）
+    fireEvent.click(within(screen.getByRole("list", { name: "新增區塊" })).getByRole("button", { name: "父塊" }));
 
     fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
     await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
@@ -552,10 +552,10 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const picker = within(screen.getByRole("list", { name: "可新增的區段" }));
     expect(picker.getByText("促銷條")).toBeInTheDocument();
 
-    fireEvent.change(picker.getByLabelText("搜尋區段"), { target: { value: "zzz" } });
+    fireEvent.change(screen.getByLabelText("搜尋區段"), { target: { value: "zzz" } }); // E5：搜尋框在清單外
     expect(picker.queryByText("促銷條")).toBeNull();
 
-    fireEvent.change(picker.getByLabelText("搜尋區段"), { target: { value: "促銷" } });
+    fireEvent.change(screen.getByLabelText("搜尋區段"), { target: { value: "促銷" } });
     expect(picker.getByText("促銷條")).toBeInTheDocument();
   });
 
@@ -953,7 +953,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     // 容器（父塊）自己的「新增區塊」列只列它接受的子型別
     const p1Li = tree.getByRole("button", { name: "父塊" }).closest("li")!;
     fireEvent.click(within(p1Li).getByRole("button", { name: "新增區塊" }));
-    fireEvent.click(within(p1Li).getByRole("button", { name: "＋ 葉塊" }));
+    fireEvent.click(within(screen.getByRole("list", { name: "新增區塊" })).getByRole("button", { name: "葉塊" })); // E5：picker
     expect(nodeNames(tree)).toEqual([ "Hero", "Hero", "Blocks demo", "父塊", "葉塊", "葉塊" ]);
 
     fireEvent.keyDown(window, { key: "s", ctrlKey: true });
@@ -1369,6 +1369,94 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(sections.hero.settings.image).toBe("shopify://shopify/files/hero.png");
     fireEvent.click(settings.getByRole("button", { name: "移除" }));
     expect(settings.getByRole("button", { name: "圖片" })).toHaveTextContent("選取");
+  });
+
+  // ── E5：兩欄 picker（docs/research/100 §4＋§8.1）──
+  const e5Boot = () => {
+    const boot = JSON.parse(JSON.stringify(BOOTSTRAP)) as typeof BOOTSTRAP;
+    const theme = boot.data.theme as unknown as Record<string, unknown>;
+    (theme.sectionCatalog as unknown[]).push(
+      { type: "promo", presetIndex: 1, name: "促銷條（橫幅）", category: "橫幅", preset: { settings: { text: "橫幅文案" }, blocks: null } },
+      { type: "gallery", presetIndex: 0, name: "圖庫", category: "橫幅", preset: { settings: {},
+        blocks: [ { type: "_parent", settings: { label: "A" }, blocks: [ { type: "_leaf", settings: { txt: "子" } } ] }, { type: "_parent", static: true, settings: {} } ] } },
+      { type: "hero", presetIndex: 0, name: "英雄（preset）", category: null, preset: { settings: { heading: "H" }, blocks: { intro: { type: "_parent", settings: {} } }, block_order: [ "intro" ] } },
+    );
+    (theme.sectionSchemas as Record<string, unknown>).gallery = { name: "Gallery", settings: [], blocks: [ { type: "_parent", name: "父塊", settings: [] } ] };
+    theme.themeBlocks = {
+      _parent: { type: "_parent", name: "父塊", category: "基本", settings: [ { id: "label", type: "text", label: "標籤" } ], blocks: [ "_leaf" ] },
+      _leaf: { type: "_leaf", name: "葉塊", category: "版面", settings: [ { id: "txt", type: "text", label: "文字" } ], blocks: [] },
+    };
+    return boot;
+  };
+
+  it("ED52 🔴 section picker 兩欄形態：搜尋框／Sections|Apps 分段／Generate／扁平清單＋分類收合區／Apps 空態；同型多 preset 各列一項", async () => {
+    stubFetch([], e5Boot());
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "新增區段" }));
+    expect(screen.getByLabelText("搜尋區段")).toHaveFocus();
+    expect(screen.getByRole("tab", { name: "區段" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "生成" })).toHaveAttribute("aria-disabled", "true");
+    const flat = within(screen.getByRole("list", { name: "可新增的區段" }));
+    expect(flat.getByRole("button", { name: "促銷條" })).toBeInTheDocument(); // 無分類 ⇒ 扁平區
+    expect(flat.getByRole("button", { name: "英雄（preset）" })).toBeInTheDocument();
+    const group = screen.getByRole("button", { name: "橫幅" });
+    expect(group).toHaveAttribute("aria-expanded", "true");
+    const banner = within(screen.getByRole("list", { name: "橫幅" }));
+    expect(banner.getByRole("button", { name: "促銷條（橫幅）" })).toBeInTheDocument(); // 同型第二個 preset 各列一項
+    expect(banner.getByRole("button", { name: "圖庫" })).toBeInTheDocument();
+    fireEvent.click(group);
+    expect(screen.queryByRole("list", { name: "橫幅" })).toBeNull(); // 收合
+    expect(screen.getByText("沒有可用的預覽")).toBeInTheDocument(); // 右欄預覽
+    fireEvent.click(screen.getByRole("tab", { name: "應用程式" }));
+    expect(screen.getByText("沒有可用的應用程式區段")).toBeInTheDocument();
+  });
+
+  it("ED53 🔴 選第二個 preset ⇒ 用它的 settings；preset blocks 陣列形實例化（生 id、巢狀、static 不進 block_order）；hash 形照 block_order", async () => {
+    const fetchMock = stubFetch([], e5Boot());
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "新增區段" }));
+    fireEvent.click(within(screen.getByRole("list", { name: "橫幅" })).getByRole("button", { name: "促銷條（橫幅）" }));
+    expect(within(screen.getByRole("complementary", { name: "設定" })).getByDisplayValue("橫幅文案")).toBeInTheDocument();
+    fireEvent.click(tree.getByRole("button", { name: "新增區段" }));
+    fireEvent.click(within(screen.getByRole("list", { name: "橫幅" })).getByRole("button", { name: "圖庫" }));
+    fireEvent.click(tree.getByRole("button", { name: "新增區段" }));
+    fireEvent.click(within(screen.getByRole("list", { name: "可新增的區段" })).getByRole("button", { name: "英雄（preset）" }));
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sections = (JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { settings: Record<string, unknown>; blocks?: Record<string, { type: string; static?: boolean; blocks?: Record<string, { type: string }>; block_order?: string[] }>; block_order?: string[] }> } } }).variables.content.sections;
+    expect(sections.promo.settings.text).toBe("橫幅文案");
+    const gallery = sections.gallery;
+    expect(gallery.block_order).toHaveLength(1); // static 不進 block_order
+    const [ dynamicId ] = gallery.block_order!;
+    expect(dynamicId).toMatch(/^_parent_[0-9A-Za-z]{6}$/); // 生成 id 形
+    expect(Object.keys(gallery.blocks ?? {})).toHaveLength(2);
+    expect(gallery.blocks?.[dynamicId].block_order).toHaveLength(1); // 巢狀
+    expect(Object.values(gallery.blocks ?? {}).some((b) => b.static)).toBe(true);
+    expect(sections.hero_1 ?? sections["hero-1"]).toBeDefined(); // 同 type 已存在 ⇒ 尾碼
+    const hero2 = sections.hero_1 ?? sections["hero-1"];
+    expect(hero2.block_order).toEqual([ "intro" ]); // hash 形照 block_order
+  });
+
+  it("ED54 🔴 block picker：分類收合區（theme block category）＋搜尋；選取 ⇒ 進容器；插入線在目標列", async () => {
+    stubFetch([], e5Boot());
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "展開 Blocks demo" }));
+    fireEvent.click(tree.getByRole("button", { name: "新增區塊" }));
+    expect(screen.getByLabelText("搜尋區塊")).toHaveFocus();
+    expect(screen.getByRole("tab", { name: "區塊" })).toHaveAttribute("aria-selected", "true");
+    const basic = within(screen.getByRole("list", { name: "基本" }));
+    fireEvent.click(basic.getByRole("button", { name: "父塊" }));
+    expect(tree.getAllByRole("button", { name: /^父塊/ })).toHaveLength(2); // 新 block 帶 default 摘要「父塊 – P」
+    // 右鍵 Add section after ⇒ 插入線在 hero 之後（data-insert=after 於 hero 列；index=1 ⇒ demo 列 before）
+    fireEvent.contextMenu(tree.getAllByRole("button", { name: "Hero" })[1]);
+    fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "在後面新增區段" }));
+    expect(tree.getByRole("button", { name: "Blocks demo" }).closest("li")).toHaveAttribute("data-insert", "before");
+    fireEvent.keyDown(document.body, { key: "Escape" }); // Escape 關 picker（Popover capture 監聽）
+    expect(screen.queryByRole("list", { name: "可新增的區段" })).toBeNull();
   });
 
 });
