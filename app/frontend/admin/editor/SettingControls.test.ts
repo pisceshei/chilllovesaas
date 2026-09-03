@@ -47,8 +47,8 @@ describe("segmentFits", () => {
     expect(segmentFits([ { value: "a", label: "A", group: "G" }, { value: "b", label: "B" } ])).toBe(false);
     expect(segmentFits(opts("Only"))).toBe(false);
   });
-  it("S6 全形字算 2 單位：三個 2 字中文標籤放得進；四個 3 字中文標籤放不進", () => {
+  it("S6 🔴 全形字算 2 單位：三個 2 字中文標籤放得進；三個 4 字中文標籤放不進（拉丁估寬會誤判放得進——突變 M111）", () => {
     expect(segmentFits(opts("靠左", "居中", "靠右"))).toBe(true);
-    expect(segmentFits(opts("靠左對齊", "置中對齊", "靠右對齊", "兩端對齊"))).toBe(false);
+    expect(segmentFits(opts("靠左對齊", "置中對齊", "靠右對齊"))).toBe(false); // 12 全形字 ×12.4＋3×16＋4 ＝ 201 > 158；若當 1 單位 ＝ 126 ⇒ 假綠
   });
 });
