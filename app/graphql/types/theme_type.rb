@@ -350,8 +350,11 @@ module Types
       defs.filter_map do |setting|
         next unless setting.is_a?(Hash)
 
+        # E4：`visible_if`（條件顯示，Ella 44.5% setting 帶它）、`alpha`（color 透明度）、`accept`（video_url）、
+        # `definition`／`role`（color_scheme_group）、`metaobject_type` 一併保留；options 的 `group` 隨 options 原樣進。
         translated = setting.slice("id", "type", "label", "info", "content", "default",
-                                   "placeholder", "min", "max", "step", "unit", "options", "limit")
+                                   "placeholder", "min", "max", "step", "unit", "options", "limit",
+                                   "visible_if", "alpha", "accept", "definition", "role", "metaobject_type")
         %w[label info content].each do |key|
           translated[key] = translate.call(translated[key]) if translated[key]
         end

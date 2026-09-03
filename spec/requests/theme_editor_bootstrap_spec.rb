@@ -398,4 +398,15 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(translations).to eq({ "t:names.promo" => "促銷條" }) # footer-group.json 的 section name ＋ DB 模板同鍵；
     # block 的 t:names.nope 無翻譯 ⇒ 不列（前端 fail-open 顯示原鍵）
   end
+  it "E15 🔴 sectionSchemas 保留 visible_if／alpha／options[].group（E4 控件與條件顯示的資料源）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas } }
+    GQL
+    settings = response.parsed_body.dig("data", "theme", "sectionSchemas", "hero", "settings")
+    accent = settings.find { |d| d["id"] == "accent" }
+    expect(accent.slice("alpha", "visible_if")).to eq({ "alpha" => true, "visible_if" => "{{ section.settings.heading != blank }}" })
+    expect(settings.find { |d| d["id"] == "align" }.dig("options", 0, "group")).to eq("Basic")
+  end
+
 end
