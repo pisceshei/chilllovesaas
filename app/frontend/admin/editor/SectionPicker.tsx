@@ -100,12 +100,17 @@ export function SectionPicker({ open, anchorRef, edgeRef, kind, items, onPick, o
               <p className="cl-picker__empty">{kind === "section" ? t("editor.noAppSections") : t("editor.noAppBlocks")}</p>
             ) : (
               <>
-                {/* 本尊首列 "Generate"（AI）：我方無 AI 入口 ⇒ 顯示登記形、不可用（100 §V V13） */}
-                <button aria-disabled="true" className="cl-picker__generate" type="button">
-                  <Sparkles aria-hidden="true" size={16} />
-                  {t("editor.generate")}
-                </button>
-                <div className="cl-picker__sep" />
+                {/* 本尊首列 "Generate"（AI）：我方無 AI 入口 ⇒ 顯示登記形、不可用（100 §V V13）。
+                    E11：只在 section picker——真店 2026-09-03 兩層 block picker（section 級／`_group-announcement` 級）皆無此列（§G16）。 */}
+                {kind === "section" ? (
+                  <>
+                    <button aria-disabled="true" className="cl-picker__generate" type="button">
+                      <Sparkles aria-hidden="true" size={16} />
+                      {t("editor.generate")}
+                    </button>
+                    <div className="cl-picker__sep" />
+                  </>
+                ) : null}
                 {visible.length === 0 ? <p className="cl-picker__empty">{t("editor.pickerEmpty")}</p> : null}
                 {/* 扁平清單＝無分類者；有分類者進收合區（本尊：先扁平可用清單、再分類收合區） */}
                 <ul aria-label={kind === "section" ? t("editor.sectionPicker") : t("editor.addBlock")} className="cl-picker__items">

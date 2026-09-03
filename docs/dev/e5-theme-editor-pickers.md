@@ -46,7 +46,8 @@ admin 主題編輯器的「Add section」／「Add block」改成本尊形態（
 - **清單以 preset 為單位**：本尊 picker 的 "Header - Classic (1/1)"／"Product list: Carousel" 都是 preset 名（100 §4 實測＋fixture）。
 - **(n/limit) 仍在頁面算**（E3 既有 `pickerEntries`），picker 只吃 items——避免兩份過濾邏輯。
 - **預覽一律 "No preview available"**：本尊多數項目也是此形（100 §4）；以 `draft_section` 渲染縮圖需 CSS 語境，另包評估。
-- **Generate 登記形**：本尊 AI 入口（100 §V V13），我方顯示但 `aria-disabled`。
+- **Generate 登記形**：本尊 AI 入口（100 §V V13），我方顯示但 `aria-disabled`。**E11（2026-09-04）：只在 section picker**——
+  真店兩層 block picker 皆無此列（external-facts §G16）；section 級是否仍有待驗（91 §3.78）。
 - **block id 形**：25 §5 觀察形 `{type}_{6 碼 base62}`；本尊逐字未取得；前導底線保留（Ella 私有 block `_parent`）。
 - **不做**：Apps 分頁內容（無 app 層）、"Recommended apps"、分類排序照本尊（未取得 ⇒ 字母序、無分類殿後）。
 
