@@ -75,10 +75,11 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 | 金額格式 | 本尊 hoko（HKD）顯示 `$19.99`，我方 `HK$19.99`（鐵律 10 範例）；本尊 shop 級 `money_format` 我方未建 | **待裁定**（§4） |
 | dev 環境 | canonical-url／hreflang 主機在本機（`mirror.chilllove.example`／`mirror.lvh.me`）與頁面主機不一致——config 層，production 同一網域 | 報告保留 |
 
-## §4 待使用者裁定
+## §4 使用者裁定（2026-09-03 已裁定，實作待開包）
 
-1. **路由前綴**：67 §F.1(b) 裁定「恆有前綴」與 1:1 前台輸出衝突（本尊主市場預設語言無前綴）。不改裁定則所有 `href`／`routes.*`／`Shopify.routes.root`／JSON-LD target 永遠差一段。
-2. **貨幣顯示格式**：需 shop 級 `money_format`（本尊 `shop.money_format`／`money_with_currency_format` 官方物件）才能對齊 `$19.99`；鐵律 10 的 `HK$` 範例是否降為預設值。
+1. **路由前綴**：D80——跟隨本尊市場／語言設定（主市場預設語言無前綴、額外語言 `/{lang}`、子資料夾市場 `/{lang}-{country}`）；
+   67 §F.1(b)「恆有前綴」作廢。實作前 `CAND_PREFIX` 抹除只是過渡。
+2. **貨幣顯示格式**：D81——店級 `money_format`／`money_with_currency_format` 跟隨本尊；鐵律 10 `HK$` 只是範例。
 
 ## §5 首頁對表結果（2026-09-03，本機 mirror vs hoko.vip 快照）
 

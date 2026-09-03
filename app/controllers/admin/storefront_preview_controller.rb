@@ -53,25 +53,27 @@ module Admin
       render html: result.html.html_safe, status: result.status, layout: false
     end
 
-    # POST /admin/store/preview/:theme_id/draft_page（PR-11 改即見全面化）
-    # body: { path, sections: {sid=>entry}, settings: {} }——以全部未儲存
-    # draft（全帶 sections＋佈景設定）渲染整頁 ⇒ 編輯器 iframe srcdoc 換入。
-    # 佈景設定/結構操作/undo 三類變更共用此通道（fleet editor-live 軸①②③）。
+    # POST /admin/store/preview/:theme_id/draft_page（PR-11 改即見全面化；E9 改形）
+    # body: { path, sections: {sid=>entry}, settings: {} }——把全部未儲存 draft（全帶 sections＋佈景設定）
+    # **存成短效草稿並回 `{token}`**，前端以 `show?editor=1&draft=token` 重載 iframe。
+    # 🔴 E9 根因（2026-09-03 使用者實測截圖）：原本回整頁 HTML、前端 `iframe.srcdoc` 換入——srcdoc 文件繼承
+    #   admin 頁的嚴格 CSP（style-src 'self'／script-src nonce），主題 inline style／script 全被擋 ⇒ 改任何設定
+    #   600ms 後預覽退化成無樣式。改成真實 URL 重載後，回應帶 ThemeCsp（主題面 CSP）與正確 base URL。
+    # 草稿 cache key 以 shop＋theme 定界、TTL 短（DRAFT_TTL）；token 只在 staff 閘後可用。
+    DRAFT_TTL = 20.minutes
+
     def draft_page
       authorize Theme, :index?
       theme = Theme.find(params[:theme_id])
       sections = params[:sections].respond_to?(:to_unsafe_h) ? params[:sections].to_unsafe_h : params[:sections]
       settings = params[:settings].respond_to?(:to_unsafe_h) ? params[:settings].to_unsafe_h : params[:settings]
 
-      result = ThemeEngine::PageRenderer.new(
-        theme: theme, shop: Current.shop, publication: Publication.online_store!,
-        design_mode: true, host: request.host
-      ).render(params[:path].presence || "/",
-               draft_sections: sections.is_a?(Hash) ? sections : {},
-               draft_settings: settings.is_a?(Hash) ? settings : nil)
-
-      response.headers["X-Robots-Tag"] = "noindex, nofollow"
-      render html: result.html.html_safe, status: result.status, layout: false
+      token = SecureRandom.urlsafe_base64(18)
+      Rails.cache.write(draft_cache_key(theme, token),
+                        { "sections" => sections.is_a?(Hash) ? sections : {},
+                          "settings" => settings.is_a?(Hash) ? settings : nil },
+                        expires_in: DRAFT_TTL)
+      render json: { token: token }
     end
 
     # GET /admin/store/preview/:theme_id(/*path)
@@ -83,11 +85,14 @@ module Admin
         Cart.includes(cart_line_items: { product_variant: :product })
             .find_by(shop_id: Current.shop.id, token: token)
       end
+      design_mode = params[:editor] == "1"
+      draft = design_mode ? draft_payload(theme, params[:draft]) : nil # E9：只在編輯器 iframe 套草稿
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: publication,
-        design_mode: params[:editor] == "1", host: request.host, # 步 16a：編輯器 iframe 開 design_mode
+        design_mode: design_mode, host: request.host, # 步 16a：編輯器 iframe 開 design_mode
         cart_json: cart && Storefront::CartSerializer.cart_json(cart)
-      ).render("/#{params[:path]}", params: request.query_parameters)
+      ).render("/#{params[:path]}", params: request.query_parameters.except("draft"),
+               draft_sections: draft&.fetch("sections", nil), draft_settings: draft&.fetch("settings", nil))
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
       # 包 33：?sections= 回 JSON（83 §12.3 真店＝application/json；單 section
@@ -100,6 +105,21 @@ module Admin
     rescue ThemeEngine::MissingSourceError => e
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
       render plain: e.message, status: :unprocessable_entity
+    end
+
+    private
+
+    # 草稿鍵：租戶＋主題＋token——另一主題／另一店的 token 找不到就是找不到（fail-closed 為「不套草稿」）。
+    def draft_cache_key(theme, token)
+      "editor-draft/v1/#{Current.shop.id}/#{theme.id}/#{token}"
+    end
+
+    def draft_payload(theme, token)
+      t = token.to_s
+      return nil unless t.match?(/\A[\w-]{16,64}\z/)
+
+      payload = Rails.cache.read(draft_cache_key(theme, t))
+      payload.is_a?(Hash) ? payload : nil
     end
   end
 end

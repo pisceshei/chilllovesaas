@@ -4038,3 +4038,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **登記併發規格在負載下的假紅**：本機同時跑 dev 伺服器與全套 rspec 時 `*_concurrency_spec` 會偶發 fail（advisory lock／SKIP LOCKED 類），單獨重跑全綠；未改判準，只登記。
 - **⚪ `product.featured_media`／`featured_image` 無圖時的值**：本尊對無圖商品回 nil（hoko.vip /collections/all 三張真商品卡皆 `card--text`）；我方 `ProductDrop#featured_image` 無圖時回 `PlaceholderImageDrop`（既有設計）⇒ 集合頁商品卡會走 `card--media`。首頁未踩到（佔位卡不經此路）；下一批（products／collections 頁）第一項處理，需同時盤點依賴佔位 drop 的既有規格。
 - **登記本機 canonical／hreflang 主機**：`canonical-url="https://mirror.chilllove.example/"`、`https://mirror.lvh.me/` 與頁面主機不一致，是 dev config，production 同一網域。
+
+### 3.76 主題編輯器 E9：srcdoc 換入整頁草稿繼承 admin 嚴格 CSP（2026-09-03 使用者實測）
+
+- **坑**：PR-11 以 `iframe.srcdoc = html` 換入全頁草稿；srcdoc 文件的 policy container（含 CSP）繼承 admin 頁
+  （style-src 'self'、script-src 'self'＋nonce）⇒ 主題 inline style／script 全被擋、預覽整頁錯亂。vitest（jsdom）
+  看不到 CSP；當時只在 jsdom 驗 `iframe.srcdoc` 含字串就當通過（假綠）。
+- **固定處理**：任何「把伺服器渲染的主題 HTML 塞進 admin 頁內文件」的做法（srcdoc／blob:／data:／document.write
+  進 about:blank）都會繼承 admin CSP——一律改成讓 iframe **導航到真實預覽 URL**（帶 ThemeCsp）。改預覽路徑的 PR
+  必須在真實 admin 頁看一次預覽（不能只靠 jsdom）。
+- **⚪ 登記**：D80／D81 實作待開包；「逐 section／逐控件與本尊功能對照」（使用者原話）待逐一驗收，第一個單位＝Announcement bar。

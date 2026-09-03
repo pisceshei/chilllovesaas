@@ -2565,3 +2565,28 @@ Kalles 的 section／block schema 有 194 檔帶尾逗號（非嚴格 JSON），
 - **執行**：E1 逐面板實測 teardown（`docs/research/100-theme-editor-live-teardown.md`）→ E2 shell＋頂欄
   → E3 左側 sections 樹 → E4 右側設定面板（逐控件型別）→ E5 區段／區塊 picker → E6 預覽內互動
   → E7 RWD 收口；每包 spec＋突變輪＋CI＋部署，照 D40。
+
+## D80（2026-09-03）前台 URL 前綴改為跟隨本尊的市場／語言設定（推翻 67 §F.1(b)「恆帶地區、恆有前綴」）
+
+使用者裁定原文（E8 對表報告回覆）：「Shopify 本尊不是沒有，而是還沒設定市場和多語言」（附本尊語言設定頁
+`admin.shopify.com/store/pnrjnw-sy/settings/languages`）。
+
+- 判準改為與本尊一致：**主市場的預設語言＝無前綴**（`/collections/all`）；額外已發布語言＝`/{lang}`
+  （官方 help「URL structure」逐字："If you publish 2 additional languages, French (fr) and German (de), then your
+  store URLs change to `example.com/fr` and `example.com/de`."）；其他市場用子資料夾＝`/{lang}-{country}`
+  （官方例 `/en-ca/products/shoes`）。取證 2026-09-03（`docs/dev/external-facts.md` §G13）。
+- 2026-08-13 的「恆帶地區」裁定與其配套（`Markets::UrlPrefix` 全函式、hreflang／sitemap／canonical 共用一律帶前綴）
+  自本裁定起作廢；改法另開包（路由解析、`Markets::UrlPrefix`、hreflang／sitemap／canonical、localization 表單、
+  redirect 保留前綴、頁快取鍵、E8 對表的 `CAND_PREFIX` 抹除規則一併回收）。
+- 未改完前 E8 對表以 `CAND_PREFIX` 抹掉我方前綴只是**過渡**，不是合規。
+
+## D81（2026-09-03）貨幣顯示格式跟隨本尊（店級 `money_format`／`money_with_currency_format`）
+
+使用者裁定原文：「貨幣顯示格式樣格跟隨 shopify 本尊。」
+
+- 本尊為店級設定（官方 objects/shop 逐字：money_format＝"The money format of the store"，例 `"${{amount}}"`；
+  money_with_currency_format＝"The money format of the store with the currency included"，例 `"${{amount}} CAD"`）。
+  真店 hoko.vip（HKD）實測 `window.money_format = "${{amount}}"`、商品頁 `$188.00`。
+- 我方改為 `shops.money_format`／`shops.money_with_currency_format` 兩欄，`money*` 過濾器與 `shop.money_format`
+  全部讀店級值；鐵律 10 的 `HK$1,480` 只是範例，不再是預設。新店預設值＝本尊各幣別預設表（官方未逐字公開 ⇒
+  先以 `{{amount}}` 前綴幣別符號的通用形，登記 V；HKD 依 hoko 實測取 `${{amount}}`）。

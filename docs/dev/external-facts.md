@@ -1301,3 +1301,20 @@ gem 5.13.0 `block_body.rb#whitespace_handler`：`parse_context[:bug_compatible_w
 must follow the standard IETF language tag nomenclature, where the first lowercase letter code represents the language, and
 the second uppercase letter code represents the region."⇒ 本尊簡體＝`zh-CN.json`（hoko.vip `<html lang="zh-CN">`）；我方 tag
 依 limits 帶 script（zh-Hans）⇒ `ThemeEngine::LocaleTags` 雙向對映；zh-Hant→zh-TW 由同規則推（未實測，V）。
+
+### G13. `iframe.srcdoc` 文件繼承父頁 CSP（E9 根因；規範逐字＝未取得）
+
+規範頁（HTML Standard「Policy containers」／CSP Level 3）本輪以工具抓取皆因頁面過大被截斷，**逐字未取得**；CSP L3 只抓到
+註記 "This is needed to facilitate the `'self'` checks of local scheme documents/workers that have inherited their policy but
+have an opaque origin."（`about:srcdoc` 屬 local scheme）。實證：demo.chilling.com.hk 編輯器改設定後預覽整頁無樣式
+（使用者截圖 2026-09-03），admin 頁 CSP＝`style-src 'self'`／`script-src 'self'`＋nonce（`config/initializers/
+content_security_policy.rb`），預覽端點自身回應帶 `'unsafe-inline'`（`app/controllers/concerns/theme_csp.rb`）——
+同一份 HTML 以真實 URL 載入正常、以 srcdoc 換入即壞 ⇒ 差別只剩文件的 policy container 來源。修法（E9）以真實 URL 重載後
+在真實 admin 頁複驗。
+
+### G14. 本尊 storefront URL 結構（D80 依據，取證 2026-09-03）
+
+官方逐字（<https://help.shopify.com/en/manual/markets/languages/url-structure>）："If you publish 2 additional languages,
+French (fr) and German (de), then your store URLs change to `example.com/fr` and `example.com/de`."；主市場預設語言用主網域
+根路徑（頁面以 `example.com` 為例，無語言碼）；市場子資料夾例 `/en-ca/products/shoes`。真店 hoko.vip（未設定額外市場／語言）
+`href="/collections/all"`、`routes.root_url` ＝ `/`。

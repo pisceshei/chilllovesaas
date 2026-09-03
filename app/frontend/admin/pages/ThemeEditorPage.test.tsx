@@ -413,13 +413,13 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     }, { timeout: 2000 });
   });
 
-  it("ED14 🔴 全頁草稿刷新：改佈景設定 → debounce 後 POST draft_page（帶 settings）→ srcdoc 換入", async () => {
+  it("ED14 🔴 全頁草稿刷新：改佈景設定 → debounce 後 POST draft_page（帶 settings）→ 取 token → iframe 以真實 URL（?editor=1&draft=token）重載，不用 srcdoc", async () => {
     const fetchMock = stubFetch();
     fetchMock.mockImplementation(async (url: unknown, init?: RequestInit) => {
       if (String(url).includes("/draft_page")) {
         return { ok: true, status: 200,
                  text: vi.fn().mockResolvedValue("<html><body>DRAFT-PAGE</body></html>"),
-                 json: vi.fn() } as unknown as Response;
+                 json: vi.fn().mockResolvedValue({ token: "tok-DRAFT-PAGE" }) } as unknown as Response;
       }
       void init;
       return { json: vi.fn().mockResolvedValue(BOOTSTRAP), ok: true, status: 200 } as unknown as Response;
@@ -445,7 +445,9 @@ describe("ThemeEditorPage（步 16a shell）", () => {
       expect(body.path).toBe("/"); // index 無樣本路徑 ⇒ 回落首頁
     }, { timeout: 3000 });
     await vi.waitFor(() => {
-      expect(iframe.srcdoc).toContain("DRAFT-PAGE"); // 🔴 全頁換入
+      // 🔴 E9：srcdoc 會繼承 admin 嚴格 CSP ⇒ 必須是真實 URL 重載
+      expect(iframe.getAttribute("src")).toContain("?editor=1&draft=tok-DRAFT-PAGE");
+      expect(iframe.srcdoc).toBe("");
     }, { timeout: 3000 });
   });
 
