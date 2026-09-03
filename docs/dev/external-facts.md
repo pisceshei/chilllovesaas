@@ -1139,3 +1139,15 @@ specifying them through the `enabled_on` attribute."，其 `templates` 可為 "`
 certain template page types and section group types by setting them in the `disabled_on` attribute."；
 並且 "You can use only one of `enabled_on` or `disabled_on`."（同上 URL，取證 2026-09-03）。
 ⇒ 我方 `sectionAllowedIn` 支援 `*`；兩者並存時先看 `disabled_on` 只是容錯順序（官方不允許並存），不得寫成語義。
+
+### F4. static block 不在 `block_order`、不可重排／移除／複製、可隱藏與改設定、不計入 `max_blocks`
+
+官方逐字：static block 以 `{% content_for "block", type: "<type>", id: "<id>" %}` 靜態渲染（"Statically rendered in
+Liquid, setting the `type` explicitly"）；模板 JSON 帶 `"static": true`，且 "are not included in the `block_order` array
+because static blocks can not be re-ordered by merchants"；編輯器內 "Cannot be reordered (drag and drop)"、
+"Cannot be removed or duplicated"，但商家可隱藏與自訂其設定；"Don't count toward the `max_blocks` limit"；
+可含巢狀 block（官方範例 collapsible-row：summary block 內嵌 icon block）。
+來源：<https://shopify.dev/docs/storefronts/themes/architecture/blocks/theme-blocks/static-blocks>（取證 2026-09-03）。
+⇒ 我方左樹：static 列以 `visibleBlockIds` 附在 `block_order` 之後顯示、`draggable=false`、無垃圾桶、`removeNode` 直接
+返回；`max_blocks` 只數 `block_order`（static 天然不計）。Ella `templates/product.json` 的 media-gallery／product-details／
+sticky-atc 即此形態（`docs/research/66` §A.5.2 的 fixture 觀察與官方一致）。

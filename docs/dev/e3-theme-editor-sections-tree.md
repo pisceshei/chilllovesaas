@@ -38,7 +38,10 @@ URL 狀態。給商家在後台客製主題用；對應 Shopify「Customize」�
   - `iconKindFor(type, name)`：關鍵字對映 type icon 種類（group／image／video／heading／link／button／text／block）。
   - `visibleBlockIds(container)`：`block_order` 內的可拖列 ＋ 不在其中的 `static: true` block（附在後）。Ella
     `templates/product.json` 的 media-gallery／product-details／sticky-atc 就是這種節點（只在 `blocks` map，不在
-    `block_order`；`docs/research/66` §A.5.2）——只迭代 `block_order` 會讓整個靜態容器從樹上消失。
+    `block_order`；`docs/research/66` §A.5.2）——只迭代 `block_order` 會讓整個靜態容器從樹上消失。官方逐字（static-blocks
+    頁，取證 2026-09-03，全文 `docs/dev/external-facts.md` §F4）："are not included in the `block_order` array because
+    static blocks can not be re-ordered by merchants"、"Cannot be reordered (drag and drop)"、"Cannot be removed or
+    duplicated"、"Don't count toward the `max_blocks` limit"——我方鎖定列的四條規則逐一對應。
   - `TreeBand {band,label,position,groupType,tpl}`／`rowKey(band,sectionId,path)`／`flattenRows(bands, expanded)`
     （可視列扁平化：Shift+↑↓ 走的就是這張表，收合的子層不在其中）／`allExpandableKeys(bands)`（Ctrl+Shift+O）。
   - `sectionAllowedIn(availability, {templateType} | {groupType})`：`disabled_on` 先擋、`enabled_on` 有列才准、都沒寫＝准。
