@@ -2547,3 +2547,21 @@ Home Fashion 01／Cosmetic／Digital／Barber 四個 demo——全部 0 error／
 `customers/*`、`gift_card.liquid`、`password.{json,liquid}` 三類未路由模板照登記。
 Kalles 的 section／block schema 有 194 檔帶尾逗號（非嚴格 JSON），引擎的
 `tolerant_json` 全數可解（三套主題 711 個 schema 0 失敗）。
+
+## D79（2026-09-03）主題編輯器 1:1 重做（UI＋完整功能）＋真店 pnrjnw-sy 全權授權
+
+使用者裁定（原話）：「為什麼你就做出不shopify一樣的主題編輯器呢，又醜又用不了」→「全權給你所有權限。
+我要做出和shopify一樣的主題編輯器，無論是ui還是完整的功能」。
+
+- **目標**：admin 主題編輯器（`/admin/themes/:id/editor`）以本尊 2026 編輯器為唯一對標，UI 與功能
+  1:1（鐵律 12 六層＋鐵律 13 三寬度），現有 op-stack／draft 渲染／橋接可保留為底層，UI 整層重做。
+- **根因登記**：先前編輯器依 `docs/research/66`（Ella 原始碼資料模型解剖）＋ `docs/research/24` §1
+  （2026-08 Horizon 4.1.3 局部實測）建骨架（G4 步 16a「三面板骨架」，27 條 CSS 規則），未做逐面板
+  逐控件六層實測、未做 CSS 量測三段式、未做三寬度；parity 軸 ⑤a／⑤b／⑤c／⑤e／⑤f 與三顆面板切換器
+  在 `docs/worklog/2026-09-02-ella修復15-編輯器shell批.md` Pending 登記後未收口。
+- **授權**：真店 pnrjnw-sy 自本裁定起**全權**（含 Duplicate 主題、在副本上點擊／儲存／刪除副本）；
+  做法仍以「Duplicate 副本上操作、現行發布主題不動」為預設安全形。測試店 chill-love-u5q5mnzq 於
+  2026-09-03 顯示「Your account … doesn't have permission to view this page」，無法使用（登記）。
+- **執行**：E1 逐面板實測 teardown（`docs/research/100-theme-editor-live-teardown.md`）→ E2 shell＋頂欄
+  → E3 左側 sections 樹 → E4 右側設定面板（逐控件型別）→ E5 區段／區塊 picker → E6 預覽內互動
+  → E7 RWD 收口；每包 spec＋突變輪＋CI＋部署，照 D40。
