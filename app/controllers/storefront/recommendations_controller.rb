@@ -101,8 +101,26 @@ module Storefront
       ActsAsTenant.with_tenant(current_shop) do
         collection_ids = CollectionProduct.where(shop_id: current_shop.id, product_id: product.id)
                                           .pluck(:collection_id)
-        return [] if collection_ids.empty?
+        picked = collection_ids.empty? ? [] : related_by_collections(product, collection_ids, limit)
+        # E12：本尊在共同系列成員不足時仍回其他商品（hoko.vip acme-tee 只在「首頁」系列，`/recommendations/products?section_id=…`
+        # 回 bolt-mug、cosy-lamp 兩張卡；兩者都不在該系列）——補位規則官方未逐字（V，91 §3.79）：以其他可見商品依建立時間升冪補到 limit
+        # （hoko 兩卡順序＝bolt-mug → cosy-lamp，即建立序）。
+        if picked.size < limit
+          picked += Product.discoverable(publication: Publication.online_store!)
+                           .where.not(id: [ product.id ] + picked.map(&:id))
+                           .order(:created_at, :id).limit(limit - picked.size)
+                           .includes(product_variants: [ :product_variant_option_values,
+                                                         { inventory_item: :inventory_levels },
+                                                         { media: :stored_file } ],
+                                     product_options: :option_values, media: :stored_file)
+                           .to_a
+        end
+        picked
+      end
+    end
 
+    def related_by_collections(product, collection_ids, limit)
+      ActsAsTenant.with_tenant(current_shop) do
         Product.discoverable(publication: Publication.online_store!)
                .joins(:collection_products)
                .where(collection_products: { collection_id: collection_ids })
@@ -148,7 +166,8 @@ module Storefront
     def renderer
       ThemeEngine::PageRenderer.new(
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
-        url_prefix:, host: request.host, asset_base: "/theme-assets", locale: nil
+        url_prefix:, host: request.host, asset_base: "/theme-assets",
+        locale: locale_hit&.locale_tag, web_presence: locale_hit&.web_presence # E12：語言跟 URL 前綴（先前 nil ⇒ 英文）
       )
     end
   end

@@ -61,6 +61,20 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(bodies.uniq.length).to eq(1)
   end
 
+  it "SF-9 🔴 SRA 端點語言跟 URL 前綴：recommendations／search suggest／cart sections 在 /zh-hant-hk/ 下取 zh-Hant 字串" do
+    get "/zh-hant-hk/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include('<span id="rhello">你好買家</span>')
+    get "/en-hk/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
+    expect(response.body).to include('<span id="rhello">Hello shopper</span>')
+    get "/zh-hant-hk/search/suggest", params: { q: "rose", section_id: "related-products" }
+    expect(response.body).to include('<span id="rhello">你好買家</span>')
+    variant_id = ActsAsTenant.with_tenant(shop) { product.product_variants.first.id }
+    post "/zh-hant-hk/cart/add", params: { id: variant_id, quantity: 1, sections: "related-products", sections_url: "/zh-hant-hk/" }
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("sections", "related-products")).to include('<span id="rhello">你好買家</span>')
+  end
+
   it "SF-3 語言不自動重導：帶中文 Accept-Language 打 /en-hk/ 仍 200（不 302 到 zh-hant）" do
     get "/en-hk/", headers: { "Accept-Language" => "zh-TW,zh-Hant;q=0.9" }
     expect(response).to have_http_status(:ok)

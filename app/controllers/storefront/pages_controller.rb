@@ -51,6 +51,21 @@ module Storefront
 
       # G6 打磨包：/cart 是個人化頁——**繞過頁快取**、以買家 cookie 的真車渲染
       # （14 §F1-4「個人化不進頁快取」＝不快取本頁，而不是快取一台空車）。
+      # E12：Section Rendering API 在**任何頁面**（官方 ajax/section-rendering，取證 2026-09-04："Sections rendered in response to
+      # the section_id query parameter are returned directly as HTML and, like sections, this parameter can be used to render a
+      # section in the context of any page."；"If the requested section ID doesn't exist on the theme, then the server responds
+      # with a 404 status."）。先前只有 search/suggest、recommendations、cart POST 走這條，`/search?section_id=` 回整頁 ⇒ Ella 的
+      # recently-viewed JS 拿到整頁 HTML 而顯示警告區塊（hoko 該段 display:none）。繞過頁快取（cart drawer 段含個人化）。
+      if section_rendering_request?
+        response.headers["Cache-Control"] = "no-store"
+        payload = render_page(hit, rest, cart_json: buyer_cart_json, extra: section_rendering_params)
+        return head :not_found if payload["status"] == 404
+        return head :bad_request if payload["status"] == 400
+        return render(json: payload["html"], status: payload["status"]) if payload["content_type"] == :json
+
+        return render html: payload["html"].html_safe, status: payload["status"], layout: false
+      end
+
       if rest == "/cart"
         response.headers["Cache-Control"] = "no-store"
         payload = render_page(hit, rest, cart_json: buyer_cart_json)
@@ -131,12 +146,6 @@ module Storefront
       nil
     end
 
-    def current_domain
-      @current_domain ||= ActsAsTenant.with_tenant(current_shop) do
-        Domain.find_by(host: request.host.to_s.downcase) || Domain.primary.first
-      end
-    end
-
     def cache_params
       base = params.permit(*CACHE_PARAMS).to_h
       qs = facets_query_string
@@ -155,14 +164,26 @@ module Storefront
       pairs.empty? ? nil : Rack::Utils.build_query(pairs)
     end
 
-    def render_page(hit, rest, cart_json: nil)
+    # Section Rendering API 參數：`section_id`（單段 HTML）／`sections`（逗號或陣列，回 JSON）——兩者並存時 renderer 讓 sections 壓過。
+    def section_rendering_request?
+      params[:section_id].present? || params[:sections].present?
+    end
+
+    def section_rendering_params
+      sections = params[:sections]
+      sections = sections.to_unsafe_h.values if sections.respond_to?(:to_unsafe_h)
+      sections = Array(sections).flat_map { |v| v.to_s.split(",") }.map(&:strip).reject(&:empty?).join(",")
+      { "section_id" => params[:section_id].to_s, "sections" => sections }.reject { |_, v| v.blank? }
+    end
+
+    def render_page(hit, rest, cart_json: nil, extra: {})
       ThemeEngine::PageRenderer.new(
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
         host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
         web_presence: hit.web_presence, # localization 真值（切換器只列開放∧已發布——67 §F.2）
         cart_json: # 🔴 個人化不進頁快取（14 §F1-4）——只有繞過快取的 /cart 會傳非 nil
-      ).render(rest, params: cache_params)
+      ).render(rest, params: cache_params.merge(extra))
     end
 
     # PR-12 預覽列：主題名＋結束預覽（href 帶正式主題 id＝83 §12.3 復位法；

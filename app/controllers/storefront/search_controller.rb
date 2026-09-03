@@ -263,7 +263,8 @@ module Storefront
     def renderer
       ThemeEngine::PageRenderer.new(
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
-        url_prefix:, host: request.host, asset_base: "/theme-assets", locale: nil
+        url_prefix:, host: request.host, asset_base: "/theme-assets",
+        locale: locale_hit&.locale_tag, web_presence: locale_hit&.web_presence # E12：語言跟 URL 前綴（先前 nil ⇒ 英文）
       )
     end
   end

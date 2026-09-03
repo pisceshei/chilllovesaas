@@ -192,11 +192,15 @@ module Storefront
       theme = ActsAsTenant.with_tenant(Current.shop) { Theme.published.first }
       return {} if theme.nil?
 
+      sections_url = params[:sections_url].presence || "/"
+      hit = locale_hit(sections_url.to_s.delete_prefix("/").split("/", 2)[0]) # E12：段的語言跟 sections_url 前綴
       renderer = ThemeEngine::PageRenderer.new(
         theme:, shop: Current.shop, publication: Publication.online_store!,
-        host: request.host, cart_json: CartSerializer.cart_json(current_cart.reload)
+        host: request.host, cart_json: CartSerializer.cart_json(current_cart.reload),
+        url_prefix: hit ? Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag) : "",
+        locale: hit&.locale_tag, web_presence: hit&.web_presence
       )
-      result = renderer.render(strip_locale_prefix(params[:sections_url].presence || "/"),
+      result = renderer.render(strip_locale_prefix(sections_url),
                                params: { "sections" => ids.join(",") })
       { "sections" => JSON.parse(result.html) }
     rescue JSON::ParserError

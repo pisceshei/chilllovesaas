@@ -93,12 +93,37 @@ module ThemeEngine
     def alt = @m.alt_text
     def position = @m.position
     def aspect_ratio = nil
-    def preview_image = nil
+
+    # E12：官方 objects/media 逐字 "A preview image of the media."（preview image 無 id；取證 2026-09-04）；本尊外部影片在
+    # 商家貼上 URL 時抓供應商縮圖存成 preview image。我方無下載線 ⇒ YouTube 以供應商公開縮圖 URL（hqdefault 480×360）
+    # 代位；Vimeo 需 oEmbed（未做 ⇒ nil ⇒ `image_url` 回 Liquid 錯誤「invalid url input」，與本尊無縮圖時同形；V，91 §3.79）。
+    # 沒有這層，Ella 商品圖庫對影片的 `media.preview_image | image_url` 會印錯誤文字（真主題回歸規格 EG1）。
+    def preview_image
+      return nil unless @m.external_host.to_s == "youtube" && @m.external_id.present?
+
+      @preview_image ||= ExternalPreviewImageDrop.new(
+        url: "https://i.ytimg.com/vi/#{@m.external_id}/hqdefault.jpg", width: 480, height: 360, alt: @m.alt_text)
+    end
 
     def liquid_method_missing(name)
       ThemeEngine.count_miss("ExternalVideoMediaDrop.#{name}")
       nil
     end
+  end
+
+  # 外部影片的供應商縮圖（無 id、無 StoredFile；`image_url` 直出 URL、不加尺寸參數）。
+  class ExternalPreviewImageDrop < Liquid::Drop
+    def initialize(url:, width:, height:, alt: nil)
+      super()
+      @url, @width, @height, @alt = url, width, height, alt
+    end
+
+    attr_reader :url, :width, :height, :alt
+    def src = @url
+    def aspect_ratio = @width.to_f / @height
+    def media_type = "image"
+    def preview_image = self
+    def to_s = @url
   end
 
   class ImageDrop < Liquid::Drop

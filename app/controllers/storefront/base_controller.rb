@@ -88,5 +88,22 @@ module Storefront
       end
       theme
     end
+    # E12：SRA 端點（recommendations／search suggest／cart sections）與整頁一樣**語言只由 URL 前綴決定**——先前三支
+    # renderer 一律 `locale: nil` ⇒ 段以英文渲染（hoko.vip 商品頁「Related products」卡片按鈕「售罄」／「加入购物车」，我方
+    # 「Sold out」／「Add to cart」，computed 對表按鈕寬 32／80 vs 74／99）。
+    def locale_hit(first_segment = params[:locale_prefix])
+      seg = first_segment.to_s
+      return nil if seg.blank?
+
+      @locale_hits ||= {}
+      @locale_hits[seg] ||= Markets::PrefixIndex.resolve(shop: current_shop, domain: current_domain, first_segment: seg)
+    end
+
+    def current_domain
+      @current_domain ||= ActsAsTenant.with_tenant(current_shop) do
+        Domain.find_by(host: request.host.to_s.downcase) || Domain.primary.first
+      end
+    end
+
   end
 end

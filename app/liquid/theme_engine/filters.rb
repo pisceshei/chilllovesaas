@@ -79,9 +79,14 @@ module ThemeEngine
           sized_media_url(base, width: w, height: h), source_drop: input,
           requested_width: w.positive? ? w : nil, requested_height: h.positive? ? h : nil)
       when ThemeEngine::PlaceholderImageDrop then input.url
-      # E8b：nil ⇒ 空字串（hoko.vip 商品頁 `data-product-variant-media=""`：無圖商品 `featured_media.preview_image | image_url` 為空；
-      # 先前回佔位 URL ⇒ 印 data: svg）。`shopify://`／空字串輸入仍走佔位（既有 PR-2 行為，官方未逐字，V）。
-      when nil then ""
+      when ThemeEngine::ExternalPreviewImageDrop then input.url # E12：供應商縮圖 URL 不加 width／height 參數
+      # E12（更正 E8b #52）：nil ⇒ raise「invalid url input」——hoko.vip 商品頁 `blocks/_sticky-add-to-cart` 逐字
+      # `<div class="sticky-atc__media">Liquid error (blocks/_sticky-add-to-cart line 96): invalid url input</div>`
+      # （`{{ current_media | image_url | image_tag }}`，current_media nil）。E8b 看到的 `data-product-variant-media=""` 不是「nil ⇒ 空字串」，
+      # 而是同一個錯誤發生在 `{% assign %}` 裡：Liquid 5.13 的 assign 吞錯、變數為空（本機 `bundle exec ruby` 探針；本尊同形）。
+      # 我方先前回空字串 ⇒ `image_tag` 再退佔位 ⇒ sticky-atc 多出一張 800px 佔位圖（computed 對表 E12 抓到）。
+      # `shopify://`／空字串輸入仍走佔位（既有 PR-2 行為，官方未逐字，V）。
+      when nil then raise Liquid::ArgumentError, "invalid url input"
       else
         s = input.to_s
         if s.start_with?("shopify://") || s.empty?

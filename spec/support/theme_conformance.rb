@@ -24,6 +24,14 @@ module ThemeConformance
       product = Product.create!(shop_id: shop.id, status: "active", handle: "tc-tee", title: "TC Tee",
                                 vendor: "TC", product_type: "Tee", description_html: "<p>tc</p>")
       ProductVariant.create!(shop_id: shop.id, product: product, price_cents: 18800, title: "Default", position: 1)
+      # E12：給商品一張圖——`image_url` 對 nil 自 E12 起＝Liquid 錯誤「invalid url input」（本尊逐字），無圖商品在 Minimog
+      # social-sharing 的 `share_image | image_url` 會如本尊一樣印錯誤；探針要抓的是引擎錯，不是無圖資料。
+      key = "shops/#{shop.id}/files/tc-tee.png"
+      Storage::LocalDisk.write(key, StringIO.new("x"))
+      file = StoredFile.create!(shop_id: shop.id, filename: "tc-tee.png", content_type: "image/png", byte_size: 1,
+                                checksum: SecureRandom.hex(32), storage_key: key, status: "ready", width: 800, height: 800)
+      Media.create!(shop_id: shop.id, product_id: product.id, file_id: file.id, media_type: "image", position: 1,
+                    source_url: "/x", status: "ready")
       collection = Collection.create!(shop_id: shop.id, title: "TC Col", handle: "tc-col",
                                       description_html: "", collection_type: "manual", sort_order: "manual")
       CollectionProduct.create!(shop_id: shop.id, collection: collection, product: product, position: 1)
