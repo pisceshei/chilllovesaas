@@ -1,2 +1,2 @@
 <i class="pblk" data-tone="{{ block.settings.tone }}">[{% for child_block in block.blocks %}{% render child_block %}{% endfor %}]</i>
-{% schema %}{ "name": "Parent", "settings": [ { "id": "tone", "type": "text", "default": "calm" } ], "blocks": [ { "type": "_leaf" } ] }{% endschema %}
+{% schema %}{ "name": "Parent", "settings": [ { "id": "tone", "type": "text", "default": "calm" } ], "blocks": [ { "type": "_leaf" } ], "presets": [ { "name": "Parent", "category": "Layout" } ] }{% endschema %}

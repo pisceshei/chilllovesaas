@@ -1126,7 +1126,7 @@
   "settings.webhooks.secretOnce": "簽章密鑰（只顯示這一次，請立即保存）：",
   "settings.webhooks.secretDismiss": "我已保存",
   "editor.templateBand": "範本",
-  "editor.blockRemove": "移除 block {id}",
+  "editor.blockRemove": "移除 block",
   "editor.exit": "離開",
   "editor.leaveTitle": "離開頁面並放棄未儲存的變更？",
   "editor.leaveMessage": "離開此頁會刪除所有未儲存的變更。",

@@ -1126,7 +1126,7 @@
   "settings.webhooks.secretOnce": "Signing secret (shown only once — save it now): ",
   "settings.webhooks.secretDismiss": "I saved it",
   "editor.templateBand": "Template",
-  "editor.blockRemove": "Remove block {id}",
+  "editor.blockRemove": "Remove block",
   "editor.exit": "Exit",
   "editor.leaveTitle": "Leave page with unsaved changes?",
   "editor.leaveMessage": "Leaving this page will delete all unsaved changes.",

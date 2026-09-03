@@ -4066,3 +4066,19 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **登記 migration 非交易重跑**：MySQL DDL 不可回滾，`add_column` 成功後 `execute` 被 strong_migrations 擋下 ⇒ 第二次跑撞
   Duplicate column；固定處理＝逐欄 `column_exists?` 守衛＋回填 `safety_assured`（本包已改）。
 - **已收口**：`ShopDrop#permanent_domain`／`#domain` 硬編 `chilllove.example`（3.75 登記）⇒ 改 `{subdomain}.{base_host}`。
+
+### 3.78 主題編輯器 E10（Announcement bar 逐控件對照）的範圍外觀察與未取得（2026-09-03）
+
+全文：`docs/dev/e10-theme-editor-announcement-bar.md` §3；證據 `docs/dev/external-facts.md` §G16。
+
+- **V section 面板「Theme Settings」收合區的判定規則**：本尊在 Announcement bar 列出 Facebook 與 Reveal sections on scroll。
+  Facebook 可由 `blocks/_group-announcement-bar.liquid` 的 `settings.social_facebook_link` 解釋（該行是 `and` 串接的 if，Liquid 短路只讀第一個；
+  Instagram／YouTube 未列），Reveal sections on scroll（`animations_reveal_on_scroll`）在該 section／block／snippet 鏈**無任何引用** ⇒
+  疑為執行期讀取追蹤或另有規則；我方仍只掃 section 檔的 `settings.x`（E4 ours），本 section 因此無此收合區。實驗方案：清空 Facebook 後看是否改列 Instagram。
+- **⚪「Ask for changes」（Sidekick）**：本尊浮動工具列第一項為 AI 入口，平台功能不複製。
+- **V section 級工具列 Duplicate 灰化規則**：Announcement bar（header group）灰化、block 級可用；template 段未觀察。
+- **V URL `section=` 形**：本尊 `sections--{group_id}__{section_id}`（group 檔 id 前綴），我方 `section={section_id}`；block 路徑兩邊同用 `__` 串接。
+- **V 面板字型／字級與分段「放得進容器」的實際量法**：只做 zoom 換算量測（控件欄 ≈158px），分段判準以真店六個實例校準的估寬（拉丁 6.2px／全形 12.4px／字）代替。
+- **V `_announcement-text` Text 標籤右側小圖示**（疑為翻譯／動態來源入口）未點驗。
+- **待驗（下一輪）**：section 級「…」選單項；隱藏後樹／預覽形態；拖曳排序；Undo／Redo；Save 啟用時機；改值時預覽更新方式。
+- **登記 Ella 標籤 bug**：`_group-announcement-bar` 的 `padding_bottom` 標籤鍵是 `t:settings.left`（本尊面板顯示兩個 Left），兩邊同形，不修主題。

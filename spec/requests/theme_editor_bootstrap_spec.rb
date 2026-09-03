@@ -386,6 +386,25 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(blocks.dig("_leaf", "blocks")).to eq([])
     expect(blocks.dig("_leaf", "settings").map { |d| d["id"] }).to eq([ "label" ])
   end
+  it "E13b 🔴 section schema 的 block **引用形**（只有 type）解析成 theme block 定義；分類退 preset category（E10）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas themeBlocks } }
+    GQL
+    data = response.parsed_body.dig("data", "theme")
+    ref = data.dig("sectionSchemas", "blocks-local", "blocks").find { |b| b["type"] == "_parent" }
+    # 殺：把引用當本地定義 ⇒ name 退成 type、settings 空、category nil
+    expect(ref["name"]).to eq("Parent")
+    expect(ref["settings"].map { |d| d["id"] }).to eq([ "tone" ])
+    expect(ref["category"]).to eq("Layout")
+    expect(ref["blocks"]).to eq([ "_leaf" ])
+    # 本地定義（帶 settings）不被 theme block 覆蓋
+    local = data.dig("sectionSchemas", "blocks-local", "blocks").find { |b| b["type"] == "text" }
+    expect(local["settings"].map { |d| d["id"] }).to eq(%w[body size])
+    expect(data.dig("themeBlocks", "_parent", "category")).to eq("Layout")
+    expect(data.dig("themeBlocks", "_bare", "category")).to be_nil
+  end
+
   it "E14 🔴 nameTranslations：實例 name 的 t: 鍵 → 翻譯（來源檔＋DB 模板）；無翻譯的鍵不列" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     ActsAsTenant.with_tenant(shop) do

@@ -1126,7 +1126,7 @@
   "settings.webhooks.secretOnce": "署名キー（今回のみ表示——今すぐ保存）：",
   "settings.webhooks.secretDismiss": "保存しました",
   "editor.templateBand": "テンプレート",
-  "editor.blockRemove": "ブロック {id} を削除",
+  "editor.blockRemove": "ブロックを削除",
   "editor.exit": "終了",
   "editor.leaveTitle": "未保存の変更を破棄してページを離れますか？",
   "editor.leaveMessage": "このページを離れると、保存していない変更はすべて失われます。",

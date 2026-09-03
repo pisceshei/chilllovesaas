@@ -1351,3 +1351,28 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   {{amount_no_decimals}} will be replaced with the price of your product."。前台印證：首頁 `window.money_format = "${{amount}}"`
   （Ella global-script 走 `shop.money_format` 分支）、購物車抽屜總額 `HK$0.00 HKD`（`cart.total_price | money_with_currency`）、
   商品卡 `$19.99`。⇒ 我方 HKD 種子＝這四值（Email 兩欄我方尚未分欄，共用 HTML 兩欄，91 §3.77）。
+
+### G16. 主題編輯器 select 分段規則與面板量測（E10 依據，取證 2026-09-03）
+
+- **官方 input-settings「select」**（<https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings>，取證 2026-09-03）逐字：
+  下拉（dropdown）條件——"The optional `group` attribute is used."／"More than five options are provided."／
+  "The options are too long and might overflow their container."；分段控制（segmented control）條件——
+  "The optional `group` attribute isn't used."／"Two to five options are provided."／"All options fit within their container and don't overflow."
+  官方逐字 radio＝"A setting of type `radio` outputs a radio option field"。**未取得**：「fit within their container」的量法（字型、內距、容器寬）。
+- **真店實測（pnrjnw-sy 副本主題 143506604135，Ella 7.2.0，Chrome 前景分頁）**：分段＝Direction（Vertical／Horizontal）、Wrap（No／Yes）、
+  Align items（Top／Center／Bottom）、Text alignment on mobile（Left／Center／Right）；下拉＝Font（Heading／Subheading／Body）、
+  Text weight（Default／400／600／700）、Justify（Start／Center／End／Space between／around／evenly，6 項）。
+  ⇒ 我方以估寬校準：拉丁字 6.2px、全形 12.4px、每段內距 16px、外框 4px，對 158px 控件欄判定，六例全部吻合（`segmentFits`）。
+- **面板量測**（zoom 換算：截圖框 1568px ↔ 視窗 2327 CSS px，zoom 2.45×）：列高 48 CSS px；標籤欄自面板左 15px 起；
+  控件欄自 121px 至 279px（≈158px）；range 數字框 ≈60×30；分段／下拉高 ≈30；toggle ≈32 寬靠右。
+- **本尊面板元素**：range＝滑桿＋數字框＋單位同列；checkbox＝toggle switch 靠右；color＝色票＋hex 文字框；
+  color_background＝「No color chosen」＋說明 "Background gradient replaces background where possible"；header＝粗體小標；
+  Remove block／Remove section＝紅字含垃圾桶 icon、不帶 id；面板標題列「…」選單（block 級）＝Copy／Duplicate／Rename／Hide／Edit code／Remove。
+- **樹列**：block 列名後以「 – 」接內容摘要（斜體、截尾），名稱不截（「Announcement text – End …」）；選中列藍底白字；
+  hover／選中列右側 🗑／👁 圖示；URL `?section=sections--{group_id}__{section_id}&block=<section>__<block>__<block>…`；開 Custom CSS 加 `&customCss=true`。
+- **Add block 選擇器**：浮層貼樹旁，搜尋框「Search blocks」、頁籤 Blocks／Apps、左清單分群（群名＝block preset 的 `category`，如 Ella
+  `_group-announcement-bar` 的 `"presets":[{"category":"t:categories.header"}]` ⇒「Header」）、右側預覽區。
+- **預覽覆疊**：選中／hover 元素藍框＋左上 chip（元素名）；浮動工具列（元素下方置中、深色圓角）＝「✨ Ask for changes」＋複製／隱藏／刪除圖示鈕
+  （section 級在 header group 複製灰化）；section 邊界「+」。
+- **section schema 引用 theme block**：Ella `announcement-bar` schema `blocks: [{type:"@app"},{type:"_group-announcement-bar"},{type:"_group-sale-banner"}]`
+  ⇒ 本尊樹列名「Announcement」「Sale banner」（取 `blocks/*.liquid` 的 `name`）、面板為該 block 的完整設定。

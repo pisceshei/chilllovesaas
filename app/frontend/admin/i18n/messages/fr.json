@@ -1126,7 +1126,7 @@
   "settings.webhooks.secretOnce": "Clé de signature (affichée une seule fois) : ",
   "settings.webhooks.secretDismiss": "Enregistrée",
   "editor.templateBand": "Modèle",
-  "editor.blockRemove": "Supprimer le bloc {id}",
+  "editor.blockRemove": "Supprimer le bloc",
   "editor.exit": "Quitter",
   "editor.leaveTitle": "Quitter la page sans enregistrer ?",
   "editor.leaveMessage": "En quittant cette page, toutes les modifications non enregistrées seront perdues.",

@@ -76,6 +76,30 @@ export function effectiveValue(def: SettingDef, value: unknown): unknown {
   }
 }
 
+/** E10：本尊分段控制的控件欄寬（CSS px；真店面板量測 2026-09-03：控件欄 ≈158、列高 48）。 */
+export const SEGMENT_COLUMN_WIDTH = 158;
+const SEGMENT_ITEM_PADDING = 16; // 每段左右內距（.cl-ctl-seg__item 8px×2）
+const SEGMENT_FRAME = 4; // .cl-ctl-seg 外框內距 2px×2
+const SEGMENT_CHAR_WIDTH = 6.2; // 估算字寬（13px 系統字平均；本尊實際量測法未取得 ⇒ 以真店六個實例校準，external-facts §G16）
+const FULLWIDTH_RE = /[\u1100-\u115f\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6]/;
+/** 標籤估寬：全形（CJK／韓文／全形標點）字算 2 單位。 */
+export function labelWidth(text: string): number {
+  let units = 0;
+  for (const ch of text) units += FULLWIDTH_RE.test(ch) ? 2 : 1;
+  return units * SEGMENT_CHAR_WIDTH;
+}
+
+/** 官方 input-settings 逐字：select 在「無 group、2–5 個選項、全部放得進容器」時是分段控制，否則下拉（external-facts §G16）。 */
+export function segmentFits(options: SettingOption[], columnWidth = SEGMENT_COLUMN_WIDTH): boolean {
+  if (options.length < 2 || options.length > 5) return false;
+  if (options.some((option) => option.group)) return false;
+  const width = options.reduce((sum, option) => sum + labelWidth(option.label ?? option.value) + SEGMENT_ITEM_PADDING, SEGMENT_FRAME);
+  return width <= columnWidth;
+}
+
+/** 本尊右欄「標籤｜控件」同列的型別（真店實測 2026-09-03：range／select／分段／toggle／color／color_background／color_scheme）。 */
+const INLINE_TYPES = new Set([ "range", "select", "radio", "checkbox", "color", "color_background", "color_scheme", "text_alignment" ]);
+
 const RESOURCE_TYPES = new Set([ "product", "collection", "page", "blog", "article", "product_list", "collection_list",
   "article_list", "video", "metaobject", "metaobject_list" ]);
 
@@ -150,8 +174,30 @@ export function SettingRow({ def, value, onChange, ctx }: RowProps) {
       break;
     }
     case "select": {
+      // E10：分段 vs 下拉（官方三條件）。真店：Direction／Wrap／Align items／Text alignment on mobile＝分段；
+      // Font（Heading／Subheading／Body）／Text weight（Default／400／600／700）／Justify（6 項）＝下拉。
+      const options = def.options ?? [];
+      if (segmentFits(options)) {
+        control = (
+          <span aria-labelledby={`${inputId}-label`} className="cl-ctl-seg" role="radiogroup">
+            {options.map((option) => (
+              <button
+                aria-checked={String(effective ?? "") === option.value}
+                className={`cl-ctl-seg__item${String(effective ?? "") === option.value ? " is-active" : ""}`}
+                key={option.value}
+                onClick={() => onChange(option.value)}
+                role="radio"
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </span>
+        );
+        break;
+      }
       const groups = new Map<string, SettingOption[]>();
-      for (const option of def.options ?? []) {
+      for (const option of options) {
         const key = option.group ?? "";
         groups.set(key, [ ...(groups.get(key) ?? []), option ]);
       }
@@ -333,13 +379,15 @@ export function SettingRow({ def, value, onChange, ctx }: RowProps) {
       }
   }
 
+  // E10：本尊單列形（標籤左、控件右）；文字／富文本／代碼／圖片／資源等仍為標籤在上、控件在下。
+  const inline = INLINE_TYPES.has(def.type);
   return (
-    <div className="cl-panel__row" data-type={def.type}>
+    <div className={`cl-panel__row${inline ? " cl-panel__row--inline" : ""}`} data-type={def.type}>
       <div className="cl-panel__labelrow">
         <label className="cl-panel__label" htmlFor={inputId} id={`${inputId}-label`}>{label}</label>
-        {side}
+        {inline ? <div className="cl-panel__inline">{control}{side}</div> : side}
       </div>
-      {control ? <div className="cl-panel__control">{control}</div> : null}
+      {!inline && control ? <div className="cl-panel__control">{control}</div> : null}
       {def.info ? <p className="cl-panel__info">{def.info}</p> : null}
     </div>
   );
