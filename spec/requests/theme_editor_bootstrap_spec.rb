@@ -431,5 +431,4 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(fonts.find { |f| f["key"] == "system_ui" }["system"]).to be(true)
     expect(fonts.find { |f| f["key"] == "assistant" }["handles"]).to include("n4")
   end
-
 end
