@@ -786,7 +786,7 @@ export function ThemeEditorPage() {
 
   /** preset block id（25 §5 生成規則 `{type 底線化}_{6 碼 base62}`）；本尊 id 形未逐字取得，取觀察形。 */
   const newPresetBlockId = (type: string, taken: Set<string>) => {
-    const base = type.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "block";
+    const base = type.replace(/[^A-Za-z0-9]+/g, "_") || "block"; // 前導底線保留（Ella 私有 block `_parent` ⇒ `_parent_xxxxxx`）
     const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const rand = () => Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
     let id = `${base}_${rand()}`;
@@ -1197,7 +1197,8 @@ export function ThemeEditorPage() {
   const catalogByKey = new Map((data?.sectionCatalog ?? []).map((entry) => [ `${entry.type}#${entry.presetIndex ?? 0}`, entry ]));
   const blockPickerItems: PickerItem[] = blockPicker
     ? addBlockOptions(blockPicker.band, blockPicker.sectionId, blockPicker.parentPath).map((def) => ({
-      key: def.type, name: def.name ?? def.type, category: (def as BlockDef).category ?? null }))
+      // 分類：section 本地 def 多半沒帶 category ⇒ 退回同型 theme block 的 category（Ella header 的 block 即 theme blocks）
+      key: def.type, name: def.name ?? def.type, category: (def as BlockDef).category ?? themeBlocks[def.type]?.category ?? null }))
     : [];
 
   if (error) {
