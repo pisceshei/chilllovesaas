@@ -36,6 +36,9 @@ URL 狀態。給商家在後台客製主題用；對應 Shopify「Customize」�
   - `summaryOf(entry, defs)`：第一個 text／textarea／richtext／inline_richtext／html 型設定值，去 tag、40 字截斷——
     block 列「名稱 – 摘要」的來源（100 §2.2）。
   - `iconKindFor(type, name)`：關鍵字對映 type icon 種類（group／image／video／heading／link／button／text／block）。
+  - `visibleBlockIds(container)`：`block_order` 內的可拖列 ＋ 不在其中的 `static: true` block（附在後）。Ella
+    `templates/product.json` 的 media-gallery／product-details／sticky-atc 就是這種節點（只在 `blocks` map，不在
+    `block_order`；`docs/research/66` §A.5.2）——只迭代 `block_order` 會讓整個靜態容器從樹上消失。
   - `TreeBand {band,label,position,groupType,tpl}`／`rowKey(band,sectionId,path)`／`flattenRows(bands, expanded)`
     （可視列扁平化：Shift+↑↓ 走的就是這張表，收合的子層不在其中）／`allExpandableKeys(bands)`（Ctrl+Shift+O）。
   - `sectionAllowedIn(availability, {templateType} | {groupType})`：`disabled_on` 先擋、`enabled_on` 有列才准、都沒寫＝准。
@@ -44,7 +47,8 @@ URL 狀態。給商家在後台客製主題用；對應 Shopify「Customize」�
     的帶（footer 類）Add section 在列之上（100 §2）。
   - section 列與 block 列同構（`renderSectionRows`／`renderBlockRows`，block 列遞迴）：chevron 只在「有子項或可加子項」
     時顯示；type icon 在 hover 時被 drag handle（⋮⋮）取代；名稱鈕 `aria-pressed`＝選中；hover 動作垃圾桶（Remove）／
-    眼睛（Hide／Show）；隱藏列 `is-hidden`（灰字）且眼睛 `is-persistent`（常駐）。
+    眼睛（Hide／Show）；隱藏列 `is-hidden`（灰字）且眼睛 `is-persistent`（常駐）。static block 列：鎖 icon 取代 drag
+    handle（`aria-label`＝「靜態區塊（固定位置）」）、`draggable=false`、無垃圾桶、不可作 drop 目標；仍可選取、改設定、隱藏。
   - 展開的 section／容器 block 的第一個子列＝"⊕ Add block"（點開列出可加型別；section 層依 schema `blocks` 且受
     `max_blocks`；容器層依 theme block 的 `blocks` 接受清單，`@theme`＝全部 theme blocks，深度 ≥ 8 不再列）。
   - 拖放：section 只在同帶內重排、block 只在同容器內重排（跨帶／跨容器 drop 忽略）。
@@ -61,7 +65,8 @@ URL 狀態。給商家在後台客製主題用；對應 Shopify「Customize」�
   - `selectNode(band, sectionId, path)`：寫 state＋URL（`section`、`block`），展開祖先（`expandTo`）。初載還原
     `?section=&block=` 時同樣展開祖先。
   - 操作全部走既有 `applyOp` 快照棧（undo／redo）：`toggleNodeDisabled`／`removeNode`／`moveNode`／`addBlockAt`
-    （id＝型別名，重複則加 `-n` 尾碼；預設值取定義 `default`）／`commitRename`（`name` 寫入或清除）／`addSection`
+    （id＝型別名，重複則加 `-n` 尾碼；預設值取定義 `default`）／`commitRename`（`name` 寫入或清除）／`removeNode`
+    對 static block 直接返回（面板底部的「移除 block」也不渲染）／`addSection`
     （插到 `pickerFor.atIndex`，`null`＝帶尾端）。
   - 快捷鍵表 `app/frontend/admin/editor/editorShortcuts.ts` 加 `selectPrev`（Shift+↑）／`selectNext`（Shift+↓）／
     `openSelected`（Shift+Enter：焦點進右欄第一個控件）／`expandAll`（Ctrl+Shift+O）／`collapseAll`（Ctrl+Shift+P）；
@@ -104,14 +109,16 @@ URL 狀態。給商家在後台客製主題用；對應 Shopify「Customize」�
   容器內新增進 payload）、ED36（右鍵選單全項＋Rename 寫 `name`＋Add section after 插位）、ED37（Shift+↑↓ 跳過收合子層、
   Shift+Enter 聚焦、Ctrl+Shift+O／P）、ED38（群組 picker 依 `enabled_on.groups` 過濾、`limit` 灰化 "(1/1)"、footer 帶
   Add section 在列之上、Template 帶只列模板可用者）、ED39（Preview 列選產品 ⇒ `previewPath`＋編輯連結）、ED40
-  （URL 還原展開祖先＋隱藏 block 灰列與眼睛常駐）。
+  （URL 還原展開祖先＋隱藏 block 灰列與眼睛常駐）、ED41（static block 列在樹上：鎖 icon、不可拖、無垃圾桶、Shift+⌫
+  不刪、可隱藏、save 保留且不進 `block_order`）。
   跑法：`pnpm -s vitest run app/frontend/admin/pages/ThemeEditorPage.test.tsx`。
 - 後端 `spec/requests/theme_editor_bootstrap_spec.rb`：E11（群組 label／type／position）、E12（`enabled_on`／`limit`）、
   E13（theme block 可接受子型別）。跑法：`bundle exec rspec spec/requests/theme_editor_bootstrap_spec.rb`。
 - 突變輪（生產碼各改一處 → 對應測試轉紅 → 還原）：見 worklog 表。
 
 ## 跨功能／跨頁／前端影響（鐵律 12.4 ④）
-- 模板 JSON：`name` 欄開始被寫入（Rename）；Liquid 引擎照舊忽略它（Ella fixture 本來就帶）。
+- 模板 JSON：`name` 欄開始被寫入（Rename）；Liquid 引擎照舊忽略它（Ella fixture 本來就帶）。`static: true` 的 block
+  由樹顯示但不動它的順序與存在（引擎以 `content_for 'block'` 固定位置渲染）。
 - URL 契約：`block=` 由單一 id 變成 `__` 串接的路徑；E6 預覽橋的 `cl:select {id, blockId}` 仍只帶葉 id，頁面以
   `findBlockPath` 反查（葉 id 在 section 內重複時取第一個命中——登記為已知限制）。
 - E4 右欄：標題已用顯示名；「…」選單的 Rename 應呼叫同一個 `startRename`。E5 picker：候選過濾與 `(n/limit)` 灰化邏輯
