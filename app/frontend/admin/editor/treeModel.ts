@@ -20,6 +20,8 @@ export interface BlockEntry {
   /** 使用者改名（本尊 Rename 寫進 JSON `name`；Ella 匯出可見）。 */
   name?: string;
   disabled?: boolean;
+  /** 靜態 block：section Liquid 以 `content_for 'block'` 固定位置渲染，不在 `block_order`、不可拖／刪（66 §A.5.2）。 */
+  static?: boolean;
   settings?: Record<string, unknown>;
   blocks?: Record<string, BlockEntry>;
   block_order?: string[];
@@ -44,6 +46,19 @@ export function orderOf(tpl: TemplateJson): string[] {
 
 export function blockOrderOf(container: BlockEntry): string[] {
   return container.block_order ?? Object.keys(container.blocks ?? {});
+}
+
+/**
+ * 樹要顯示的子 block：`block_order` 內的可拖列，加上不在其中的 static block（依 `blocks` 鍵序附在後）。
+ * 🔴 static block 只出現在 `blocks` map（Ella `templates/product.json` 的 media-gallery／product-details／sticky-atc）；
+ * 只迭代 `block_order` 會讓整個靜態容器與其子樹從樹上消失。重排／新增仍只動 `block_order`。
+ */
+export function visibleBlockIds(container: BlockEntry): string[] {
+  const ordered = blockOrderOf(container);
+  const statics = Object.entries(container.blocks ?? {})
+    .filter(([ id, block ]) => block.static && !ordered.includes(id))
+    .map(([ id ]) => id);
+  return [ ...ordered, ...statics ];
 }
 
 /** 依路徑取 block；`[]` 回 section 本身。找不到回 null。 */
@@ -76,7 +91,7 @@ export function decodeBlockPath(value: string | null): BlockPath | null {
 export function findBlockPath(section: SectionEntry, leafId: string): BlockPath | null {
   const walk = (container: BlockEntry, prefix: BlockPath, depth: number): BlockPath | null => {
     if (depth > MAX_BLOCK_DEPTH) return null;
-    for (const id of blockOrderOf(container)) {
+    for (const id of visibleBlockIds(container)) {
       const child = container.blocks?.[id];
       if (!child) continue;
       if (id === leafId) return [ ...prefix, id ];
@@ -144,7 +159,7 @@ export function flattenRows(bands: TreeBand[], expanded: Set<string>): TreeRow[]
   const rows: TreeRow[] = [];
   const walk = (band: string, sectionId: string, container: BlockEntry, prefix: BlockPath, depth: number) => {
     if (depth > MAX_BLOCK_DEPTH) return;
-    for (const id of blockOrderOf(container)) {
+    for (const id of visibleBlockIds(container)) {
       const child = container.blocks?.[id];
       if (!child) continue;
       const path = [ ...prefix, id ];
@@ -169,7 +184,7 @@ export function allExpandableKeys(bands: TreeBand[]): string[] {
   const keys: string[] = [];
   const walk = (band: string, sectionId: string, container: BlockEntry, prefix: BlockPath, depth: number) => {
     if (depth > MAX_BLOCK_DEPTH) return;
-    for (const id of blockOrderOf(container)) {
+    for (const id of visibleBlockIds(container)) {
       const child = container.blocks?.[id];
       if (!child) continue;
       const path = [ ...prefix, id ];

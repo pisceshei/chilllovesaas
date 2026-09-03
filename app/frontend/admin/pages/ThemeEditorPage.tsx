@@ -758,6 +758,8 @@ export function ThemeEditorPage() {
       return;
     }
     const id = path[path.length - 1];
+    const sectionNow = sectionOf(band, sectionId);
+    if (sectionNow && getBlock(sectionNow, path)?.static) return; // static block 不可刪（66 §A.5.2；樹也不給垃圾桶）
     withSection(band, sectionId, (section) => {
       const container = getContainer(section, path);
       if (!container?.blocks) return;
@@ -1364,13 +1366,15 @@ export function ThemeEditorPage() {
                         <FallbackControl key={key} name={key}
                           onChange={(next) => setBlockSetting(key, next)} value={value} />
                       ))}
-                      <Button
-                        onClick={() => removeNode(selectedBand, selectedId, selectedPath)}
-                        size="small"
-                        variant="critical"
-                      >
-                        <Trash2 aria-hidden="true" size={13} /> {t("editor.blockRemove", { id: selectedBlockId ?? "" })}
-                      </Button>
+                      {selectedBlock.static ? null : (
+                        <Button
+                          onClick={() => removeNode(selectedBand, selectedId, selectedPath)}
+                          size="small"
+                          variant="critical"
+                        >
+                          <Trash2 aria-hidden="true" size={13} /> {t("editor.blockRemove", { id: selectedBlockId ?? "" })}
+                        </Button>
+                      )}
                     </>
                   );
                 })()

@@ -1076,4 +1076,41 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(tree.getByRole("button", { name: "父塊" }).closest(".cl-tree__row")?.className).toContain("is-hidden");
   });
 
+  it("ED41 🔴 static block：不在 block_order 也列在樹上（鎖 icon、不可拖、無垃圾桶）；Shift+⌫ 不刪；可隱藏；save 保留", async () => {
+    const boot = JSON.parse(JSON.stringify(BOOTSTRAP)) as typeof BOOTSTRAP;
+    const demo = boot.data.theme!.templateJson!.sections!.demo as {
+      block_order?: string[]; blocks?: Record<string, { type: string; static?: boolean; settings?: Record<string, unknown> }> };
+    demo.block_order = [ "p1" ];
+    demo.blocks = { p1: { type: "_parent" }, sb: { type: "_parent", static: true, settings: {} } }; // Ella product.json 形：static 不在 block_order
+    const fetchMock = stubFetch([], boot);
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getByRole("button", { name: "展開 Blocks demo" }));
+    const rows = tree.getAllByRole("button", { name: "父塊" });
+    expect(rows).toHaveLength(2); // p1（可拖）＋ sb（static，附在後）
+    const staticLi = rows[1].closest("li")!;
+    expect(staticLi.getAttribute("draggable")).toBe("false");
+    expect(within(staticLi).getByRole("img", { name: "靜態區塊（固定位置）" })).toBeInTheDocument(); // 鎖 icon
+    expect(within(staticLi).queryByLabelText("移除 block sb")).toBeNull(); // 無垃圾桶
+    expect(within(staticLi).getByLabelText("隱藏 sb")).toBeInTheDocument(); // 眼睛照舊
+
+    fireEvent.click(rows[1]);
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    expect(settings.getByLabelText("標籤")).toBeInTheDocument(); // 設定可改
+    expect(settings.queryByRole("button", { name: /移除 block/ })).toBeNull(); // 面板底部也無移除
+    fireEvent.keyDown(window, { key: "Backspace", shiftKey: true });
+    expect(tree.getAllByRole("button", { name: "父塊" })).toHaveLength(2); // Shift+⌫ 不刪 static
+
+    fireEvent.click(tree.getByLabelText("隱藏 sb"));
+    expect(tree.getByLabelText("顯示 sb")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { block_order: string[]; blocks: Record<string, unknown> }> } } };
+    expect(sent.variables.content.sections.demo.block_order).toEqual([ "p1" ]); // static 不進 block_order
+    expect(sent.variables.content.sections.demo.blocks.sb).toMatchObject({ type: "_parent", static: true, disabled: true });
+  });
+
 });

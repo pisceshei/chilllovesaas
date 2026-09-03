@@ -2842,6 +2842,8 @@ a {
 .cl-tree__grip { display: none; cursor: grab; }
 .cl-tree__row:hover .cl-tree__typeicon { display: none; }
 .cl-tree__row:hover .cl-tree__grip { display: inline; }
+/* E3：static block 的鎖 icon 佔 grip 的位置（hover 才顯示，與 grip 同規則），灰階 */
+.cl-tree__lock { color: var(--text-3); }
 .cl-tree__label { flex: 1; min-width: 0; display: inline-flex; align-items: baseline; gap: var(--sp-100); min-height: var(--editor-row-h); padding: 0 var(--sp-100); border: 0; background: transparent; color: var(--text); text-align: start; cursor: pointer; font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); }
 .cl-tree__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cl-tree__summary { color: var(--text-3); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

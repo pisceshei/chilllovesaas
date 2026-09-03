@@ -1212,5 +1212,6 @@
   "editor.previewLabel": "Aperçu",
   "editor.searchResources": "Rechercher",
   "editor.editResource": "Modifier",
-  "editor.renamePrompt": "Nom"
+  "editor.renamePrompt": "Nom",
+  "editor.staticBlock": "Bloc statique (position fixe)"
 }

@@ -1212,5 +1212,6 @@
   "editor.previewLabel": "預覽",
   "editor.searchResources": "搜尋",
   "editor.editResource": "編輯",
-  "editor.renamePrompt": "名稱"
+  "editor.renamePrompt": "名稱",
+  "editor.staticBlock": "靜態區塊（固定位置）"
 }

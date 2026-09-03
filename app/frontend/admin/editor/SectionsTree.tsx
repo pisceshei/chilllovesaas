@@ -1,11 +1,11 @@
 import {
-  AlignLeft, ChevronDown, ChevronRight, CirclePlus, Code2, Eye, EyeOff, Folder, GripVertical, Heading, Image, Link2,
+  AlignLeft, ChevronDown, ChevronRight, CirclePlus, Code2, Eye, EyeOff, Folder, GripVertical, Lock, Heading, Image, Link2,
   MousePointer, PanelTop, Pencil, SquareDashed, Trash2, Video,
 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { useT } from "../i18n/I18nContext";
 import {
-  blockOrderOf, iconKindFor, orderOf, rowKey, summaryOf, type BlockEntry, type BlockPath, type IconKind,
+  visibleBlockIds, iconKindFor, orderOf, rowKey, summaryOf, type BlockEntry, type BlockPath, type IconKind,
   type SectionEntry, type SettingDefLite, type TreeBand,
 } from "./treeModel";
 
@@ -127,7 +127,7 @@ export function SectionsTree(props: SectionsTreeProps) {
 
   const renderBlockRows = (band: string, sectionId: string, sectionType: string, container: BlockEntry,
     prefix: BlockPath, depth: number): ReactNode => {
-    const order = blockOrderOf(container);
+    const order = visibleBlockIds(container);
     const parentKey = prefix.join("/");
     return (
       <ul className="cl-tree__children">
@@ -140,18 +140,18 @@ export function SectionsTree(props: SectionsTreeProps) {
           const def = props.blockDef(sectionType, path, block.type);
           const label = block.name ?? def?.name ?? block.type;
           const summary = summaryOf(block, def?.settings);
-          const hasChildren = blockOrderOf(block).length > 0 || props.addBlockOptions(band, sectionId, path).length > 0;
+          const hasChildren = visibleBlockIds(block).length > 0 || props.addBlockOptions(band, sectionId, path).length > 0;
           const isOpen = props.expanded.has(key);
           const isActive = props.selection?.band === band && props.selection.sectionId === sectionId
             && props.selection.path.join("/") === path.join("/");
           return (
             <li
               className="cl-tree__item"
-              draggable
+              draggable={!block.static}
               key={blockId}
               onDragOver={(event) => {
                 const drag = dragRef.current;
-                if (drag && drag.band === band && drag.sectionId === sectionId && drag.parent === parentKey) {
+                if (!block.static && drag && drag.band === band && drag.sectionId === sectionId && drag.parent === parentKey) {
                   event.preventDefault();
                   event.stopPropagation();
                 }
@@ -165,7 +165,7 @@ export function SectionsTree(props: SectionsTreeProps) {
                 event.stopPropagation();
                 const drag = dragRef.current;
                 dragRef.current = null;
-                if (!drag || drag.band !== band || drag.sectionId !== sectionId || drag.parent !== parentKey || drag.id === blockId) return;
+                if (block.static || !drag || drag.band !== band || drag.sectionId !== sectionId || drag.parent !== parentKey || drag.id === blockId) return;
                 props.onMove(band, sectionId, [ ...prefix, drag.id ], index);
               }}
             >
@@ -187,7 +187,9 @@ export function SectionsTree(props: SectionsTreeProps) {
                 ) : <span className="cl-tree__chevron cl-tree__chevron--empty" />}
                 <span className="cl-tree__icon">
                   <span className="cl-tree__typeicon">{iconFor(iconKindFor(block.type, def?.name))}</span>
-                  <GripVertical aria-hidden="true" className="cl-tree__grip" size={14} />
+                  {block.static
+                    ? <Lock aria-label={t("editor.staticBlock")} className="cl-tree__grip cl-tree__lock" role="img" size={14} />
+                    : <GripVertical aria-hidden="true" className="cl-tree__grip" size={14} />}
                 </span>
                 <button
                   aria-pressed={isActive}
@@ -199,7 +201,9 @@ export function SectionsTree(props: SectionsTreeProps) {
                   {summary ? <span className="cl-tree__summary"> – {summary}</span> : null}
                 </button>
                 <span className="cl-tree__actions">
-                  <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-tree__op" onClick={() => props.onRemove(band, sectionId, path)} type="button"><Trash2 size={14} /></button>
+                  {block.static ? null : (
+                    <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-tree__op" onClick={() => props.onRemove(band, sectionId, path)} type="button"><Trash2 size={14} /></button>
+                  )}
                   <button aria-label={block.disabled ? t("editor.show", { id: blockId }) : t("editor.hide", { id: blockId })} className={`cl-tree__op${block.disabled ? " is-persistent" : ""}`} onClick={() => props.onToggleDisabled(band, sectionId, path)} type="button">
                     {block.disabled ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -224,7 +228,7 @@ export function SectionsTree(props: SectionsTreeProps) {
           const label = entry.name ?? props.sectionName(entry.type);
           const isOpen = props.expanded.has(key);
           const isActive = props.selection?.band === item.band && props.selection.sectionId === sectionId && props.selection.path.length === 0;
-          const hasChildren = blockOrderOf(entry).length > 0 || props.addBlockOptions(item.band, sectionId, []).length > 0;
+          const hasChildren = visibleBlockIds(entry).length > 0 || props.addBlockOptions(item.band, sectionId, []).length > 0;
           return (
             <li
               className="cl-tree__item"
