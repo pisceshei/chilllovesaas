@@ -43,8 +43,10 @@ module ThemeEngine
     # 官方逐字（filters/stylesheet_tag，取證 2026-09-03）：`<link href="…" rel="stylesheet" type="text/css" media="all" />`
     # ——rel／href 由 filter 管、media 預設 all、可加其他屬性；渲染 1:1 對表：舊實作 `<link rel="stylesheet" href="…">` 與
     # 本尊逐字不同（hoko.vip header section diff 實錘）。
+    # `preload: true` 不是屬性——官方逐字（filters/stylesheet_tag，2026-09-03）："When preload is set to true, a resource hint
+    # is sent as a Link header with a rel value of preload."（hoko.vip base.css tag 無 preload 屬性；Link header 我方未實作，登記）
     def stylesheet_tag(input, opts = {})
-      extra = opts.is_a?(Hash) ? opts.reject { |k, _| %w[href rel].include?(k.to_s) } : {}
+      extra = opts.is_a?(Hash) ? opts.reject { |k, _| %w[href rel preload].include?(k.to_s) } : {}
       media = extra.delete("media") || (opts.is_a?(String) ? opts : nil) || "all"
       attrs = extra.map { |k, v| %( #{k}="#{CGI.escapeHTML(v.to_s)}") }.join
       %(<link href="#{input}" rel="stylesheet" type="text/css" media="#{CGI.escapeHTML(media.to_s)}"#{attrs} />)
@@ -53,6 +55,9 @@ module ThemeEngine
     # 官方逐字（filters/script_tag）：`<script src="…" type="text/javascript"></script>`（無 defer）。
     def script_tag(input) = %(<script src="#{input}" type="text/javascript"></script>)
 
+    # 資產檔**照檔輸出、含檔尾換行**：hoko.vip 原始位元組 `</svg>\r\n</span>`（account-drawer.liquid
+    # `{{- 'icon-close.svg' | inline_asset_content -}}` 兩側都有 `-`，唯一可能的 `\r\n` 來源是資產檔尾；
+    # 2026-09-03 同日曾誤判為修尾——toolbar 的 `</svg>\r</span>` 其實來自 `block.settings.icon` 字串，不是資產檔）。
     def inline_asset_content(input)
       rt = @context.registers[:runtime]
       rt ? rt.asset(input.to_s).to_s : ""
@@ -170,13 +175,18 @@ module ThemeEngine
     def money_without_trailing_zeros(input) = format_money(input, "%<sym>s%<amt>s").sub(/\.00\z/, "")
 
     def format_money(input, pattern)
+      # 空值（nil／空字串）⇒ 空輸出（hoko.vip 佔位商品卡 `{{ card_product.compare_at_price | money }}` ⇒ `<s …> </s>`；
+      # 官方 money 文件對空值未逐字，登記 V）
+      return "" if input.nil? || input == ""
+
       sym = @context.registers[:money_symbol] || "$"
       amt = format("%.2f", input.to_f / 100.0).gsub(/\B(?=(\d{3})+(?!\d))/, ",")
       format(pattern, sym: sym, amt: amt)
     end
 
     # ---- string / misc -----------------------------------------------------
-    def handleize(input) = input.to_s.downcase.gsub(/[^a-z0-9\p{Han}]+/, "-").gsub(/\A-|-\z/, "")
+    # Unicode 字母／數字保留（本尊 `HeaderMenu-首頁`：link.handle 保留 CJK；官方例 "100% M & M's!!!" ⇒ "100-m-m-s"）
+    def handleize(input) = input.to_s.downcase.gsub(/[^\p{L}\p{N}]+/, "-").gsub(/\A-|-\z/, "")
     alias_method :handle, :handleize
 
     # drop 感知（資料出口包）：形狀契約與黑名單見 JsonSerializer 檔頭。
@@ -325,7 +335,10 @@ module ThemeEngine
                 "  font-weight: #{input.weight};",
                 "  font-style: #{input.style};" ]
       lines << "  font-display: #{display};" if display
-      lines << %(  src: url("#{input.file}") format("woff2");)
+      # 本尊 src 兩行（hoko.vip 2026-09-03 原始位元組）：woff2 之後接 `,\n       url("….woff") format("woff")`；
+      # 我方 woff 檔未提供（現代瀏覽器優先 woff2 不會請求 woff；登記）。
+      woff = input.file.to_s.sub(/\.woff2\z/, ".woff")
+      lines << %(  src: url("#{input.file}") format("woff2"),\n       url("#{woff}") format("woff");)
       "@font-face {\n#{lines.join("\n")}\n}"
     end
 
@@ -366,9 +379,15 @@ module ThemeEngine
       return input.to_s unless key.to_s == "alpha"
 
       drop = input.is_a?(ThemeEngine::ColorDrop) ? input : ThemeEngine::ColorDrop.new(input.to_s)
-      "rgba(#{drop.red}, #{drop.green}, #{drop.blue}, #{value.to_f})"
+      "rgba(#{drop.red}, #{drop.green}, #{drop.blue}, #{css_alpha(value)})"
     rescue StandardError
       input.to_s
+    end
+
+    # alpha 的 CSS 數字形：整數值不帶 `.0`（hoko.vip：`color_modify: 'alpha', 0` ⇒ `rgba(0, 0, 0, 0)`；官方例 0.85 ⇒ `0.85`）
+    def css_alpha(value)
+      f = value.to_f
+      f == f.floor ? f.to_i.to_s : f.to_s
     end
     # 引擎缺口 PR-6（官方 filters/color_to_hsl／color_to_rgb，取證 2026-09-02）：
     #   color_to_hsl "Converts a CSS color string to `HSL` format."，例 '#EA5AB9' ⇒ 'hsl(320, 77%, 64%)'，
@@ -385,7 +404,7 @@ module ThemeEngine
     def color_to_rgb(input)
       parsed = parse_css_color(input) or return input.to_s
       r, g, b, a = parsed
-      a < 1 ? "rgba(#{r}, #{g}, #{b}, #{a})" : "rgb(#{r}, #{g}, #{b})"
+      a < 1 ? "rgba(#{r}, #{g}, #{b}, #{css_alpha(a)})" : "rgb(#{r}, #{g}, #{b})"
     end
 
     private def parse_css_color(input)

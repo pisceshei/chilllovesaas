@@ -23,15 +23,16 @@ module Storefront
 
       languages = rows.select { |row| published.include?(row.locale_tag) }.map do |row|
         {
-          "iso_code" => row.locale_tag,
+          "iso_code" => ThemeEngine::LocaleTags.shopify_code(row.locale_tag), # 本尊碼形（zh-Hans ⇒ zh-CN）
           "endonym_name" => endonyms.fetch(row.locale_tag, row.locale_tag),
           "primary" => row.is_market_default,
           "root_url" => Markets::UrlPrefix.for(web_presence, row.locale_tag)
         }
       end
 
-      current = languages.find { |l| l["iso_code"] == locale_tag } ||
-                { "iso_code" => locale_tag, "endonym_name" => endonyms.fetch(locale_tag, locale_tag),
+      current_code = ThemeEngine::LocaleTags.shopify_code(locale_tag)
+      current = languages.find { |l| l["iso_code"] == current_code } ||
+                { "iso_code" => current_code, "endonym_name" => endonyms.fetch(locale_tag, locale_tag),
                   "primary" => false,
                   "root_url" => Markets::UrlPrefix.for(web_presence, locale_tag) }
 

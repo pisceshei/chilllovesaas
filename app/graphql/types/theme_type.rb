@@ -285,7 +285,7 @@ module Types
         next unless rel.start_with?("blocks/") && rel.end_with?(".liquid")
 
         raw = source.read(rel)
-        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 1]
+        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 2]
         schema = begin
           schema_json && ThemeEngine::Runtime.tolerant_json(schema_json)
         rescue JSON::ParserError
@@ -425,7 +425,7 @@ module Types
         next unless rel.start_with?("sections/") && rel.end_with?(".liquid")
 
         raw = source.read(rel)
-        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 1]
+        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 2]
         schema = begin
           schema_json && ThemeEngine::Runtime.tolerant_json(schema_json)
         rescue JSON::ParserError

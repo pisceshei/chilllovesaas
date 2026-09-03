@@ -16,16 +16,32 @@ module ThemeEngine
     module_function
 
     # rubocop:disable Metrics/MethodLength
-    def script(shop:, theme:, locale:, currency:, root:, design_mode:)
+    # 頭段逐字對齊本尊（hoko.vip 2026-09-03 原始位元組）：
+    #   `var Shopify = Shopify || {};` → shop（本尊＝myshopify 永久網域；我方＝平台子網域）→ locale → currency（JSON 形）
+    #   → country → theme（name／id／schema_name／schema_version／theme_store_id／role）→ theme.handle="null"
+    #   → theme.style={"id":null,"handle":null} → cdnHost → routes.root。designMode 於編輯器預覽的位置＝未取得（置於其後）。
+    #   其後的 formatMoney／postLink 等是本尊另行載入的 shopify_common 面（ours，Ella 用法收斂）。
+    # @param country [String, nil] localization 國別（本尊 `Shopify.country = "TW"`）
+    # @param schema_name／schema_version [String, nil] settings_schema theme_info
+    # @param host [String, nil] 本店主機（cdnHost 形 `{host}/theme-assets`；本尊 `hoko.vip/cdn`，路徑為 ours）
+    def script(shop:, theme:, locale:, currency:, root:, design_mode:, country: nil, schema_name: nil,
+               schema_version: nil, host: nil)
+      theme_json = JSON.generate(name: theme.name.to_s, id: theme.id, schema_name: schema_name,
+                                 schema_version: schema_version, theme_store_id: nil,
+                                 role: theme.role.to_s == "published" ? "main" : "unpublished")
       <<~HTML
-        <script>
-        window.Shopify = window.Shopify || {};
-        Shopify.shop = #{shop.subdomain.to_s.inspect};
+        <script>var Shopify = Shopify || {};
+        Shopify.shop = #{"#{shop.subdomain}.#{Chilllove::TenantResolver.base_host}".inspect};
         Shopify.locale = #{locale.to_s.inspect};
-        Shopify.currency = { active: #{currency.to_s.inspect}, rate: "1.0" };
+        Shopify.currency = #{JSON.generate(active: currency.to_s, rate: "1.0")};
+        Shopify.country = #{country.to_s.inspect};
+        Shopify.theme = #{theme_json};
+        Shopify.theme.handle = "null";
+        Shopify.theme.style = {"id":null,"handle":null};
+        Shopify.cdnHost = #{"#{host}/theme-assets".inspect};
+        Shopify.routes = Shopify.routes || {};
+        Shopify.routes.root = #{root.to_s.inspect};
         #{design_mode ? "Shopify.designMode = true;" : "/* Shopify.designMode: undefined outside the editor (official) */"}
-        Shopify.routes = { root: #{root.to_s.inspect} };
-        Shopify.theme = { id: #{theme.id}, name: #{theme.name.to_s.inspect}, role: #{theme.role.to_s.inspect} };
         Shopify.formatMoney = function(cents, format) {
           if (typeof cents === "string") cents = cents.replace(/[^0-9.-]/g, "");
           var value = (parseFloat(cents) / 100).toFixed(2);

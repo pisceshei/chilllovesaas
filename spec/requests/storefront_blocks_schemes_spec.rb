@@ -31,10 +31,10 @@ RSpec.describe "Storefront theme blocks and color schemes", type: :request do
     expect(response).to have_http_status(:ok)
     # 父 block 渲染＋設定；子層兩個 leaf 依 block_order 進括號內
     expect(response.body).to include('data-tone="warm"')
-    # 子層依 block_order 序（fixture 檔尾換行 ⇒ 寬鬆空白匹配）；子塊各帶官方包裝
+    # 子層依 block_order 序（fixture 檔尾換行 ⇒ 寬鬆空白匹配；E8：`{% render <block> %}` 輸出尾接 LF）；子塊各帶官方包裝
     # （`<div id="shopify-block-{id}" class="shopify-block">`——引擎缺口 PR-2）
     expect(response.body).to match(
-      %r{\[<div id="shopify-block-c1" class="shopify-block"><b class="leaf">子一</b>\s*</div><div id="shopify-block-c2" class="shopify-block"><b class="leaf">子二</b>\s*</div>\]}
+      %r{\[<div id="shopify-block-A[A-Za-z0-9]{17}__c1" class="shopify-block"><b class="leaf">子一</b>\s*</div>\s*<div id="shopify-block-A[A-Za-z0-9]{17}__c2" class="shopify-block"><b class="leaf">子二</b>\s*</div>\s*\]}
     )
   end
 
@@ -43,7 +43,7 @@ RSpec.describe "Storefront theme blocks and color schemes", type: :request do
     # section.blocks → SectionDrop.blocks（ordered_block_drops 遞迴）→ render 變數形
     expect(response.body).to include('data-tone="iter"')
     expect(response.body).to match(
-      %r{data-tone="iter">\[<div id="shopify-block-d1" class="shopify-block"><b class="leaf">迭代子</b>\s*</div>\]}
+      %r{data-tone="iter">\[<div id="shopify-block-A[A-Za-z0-9]{17}__d1" class="shopify-block"><b class="leaf">迭代子</b>\s*</div>\s*\]}
     )
     # 🔴 drop 面直讀（不經 render 重建）：Ella 有「先數 slides 再渲染」形——
     # ordered_block_drops 的 children 必須自身正確，不能靠 render_block 重算兜底

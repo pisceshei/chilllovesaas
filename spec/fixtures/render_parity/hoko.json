@@ -1,0 +1,34 @@
+{
+  "_source": "hoko.vip（Shopify 真店 pnrjnw-sy，Ella 7.2.0 原版主題）2026-09-03 快照：/products.json、/collections.json、/collections/frontpage/products.json、首頁 HTML（<html lang>、Shopify.locale／currency／country、header 選單、標題）",
+  "shop": {
+    "name": "我的商店 3",
+    "currency": "HKD",
+    "locale": "zh-Hans",
+    "_locale": "本尊 Shopify.locale = \"zh-CN\"；我方 tag 依 limits i18n.script_subtag_required_for 為 zh-Hans，輸出碼由 ThemeEngine::LocaleTags 轉回 zh-CN",
+    "country": "TW",
+    "market_name": "Taiwan",
+    "customer_accounts_enabled": true,
+    "taxes_included": true,
+    "_taxes_included": "本尊購物車抽屜稅注為「已含税。优惠和运费将在结账时一起计算。」（cart.taxes_included=true 分支）",
+    "_timezone": "本尊時區未取得（首頁未渲染時間）；沿用建店預設"
+  },
+  "theme": {
+    "name": "ella-7-2-0-theme-source",
+    "fixture_name": "ella",
+    "version": "7.2.0"
+  },
+  "products": [
+    { "title": "Acme Tee", "handle": "acme-tee", "vendor": "Acme", "product_type": "Tee", "price": "188.00", "tags": [], "body_html": "" },
+    { "title": "Bolt Mug", "handle": "bolt-mug", "vendor": "Bolt", "product_type": "Mug", "price": "68.00", "tags": [], "body_html": "" },
+    { "title": "Cosy Lamp", "handle": "cosy-lamp", "vendor": "Acme", "product_type": "Lamp", "price": "320.00", "tags": [], "body_html": "" }
+  ],
+  "collections": [
+    { "title": "首頁", "handle": "frontpage", "products": ["acme-tee"] }
+  ],
+  "pages": [
+    { "title": "聯絡我們", "handle": "contact", "body_html": "" }
+  ],
+  "menus": [
+    { "handle": "main-menu", "title": "主選單", "items": [["首頁", "frontpage", null], ["目錄", "catalog", null], ["聯絡我們", "http", "/pages/contact"]] }
+  ]
+}

@@ -33,22 +33,23 @@ RSpec.describe "Storefront theme block wrapper / disabled / section-local blocks
   end
 
   it "W1 🔴 預設 div 包裝帶 shopify-block-{id}；content_for 'blocks' 與 render child_block 兩路皆包" do
-    expect(response.body).to include('<div id="shopify-block-p1" class="shopify-block"><i class="pblk" data-tone="warm">')
-    expect(response.body).to include('<div id="shopify-block-c1" class="shopify-block"><b class="leaf">子一</b>')
+    # E8 渲染 1:1：id＝本尊實例形 `{A+17 碼}__{key}`（BlockIds）
+    expect(response.body).to match(%r{<div id="shopify-block-A[A-Za-z0-9]{17}__p1" class="shopify-block"><i class="pblk" data-tone="warm">})
+    expect(response.body).to match(%r{<div id="shopify-block-A[A-Za-z0-9]{17}__c1" class="shopify-block"><b class="leaf">子一</b>})
   end
 
   it "W2 🔴 tag: null ⇒ 直接輸出內容、無包裝" do
     expect(response.body).to include('<u class="bare">裸</u>')
-    expect(response.body).not_to include('id="shopify-block-b1"')
+    expect(response.body).not_to match(/id="shopify-block-[^"]*b1"/)
   end
 
   it "W3 tag＋class ⇒ 指定元素、class 接在 shopify-block 之後" do
-    expect(response.body).to include('<section id="shopify-block-b2" class="shopify-block boxed"><span class="boxed-in">盒</span>')
+    expect(response.body).to match(%r{<section id="shopify-block-A[A-Za-z0-9]{17}__b2" class="shopify-block boxed"><span class="boxed-in">盒</span>})
   end
 
   it "W4 🔴 disabled theme block 不渲染" do
     expect(response.body).not_to include("隱藏塊")
-    expect(response.body).not_to include('id="shopify-block-b3"')
+    expect(response.body).not_to match(/id="shopify-block-[^"]*b3"/)
   end
 
   it "W5 🔴 section 本地 blocks：渲染、吃本地預設、隱藏者排除、與 @theme 塊混排、size 同源" do

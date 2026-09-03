@@ -52,7 +52,8 @@ module Storefront
       requested = params[:language_code].to_s.presence
       return presence.default_shop_locale if requested.nil?
 
-      tag = Locales::Tag.normalize(requested)
+      # 表單送回的是主題輸出的本尊碼（zh-CN／zh-TW；ThemeEngine::LocaleTags）⇒ 先反查回我方 tag 再正規化
+      tag = Locales::Tag.normalize(ThemeEngine::LocaleTags.platform_tag(requested))
       open = presence.market_web_presence_locales.open_to_buyers.exists?(locale_tag: tag)
       published = ShopLocale.where(shop_id: presence.shop_id, locale_tag: tag, published: true).exists?
       open && published ? tag : presence.default_shop_locale

@@ -4,9 +4,14 @@ require "rails_helper"
 
 # E3b：`placeholder_svg_tag` 對位本尊實測形（hoko.vip 2026-09-03）：整張插圖、class 規則、viewBox 依名稱。
 RSpec.describe ThemeEngine::PlaceholderSvg do
-  it "PS1 未給 class ⇒ class=\"placeholder-svg\"（hoko.vip：background-image snippet 不帶 class 也得到它）" do
+  # 2026-09-03 更正（E8 渲染 1:1，hoko.vip 原始位元組）：原文「未給 class 也得到 placeholder-svg」是誤讀——
+  # background-image snippet 的 `hero-apparel-3` 輸出 `<svg preserveAspectRatio="xMaxYMid slice" viewBox="0 0 1297 729" …>`
+  # **沒有 class 屬性**，與官方範例一致；且 preserveAspectRatio／viewBox 逐名不同（FRAMES）。
+  it "PS1 未給 class ⇒ 無 class 屬性；外框逐名（hero-apparel-2＝xMidYMin 1300×731、hero-apparel-3＝xMaxYMid 1297×729）" do
     svg = described_class.tag("hero-apparel-2")
-    expect(svg).to start_with('<svg class="placeholder-svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1300 731" fill="none"')
+    expect(svg).to start_with('<svg preserveAspectRatio="xMidYMin slice" viewBox="0 0 1300 731" fill="none"')
+    expect(described_class.tag("hero-apparel-3")).to start_with('<svg preserveAspectRatio="xMaxYMid slice" viewBox="0 0 1297 729" fill="none"')
+    expect(described_class.tag("hero-apparel-2", "placeholder-svg")).to start_with('<svg class="placeholder-svg" preserveAspectRatio="xMidYMin slice" viewBox="0 0 1300 731" fill="none"')
     expect(svg).to end_with("</svg>")
     expect(svg).to include("<path")
   end

@@ -36,11 +36,12 @@ RSpec.describe "Theme Shopify global & section assets", type: :request do
 
   it "SG1 🔴 window.Shopify 注入：designMode 依語境、routes.root 帶前綴、theme/currency 齊" do
     html = render_home
-    expect(html).to include("window.Shopify = window.Shopify || {}")
+    # E8（2026-09-03，hoko.vip 原始位元組）：`var` 宣告、JSON 形 currency、routes 兩行形
+    expect(html).to include("<script>var Shopify = Shopify || {};")
     # E6：官方逐字 "Otherwise, it's set to `undefined`."（100 §9.5）⇒ 公開頁不輸出該鍵
     expect(html).not_to include("Shopify.designMode =")
-    expect(html).to include('Shopify.routes = { root: "/en-hk/" }')
-    expect(html).to include(%(Shopify.currency = { active: "HKD"))
+    expect(html).to include(%(Shopify.routes = Shopify.routes || {};\nShopify.routes.root = "/en-hk/";))
+    expect(html).to include(%(Shopify.currency = {"active":"HKD","rate":"1.0"};))
     expect(html).to include("Shopify.formatMoney = function")
     expect(html).to include("Shopify.CountryProvinceSelector = function")
 

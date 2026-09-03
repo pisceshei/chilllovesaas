@@ -1218,3 +1218,86 @@ array, or another string."；真假值：只有 `false` 與 `nil` 為假，"empt
 they're empty with `blank`."
 ⇒ 我方 `evaluateVisibleIf`：`a and b or c` ＝ `a and (b or c)`（不是 JS 優先序，`visibleIf.test.ts` V3 鎖住）；空字串為真；
 `blank`／`empty` 字面量對應空字串比較。
+
+## G. 渲染 1:1 對表（E8 包，取證 2026-09-03）
+
+### G1. `section.index`／`index0`／`location`
+
+官方逐字（<https://shopify.dev/docs/api/liquid/objects/section>，取證 2026-09-03）：index＝"The 1-based index of the current
+section within its location."，"Returns nil in: static sections, online store editor rendering, and Section Rendering API
+contexts."；index0＝"This is the same as the index property except that the index starts at 0 instead of 1."；
+location＝"The scope or context of the section (template, section group, or global)."，值域 template／群組 type
+（header、footer、custom.<type>）／static／content_for_index。
+⇒ `Runtime#render_section(index:, location:)`；disabled section 是否佔位＝**未取得**（我方只數實際渲染者，V）。
+hoko.vip：slideshow `data-index="1"`、before-you-leave `data-section-fetch="false"`（Ella 以 `section.index == nil` 判 SRA）。
+
+### G2. `{% style %}` 帶 `data-shopify`
+
+官方逐字（<https://shopify.dev/docs/api/liquid/tags/style>）："Generates an HTML `<style>` tag with an attribute of
+`data-shopify`."⇒ `StyleTag`。hoko.vip 全頁 `<style data-shopify>`。
+
+### G3. `shop.customer_accounts_enabled`／`customer_accounts_optional`
+
+官方逐字（<https://shopify.dev/docs/api/liquid/objects/shop>）："Returns `true` if the store shows a login link. Returns
+`false` if not."／"Returns `true` if customer accounts are optional to complete checkout. Returns `false` if not."
+⇒ `shops.customer_accounts_enabled`（預設 true＝本尊新店未動設定即渲染 Drawer-Account）；optional 恆 true（我方無強制登入結帳）。
+
+### G4. `placeholder_svg_tag` 的 class 與外框
+
+官方逐字（<https://shopify.dev/docs/api/liquid/filters/placeholder_svg_tag>）："Generates an HTML `<svg>` tag for a given
+placeholder name."；class 參數＝"Specify the `class` attribute for the `<svg>` tag."；範例輸出無 class 參數時
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 525.5 525.5">`（無 class 屬性）。
+hoko.vip 原始位元組（apparel 系）：hero-apparel-1 `preserveAspectRatio="xMaxYMid slice" viewBox="0 0 1300 730"`、
+hero-apparel-2 `xMidYMin slice` `0 0 1300 731`、hero-apparel-3（無 class）`xMaxYMid slice` `0 0 1297 729`、
+product-apparel-1 `width="448" height="448" viewBox="0 0 448 448"`、product-apparel-2／-3 `449×448`（以 clip id 對名）。
+🔴 更正 F5「class 未給時為 placeholder-svg」——那是誤讀；原文保留、以本條為準。其餘名稱外框＝未取得。
+
+### G5. `stylesheet_tag` 的 `preload`
+
+官方逐字（<https://shopify.dev/docs/api/liquid/filters/stylesheet_tag>）："When `preload` is set to `true`, a resource hint
+is sent as a Link header with a `rel` value of `preload`."⇒ 不是 HTML 屬性；hoko.vip base.css tag 無 preload。Link header 我方未實作（登記）。
+
+### G6. `link` 物件
+
+官方逐字（<https://shopify.dev/docs/api/liquid/objects/link>）：current＝"Returns `true` if the current URL path matches
+the URL of the link."；child_current＝"Returns `true` if current URL path matches a link's child link URL."；active／
+child_active＝"Returns `true` if the link is active."／"…if a link's child link is active."（判準未取得 ⇒ 以 current 對位，V）；
+handle＝"The handle of the link."（hoko.vip `id="HeaderMenu-首頁"` ⇒ CJK 保留）。
+
+### G7. `cart.taxes_included`
+
+官方逐字（<https://shopify.dev/docs/api/liquid/objects/cart>）："Returns `true` if taxes are included in the prices of
+products in the cart. Returns `false` if not."⇒ `shops.taxes_included`；hoko.vip 稅注「已含税」⇒ 鏡像店 true。
+
+### G8. 資源型 input setting 的空值
+
+官方逐字（<https://shopify.dev/docs/storefronts/themes/architecture/settings/input-settings>）：product／collection／page／
+blog 回物件，"blank if no selection has been made, the selection isn't visible, or the selection no longer exists"；
+product_list／collection_list 回陣列；直接輸出 setting ＝物件的 handle（backwards compatibility）。
+hoko.vip 實測「blank」兩形：未選（含動態來源）⇒ 對其取屬性仍為真、`| json` ⇒ `""`；已選但查無 ⇒ `| json` ⇒ `null`、
+`== empty` 為真。⇒ `SettingsDrop#coerce` 資源型：未選＝空字串、查無＝nil、動態已解值透傳（G9）。
+
+### G9. 對純量取屬性、`nil == empty`（官方未逐字，hoko.vip 實測）
+
+`{% if product.featured_media %}` 在 product 為整數／空字串時為真（product-grid 佔位卡 `card--media`、`"id": ,`、
+`media | json` ⇒ `""`）；`card_product != empty` 在 card_product 為 nil 時為假（lookbook 點位「No product selected for this dot」）。
+gem 5.13.0 原生：前者回 nil、後者 `call_method_literal` 對 nil 回假。⇒ `NumericLookup`／`NilEmpty`（prepend）。
+官方對此無逐字 ⇒ 登記 V。
+
+### G10. Liquid whitespace control 的 bug-compatible 模式
+
+gem 5.13.0 `block_body.rb#whitespace_handler`：`parse_context[:bug_compatible_whitespace_trimming]` 為真時，`{%-` 把前一段
+純空白清空後**保留首位元組**。hoko.vip 首頁 14,762 個孤立 `\r`（Ella 全 CRLF）與此分支完全吻合（`column;\r--gap`）。
+本尊是否即此旗標＝不可觀測；行為對位，登記 V。
+
+### G11. block 實例 id 與重複渲染尾綴（hoko.vip 實測，官方未逐字）
+
+`block.id`＝`{A+17 碼 [A-Za-z0-9]}__{key}`，同 block 頁內一致、同 key 跨 section 前綴不同；同 section 內同 block 第 n 次渲染
+（n≥2）key 尾綴 `-{n-1}`、子孫同尾綴、前綴不變；每個 block 渲染輸出後接一個 LF。前綴演算法不可觀測 ⇒ 我方 SHA-256 導出（值為 ours）。
+
+### G12. 主題 locale 檔命名
+
+官方逐字（<https://shopify.dev/docs/storefronts/themes/architecture/locales/storefront-locale-files>）："Locale file naming
+must follow the standard IETF language tag nomenclature, where the first lowercase letter code represents the language, and
+the second uppercase letter code represents the region."⇒ 本尊簡體＝`zh-CN.json`（hoko.vip `<html lang="zh-CN">`）；我方 tag
+依 limits 帶 script（zh-Hans）⇒ `ThemeEngine::LocaleTags` 雙向對映；zh-Hant→zh-TW 由同規則推（未實測，V）。
