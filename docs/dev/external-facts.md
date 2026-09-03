@@ -1113,3 +1113,41 @@ S5 研究輪抓取六個 Medusa 文檔頁，**全部命中**同一個內嵌區�
 🔴 **這條不影響「能不能引用 Medusa 的文檔概念」**：那受鐵律 9 管
 （概念可從公開文檔學、代碼不可看），且 Medusa 的授權取證狀態登記在
 `docs/specs/107-external-adoption-register.md` 的拒絕／禁用表。兩件事分開判。
+
+---
+
+## F. Shopify section schema 的可用性與上限鍵（主題編輯器 E3 包，取證 2026-09-03）
+
+### F1. `limit` 的射程是「模板**或 section group**」，值域只有 1 或 2
+
+官方逐字："By default, there's no limit to how many times a section can be added to a template or
+section group. You can specify a limit of 1 or 2 with the `limit` attribute"。
+⇒ 我方 Add section 候選的 "(n/limit)" 計數**逐帶**算（群組帶各自一份），不是全模板合計；
+值域外的 `limit` 值（例如 3）官方未定義，我方照數字比對，不另造語義。
+來源：<https://shopify.dev/docs/storefronts/themes/architecture/sections/section-schema>（取證 2026-09-03）。
+
+### F2. `max_blocks` 預設 50、只能調低
+
+官方逐字："There's a limit of 50 blocks per section. You can specify a lower limit with the `max_blocks`
+attribute."（同上 URL，取證 2026-09-03）。⇒ 未宣告時以 50 為上限；`docs/research/24` §2.4 的「只可調低」與此一致。
+
+### F3. `enabled_on`／`disabled_on` 的 `["*"]` 通配官方有定義；兩者**只能擇一**
+
+官方逐字：`enabled_on`＝"You can restrict a section to certain template page types and section group types by
+specifying them through the `enabled_on` attribute."，其 `templates` 可為 "`["*"]` (all template page types)"、
+`groups` 可為 "`["*"]` (all section group types)"；`disabled_on`＝"You can prevent a section from being used on
+certain template page types and section group types by setting them in the `disabled_on` attribute."；
+並且 "You can use only one of `enabled_on` or `disabled_on`."（同上 URL，取證 2026-09-03）。
+⇒ 我方 `sectionAllowedIn` 支援 `*`；兩者並存時先看 `disabled_on` 只是容錯順序（官方不允許並存），不得寫成語義。
+
+### F4. static block 不在 `block_order`、不可重排／移除／複製、可隱藏與改設定、不計入 `max_blocks`
+
+官方逐字：static block 以 `{% content_for "block", type: "<type>", id: "<id>" %}` 靜態渲染（"Statically rendered in
+Liquid, setting the `type` explicitly"）；模板 JSON 帶 `"static": true`，且 "are not included in the `block_order` array
+because static blocks can not be re-ordered by merchants"；編輯器內 "Cannot be reordered (drag and drop)"、
+"Cannot be removed or duplicated"，但商家可隱藏與自訂其設定；"Don't count toward the `max_blocks` limit"；
+可含巢狀 block（官方範例 collapsible-row：summary block 內嵌 icon block）。
+來源：<https://shopify.dev/docs/storefronts/themes/architecture/blocks/theme-blocks/static-blocks>（取證 2026-09-03）。
+⇒ 我方左樹：static 列以 `visibleBlockIds` 附在 `block_order` 之後顯示、`draggable=false`、無垃圾桶、`removeNode` 直接
+返回；`max_blocks` 只數 `block_order`（static 天然不計）。Ella `templates/product.json` 的 media-gallery／product-details／
+sticky-atc 即此形態（`docs/research/66` §A.5.2 的 fixture 觀察與官方一致）。

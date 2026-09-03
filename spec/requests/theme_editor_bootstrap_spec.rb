@@ -339,4 +339,49 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(assignments["product"]).to eq("" => 1) # products 尚無 template_suffix 欄 ⇒ 全計預設
     expect(assignments.keys).to contain_exactly("product", "collection", "page", "blog", "article")
   end
+
+  # E3（D79 左樹）：群組中繼資料、section 可用性三鍵、theme blocks 全表。🔴 假綠殺手：
+  #   E11 群組 label 取 JSON name、無 name 以檔名人性化；position 依 content_for_layout 前後
+  #       （殺：footer 群組排到 Template 上方）
+  #   E12 enabled_on／limit 透傳（殺：picker 無法依群組過濾、limit 灰化失效）
+  #   E13 themeBlocks 的 blocks＝可接受子型別（殺：巢狀 add-block 白名單空 ⇒ 子 block 加不進去）
+  it "E11 🔴 sectionGroups：label／type／position（layout 順序＋content_for_layout 前後）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionGroups } }
+    GQL
+    groups = response.parsed_body.dig("data", "theme", "sectionGroups")
+    by_name = groups.to_h { |g| [ g["name"], g ] }
+    expect(groups.map { |g| g["name"] }).to eq(%w[test-group header-group footer-group]) # layout 掃描序
+    expect(by_name["test-group"].slice("label", "type", "position"))
+      .to eq("label" => "Test group", "type" => "header", "position" => "before") # JSON 自帶 name／type
+    expect(by_name["header-group"].slice("label", "type", "position"))
+      .to eq("label" => "Header group", "type" => "header", "position" => "before")
+    expect(by_name["footer-group"].slice("label", "type", "position"))
+      .to eq("label" => "Footer group", "type" => "footer", "position" => "after")
+  end
+
+  it "E12 🔴 sectionSchemas 透傳 enabled_on／disabled_on／limit" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas } }
+    GQL
+    schemas = response.parsed_body.dig("data", "theme", "sectionSchemas")
+    expect(schemas.dig("sid-probe", "enabled_on")).to eq("groups" => [ "header" ])
+    expect(schemas.dig("sid-probe", "limit")).to eq(1)
+    expect(schemas.dig("hero", "enabled_on")).to be_nil
+    expect(schemas.dig("hero", "limit")).to be_nil
+  end
+
+  it "E13 🔴 themeBlocks：type → {name, settings, blocks 可接受子型別}" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { themeBlocks } }
+    GQL
+    blocks = response.parsed_body.dig("data", "theme", "themeBlocks")
+    expect(blocks.dig("_parent", "name")).to eq("Parent")
+    expect(blocks.dig("_parent", "blocks")).to eq([ "_leaf" ])  # 巢狀白名單
+    expect(blocks.dig("_leaf", "blocks")).to eq([])
+    expect(blocks.dig("_leaf", "settings").map { |d| d["id"] }).to eq([ "label" ])
+  end
 end

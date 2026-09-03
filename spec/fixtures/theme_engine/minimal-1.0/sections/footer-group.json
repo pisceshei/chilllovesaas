@@ -1,6 +1,15 @@
 {
+  "name": "Footer group",
+  "type": "footer",
   "sections": {
-    "footer": { "type": "hero", "settings": { "heading": "群組頁尾" } }
+    "footer": {
+      "type": "hero",
+      "settings": {
+        "heading": "群組頁尾"
+      }
+    }
   },
-  "order": [ "footer" ]
+  "order": [
+    "footer"
+  ]
 }
