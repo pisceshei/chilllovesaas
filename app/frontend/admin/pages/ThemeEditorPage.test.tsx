@@ -1459,4 +1459,77 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(screen.queryByRole("list", { name: "可新增的區段" })).toBeNull();
   });
 
+  // ── E6：預覽互動（docs/research/100 §5／§9.5）──
+  const fromPreview = (data: Record<string, unknown>) => fireEvent(window, new MessageEvent("message", { data, origin: window.location.origin }));
+
+  it("ED55 🔴 預覽 section 邊界「+」（cl:insert after）⇒ 區段 picker 開在該位置：插入線在下一列、選取後插到該 index", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fromPreview({ type: "cl:insert", id: "hero", position: "after" });
+    expect(tree.getByRole("button", { name: "Blocks demo" }).closest("li")).toHaveAttribute("data-insert", "before"); // hero 之後＝demo 之前
+    fireEvent.click(within(screen.getByRole("list", { name: "可新增的區段" })).getByRole("button", { name: "促銷條" }));
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as { variables: { content: { order: string[] } } };
+    expect(sent.variables.content.order).toEqual([ "hero", "promo", "demo" ]);
+  });
+
+  it("ED56 🔴 預覽右鍵（cl:contextmenu 帶 blockId）⇒ 左樹同款選單開在 iframe 座標；項目含 Rename／隱藏／編輯代碼", async () => {
+    stubFetch();
+    renderEditor();
+    await screen.findByRole("complementary", { name: "區段" });
+    fromPreview({ type: "cl:contextmenu", id: "demo", blockId: "p1", x: 120, y: 80 });
+    const menu = screen.getByRole("menu");
+    expect(within(menu).getByRole("menuitem", { name: "重新命名" })).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: /隱藏/ })).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: /編輯代碼/ })).toBeInTheDocument();
+    expect(within(menu).queryByRole("menuitem", { name: "在後面新增區段" })).toBeNull(); // block 列無 section 專屬項
+    fireEvent.click(within(menu).getByRole("menuitem", { name: /隱藏/ }));
+    const tree = within(screen.getByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "展開 Blocks demo" }));
+    expect(tree.getByLabelText("顯示 p1")).toBeInTheDocument(); // block 已隱藏
+  });
+
+  it("ED57 🔴 預覽浮動工具列 cl:op：hide／duplicate／remove 對 block（blockId）與 section 都走同一 op；異 origin 忽略", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fromPreview({ type: "cl:op", op: "duplicate", id: "demo", blockId: "p1" });
+    // duplicateNode 選中副本 ⇒ demo 已自動展開；保險：若仍收合則展開
+    const expand = tree.queryByRole("button", { name: "展開 Blocks demo" });
+    if (expand) fireEvent.click(expand);
+    expect(tree.getAllByRole("button", { name: "父塊" })).toHaveLength(2); // block 副本
+    fromPreview({ type: "cl:op", op: "hide", id: "hero" });
+    expect(tree.getByLabelText("顯示 hero")).toBeInTheDocument();
+    fromPreview({ type: "cl:op", op: "remove", id: "demo", blockId: "p1" });
+    expect(tree.getAllByRole("button", { name: "父塊" })).toHaveLength(1);
+    fireEvent(window, new MessageEvent("message", { data: { type: "cl:op", op: "remove", id: "hero" }, origin: "https://evil.example" }));
+    expect(tree.getAllByRole("button", { name: "Hero" })).toHaveLength(2); // 異 origin 不動
+  });
+
+  it("ED58 🔴 iframe 載入 ⇒ 推 cl:names（顯示名同左樹、含工具列文字）與 cl:inspector；bands 變動再推", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+    const spy = vi.spyOn(iframe.contentWindow!, "postMessage");
+    fireEvent.load(iframe);
+    const names = spy.mock.calls.map((c) => c[0] as { type: string }).filter((m) => m.type === "cl:names").at(-1) as
+      { sections: Record<string, string>; blocks: Record<string, Record<string, string>>; labels: Record<string, string> };
+    expect(names.sections).toEqual({ gh: "Hero", hero: "Hero", demo: "Blocks demo" });
+    expect(names.blocks.demo).toEqual({ p1: "父塊" });
+    expect(names.labels).toEqual({ addSection: "新增區段", duplicate: "建立副本", hide: "隱藏", remove: "移除" });
+    expect(spy.mock.calls.some((c) => (c[0] as { type: string }).type === "cl:inspector")).toBe(true);
+    spy.mockClear();
+    fireEvent.click(tree.getAllByRole("button", { name: "Hero" })[1]);
+    fireEvent.contextMenu(tree.getAllByRole("button", { name: "Hero" })[1]);
+    fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "重新命名" }));
+    const input = screen.getByLabelText("名稱") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "主視覺" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    const again = spy.mock.calls.map((c) => c[0] as { type: string; sections?: Record<string, string> }).filter((m) => m.type === "cl:names").at(-1);
+    expect(again?.sections?.hero).toBe("主視覺"); // 改名 ⇒ 重推
+  });
+
 });
