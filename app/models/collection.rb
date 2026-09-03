@@ -50,7 +50,10 @@ class Collection < ApplicationRecord
      END) AS member_count
   SQL
 
-  SORT_ORDERS = %w[manual best_selling title_asc title_desc price_asc price_desc created_desc created_asc].freeze
+  # E8b：`most_relevant`＝本尊 2026 admin 自動系列的「Default sort: Most relevant」（hoko.vip 首頁系列，admin 實測 2026-09-04；
+  # 前台 `collection.default_sort_by` 出 `most-relevant`）。官方 objects/collection 的 default_sort_by 值表未列它（external-facts §G17 追加）；
+  # 排序語義未取得（91 §3.75b V），前台以上新代位。
+  SORT_ORDERS = %w[manual best_selling title_asc title_desc price_asc price_desc created_desc created_asc most_relevant].freeze
 
   validates :collection_type, inclusion: { in: TYPES }
   validates :sort_order, inclusion: { in: SORT_ORDERS }

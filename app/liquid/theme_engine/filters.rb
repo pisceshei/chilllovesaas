@@ -79,7 +79,9 @@ module ThemeEngine
           sized_media_url(base, width: w, height: h), source_drop: input,
           requested_width: w.positive? ? w : nil, requested_height: h.positive? ? h : nil)
       when ThemeEngine::PlaceholderImageDrop then input.url
-      when nil then placeholder_url(w, h, "image")
+      # E8b：nil ⇒ 空字串（hoko.vip 商品頁 `data-product-variant-media=""`：無圖商品 `featured_media.preview_image | image_url` 為空；
+      # 先前回佔位 URL ⇒ 印 data: svg）。`shopify://`／空字串輸入仍走佔位（既有 PR-2 行為，官方未逐字，V）。
+      when nil then ""
       else
         s = input.to_s
         if s.start_with?("shopify://") || s.empty?
@@ -207,8 +209,16 @@ module ThemeEngine
       input.to_s
     end
 
+    # E8b：整數／純數字字串＝Unix 時間戳（Ella schema.liquid `'now' | date: '%s' | plus: 31536000 | date: '%Y-%m-%d'`
+    # ⇒ hoko.vip `"priceValidUntil": "2027-09-03"`；先前 `Time.zone.parse("1819990583")` 失敗 ⇒ 原字串）。官方 date 文件未逐字
+    # 提時間戳輸入（V）。
     def date(input, fmt = "%Y-%m-%d")
-      t = input.is_a?(String) ? Time.zone.parse(input) : input
+      t =
+        if input.is_a?(Integer) || (input.is_a?(String) && input.match?(/\A\d{9,}\z/))
+          Time.zone.at(input.to_i)
+        else
+          input.is_a?(String) ? Time.zone.parse(input) : input
+        end
       (t || Time.zone.now).strftime(fmt.to_s)
     rescue StandardError
       input.to_s
@@ -217,17 +227,26 @@ module ThemeEngine
     def pluralize(input, singular, plural) = input.to_i == 1 ? singular : plural
     def default_errors(_input) = ""
     def highlight(input, _q = nil) = input
-    def url_param_escape(input) = CGI.escape(input.to_s)
+    # 官方逐字（filters/url_param_escape，取證 2026-09-04）："Escapes any characters in a string that are unsafe for URL parameters."；
+    # 例 `{{ '<p>Health & Love potions</p>' | url_param_escape }}` ⇒ `%3Cp%3EHealth%20%26%20Love%20potions%3C/p%3E`（空白 %20、& %26、/ 保留）。
+    # hoko.vip 商品頁分享連結 `text=Acme%20Tee`（Ella `share_title | url_param_escape`）；先前 CGI.escape ⇒ `Acme+Tee`、`/` ⇒ `%2F`。
+    def url_param_escape(input) = ERB::Util.url_encode(input.to_s).gsub("%2F", "/")
+    # 官方逐字（filters/url_escape）："Escapes any URL-unsafe characters in a string."；同例 ⇒ `%3Cp%3EHealth%20&%20Love%20potions%3C/p%3E`
+    # （& 保留）。例外保留字元只證 `&` 與 `/`（V）。
+    def url_escape(input) = url_param_escape(input).gsub("%26", "&")
     def link_to(input, url, _title = nil) = %(<a href="#{url}">#{input}</a>)
     # vendor／type 連結四支（引擎缺口 PR-4）：官方 url_for_vendor 例逐字
     # `/collections/vendors?q=Polina%27s%20Potent%20Potions`（filters/url_for_vendor，取證 2026-09-02）
     # ⇒ 空白編成 `%20`（percent-encoding），不是 CGI.escape 的 `+`。
     # url_for_type："Generates a URL for a collection page that lists all products of the given product
     # type."，例 `/collections/types?q=health`。
-    def link_to_vendor(input) = %(<a href="#{url_for_vendor(input)}">#{input}</a>)
+    # 官方逐字（filters/link_to_vendor，取證 2026-09-04）：`{{ "Polina's Potent Potions" | link_to_vendor }}` ⇒
+    # `<a href="/collections/vendors?q=Polina%27s%20Potent%20Potions" title="Polina&#39;s Potent Potions">Polina's Potent Potions</a>`
+    # ⇒ title 屬性 HTML-escape、內文不 escape（hoko.vip 商品頁 `title="Acme"` 同形）。link_to_type 官方頁未給例 ⇒ 同形（V）。
+    def link_to_vendor(input) = %(<a href="#{url_for_vendor(input)}" title="#{ERB::Util.html_escape(input.to_s)}">#{input}</a>)
     def url_for_vendor(input) = "/collections/vendors?q=#{ERB::Util.url_encode(input.to_s)}"
     def url_for_type(input) = "/collections/types?q=#{ERB::Util.url_encode(input.to_s)}"
-    def link_to_type(input) = %(<a href="#{url_for_type(input)}">#{input}</a>)
+    def link_to_type(input) = %(<a href="#{url_for_type(input)}" title="#{ERB::Util.html_escape(input.to_s)}">#{input}</a>)
     # ---- tag／sort／within 連結（引擎缺口 PR-6；官方 filters/* 逐字，取證 2026-09-02）------
     # link_to_tag："Generates an HTML `<a>` tag with an `href` attribute linking to the current blog or
     #   collection, filtered to show only articles or products that have a given tag."；官方例

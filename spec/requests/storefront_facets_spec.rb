@@ -82,6 +82,8 @@ RSpec.describe "Storefront facets", type: :request do
   end
 
   it "FA3 🔴 變體選項多值 OR（query string 重複鍵）＋跨過濾器 AND（vendor）" do
+    # E8b：新店預設只有 availability＋price（hoko.vip），選項／vendor 過濾器要經 shops.storefront_filters 啟用
+    shop.update!(storefront_filters: ThemeEngine::Facets::ALL_FILTERS)
     r = make_product(handle: "opt-red", price: 1000, vendor: "Acme", option: [ "Color", "Red" ])
     b = make_product(handle: "opt-blue", price: 1000, vendor: "Zeta", option: [ "Color", "Blue" ])
     g = make_product(handle: "opt-green", price: 1000, vendor: "Acme", option: [ "Color", "Green" ])
@@ -102,6 +104,7 @@ RSpec.describe "Storefront facets", type: :request do
   end
 
   it "FA4 URL 建構：url_to_add 疊加、url_to_remove 摘除、page 恆剝、sort_by 保留" do
+    shop.update!(storefront_filters: ThemeEngine::Facets::ALL_FILTERS) # E8b：vendor 過濾器非預設
     a = make_product(handle: "u-a", price: 1000, vendor: "Acme")
     make_collection!([ a ])
 

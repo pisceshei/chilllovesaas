@@ -21,15 +21,22 @@
     "version": "7.2.0"
   },
   "products": [
-    { "title": "Acme Tee", "handle": "acme-tee", "vendor": "Acme", "product_type": "Tee", "price": "188.00", "tags": [], "body_html": "" },
-    { "title": "Bolt Mug", "handle": "bolt-mug", "vendor": "Bolt", "product_type": "Mug", "price": "68.00", "tags": [], "body_html": "" },
-    { "title": "Cosy Lamp", "handle": "cosy-lamp", "vendor": "Acme", "product_type": "Lamp", "price": "320.00", "tags": [], "body_html": "" }
+    { "title": "Acme Tee", "handle": "acme-tee", "vendor": "Acme", "product_type": "Tee", "price": "188.00", "tags": [], "body_html": "", "inventory_quantity": 0 },
+    { "title": "Bolt Mug", "handle": "bolt-mug", "vendor": "Bolt", "product_type": "Mug", "price": "68.00", "tags": [], "body_html": "", "inventory_quantity": 0 },
+    { "title": "Cosy Lamp", "handle": "cosy-lamp", "vendor": "Acme", "product_type": "Lamp", "price": "320.00", "tags": [], "body_html": "", "inventory_quantity": 10 }
   ],
+  "_inventory_quantity": "本尊 /products.json（2026-09-04）variants[].available：cosy-lamp true、acme-tee／bolt-mug false（供貨情況 现货 1／缺货 2）；實際數量未取得 ⇒ 10（V）",
   "collections": [
-    { "title": "首頁", "handle": "frontpage", "products": ["acme-tee"] }
+    { "title": "首頁", "handle": "frontpage", "products": ["acme-tee"],
+      "sort_order": "most_relevant",
+      "_sort_order": "本尊 admin（pnrjnw-sy）首頁系列＝自動系列（Add condition），Default sort＝Most relevant（2026-09-04 實測）⇒ 前台 select 選中 most-relevant；我方鏡像以手動系列＋同商品代位，只對齊 sort_order"
+    }
   ],
   "pages": [
-    { "title": "聯絡我們", "handle": "contact", "body_html": "" }
+    { "title": "聯絡我們", "handle": "contact", "body_html": "",
+      "template_suffix": "contact",
+      "_template_suffix": "本尊 /pages/contact 渲染的 section_ApznVq／section_8XtMhn／section_mr4YF8 只存在於 Ella templates/page.contact.json ⇒ 頁面模板＝page.contact（快照 2026-09-03）"
+    }
   ],
   "menus": [
     { "handle": "main-menu", "title": "主選單", "items": [["首頁", "frontpage", null], ["目錄", "catalog", null], ["聯絡我們", "http", "/pages/contact"]] }

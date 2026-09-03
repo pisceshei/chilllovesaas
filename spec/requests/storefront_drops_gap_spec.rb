@@ -88,7 +88,7 @@ RSpec.describe "Storefront drops gap (collection/blog/page/article/product)", ty
       "blue,new,red|blue,new,red|Mug,Tee|Acme,Bolt|[]|" \
       "Featured=manual;Most relevant=most-relevant;Best selling=best-selling;Alphabetically, A-Z=title-ascending;" \
       "Alphabetically, Z-A=title-descending;Price, low to high=price-ascending;Price, high to low=price-descending;" \
-      "Date, old to new=created-ascending;Date, new to old=created-descending;|data:image/svg+xml|"
+      "Date, old to new=created-ascending;Date, new to old=created-descending;||" # E8b：無圖商品 ⇒ featured_image nil（PP13），不再退佔位
     )
 
     vendor_page = ThemeEngine::CollectionDrop.new(

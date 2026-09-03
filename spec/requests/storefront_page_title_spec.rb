@@ -5,7 +5,8 @@ require "rails_helper"
 # 引擎缺口 PR-8：`page_title` 各頁型（官方 objects/page_title "The page title of the current page."；值形＝真店逐字：
 # 英文店 kyliecosmetics.com、中文店 hoko.vip，2026-09-03，兩店主題 layout 皆為 `{{ page_title }} &ndash; {{ shop.name }}` 形）：
 #   首頁＝店名（hoko `<title>我的商店 3</title>`）；商品／系列／頁面／部落格／文章＝資源標題；
-#   /collections/all＝"Products"／"商品"；/collections＝"Collections"／"产品系列"（hoko 逐字，繁體店出簡體字）；
+#   /collections/all＝"Products"／"产品"（E8b：hoko.vip 2026-09-03 快照與 2026-09-04 live 皆「产品」，PR-8 記的「商品」已取代）；
+#   /collections＝"Collections"／"产品系列"（hoko 逐字，繁體店出簡體字）；
 #   vendors／types 虛擬系列＝q；搜尋無 q＝"Search"／"搜索"；有 q＝`Search: N results found for "q"`／
 #   `搜尋：找到「q」的結果，共 N 筆`；購物車＝"Your Shopping Cart"／"您的購物車"；404＝"404 Not Found"／"404 找不到"。
 # 原實作恆＝店名（hoko 稽核候選）。
@@ -84,7 +85,7 @@ RSpec.describe "Storefront page_title per page type", type: :request do
     end
     titles["/search?q=tee"] = renderer.render("/search", params: { "q" => "tee" }).html[%r{<title>(.*?)</title>}m, 1]
     expect(titles).to eq(
-      "/cart" => "您的購物車", "/nope-404" => "404 找不到", "/collections/all" => "商品",
+      "/cart" => "您的購物車", "/nope-404" => "404 找不到", "/collections/all" => "产品",
       "/collections" => "产品系列", "/search" => "搜索", "/search?q=tee" => "搜尋：找到「tee」的結果，共 1 筆" # PT Tee 命中 1 筆
     )
   end

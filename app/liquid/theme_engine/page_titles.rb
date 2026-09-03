@@ -17,7 +17,8 @@ module ThemeEngine
                 cart: "Your Shopping Cart", not_found: "404 Not Found" },
       # products_tagged：`/collections/all/{tag}` 的標題（hoko `/collections/all/red` 逐字「产品」，與
       # `/collections/all` 的「商品」不同字；英文店對應形未取得 ⇒ 沿用 Products）。
-      "zh" => { products: "商品", products_tagged: "产品", collections: "产品系列", search: "搜索",
+      # E8b：`/collections/all` 標題本尊 zh-CN 逐字「产品」（hoko.vip title／h1／JSON-LD 三處）；zh-Hant 對應值未取得（V，91 §3.75 追加）
+      "zh" => { products: "产品", products_tagged: "产品", collections: "产品系列", search: "搜索",
                 search_results: "搜尋：找到「%<terms>s」的結果，共 %<count>d 筆",
                 cart: "您的購物車", not_found: "404 找不到" }
     }.freeze

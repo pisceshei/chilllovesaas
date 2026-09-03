@@ -4084,3 +4084,27 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **登記 Ella 標籤 bug**：`_group-announcement-bar` 的 `padding_bottom` 標籤鍵是 `t:settings.left`（本尊面板顯示兩個 Left），兩邊同形，不修主題。
 - **E11 追加**：section 級 Add section 選擇器的「Generate」列是否仍存在待驗（100 §V V13 為 8 月觀察，本輪本尊分頁轉背景未及點驗）；
   color 列在有相容 metafield 定義時是否出現動態來源圖示未取得（我方 E11 起 color 列一律不出圖示）。
+
+### 3.75b E8b 頁面批（2026-09-04）的未取得與範圍外
+
+- **V linklist 的字串形**：本尊 `{{ linklist }}`／`| handleize` 的底層是 handle 還是 title 未取得；預設選單（main-menu／Main menu）兩者 handleize 同值，我方取 handle。
+- **V `link_to_type` 的 title 屬性**：官方 link_to_vendor 例有 `title`，link_to_type 頁未給例 ⇒ 同形處理。
+- **V zh-Hant 的全商品集合標題**：hoko 為 zh-CN「产品」；zh-Hant 本尊值（「產品」？）未實測，我方 zh 表單值。
+- **V `search.results_count` 未執行時的官方值**：官方逐字未取得；hoko /search 無 q 不炸 ⇒ 我方 0。
+- **⚪ 商品頁 `product_recommendations` 段的 JS 二次載入**：本尊 skeleton 後由前端打 `/recommendations/products?section_id=` 換入；我方同形（endpoint 已有），對表只比初次 HTML。
+- **登記 hoko 的 `/blogs/news` 為 404**：真店無 news blog（快照與 /nope 同大小）⇒ blog 頁對表待真店建 blog 後補（鏡像店 spec 無 blogs）。
+- **登記本機 mirror 店資料漂移**：本機 dev DB 的 mirror 店由較早的 `hoko.json` 建立（頁面未發布）⇒ 重跑 `render_parity:mirror[mirror]` 冪等對齊後才可對表；bt3 同。
+- **V 篩選平台字串**：zh 店的 Price／Brand／Product type 標籤本尊值未取得（hoko 只啟用 availability 篩選）⇒ 暫用英文。
+- **V cosy-lamp 庫存量**：本尊 `/products.json` 只給 `available: true`（數量不公開）⇒ 快照 10；影響 cosy-lamp 商品頁 `product_inventory_array` 的數字（未對表）。
+- **V 替代模板頁的 section 請求**：`PageRenderer#section_data_for` 無 record ⇒ 只看 `?view=`，page.contact 頁的 section 請求會落回 page.json（待補 record 傳遞）。
+- **⚪ pages/contact 自訂 section 資料**：本尊 page.contact 各 section 的實例設定（背景圖、色系）我方快照未含 ⇒ 該三段仍 0.000，需補真店 template JSON。
+- **⚪ collections 商品卡有圖／無圖**：本尊商品有圖（`card--media`）、鏡像店無圖 ⇒ 資料差，需鏡像圖片。
+- **V 過濾器啟用清單的設定面**：本尊在 Search & Discovery「Add filter」啟用 vendor／type／選項過濾器；我方只做儲存位 `shops.storefront_filters`（nil ⇒ 新店預設 availability＋price），admin 設定面未做。
+- **V `closest` 無同型資源時的官方值**：objects/closest 未逐字（external-facts §G18）；我方回 nil（blank），旁證＝hoko 集合頁無描述時 Ella text 區塊整塊不輸出。metaobject 模板未做。
+- **V 其餘 `collection-apparel-N` 佔位框**：只實測到 `collection-apparel-3`（hoko 集合頁四張卡 448×448）；1／2 等序號的框未取得，仍走預設方框。
+- **V 自動系列「Default sort」值域與 most-relevant 語義**：admin 只讀到已選值「Most relevant」（hidden tab 開不出 popover）；完整值域待前景分頁窮舉。
+  most-relevant 的商品排序語義未取得，我方以上新代位；鏡像店以手動系列＋同商品代位本尊的自動系列（`collection_type` 差異前台未印，V）。
+- **⚪ 商品頁動態結帳按鈕（`{{ form | payment_button }}`）**：本尊輸出 `<div data-shopify="payment-button" class="shopify-payment-button"><shopify-accelerated-checkout …>`
+  骨架（平台 web component＋店級 token），我方無結帳線 ⇒ 空；屬平台結帳功能，待結帳包實作，不在本批。
+- **⚪ 新版顧客帳戶 URL**：本尊 header／cart_drawer／cart 的登入連結是 `/customer_authentication/redirect?locale=…`、註冊是 `https://shopify.com/{shop_id}/account?…`（新版顧客帳戶）；我方 `/account/login`／`/account/register`（舊版形），待顧客帳戶包裁定。
+- **更正（PR-8 記錄）**：`/collections/all` 的 zh 標題 PR-8（2026-09-03）記「商品」；E8b 以 hoko.vip 2026-09-03 快照與 2026-09-04 live（`/collections/all.json` 404 ⇒ 虛擬系列）皆「产品」取代，PT5／CT5 期望值同步改。

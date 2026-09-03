@@ -135,6 +135,7 @@ module RenderParity
       @spec.fetch("products", []).each do |p|
         if Product.find_by(shop_id: shop.id, handle: p.fetch("handle"))
           note("product exists: #{p['handle']}")
+          align_stock(shop, p)
           next
         end
         result = Catalog::SaveProduct.call(shop:, input: {
@@ -145,19 +146,50 @@ module RenderParity
         raise "product #{p['handle']}: #{result.user_errors.inspect}" if result.user_errors.any?
 
         note("product created: #{p['handle']} #{p['price']} #{shop.store_currency}")
+        align_stock(shop, p)
       end
+    end
+
+    # E8b：快照 `inventory_quantity`（本尊 /products.json `available`：cosy-lamp true、其餘 false；實際數量未取得 ⇒ 快照給值，V）
+    # ⇒ 店預設地點的 inventory_level.available；缺鍵不動（沿用 SaveProduct 預設＝tracked、0）。
+    def align_stock(shop, p)
+      return unless p.key?("inventory_quantity")
+
+      variant = Product.find_by!(shop_id: shop.id, handle: p.fetch("handle")).product_variants.order(:id).first
+      item = InventoryItem.find_by(shop_id: shop.id, product_variant_id: variant.id) or return note("no inventory item: #{p['handle']}")
+      location = Location.where(shop_id: shop.id).order(:id).first or raise "shop #{shop.subdomain} 無地點"
+      target = p["inventory_quantity"].to_i
+      current = InventoryLevel.where(shop_id: shop.id, inventory_item_id: item.id, location_id: location.id).sum(:available)
+      return if current == target
+
+      # 庫存唯一寫入入口（13 §F5；rubocop Chilllove/InventoryDirectWrite）：set 模式、忽略 compare，每次對齊一把新 key
+      result = Inventory::Adjust.call(shop:, mode: "set", input: {
+        name: "available", reason: "correction", idempotency_key: "render-parity-mirror:#{SecureRandom.uuid}",
+        changes: [ { inventory_item_id: "gid://chilllove/InventoryItem/#{item.id}",
+                     location_id: "gid://chilllove/Location/#{location.id}",
+                     quantity: target, ignore_compare_quantity: true } ] })
+      raise "stock align #{p['handle']}: #{result.user_errors.inspect}" if result.user_errors.any?
+
+      note("stock aligned: #{p['handle']} = #{target}")
     end
 
     def ensure_collections(shop)
       @spec.fetch("collections", []).each do |c|
-        if Collection.find_by(shop_id: shop.id, handle: c.fetch("handle"))
-          note("collection exists: #{c['handle']}")
+        if (existing = Collection.find_by(shop_id: shop.id, handle: c.fetch("handle")))
+          # E8b：既有系列只對齊 sort_order（本尊首頁系列 admin「Default sort: Most relevant」）
+          if c["sort_order"].present? && existing.sort_order != c["sort_order"]
+            existing.update!(sort_order: c["sort_order"])
+            note("collection sort aligned: #{c['handle']} = #{c['sort_order']}")
+          else
+            note("collection exists: #{c['handle']}")
+          end
           next
         end
         gids = Product.where(shop_id: shop.id, handle: c.fetch("products", [])).pluck(:id).map { |id| "gid://chilllove/Product/#{id}" }
         result = Catalog::SaveCollection.call(shop:, input: {
-          title: c.fetch("title"), handle: c.fetch("handle"), collection_type: "manual", product_ids: gids
-        })
+          title: c.fetch("title"), handle: c.fetch("handle"), collection_type: "manual", product_ids: gids,
+          sort_order: c["sort_order"]
+        }.compact)
         raise "collection #{c['handle']}: #{result.user_errors.inspect}" if result.user_errors.any?
 
         note("collection created: #{c['handle']} (#{gids.size} products)")
@@ -168,9 +200,13 @@ module RenderParity
       @spec.fetch("pages", []).each do |pg|
         page = Page.find_by(shop_id: shop.id, handle: pg.fetch("handle"))
         if page
+          # E8b：既有草稿頁補發布（本尊頁面為已發布；先前 create 未帶 published_at ⇒ 前台 404）
+          page.update!(published_at: Time.current) if page.published_at.nil?
+          page.update!(template_suffix: pg["template_suffix"]) if pg.key?("template_suffix") && page.template_suffix != pg["template_suffix"]
           note("page exists: #{pg['handle']}")
         else
-          Page.create!(shop_id: shop.id, title: pg.fetch("title"), handle: pg.fetch("handle"), body_html: pg.fetch("body_html", ""))
+          Page.create!(shop_id: shop.id, title: pg.fetch("title"), handle: pg.fetch("handle"), body_html: pg.fetch("body_html", ""),
+                       published_at: Time.current, template_suffix: pg["template_suffix"])
           note("page created: #{pg['handle']}")
         end
       end

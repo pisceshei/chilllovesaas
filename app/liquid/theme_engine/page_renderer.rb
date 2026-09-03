@@ -66,7 +66,7 @@ module ThemeEngine
                             asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
                             publication: @publication, params: @params,
                             draft_settings: @draft_settings, draft_sections: @draft_sections)
-      template_key = template_key_for(runtime, page_type)
+      template_key = template_key_for(runtime, page_type, record)
       if template_key != page_type
         runtime.assign("template", TemplateDrop.new(page_type, suffix: template_key.delete_prefix("#{page_type}.")))
       end
@@ -74,9 +74,8 @@ module ThemeEngine
       @extra_assigns&.each { |k, v| runtime.assign(k, v) }
       # 引擎缺口 PR-8：page_title 各頁型（值形見 PageTitles 檔頭；全域預設＝店名只剩首頁沿用）
       runtime.assign("page_title", PageTitles.for(page_type:, assigns:, status:, shop: @shop, locale: @locale))
-      if (product = assigns["product"])
-        runtime.closest = ClosestDrop.new(product: product)
-      end
+      # E8b：closest 依模板資源填入（product／collection／article／blog／page；官方 objects/closest，見 ClosestDrop.from_template）
+      runtime.closest = ClosestDrop.from_template(assigns)
       # 平台 head 注入（包 35；62 §A.1 第 1 層）：canonical＋hreflang＋JSON-LD。
       # 只在公開店面（有 presence）注入；預覽面（noindex 牆後）維持空字串（包 30 行為）。
       if @web_presence
@@ -131,8 +130,12 @@ module ThemeEngine
       prefix.empty? ? "/" : "/#{prefix.delete_prefix('/')}/"
     end
 
-    def template_key_for(runtime, page_type)
+    # E8b：資源自帶的 `template_suffix`（本尊 page／product／collection 的替代模板：hoko.vip /pages/contact 渲染的
+    # section_ApznVq 等只在 Ella `templates/page.contact.json`）；`?view=` 參數仍優先。section 請求（section_data_for）
+    # 無 record ⇒ 只看 view（替代模板頁的 section 請求登記 V）。
+    def template_key_for(runtime, page_type, record = nil)
       view = @params["view"].to_s
+      view = record.template_suffix.to_s if view.blank? && record.respond_to?(:template_suffix) && record.template_suffix.present?
       return page_type if page_type == "404" || view.blank? ||
                           !view.match?(/\A[a-z0-9][a-z0-9\-_.]{0,64}\z/i)
 
@@ -330,9 +333,8 @@ module ThemeEngine
                             publication: @publication, params: @params)
       assigns.each { |k, v| runtime.assign(k, v) }
       @extra_assigns&.each { |k, v| runtime.assign(k, v) }
-      if (product = assigns["product"])
-        runtime.closest = ClosestDrop.new(product: product)
-      end
+      # E8b：closest 依模板資源填入（product／collection／article／blog／page；官方 objects/closest，見 ClosestDrop.from_template）
+      runtime.closest = ClosestDrop.from_template(assigns)
       # PR-13：page_image（官方＝product/collection/article 用資源 featured
       # image，其餘退 social sharing image——後者我方無資料面 ⇒ nil，主題
       # `!= blank` 閘走無圖分支；shopify.dev objects/page_image 2026-09-02）

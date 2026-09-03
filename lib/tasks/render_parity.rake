@@ -19,7 +19,9 @@ namespace :render_parity do
       if source.to_s.match?(%r{\Ahttps?://})
         uri = URI.parse(source)
         response = Net::HTTP.get_response(uri)
-        raise "GET #{source} => #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+        # E8b：`ALLOW_404=1` 時 404 頁也對表（本尊 /nope 與不存在的 blog 皆為 404 模板）
+        ok = response.is_a?(Net::HTTPSuccess) || (ENV["ALLOW_404"] == "1" && response.code == "404")
+        raise "GET #{source} => #{response.code}" unless ok
 
         [ response.body.force_encoding("UTF-8"), uri.host ]
       else

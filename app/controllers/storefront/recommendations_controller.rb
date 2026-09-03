@@ -45,7 +45,7 @@ module Storefront
         ThemeEngine::ProductDrop.new(rec, url_prefix:, publication:)
       end
       rec_drop = ThemeEngine::BaseDrop.new({
-        "performed?" => true, "products" => drops,
+        "performed" => true, "performed?" => true, "products" => drops, # E8b：Ella 讀 `recommendations.performed`（無 ?）
         "products_count" => drops.size, "intent" => intent
       })
       result = renderer.render("/products/#{product.handle}",
