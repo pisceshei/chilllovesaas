@@ -441,4 +441,7 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   handoff 只存在 Git 倉庫外本地工作區，不 commit／push、不另留 remote handoff；既有
   `docs/handoff/` 是歷史唯讀資料。一個可獨立合併 PR／原子包只維護一份 tracked worklog；
   no-tree disposition 不改 worklog、不造 head。倉庫終態回寫與鐵律 19 證據稽核仍照舊。
+- 🔴 **渲染 1:1**（2026-09-04 新增鐵律 22，全文在 CLAUDE.md）：編輯器 live preview 與買家前台的實際渲染
+  （HTML／CSS／尺寸／全部參數）必須與本尊同主題同資料完全一樣；驗收＝鏡像店逐段 diff 與 computed 量測到零，
+  差異只能修到一致或登記平台差異（`91` §3）；憑證（報告、腳本、快照）在倉庫，截圖不算。
   🔴 **「一份 worklog（不另建「第 M 輪」）」這一條對規則生效前已開的 PR 不追溯；其餘條文（分層、更正註、閘門、ledger）照舊不豁免**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
