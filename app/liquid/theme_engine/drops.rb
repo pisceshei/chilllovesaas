@@ -455,6 +455,9 @@ module ThemeEngine
 
   # DB-backed 商品 drop（白名單委派；輸入＝已 preload 關聯的 Product）。
   class ProductDrop < Liquid::Drop
+    # 官方（input-settings）：資源型 setting 直接輸出時回物件的 handle（backwards compatibility）
+    def to_s = handle.to_s
+
     # @param selected_variant_id [Integer, nil] `?variant=` URL 參數（缺口分析 A2）；
     #   nil＝無選中（selected_variant 回 nil、selected_or_first… 走 first available）。
     # @param publication [Publication, nil] 渲染管道（A′5 collections 過濾與
@@ -649,6 +652,9 @@ module ThemeEngine
   end
 
   class CollectionDrop < Liquid::Drop
+    # 官方（input-settings）：資源型 setting 直接輸出時回物件的 handle（backwards compatibility）
+    def to_s = handle.to_s
+
     # translations：同 ProductDrop 的 overlay 契約（包 34）。
     # publication/locale/sort_param：步 12 商品出口（96 §1/§2）的渲染語境；
     #   publication nil＝無管道語境（products 回 nil——舊呼叫面行為不變）。
@@ -1381,6 +1387,9 @@ module ThemeEngine
 
   # 部落格（98 §1 官方 14 屬性的 v1 對位；articles 可分頁）。
   class BlogDrop < Liquid::Drop
+    # 官方（input-settings）：資源型 setting 直接輸出時回物件的 handle（backwards compatibility）
+    def to_s = handle.to_s
+
     # current_article：文章頁的錨（next_article／previous_article 相對於它）；非文章頁 nil。
     def initialize(blog, url_prefix: "", current_tags: nil, current_article: nil)
       super()
@@ -1569,6 +1578,9 @@ module ThemeEngine
   end
 
   class PageDrop < Liquid::Drop
+    # 官方（input-settings）：資源型 setting 直接輸出時回物件的 handle（backwards compatibility）
+    def to_s = handle.to_s
+
     def initialize(page, url_prefix: "")
       super()
       @page = page
@@ -1661,7 +1673,12 @@ module ThemeEngine
 
     def enabled_currencies = [ @shop.store_currency ]
     def published_locales = []
-    def customer_accounts_enabled = false
+    # 官方逐字（objects/shop，2026-09-03）："Returns true if the store shows a login link. Returns false if not."
+    # 店級設定（shops.customer_accounts_enabled，預設 true＝本尊新店形：hoko.vip 未動設定即渲染 Drawer-Account，
+    # 該區塊受 `enable_account and shop.customer_accounts_enabled` 守）。
+    def customer_accounts_enabled = @shop.customer_accounts_enabled
+    # 官方逐字："Returns true if customer accounts are optional to complete checkout. Returns false if not."
+    # 我方無「必須登入才可結帳」設定 ⇒ 恆 true（登記）。
     def customer_accounts_optional = true
     def metafields = {}
     def brand = nil
@@ -1701,13 +1718,29 @@ module ThemeEngine
 
   # 選單（linklists）——DB：menus／menu_items。
   class LinkDrop < Liquid::Drop
-    def initialize(item, url_prefix: "")
+    # @param current_path [String] 帶前綴的當前路徑（link.current 比對用）
+    def initialize(item, url_prefix: "", current_path: nil)
       super()
       @item = item
       @url_prefix = url_prefix
+      @current_path = current_path
     end
 
     def title = @item.title
+    # 官方 "The handle of the link."——由標題 handleize（hoko.vip：`id="HeaderMenu-首頁"` ⇒ CJK 保留）
+    def handle = @item.title.to_s.downcase.gsub(/[^\p{L}\p{N}]+/, "-").gsub(/\A-|-\z/, "")
+
+    # 官方逐字（objects/link，2026-09-03）：current "Returns true if the current URL path matches the URL of the link."；
+    # child_current "Returns true if current URL path matches a link's child link URL."；active／child_active 官方只說
+    # "Returns true if the link is active"（判準未取得 ⇒ 以 current 對位，登記 V）。比對＝去尾斜線的路徑（首頁 `/` 形）。
+    def current
+      return false if @current_path.nil?
+
+      normalize_path(url) == normalize_path(@current_path)
+    end
+    def active = current
+    def child_current = links.any?(&:current)
+    def child_active = links.any?(&:active)
 
     # 官方 link.type 值形＝`{kind}_link`（98 §1 逐字 13 值；我方子集同名對映）。
     def type = "#{@item.item_type}_link"
@@ -1734,13 +1767,16 @@ module ThemeEngine
     end
 
     def links
-      @links ||= @item.children.sort_by(&:position).map { |i| LinkDrop.new(i, url_prefix: @url_prefix) }
+      @links ||= @item.children.sort_by(&:position).map { |i| LinkDrop.new(i, url_prefix: @url_prefix, current_path: @current_path) }
     end
 
-    def child_active = false
-    def active = false
-
     private
+
+    def normalize_path(path)
+      p = path.to_s.split(/[?#]/).first.to_s
+      p = p.chomp("/")
+      p.empty? ? "/" : p
+    end
 
     def resource_handle(klass)
       klass.where(shop_id: @item.shop_id, id: @item.resource_id).pick(:handle)
@@ -1748,10 +1784,17 @@ module ThemeEngine
   end
 
   class LinkListDrop < Liquid::Drop
-    def initialize(menu, url_prefix: "")
+    # 缺 handle 時的空選單（本尊 `{% if linklists[x] %}` 為真且 links 為空——hoko.vip footer 選單區塊輸出空 `<ul>`；
+    # 本尊對不存在 handle 回什麼物件＝官方未取得，以此形對位，登記 V）
+    EmptyMenu = Struct.new(:handle, :title) do
+      def menu_items = []
+    end
+
+    def initialize(menu, url_prefix: "", current_path: nil)
       super()
       @menu = menu
       @url_prefix = url_prefix
+      @current_path = current_path
     end
 
     def title = @menu.title
@@ -1760,25 +1803,26 @@ module ThemeEngine
     def links
       @links ||= @menu.menu_items.select { |i| i.parent_menu_item_id.nil? }
                       .sort_by(&:position)
-                      .map { |i| LinkDrop.new(i, url_prefix: @url_prefix) }
+                      .map { |i| LinkDrop.new(i, url_prefix: @url_prefix, current_path: @current_path) }
     end
 
     def levels = 3
   end
 
   class LinkListsDrop < Liquid::Drop
-    def initialize(shop, url_prefix: "")
+    def initialize(shop, url_prefix: "", current_path: nil)
       super()
       @shop = shop
       @url_prefix = url_prefix
+      @current_path = current_path
     end
 
     def liquid_method_missing(name)
       menu = Menu.includes(:menu_items).find_by(shop_id: @shop.id, handle: name.to_s)
-      return LinkListDrop.new(menu, url_prefix: @url_prefix) if menu
+      return LinkListDrop.new(menu, url_prefix: @url_prefix, current_path: @current_path) if menu
 
       ThemeEngine.count_miss("linklists.#{name}")
-      nil
+      LinkListDrop.new(LinkListDrop::EmptyMenu.new(name.to_s, nil), url_prefix: @url_prefix, current_path: @current_path)
     end
   end
 
@@ -1816,7 +1860,8 @@ module ThemeEngine
     def initialize(page_type: "index", design_mode: false, locale: nil, host: nil, path: "/")
       # PR-8：locale 物件化（本尊 request.locale＝shop_locale 物件——
       # 裸字串令 `<html lang="{{ request.locale.iso_code }}">` 吐空）。
-      locale_obj = locale.is_a?(Hash) ? locale : { "iso_code" => locale.to_s, "primary" => true }
+      # iso_code 輸出本尊碼（zh-Hans ⇒ zh-CN；hoko.vip `<html lang="zh-CN">`），內部 tag 不變（LocaleTags）
+      locale_obj = locale.is_a?(Hash) ? locale : { "iso_code" => LocaleTags.shopify_code(locale), "primary" => true }
       super({ "design_mode" => design_mode, "visual_preview_mode" => false,
               "page_type" => page_type, "host" => host,
               "origin" => host ? "https://#{host}" : nil, "path" => path,
@@ -1828,14 +1873,16 @@ module ThemeEngine
   # `Storefront::CartSerializer.cart_json`（金額 cents 直通；items＝hash 陣列，
   # Liquid 點取即鍵取——契約同 `/cart.js`，83 §3.3）。
   class CartDrop < BaseDrop
-    def initialize(currency:, cart_json: nil)
+    # @param taxes_included [Boolean] 官方 cart.taxes_included "Returns true if taxes are included in the prices of
+    #   products in the cart."——店級設定（shops.taxes_included；hoko.vip 稅注「已含税」⇒ true）
+    def initialize(currency:, cart_json: nil, taxes_included: false)
       # 🔴 `duties_included` 必須**顯式 false**（第三包；86 §7 差距 #1）：Ella 的
       # tax-note 四分支用 `== false` 顯式比較（cart-drawer:380 等），Liquid 的
       # `nil == false` 為假 ⇒ 缺鍵時四分支全不命中、整段稅注（含「未含稅」文案）
       # 靜默空白。taxes_included 同理保持顯式（真值接 tax_settings 隨法域包）。
       if cart_json
         super(cart_json.merge("currency" => { "iso_code" => cart_json["currency"] },
-                              "taxes_included" => false, "duties_included" => false,
+                              "taxes_included" => taxes_included, "duties_included" => false,
                               "discount_applications" => []))
       else
         super({ "item_count" => 0, "items" => [], "total_price" => 0,
@@ -1843,7 +1890,7 @@ module ThemeEngine
                 "total_discount" => 0, "note" => nil, "attributes" => {},
                 "currency" => { "iso_code" => currency },
                 "cart_level_discount_applications" => [], "requires_shipping" => false,
-                "taxes_included" => false, "duties_included" => false,
+                "taxes_included" => taxes_included, "duties_included" => false,
                 "discount_applications" => [] })
       end
     end
@@ -1870,24 +1917,83 @@ module ThemeEngine
     def to_s = @attrs["name"]
   end
 
+  # 官方 `color` 物件（objects/color，取證 2026-09-03）：alpha＝0.0–1.0 小數；red／green／blue 0–255；hue 0–360；
+  # saturation／lightness 0–100；`rgb`＝空白分隔；`rgba`＝空白分隔＋斜線後 alpha（官方例 "51 79 180 / 1.0"）；
+  # 直接輸出＝設定原值（官方例為 hex）。
+  # 渲染 1:1 對表（2026-09-03，hoko.vip 首頁 86 處 `rgb(0 0 0 / 0.0)`）：Ella settings_data 的透明色存成
+  # `rgba(0,0,0,0)`（arrow_background 70／arrow_border 64／primary_button_background 49／background 33…），本尊照樣
+  # 給 color 物件（alpha 0.0）；舊實作只認 hex ⇒ 這些值以字串進主題，`.rgba` 為 nil、`.alpha != 0.0` 判斷全錯。
   class ColorDrop < Liquid::Drop
-    def initialize(hex)
+    HEX_RE = /\A#?(\h\h)(\h\h)(\h\h)(\h\h)?\z/
+    SHORT_HEX_RE = /\A#?(\h)(\h)(\h)\z/
+    RGB_RE = /\Argba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)\z/i
+
+    def self.color_like?(value)
+      s = value.to_s.strip
+      s.match?(HEX_RE) || s.match?(SHORT_HEX_RE) || s.match?(RGB_RE) || s.casecmp?("transparent")
+    end
+
+    # 色值物件與**原始字串**相等（本尊：Ella color-swatches `color_2 == 'rgba(0,0,0,0)'` 成立 ⇒ 輸出
+    # `background: #1199bb`，hoko.vip 2026-09-03；我方原本走 gradient 分支）。`to_str` 讓 `'…' == drop`
+    # （String#== 對 to_str 物件反向呼叫 ==）同樣成立。
+    def ==(other)
+      other.respond_to?(:to_str) ? to_s == other.to_str : (other.is_a?(ColorDrop) && to_s == other.to_s)
+    end
+    alias eql? ==
+    def to_str = to_s
+    def hash = to_s.hash
+
+    def initialize(value)
       super()
-      @hex = hex.to_s
-      m = @hex.match(/#?(\h\h)(\h\h)(\h\h)/)
-      @r, @g, @b = m ? m.captures.map { |x| x.to_i(16) } : [ 0, 0, 0 ]
+      @raw = value.to_s
+      s = @raw.strip
+      @r, @g, @b, @a = 0, 0, 0, 1.0
+      if (m = s.match(HEX_RE))
+        @r, @g, @b = m.captures.first(3).map { |x| x.to_i(16) }
+        @a = m[4] ? (m[4].to_i(16) / 255.0).round(2) : 1.0
+      elsif (m = s.match(SHORT_HEX_RE))
+        @r, @g, @b = m.captures.map { |x| (x * 2).to_i(16) }
+      elsif (m = s.match(RGB_RE))
+        @r, @g, @b = m.captures.first(3).map(&:to_i)
+        @a = m[4] ? m[4].to_f : 1.0
+      elsif s.casecmp?("transparent")
+        @a = 0.0
+      end
     end
 
     def red = @r
     def green = @g
     def blue = @b
-    def alpha = 1.0
+    def alpha = @a
     def rgb = "#{@r} #{@g} #{@b}"
-    def rgba = "#{@r} #{@g} #{@b} / 1.0"
-    def hue = 0
-    def saturation = 0
-    def lightness = ((@r * 0.299 + @g * 0.587 + @b * 0.114) / 2.55).round
-    def to_s = @hex
+    def rgba = "#{@r} #{@g} #{@b} / #{@a.to_f}"
+    def hex = format("#%02x%02x%02x", @r, @g, @b)
+    def hue = hsl[0]
+    def saturation = hsl[1]
+    def lightness = hsl[2]
+    def to_s = @raw
+
+    private
+
+    # HSL（0–360／0–100／0–100，四捨五入）——官方屬性語義；舊實作 hue／saturation 為 0 的佔位已換掉。
+    def hsl
+      @hsl ||= begin
+        r, g, b = @r / 255.0, @g / 255.0, @b / 255.0
+        max, min = [ r, g, b ].max, [ r, g, b ].min
+        l = (max + min) / 2.0
+        if max == min
+          [ 0, 0, (l * 100).round ]
+        else
+          d = max - min
+          sat = l > 0.5 ? d / (2.0 - max - min) : d / (max + min)
+          h = if max == r then ((g - b) / d) % 6
+          elsif max == g then (b - r) / d + 2
+          else (r - g) / d + 4
+          end
+          [ ((h * 60) % 360).round, (sat * 100).round, (l * 100).round ]
+        end
+      end
+    end
   end
 
   # 色階（步 13b；97 §3——official `color_scheme`：`id`＋`settings`；直接輸出＝id，
@@ -2096,13 +2202,25 @@ module ThemeEngine
       @schemes = schemes
     end
 
+    # 資源型 setting（官方 input-settings）："blank if no selection has been made"——值**根本不存在**（無 default、
+    # JSON 未給，靜態 block 常態）時同樣回空字串，不是 nil（hoko.vip product-grid 靜態卡 `card_product.featured_media`
+    # 為真 ⇒ `card--media`）。其他型別維持「缺鍵 ⇒ nil」。
+    RESOURCE_TYPES = %w[product collection page blog product_list collection_list].freeze
+
     def liquid_method_missing(name)
       k = name.to_s
       unless @v.key?(k)
+        return coerce(k, nil) if RESOURCE_TYPES.include?(type_name_of(k))
+
         ThemeEngine.count_miss("#{@label}.#{k}")
         return nil
       end
       coerce(k, @v[k])
+    end
+
+    def type_name_of(key)
+      entry = @t[key]
+      (entry.is_a?(Hash) ? entry["type"] : entry).to_s
     end
 
     private
@@ -2126,7 +2244,8 @@ module ThemeEngine
       when "color", "color_background"
         return nil if val.nil? || val == ""
 
-        val.to_s.start_with?("#") ? ColorDrop.new(val) : val
+        # hex／rgba()／transparent 都是 color 物件（Ella 透明色存 `rgba(0,0,0,0)`）；漸層字串（color_background）原樣
+        ColorDrop.color_like?(val) ? ColorDrop.new(val) : val
       when "image_picker"
         # 空值＝nil（官方契約：blank image setting 回 nil——除零診斷實錘，勿改）。
         # 非空 ⇒ 先解析檔案庫（shopify://shopify/files/{name} 或裸檔名 →
@@ -2135,6 +2254,19 @@ module ThemeEngine
 
         resolve_settings_image(val)
       when "font_picker" then FontLibrary.drop(val) # 步 13a：handle → 真 font drop（97 §1）
+      # 資源型 setting：值是 handle 字串，主題以物件消費（`bl_stts.collection.products`、`card_product != empty`）。
+      # 官方逐字（input-settings，2026-09-03）：product／collection／page／blog 回物件，"blank if no selection has been
+      # made, the selection isn't visible, or the selection no longer exists"；product_list／collection_list 回陣列。
+      # 「blank」有兩種實測形（hoko.vip 首頁）：**未選**（setting 無值）⇒ 空字串——無商品的 card-product-flex 靜態卡
+      # `card_product.featured_media` 仍為真 ⇒ `card--media`、`{{ card_product.id }}` 空、`media | json` ⇒ `""`；
+      # **已選但查無**（lookbook 點位 `product: 'draped-mock-neck-tee'`）⇒ nil——`card_product == empty` 走 else、
+      # `media | json` ⇒ `null`。原本回裸 handle 字串。
+      when "product" then resolve_resource("all_products", val)
+      when "collection" then resolve_resource("collections", val)
+      when "page" then resolve_resource("pages", val)
+      when "blog" then resolve_resource("blogs", val)
+      when "product_list" then resolve_resource_list("all_products", val)
+      when "collection_list" then resolve_resource_list("collections", val)
       when "link_list"
         # E3c：`link_list` 型 setting 回 linklist 物件（Ella header：`header_settings.menu.links`），
         # 不是 handle 字串——原本回字串 ⇒ `.links` 為 nil ⇒ 整條主選單空白（demo 店 2026-09-03 實錘）。
@@ -2164,14 +2296,19 @@ module ThemeEngine
   end
 
   class BlockDrop < Liquid::Drop
-    attr_reader :id, :type, :settings_hash, :data
+    attr_reader :key, :type, :settings_hash, :data, :path, :section_id
 
     # children：巢狀子 block drops（步 13b；官方 ≤8 層）——Ella
     # `{% for child_block in block.blocks %}{% render child_block %}` 消費形。
+    # instance_id：本尊形 `{A+17 碼}__{key}`（BlockIds；渲染 1:1）——`block.id` 與 `shopify-block-{id}` 同值；
+    # key：JSON 裸鍵（編輯器橋 `data-shopify-editor-block` 與 `cl:*` 契約以 key 定址）。
     def initialize(id:, type:, settings:, types:, data:, design_mode: false,
-                   children: [], schemes: nil)
+                   children: [], schemes: nil, instance_id: nil, path: nil, section_id: nil)
       super()
-      @id, @type, @data = id, type, data
+      @key, @type, @data = id, type, data
+      @instance_id = instance_id
+      @path = path || [ id ]
+      @section_id = section_id
       @settings_hash = settings
       @settings = SettingsDrop.new(settings, types, label: "block(#{type})", schemes:)
       @design_mode = design_mode
@@ -2180,11 +2317,13 @@ module ThemeEngine
 
     def settings = @settings
     def blocks = @children
+    # 官方 block.id；本尊實例形（見 BlockIds）。無 instance_id（測試直建 drop）⇒ 裸 key。
+    def id = @instance_id || @key
 
     def shopify_attributes
       return "" unless @design_mode
 
-      %(data-shopify-editor-block='#{JSON.generate(id: @id, type: @type)}')
+      %(data-shopify-editor-block='#{JSON.generate(id: @key, type: @type)}')
     end
 
     def to_s = ""
@@ -2193,22 +2332,61 @@ module ThemeEngine
   class SectionDrop < Liquid::Drop
     attr_reader :id
 
-    def initialize(id:, data:, types:, blocks: [], schemes: nil)
+    # @param index [Integer, nil] 官方 section.index（1-based，within its location）；nil＝static／編輯器／SRA。
+    # @param location [String] 官方 section.location：template／群組 type／static／content_for_index。
+    def initialize(id:, data:, types:, blocks: [], schemes: nil, index: nil, location: "template")
       super()
       @id, @data = id, data
       @settings = SettingsDrop.new(data["settings"] || {}, types, label: "section(#{data['type']})", schemes:)
       @blocks = blocks
+      @index = index
+      @location = location
     end
 
     def settings = @settings
     def blocks = @blocks
-    def index = nil
-    def index0 = nil
-    def location = "template"
+    # 官方逐字（2026-09-03）："The 1-based index of the current section within its location." ／
+    # index0："This is the same as the index property except that the index starts at 0 instead of 1."
+    # Ella 以 `section.index == nil` 判定「非整頁渲染 ⇒ 改走 section fetch」（before-you-leave／header_mobile），
+    # 故整頁必須給值、SRA／編輯器必須 nil（hoko.vip：slideshow `data-index="1"`、before-you-leave
+    # `data-section-fetch="false"`）。
+    def index = @index
+    def index0 = @index && @index - 1
+    def location = @location
 
     def liquid_method_missing(name)
       ThemeEngine.count_miss("section.#{name}")
       nil
+    end
+  end
+
+  # SettingsDrop 資源解析（放在 SectionDrop 之後以維持檔內順序；方法屬 SettingsDrop）
+  class SettingsDrop
+    private
+
+    BLANK_RESOURCE = ""
+
+    # 動態來源（`"product": "{{ closest.product }}"`，Ella 靜態商品卡）已由 resolve_dynamic 換成物件——drop／陣列**原樣透傳**；
+    # 解成非資源純量（本尊 product-grid 以整數當 closest.product）⇒ 官方 "blank"（空字串）：卡片 `card--media`、
+    # `{{ card_product.id }}` 空、`media | json` ⇒ `""`（hoko.vip）。
+    def resolve_resource(global, val)
+      return val if val.is_a?(Liquid::Drop) || val.is_a?(Array)
+      return BLANK_RESOURCE unless val.nil? || val.is_a?(String)
+
+      handle = val.to_s.strip
+      return BLANK_RESOURCE if handle.empty? # 未選
+
+      drop = @context&.[](global)
+      return nil unless drop.respond_to?(:liquid_method_missing)
+
+      drop.liquid_method_missing(handle).presence # 已選但查無 ⇒ nil
+    end
+
+    def resolve_resource_list(global, val)
+      Array(val).filter_map do |handle|
+        resolved = resolve_resource(global, handle)
+        resolved == BLANK_RESOURCE ? nil : resolved
+      end
     end
   end
 end

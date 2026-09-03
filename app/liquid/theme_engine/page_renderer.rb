@@ -102,9 +102,12 @@ module ThemeEngine
       # PR-3：window.Shopify bootstrap（主題 JS 生態依賴；shopify_global.rb 檔頭）
       html = html.sub("</head>") do
         ThemeEngine::ShopifyGlobal.script(
-          shop: @shop, theme: @theme, locale: @locale.to_s,
+          shop: @shop, theme: @theme, locale: ThemeEngine::LocaleTags.shopify_code(@locale),
           currency: @shop.store_currency, root: root_prefix_path,
-          design_mode: @design_mode) + "</head>"
+          design_mode: @design_mode,
+          country: @web_presence&.market&.region_country_codes&.first,
+          schema_name: runtime.theme_info["theme_name"], schema_version: runtime.theme_info["theme_version"],
+          host: @host) + "</head>"
       end
       # PR-19：theme 級 Custom CSS（head 尾；官方全站生效語義）
       theme_css = runtime.theme_custom_css_style
@@ -423,10 +426,15 @@ module ThemeEngine
 
       order = tj["order"] || tj.dig("sections") && tj["sections"].keys || []
       scope = Runtime.template_scope(key) # PR-7：`template--{template}__{key}` 前綴
+      position = 0
       Array(order).map do |k|
         # PR-11：draft 覆蓋最優先（編輯器整頁草稿）——與 section_data_for 同序
         data = @draft_sections[k] || (tj["sections"] || {})[k] or next ""
-        data["disabled"] ? "" : runtime.render_section(k, data, scope: scope)
+        next "" if data["disabled"]
+
+        # section.index＝在 template 內的 1-based 位置（只數實際渲染者；hoko.vip slideshow `data-index="1"`）
+        position += 1
+        runtime.render_section(k, data, scope: scope, index: position, location: "template")
       end.join
     end
 

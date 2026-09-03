@@ -67,7 +67,7 @@ RSpec.describe "ThemeEngine {% form %}（型別化）" do
     # 無主題 id ⇒ 官方預設 id 與 fragment
     expect(render("{% form 'contact' %}x{% endform %}"))
       .to include('action="/contact#contact_form" id="contact_form" accept-charset="UTF-8" class="contact-form">')
-    expect(render("{% form 'customer_login' %}{{ form.id }}{% endform %}")).to include(">\ncustomer_login</form>")
+    expect(render("{% form 'customer_login' %}{{ form.id }}{% endform %}")).to include('value="✓" />customer_login</form>')
   end
 
   it "F4 posted_successfully?：純 GET 為 false（Ella 成功訊息不出）；customer_address 恆 true" do
@@ -117,12 +117,15 @@ RSpec.describe "ThemeEngine {% form %}（型別化）" do
     expect(nil_style).not_to include("style=")
   end
 
-  it "F8 🔴 真店逐字形（hoko.vip 2026-09-02）：屬性序＋自閉隱藏欄各一行" do
+  # 2026-09-03 更正（E8 渲染 1:1）：09-02 的「各一行」來自 DevTools 元素面板的排版，不是回應位元組；
+  # hoko.vip 原始 HTTP 位元組（customer／product／contact／customer_login 四形）＝ `<form …>` 緊接兩個隱藏欄位、
+  # 彼此無分隔、再緊接內容。
+  it "F8 🔴 真店逐字形（hoko.vip 2026-09-03 原始位元組）：屬性序＋隱藏欄位緊接、無分隔" do
     out = render("{% form 'customer_login', id: 'CustomerLoginForm', class: 'customer-drawer__form' %}x{% endform %}")
     expect(out).to start_with(
-      %(<form method="post" action="/account/login" id="CustomerLoginForm" accept-charset="UTF-8" data-login-with-shop-sign-in="true" class="customer-drawer__form">\n) \
-      "<input type=\"hidden\" name=\"form_type\" value=\"customer_login\" />\n" \
-      "<input type=\"hidden\" name=\"utf8\" value=\"✓\" />\n"
+      %(<form method="post" action="/account/login" id="CustomerLoginForm" accept-charset="UTF-8" data-login-with-shop-sign-in="true" class="customer-drawer__form">) \
+      "<input type=\"hidden\" name=\"form_type\" value=\"customer_login\" />" \
+      "<input type=\"hidden\" name=\"utf8\" value=\"✓\" />x</form>"
     )
   end
 end

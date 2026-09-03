@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_121000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1418,6 +1418,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_200000) do
     t.bigint "catalog_version", default: 1, null: false, comment: "目錄級版本（市場／價格表變動時 bump；寫入者隨第 32 包）"
     t.datetime "created_at", null: false
     t.string "custom_domain", limit: 253
+    t.boolean "customer_accounts_enabled", default: true, null: false, comment: "storefront 是否顯示登入連結（官方 shop.customer_accounts_enabled；預設 true＝本尊新店形）"
     t.json "feature_flags", default: -> { "(json_object())" }, null: false
     t.string "name", null: false
     t.bigint "order_counter", default: 1000, null: false, comment: "每店訂單連號計數器（15-F5；取號＝交易內 +1 後讀回，鎖序首位）"
@@ -1429,6 +1430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_200000) do
     t.string "store_currency", limit: 3, default: "HKD", null: false
     t.string "storefront_password_digest", comment: "storefront 密碼保護（NULL＝off；PR-10）"
     t.string "subdomain", limit: 63, null: false
+    t.boolean "taxes_included", default: false, null: false, comment: "售價是否含稅（官方 cart.taxes_included；預設 false）"
     t.string "timezone", limit: 64, default: "Asia/Hong_Kong", null: false
     t.datetime "updated_at", null: false
     t.index ["custom_domain"], name: "uq_shops_custom_domain", unique: true

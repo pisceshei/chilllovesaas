@@ -59,9 +59,10 @@ module ThemeEngine
       def evaluate_attr(v, context) = v.is_a?(String) ? v : context.evaluate(v)
     end
 
-    # {% style %} → <style> 包裹（區塊作用域 CSS 的主要載體）。
+    # {% style %} → `<style data-shopify>` 包裹（區塊作用域 CSS 的主要載體）。官方逐字（tags/style，2026-09-03）：
+    # "Generates an HTML <style> tag with an attribute of data-shopify."；hoko.vip 全頁 `<style data-shopify>` 逐字。
     class StyleTag < Liquid::Block
-      def render(context) = "<style>#{super}</style>"
+      def render(context) = "<style data-shopify>#{super}</style>"
     end
 
     # {% stylesheet %}／{% javascript %}：section 級資產（PR-3——本尊語義＝
@@ -186,8 +187,11 @@ module ThemeEngine
         (spec[:hidden] || {}).each { |k, v| hidden << [ k, v ] }
         hidden << [ spec[:resource_hidden], resource.id ] if spec[:resource_hidden] && resource.respond_to?(:id)
         hidden << [ "return_to", return_to ] if return_to
-        inputs = hidden.map { |k, v| %(<input type="hidden" name="#{k}" value="#{h(v)}" />) }.join("\n")
-        %(<form #{attrs.join(' ')}>\n#{inputs}\n#{inner}</form>)
+        # 本尊逐字（hoko.vip 2026-09-03，customer／product／contact／customer_login 四形一致）：
+        # `<form …>` 緊接 `<input type="hidden" name="form_type" value="…" /><input type="hidden" name="utf8" value="✓" />`
+        # 再緊接內容，隱藏欄位之間與前後**無任何空白**。
+        inputs = hidden.map { |k, v| %(<input type="hidden" name="#{k}" value="#{h(v)}" />) }.join
+        %(<form #{attrs.join(' ')}>#{inputs}#{inner}</form>)
       end
 
       private
@@ -330,11 +334,14 @@ module ThemeEngine
     #   （隔離語義同 content_for "block"）；其他值 ⇒ 空輸出＋遙測（不炸頁）。
     # ③quoted string 形完全走原生 super（snippet 隔離語義不動）。
     class RenderTag < Liquid::Render
-      BARE_VAR = /\A\s*([a-zA-Z_][\w-]*(?:\.[\w-]+)*)\s*\z/
+      # 變數形（`{% render child_block %}`）另收 `, key: value` 參數（Ella `_lookbook.liquid`
+      # `{% render child_block, enable_lookbook_all_items_layout: … %}`）⇒ 參數進 block 內變數（同 content_for 'block'）。
+      BARE_VAR = /\A\s*([a-zA-Z_][\w-]*(?:\.[\w-]+)*)\s*(?:,(.*))?\z/m
 
       def initialize(tag_name, markup, options)
         if (m = markup.match(BARE_VAR))
           @block_expr = Liquid::Expression.parse(m[1])
+          @block_params = m[2].to_s.scan(FormTag::PARAM).to_h { |k, _q, str, expr| [ k, str || Liquid::Expression.parse(expr) ] }
           # 跳過 Render 的 quoted-string 解析（會 raise）——直接 Tag 層初始化。
           Liquid::Tag.instance_method(:initialize).bind_call(self, tag_name, markup, options)
         else
@@ -348,7 +355,9 @@ module ThemeEngine
         target = context.evaluate(@block_expr)
         runtime = context.registers[:runtime]
         if target.is_a?(ThemeEngine::BlockDrop) && runtime
-          output << runtime.render_block(target.id, target.data, context)
+          extra = @block_params.transform_values { |v| v.is_a?(String) ? v : context.evaluate(v) }
+          # LF 尾接由 render_block 統一處理（本尊每個 block 渲染後皆接 LF，見 Runtime#render_block）
+          output << runtime.render_block(target.key, target.data, context, path: target.path, extra_assigns: extra)
         else
           ThemeEngine.count_miss("render.non_block_variable")
         end

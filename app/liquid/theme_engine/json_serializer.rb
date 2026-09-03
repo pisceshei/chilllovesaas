@@ -15,8 +15,10 @@ module ThemeEngine
 
     module_function
 
+    # 本尊 json 過濾器把 `/` 轉義成 `\/`（hoko.vip：`window.shopUrl = "https:\/\/hoko.vip"`、`"\/cart\/add"`）
+    # ⇒ Ruby JSON `script_safe: true`（同時轉義 U+2028／2029）。
     def dump(input)
-      JSON.generate(coerce(input))
+      JSON.generate(coerce(input), script_safe: true)
     rescue StandardError
       JSON.generate(REFUSAL)
     end

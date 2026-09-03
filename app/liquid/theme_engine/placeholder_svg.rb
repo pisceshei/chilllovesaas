@@ -35,12 +35,47 @@ module ThemeEngine
     module_function
 
     # @return [String] 完整 `<svg …>…</svg>`
+    # 本尊各 placeholder 的外框屬性（hoko.vip 2026-09-03 逐字；插圖本體是本尊版權圖，我方自繪——鐵律 9）：
+    #   apparel 系：`[class] preserveAspectRatio [width height] viewBox fill="none" xmlns`，比例／尺寸逐名不同；
+    #   其餘（官方 filters/placeholder_svg_tag 範例）：`[class] xmlns viewBox="0 0 525.5 525.5"`。
+    #   未列名者＝未取得（沿用系內預設，登記 V）。
+    FRAMES = {
+      "hero-apparel-1" => { par: "xMaxYMid slice", view_box: "0 0 1300 730" },
+      "hero-apparel-2" => { par: "xMidYMin slice", view_box: "0 0 1300 731" },
+      "hero-apparel-3" => { par: "xMaxYMid slice", view_box: "0 0 1297 729" },
+      "product-apparel-1" => { par: "xMidYMid slice", view_box: "0 0 448 448", size: [ 448, 448 ] },
+      "product-apparel-2" => { par: "xMidYMid slice", view_box: "0 0 449 448", size: [ 449, 448 ] },
+      "product-apparel-3" => { par: "xMidYMid slice", view_box: "0 0 449 448", size: [ 449, 448 ] }
+    }.freeze
+    APPAREL_RE = /\A(?:hero|product|collection|blog|detailed)-apparel-\d\z/
+
+    # @param name [String] placeholder 名
+    # @param css_class [String, nil] class 參數；官方："Specify the class attribute for the <svg> tag."——**未給即無 class 屬性**
+    #   （官方範例與 hoko.vip `hero-apparel-3` 皆無 class）
     def tag(name, css_class = nil)
       key = name.to_s
       body, view_box = illustration(key)
-      cls = css_class.to_s.strip.empty? ? "placeholder-svg" : css_class.to_s
-      %(<svg class="#{CGI.escapeHTML(cls)}" preserveAspectRatio="xMidYMid slice" viewBox="#{view_box}" ) \
-        "fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">#{body}</svg>"
+      attrs = []
+      attrs << %(class="#{CGI.escapeHTML(css_class.to_s)}") unless css_class.to_s.strip.empty?
+      if key.match?(APPAREL_RE)
+        frame = FRAMES[key] || { par: "xMidYMid slice", view_box: view_box }
+        attrs << %(preserveAspectRatio="#{frame[:par]}")
+        attrs << %(width="#{frame[:size][0]}" height="#{frame[:size][1]}") if frame[:size]
+        attrs << %(viewBox="#{frame[:view_box]}") << %(fill="none") << %(xmlns="http://www.w3.org/2000/svg")
+        body = fit(body, view_box, frame[:view_box])
+      else
+        attrs << %(xmlns="http://www.w3.org/2000/svg") << %(viewBox="#{view_box}")
+      end
+      "<svg #{attrs.join(' ')}>#{body}</svg>"
+    end
+
+    # 自繪插圖座標系（WIDE／SQUARE）⇒ 本尊外框 viewBox：尺寸不同時以 scale 貼合（不裁圖）。
+    def fit(body, from_view_box, to_view_box)
+      return body if from_view_box == to_view_box
+
+      fw, fh = from_view_box.split.last(2).map(&:to_f)
+      tw, th = to_view_box.split.last(2).map(&:to_f)
+      %(<g transform="scale(#{(tw / fw).round(4)} #{(th / fh).round(4)})">#{body}</g>)
     end
 
     def illustration(key)

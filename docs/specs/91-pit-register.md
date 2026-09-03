@@ -4015,3 +4015,26 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - 壓測防線分層登記：訂單恰一由三層各自可擋（FOR UPDATE／open→completed
   條件轉移／uq_orders_checkout_id）——單層突變被其餘層接住＝預期內殺不掉
   （defense-in-depth）；壓測輪以複合突變（鎖＋條件轉移同時退化）證紅（MS-1）。
+
+### 3.75 E8 渲染 1:1 對表（首頁首批）的範圍外觀察與登記（2026-09-03）
+
+全文與證據：`docs/dev/e8-render-parity.md`（§3 已登記差異、§4 待裁定）。
+
+- **⚪ 路由前綴 vs 本尊無前綴**：67 §F.1(b)（2026-08-13 裁定「恆有前綴」）與 1:1 前台輸出衝突——本尊主市場預設語言 `href="/collections/all"`、`routes.root_url` ＝ `/`；我方 `/zh-hans-tw/…`。對表以 `CAND_PREFIX` 抹掉；改不改裁定＝待使用者。
+- **⚪ 貨幣顯示格式**：本尊 hoko（HKD）`$19.99`，我方 `HK$19.99`（鐵律 10 範例）；本尊 `shop.money_format`／`money_with_currency_format` 為店級設定，我方無此欄。待裁定後才能對齊商品卡價格。
+- **⚪ 本尊新版顧客帳戶**：登入／註冊連結 `/customer_authentication/redirect?locale=…`、`https://shopify.com/{shop_id}/account?…`；我方 `/account/login`／`/account/register`。平台功能差異，不在引擎範圍。
+- **⚪ block 實例前綴演算法**：本尊 `A`＋17 碼不可觀測，我方 SHA-256 導出（形同值異）；正規化兩邊都收斂成 `B__`。
+- **V 已停用 section 是否佔 `section.index`**：官方未取得；我方只數實際渲染者。
+- **V 群組檔缺 `type` 時的 `section.location`**：我方回落群組名。
+- **V `linklists['不存在']`**：本尊回什麼物件未取得；我方回空 LinkListDrop（hoko.vip footer 空 `<ul>` 形對位）。
+- **V section／block／layout 的 Liquid 錯誤訊息路徑名**：只實測到 `snippets/x`；其餘依同規則。
+- **V zh-Hant ⇒ zh-TW**：由官方命名規則推得，未實測繁體店。
+- **V `money` 過濾器空值**：本尊空 compare_at_price 經 money 為空，官方未逐字；我方 nil／空字串 ⇒ 空。
+- **V `active`／`child_active`**：官方只說 "Returns true if the link is active"，判準未取得；以 current 對位。
+- **登記 stylesheet `preload` Link header**：官方為 Link header 而非屬性；我方尚未送 header（只移除屬性）。
+- **登記 woff 備援**：`font_face` 已輸出 `.woff` URL 形，但我方未提供 woff 檔（現代瀏覽器優先 woff2 不會請求）。
+- **登記 dev 重載怪癖**：`drops.rb` 排除於 autoload（initializers/theme_engine.rb），改引擎檔後不重啟即 `ThemeEngine::Runtime::ClosestDrop` NameError；本機對表流程每批改動都重啟伺服器。
+- **登記 Git Bash 環境值路徑轉換**：`CAND_PREFIX=/zh-hans-tw` 會被 MSYS 轉成 Windows 路徑，`MSYS_NO_PATHCONV=1` 又會弄壞 bundle 捷徑 ⇒ rake 接受無前導斜線形。
+- **登記併發規格在負載下的假紅**：本機同時跑 dev 伺服器與全套 rspec 時 `*_concurrency_spec` 會偶發 fail（advisory lock／SKIP LOCKED 類），單獨重跑全綠；未改判準，只登記。
+- **⚪ `product.featured_media`／`featured_image` 無圖時的值**：本尊對無圖商品回 nil（hoko.vip /collections/all 三張真商品卡皆 `card--text`）；我方 `ProductDrop#featured_image` 無圖時回 `PlaceholderImageDrop`（既有設計）⇒ 集合頁商品卡會走 `card--media`。首頁未踩到（佔位卡不經此路）；下一批（products／collections 頁）第一項處理，需同時盤點依賴佔位 drop 的既有規格。
+- **登記本機 canonical／hreflang 主機**：`canonical-url="https://mirror.chilllove.example/"`、`https://mirror.lvh.me/` 與頁面主機不一致，是 dev config，production 同一網域。
