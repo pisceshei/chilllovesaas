@@ -204,7 +204,7 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8）" do
     expect(html.scan(/<div id="shopify-block-(#{PREFIX})__y" class="shopify-block">/).flatten.uniq.size).to eq(2)
     st = html[/<div id="shopify-block-(#{PREFIX}__static-leaf)" class="shopify-block"><i data-bid="\1"/, 1]
     expect(st).to be_present
-    expect(html).to include("<ol><li>#{x}</li></ol>") # section.blocks 的 drop 與 content_for 路徑同值
+    expect(html).to match(%r{<ol><li>#{Regexp.escape(x)}</li><li>#{PREFIX}__x2</li></ol>}) # section.blocks 的 drop 與 content_for 路徑同值
     expect(render.html).to include(x) # 同輸入同 id（確定性）
     editor = render("/", design_mode: true).html
     expect(editor).to include(%(data-bid="#{x}" data-shopify-editor-block='{"id":"x","type":"leaf"}'))
