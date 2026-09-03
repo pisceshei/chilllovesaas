@@ -1254,6 +1254,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const { settings } = await openHero();
     const swatch = settings.getByLabelText("強調色");
     expect(swatch).toHaveTextContent("#FF0000");
+    expect(swatch.querySelector("svg")).toBeNull(); // E11：本尊 color 列無動態來源圖示
     fireEvent.click(swatch);
     expect(screen.getByLabelText("色相")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("不透明度"), { target: { value: "50" } });
@@ -1463,6 +1464,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.click(tree.getByRole("button", { name: "新增區塊" }));
     expect(screen.getByLabelText("搜尋區塊")).toHaveFocus();
     expect(screen.getByRole("tab", { name: "區塊" })).toHaveAttribute("aria-selected", "true");
+    expect(document.querySelector(".cl-picker__generate")).toBeNull(); // E11：block picker 無 Generate（真店兩層皆無）
     const basic = within(screen.getByRole("list", { name: "基本" }));
     fireEvent.click(basic.getByRole("button", { name: "父塊" }));
     expect(tree.getAllByRole("button", { name: /^父塊/ })).toHaveLength(2); // 新 block 帶 default 摘要「父塊 – P」

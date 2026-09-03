@@ -32,6 +32,9 @@ ED8 的 fixture select（2 個短選項）依官方規則變成分段 ⇒ 測試
 
 ## §3 仍有差異（91 §3.78）
 
+E11（2026-09-04，部署後並排複驗）已收：color 列去動態來源圖示、block 級 picker 去 Generate。仍待本尊分頁前景後處理：右欄寬／標籤欄
+（我方 292px、Show separator line 折行）、color_background「No color chosen」彈層、面板字級量測（本機 Chrome 有 font-weight 注入污染）。
+
 Theme Settings 收合區規則（本尊列 Facebook＋Reveal sections on scroll，判定法未取得）、Ask for changes（Sidekick）、section 級 Duplicate 灰化規則、
 URL `section=` 的 group 前綴、面板字型／字級量測、Text 標籤旁小圖示、section 級「…」選單、隱藏／拖曳／Undo／Save／預覽更新方式（下一輪）。
 

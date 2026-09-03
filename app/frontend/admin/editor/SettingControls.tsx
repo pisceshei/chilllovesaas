@@ -470,7 +470,7 @@ function ColorControl({ id, label, value, alpha, onChange }: {
       <button aria-expanded={open} aria-haspopup="dialog" className="cl-ctl-color" id={id} onClick={() => setOpen((on) => !on)} ref={anchorRef} type="button">
         <span aria-hidden="true" className={`cl-ctl-color__swatch${transparent ? " is-transparent" : ""}`} style={swatchStyle} />
         <span className="cl-ctl-color__text">{transparent ? t("editor.transparent") : value.toUpperCase()}</span>
-        <Database aria-hidden="true" size={16} />
+        {/* E11：本尊 color 列只有色票＋hex（真店八個 color 列實測無動態來源圖示，external-facts §G16）；圖示只留 text／url／image 類 */}
       </button>
       <Popover anchorRef={anchorRef} dismissOnOutsideClick label={label} onClose={() => setOpen(false)} open={open}>
         <div className="cl-colorpicker" role="dialog" aria-label={label}>
