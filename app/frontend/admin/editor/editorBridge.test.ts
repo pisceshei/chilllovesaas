@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+// Vite `?raw`：把橋腳本原文當字串載入（vite/client 型別已在 tsconfig types）
+import SCRIPT from "../../../assets/javascripts/editor-bridge.js?raw";
 
 /**
  * E6：預覽橋（app/assets/javascripts/editor-bridge.js）在 jsdom 內執行——同一份腳本給引擎注入。
@@ -9,7 +9,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
  * cl:replace ⇒ shopify:section:load。
  * 橋只掛一次（document 級監聽會累積）；每例重設頁面內容與選取狀態。
  */
-const SCRIPT = readFileSync(resolve(__dirname, "../../../assets/javascripts/editor-bridge.js"), "utf8");
 const PAGE = `
     <div id="shopify-section-template--index__hero" class="shopify-section" data-shopify-editor-section='{"id":"hero","type":"hero"}'>
       <h1>Hero</h1>
@@ -50,8 +49,10 @@ afterEach(() => {
 
 describe("editor-bridge", () => {
   it("B1 🔴 hover：藍框＋chip（名稱來自 cl:names）；section 上下邊界「+」點擊 ⇒ cl:insert；block 上 hover 用 block 名", () => {
-    fromParent({ type: "cl:names", sections: { hero: "英雄橫幅" }, blocks: { hero: { b1: "文字塊" } } });
+    fromParent({ type: "cl:names", sections: { hero: "英雄橫幅" }, blocks: { hero: { b1: "文字塊" } }, labels: { addSection: "新增區段", duplicate: "建立副本", hide: "隱藏", remove: "移除" } });
     hero().querySelector("h1")!.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    expect((document.querySelector(".cl-ov-insert") as HTMLElement).title).toBe("新增區段"); // 文字跟 admin 語系
+    expect([ ...document.querySelectorAll(".cl-ov-bar button") ].map((x) => x.textContent)).toEqual([ "建立副本", "隱藏", "移除" ]);
     const chip = overlay(".cl-ov-chip");
     expect(chip.style.display).toBe("flex");
     expect(chip.textContent).toBe("英雄橫幅");

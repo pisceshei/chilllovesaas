@@ -17,7 +17,7 @@
 (function () {
   "use strict";
   var ORIGIN = window.location.origin;
-  var state = { inspector: true, names: { sections: {}, blocks: {} }, selected: null, hover: null };
+  var state = { inspector: true, names: { sections: {}, blocks: {} }, labels: {}, selected: null, hover: null };
 
   function sectionKey(domId) {
     var raw = String(domId).replace("shopify-section-", "");
@@ -176,7 +176,19 @@
   window.addEventListener("message", function (ev) {
     if (ev.origin !== ORIGIN) return;
     var d = ev.data || {};
-    if (d.type === "cl:names" && d.sections) { state.names = { sections: d.sections || {}, blocks: d.blocks || {} }; return; }
+    if (d.type === "cl:names" && d.sections) {
+      state.names = { sections: d.sections || {}, blocks: d.blocks || {} };
+      // 工具列／插入點文字跟 admin 語系（父頁 t()），不寫死英文
+      if (d.labels) {
+        state.labels = d.labels;
+        insertTop.title = insertBottom.title = d.labels.addSection || insertTop.title;
+        bar.querySelectorAll("button").forEach(function (btn) {
+          var key = btn.getAttribute("data-cl-op");
+          if (d.labels[key]) btn.textContent = d.labels[key];
+        });
+      }
+      return;
+    }
     if (d.type === "cl:inspector") {
       state.inspector = !!d.active;
       if (!state.inspector) hideAll(false);

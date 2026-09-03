@@ -2,7 +2,7 @@ import {
   AlignLeft, ChevronDown, ChevronRight, CirclePlus, Code2, Eye, EyeOff, Folder, GripVertical, Lock, Heading, Image, Link2,
   MousePointer, PanelTop, Pencil, SquareDashed, Trash2, Video,
 } from "lucide-react";
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { useT } from "../i18n/I18nContext";
 import {
   visibleBlockIds, iconKindFor, orderOf, rowKey, summaryOf, type BlockEntry, type BlockPath, type IconKind,
@@ -80,7 +80,12 @@ function iconFor(kind: IconKind): ReactNode {
   }
 }
 
-export function SectionsTree(props: SectionsTreeProps) {
+/** E6：預覽右鍵 ⇒ 父頁以視窗座標開同款右鍵選單（100 §5：預覽內 block 的右鍵選單與左樹同項） */
+export interface SectionsTreeHandle {
+  openMenuAt: (band: string, sectionId: string, path: BlockPath, x: number, y: number, disabled: boolean) => void;
+}
+
+export const SectionsTree = forwardRef<SectionsTreeHandle, SectionsTreeProps>(function SectionsTree(props, ref) {
   const t = useT();
   const dragRef = useRef<DragState | null>(null);
   const [ menu, setMenu ] = useState<{ x: number; y: number; band: string; sectionId: string; path: BlockPath; disabled: boolean; anchor: HTMLElement | null } | null>(null);
@@ -93,6 +98,10 @@ export function SectionsTree(props: SectionsTreeProps) {
     document.addEventListener("keydown", onKey, true);
     return () => { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", onKey, true); };
   }, [ menu ]);
+
+  useImperativeHandle(ref, () => ({
+    openMenuAt: (band, sectionId, path, x, y, disabled) => setMenu({ x, y, band, sectionId, path, disabled, anchor: null }),
+  }), []);
 
   const openMenu = (event: ReactMouseEvent, band: string, sectionId: string, path: BlockPath, disabled: boolean) => {
     event.preventDefault();
@@ -346,7 +355,7 @@ export function SectionsTree(props: SectionsTreeProps) {
       ) : null}
     </div>
   );
-}
+});
 
 function indexOfSection(bands: TreeBand[], band: string, sectionId: string): number {
   const item = bands.find((b) => b.band === band);

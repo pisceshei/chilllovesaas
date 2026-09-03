@@ -9,7 +9,7 @@ import { ImagePickerModal } from "../editor/ImagePickerModal";
 import { isTypingTarget, shortcutFor } from "../editor/editorShortcuts";
 import { PreviewResourceRow } from "../editor/PreviewResourceRow";
 import { SectionPicker, type PickerItem } from "../editor/SectionPicker";
-import { SectionsTree, type BlockDefLite } from "../editor/SectionsTree";
+import { SectionsTree, type BlockDefLite, type SectionsTreeHandle } from "../editor/SectionsTree";
 import { SettingRow, type ControlContext, type FontFamily, type MenuOption, type SchemeOption, type SettingDef } from "../editor/SettingControls";
 import { FontPickerPanel, SettingsPanel } from "../editor/SettingsPanel";
 import { evaluateVisibleIf } from "../editor/visibleIf";
@@ -252,6 +252,9 @@ export function ThemeEditorPage() {
   const [blockPicker, setBlockPicker] = useState<{ band: string; sectionId: string; parentPath: BlockPath; anchor: HTMLElement } | null>(null);
   const blockPickerAnchorRef = useRef<HTMLElement | null>(null);
   blockPickerAnchorRef.current = blockPicker?.anchor ?? null;
+  // E5b／E6：picker 貼左欄卡片右緣；預覽右鍵 ⇒ 左樹同款選單（imperative）
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const treeRef = useRef<SectionsTreeHandle | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
   // E2：左欄面板（sections／theme／apps；本尊面板切換器）＋全寬預覽＋inspector＋手機檢視
   const [panel, setPanel] = useState<EditorPanel>("sections");
@@ -461,17 +464,46 @@ export function ThemeEditorPage() {
                           ...(inferred !== templateKey ? { template: inferred } : {}) });
         return;
       }
+      const bandOf = (id: string) => (draftRef.current?.sections?.[id]
+        ? "template"
+        : Object.entries(groupDraftsRef.current).find(([ , tpl ]) => tpl.sections?.[id])?.[0]);
+      const pathOf = (band: string, id: string, blockId: string | null | undefined): BlockPath => {
+        const section = tplOf(band)?.sections?.[id];
+        return blockId && section ? (findBlockPath(section, blockId) ?? [ blockId ]) : [];
+      };
       if (payload?.type === "cl:op" && payload.id) {
+        // E6：浮動工具列（Duplicate／Hide／Remove）對 section 或 block（blockId）；up／down 為舊橋相容
         const op = (payload as { op?: string }).op;
         const id = payload.id;
-        const band = draftRef.current?.sections?.[id]
-          ? "template"
-          : Object.entries(groupDraftsRef.current).find(([ , tpl ]) => tpl.sections?.[id])?.[0];
+        const band = bandOf(id);
         if (!band) return;
+        const path = pathOf(band, id, payload.blockId);
         if (op === "up") moveSection(band, id, -1);
         else if (op === "down") moveSection(band, id, 1);
-        else if (op === "duplicate") duplicateSection(band, id);
-        else if (op === "remove") { removeSection(band, id); setSelectedId((cur) => (cur === id ? null : cur)); }
+        else if (op === "duplicate") duplicateNode(band, id, path);
+        else if (op === "hide") toggleNodeDisabled(band, id, path);
+        else if (op === "remove") removeNode(band, id, path);
+        return;
+      }
+      if (payload?.type === "cl:insert" && payload.id) {
+        // E6：section 上下邊界「+」⇒ 區段 picker 錨在該位置（我方：貼左欄右緣、頂對齊預覽；本尊貼插入線下方——登記差異）
+        const band = bandOf(payload.id);
+        if (!band) return;
+        const order = orderOf(tplOf(band) ?? {});
+        const at = order.indexOf(payload.id) + ((payload as { position?: string }).position === "after" ? 1 : 0);
+        setBlockPicker(null);
+        setPickerFor({ band, atIndex: at, anchor: iframeRef.current });
+        return;
+      }
+      if (payload?.type === "cl:contextmenu" && payload.id) {
+        // E6：預覽右鍵 ⇒ 左樹同款選單，座標＝iframe 左上 ＋ 預覽內座標
+        const band = bandOf(payload.id);
+        if (!band) return;
+        const path = pathOf(band, payload.id, payload.blockId);
+        const node = getBlock(tplOf(band)?.sections?.[payload.id] ?? { type: "" }, path);
+        const rect = iframeRef.current?.getBoundingClientRect();
+        const { x, y } = payload as { x?: number; y?: number };
+        treeRef.current?.openMenuAt(band, payload.id, path, (rect?.left ?? 0) + (x ?? 0), (rect?.top ?? 0) + (y ?? 0), Boolean(node?.disabled));
         return;
       }
       if (payload?.type === "cl:select" && payload.id) {
@@ -494,6 +526,41 @@ export function ThemeEditorPage() {
     iframeRef.current?.contentWindow?.postMessage(
       { type: "cl:highlight", id: selectedId, blockId: selectedBlockId }, window.location.origin);
   }, [selectedId, selectedBlockId]);
+
+  // E6：hover chip 的顯示名（與左樹同源：實例 name（t: 翻譯）?? schema name／block def name）推給預覽；
+  // bands 一變就推、iframe 重載也推（見 iframe onLoad）。
+  const namesPayload = useMemo(() => {
+    const sections: Record<string, string> = {};
+    const blocks: Record<string, Record<string, string>> = {};
+    const walk = (sectionId: string, sectionType: string, container: BlockEntry, prefix: BlockPath) => {
+      for (const [ blockId, block ] of Object.entries(container.blocks ?? {})) {
+        const path = [ ...prefix, blockId ];
+        const def = blockDef(sectionType, path, block.type);
+        (blocks[sectionId] ??= {})[blockId] = translateName(block.name) ?? def?.name ?? block.type;
+        walk(sectionId, sectionType, block, path);
+      }
+    };
+    for (const item of bands) {
+      for (const [ sectionId, entry ] of Object.entries(item.tpl?.sections ?? {})) {
+        sections[sectionId] = translateName(entry.name) ?? sectionName(entry.type);
+        walk(sectionId, entry.type, entry, []);
+      }
+    }
+    return { type: "cl:names", sections, blocks,
+      labels: { addSection: t("editor.addSection"), duplicate: t("editor.duplicate"), hide: t("editor.shortcuts.hide"), remove: t("common.remove") } };
+  }, [ bands, t ]); // eslint-disable-line react-hooks/exhaustive-deps
+  const namesRef = useRef(namesPayload);
+  namesRef.current = namesPayload;
+  const inspectorRef = useRef(inspector);
+  inspectorRef.current = inspector;
+  useEffect(() => {
+    iframeRef.current?.contentWindow?.postMessage(namesPayload, window.location.origin);
+  }, [namesPayload]);
+  const onPreviewLoad = () => {
+    const win = iframeRef.current?.contentWindow;
+    win?.postMessage(namesRef.current, window.location.origin);
+    win?.postMessage({ type: "cl:inspector", active: inspectorRef.current }, window.location.origin);
+  };
 
   // E2：inspector 開關送進預覽（E6 的橋消費 `cl:inspector`；本包只維持狀態與訊息形）
   useEffect(() => {
@@ -1251,7 +1318,7 @@ export function ThemeEditorPage() {
 
       <div className="cl-editor__panels">
         {fullscreen ? null : panel === "sections" ? (
-          <aside aria-label={t("editor.sectionsTree")} className="cl-editor__sidebar cl-editor__tree">
+          <aside aria-label={t("editor.sectionsTree")} className="cl-editor__sidebar cl-editor__tree" ref={sidebarRef}>
             <div className="cl-editor__paneltitle"><h3>{templateLabel}</h3></div>
             <div className="cl-editor__panelbody">
               {RESOURCE_TEMPLATE_TYPES.has(templateType) && themeId ? (
@@ -1263,6 +1330,7 @@ export function ThemeEditorPage() {
                 />
               ) : null}
               <SectionsTree
+                ref={treeRef}
                 addBlockOptions={addBlockOptions}
                 bands={bands}
                 blockDef={blockDef}
@@ -1289,6 +1357,7 @@ export function ThemeEditorPage() {
               />
               <SectionPicker
                 anchorRef={pickerAnchorRef}
+                edgeRef={sidebarRef}
                 items={pickerItems}
                 kind="section"
                 onClose={() => setPickerFor(null)}
@@ -1297,6 +1366,7 @@ export function ThemeEditorPage() {
               />
               <SectionPicker
                 anchorRef={blockPickerAnchorRef}
+                edgeRef={sidebarRef}
                 items={blockPickerItems}
                 kind="block"
                 onClose={() => setBlockPicker(null)}
@@ -1373,6 +1443,7 @@ export function ThemeEditorPage() {
         <main className="cl-editor__preview">
           <iframe
             className={mobilePreview ? "cl-editor__iframe cl-editor__iframe--mobile" : "cl-editor__iframe"}
+            onLoad={onPreviewLoad}
             ref={iframeRef}
             src={previewSrc}
             style={mobilePreview ? { width: 390 } : undefined}
