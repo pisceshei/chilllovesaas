@@ -396,7 +396,6 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     GQL
     translations = response.parsed_body.dig("data", "theme", "nameTranslations")
     expect(translations).to eq({ "t:names.promo" => "促銷條" }) # footer-group.json 的 section name ＋ DB 模板同鍵；
-                                                               # block 的 t:names.nope 無翻譯 ⇒ 不列（前端 fail-open 顯示原鍵）
+    # block 的 t:names.nope 無翻譯 ⇒ 不列（前端 fail-open 顯示原鍵）
   end
-
 end

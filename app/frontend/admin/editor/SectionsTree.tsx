@@ -105,7 +105,7 @@ export function SectionsTree(props: SectionsTreeProps) {
           onClick={() => setAddOpen((current) => (current === key ? null : key))}
           type="button"
         >
-          <CirclePlus aria-hidden="true" size={14} />
+          <CirclePlus aria-hidden="true" size={16} />
           {t("editor.addBlock")}
         </button>
         {addOpen === key ? (
@@ -184,14 +184,14 @@ export function SectionsTree(props: SectionsTreeProps) {
                     onClick={() => props.onToggleExpand(key)}
                     type="button"
                   >
-                    {isOpen ? <ChevronDown aria-hidden="true" size={14} /> : <ChevronRight aria-hidden="true" size={14} />}
+                    {isOpen ? <ChevronDown aria-hidden="true" size={16} /> : <ChevronRight aria-hidden="true" size={16} />}
                   </button>
                 ) : <span className="cl-tree__chevron cl-tree__chevron--empty" />}
                 <span className="cl-tree__icon">
                   <span className="cl-tree__typeicon">{iconFor(iconKindFor(block.type, def?.name))}</span>
                   {block.static
-                    ? <Lock aria-label={t("editor.staticBlock")} className="cl-tree__grip cl-tree__lock" role="img" size={14} />
-                    : <GripVertical aria-hidden="true" className="cl-tree__grip" size={14} />}
+                    ? <Lock aria-label={t("editor.staticBlock")} className="cl-tree__grip cl-tree__lock" role="img" size={16} />
+                    : <GripVertical aria-hidden="true" className="cl-tree__grip" size={16} />}
                 </span>
                 <button
                   aria-pressed={isActive}
@@ -204,10 +204,10 @@ export function SectionsTree(props: SectionsTreeProps) {
                 </button>
                 <span className="cl-tree__actions">
                   {block.static ? null : (
-                    <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-tree__op" onClick={() => props.onRemove(band, sectionId, path)} type="button"><Trash2 size={14} /></button>
+                    <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-tree__op" onClick={() => props.onRemove(band, sectionId, path)} type="button"><Trash2 size={16} /></button>
                   )}
                   <button aria-label={block.disabled ? t("editor.show", { id: blockId }) : t("editor.hide", { id: blockId })} className={`cl-tree__op${block.disabled ? " is-persistent" : ""}`} onClick={() => props.onToggleDisabled(band, sectionId, path)} type="button">
-                    {block.disabled ? <EyeOff size={14} /> : <Eye size={14} />}
+                    {block.disabled ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </span>
               </div>
@@ -261,12 +261,12 @@ export function SectionsTree(props: SectionsTreeProps) {
                     onClick={() => props.onToggleExpand(key)}
                     type="button"
                   >
-                    {isOpen ? <ChevronDown aria-hidden="true" size={14} /> : <ChevronRight aria-hidden="true" size={14} />}
+                    {isOpen ? <ChevronDown aria-hidden="true" size={16} /> : <ChevronRight aria-hidden="true" size={16} />}
                   </button>
                 ) : <span className="cl-tree__chevron cl-tree__chevron--empty" />}
                 <span className="cl-tree__icon">
                   <span className="cl-tree__typeicon">{iconFor("section")}</span>
-                  <GripVertical aria-hidden="true" className="cl-tree__grip" size={14} />
+                  <GripVertical aria-hidden="true" className="cl-tree__grip" size={16} />
                 </span>
                 <button
                   aria-pressed={isActive}
@@ -277,9 +277,9 @@ export function SectionsTree(props: SectionsTreeProps) {
                   <span className="cl-tree__name">{label}</span>
                 </button>
                 <span className="cl-tree__actions">
-                  <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-tree__op" onClick={() => props.onRemove(item.band, sectionId, [])} type="button"><Trash2 size={14} /></button>
+                  <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-tree__op" onClick={() => props.onRemove(item.band, sectionId, [])} type="button"><Trash2 size={16} /></button>
                   <button aria-label={entry.disabled ? t("editor.show", { id: sectionId }) : t("editor.hide", { id: sectionId })} className={`cl-tree__op${entry.disabled ? " is-persistent" : ""}`} onClick={() => props.onToggleDisabled(item.band, sectionId, [])} type="button">
-                    {entry.disabled ? <EyeOff size={14} /> : <Eye size={14} />}
+                    {entry.disabled ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </span>
               </div>
@@ -298,7 +298,7 @@ export function SectionsTree(props: SectionsTreeProps) {
       onClick={() => props.onAddSection(item.band, null)}
       type="button"
     >
-      <CirclePlus aria-hidden="true" size={14} />
+      <CirclePlus aria-hidden="true" size={16} />
       {t("editor.addSection")}
     </button>
   );
@@ -325,10 +325,10 @@ export function SectionsTree(props: SectionsTreeProps) {
           style={{ left: menu.x, top: menu.y }}
         >
           <li><button className="cl-tree__menuitem" disabled role="menuitem" type="button">{t("editor.paste")}</button></li>
-          <li><button className="cl-tree__menuitem" onClick={() => { props.onRename(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button"><Pencil aria-hidden="true" size={14} />{t("editor.rename")}</button></li>
+          <li><button className="cl-tree__menuitem" onClick={() => { props.onRename(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button"><Pencil aria-hidden="true" size={16} />{t("editor.rename")}</button></li>
           <li>
             <button className="cl-tree__menuitem" onClick={() => { props.onToggleDisabled(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button">
-              {menu.disabled ? <Eye aria-hidden="true" size={14} /> : <EyeOff aria-hidden="true" size={14} />}
+              {menu.disabled ? <Eye aria-hidden="true" size={16} /> : <EyeOff aria-hidden="true" size={16} />}
               {menu.disabled ? t("editor.shortcuts.show") : t("editor.shortcuts.hide")}
               <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>H</kbd>
             </button>
@@ -336,12 +336,12 @@ export function SectionsTree(props: SectionsTreeProps) {
           {menu.path.length === 0 ? (
             <>
               <li className="cl-tree__menusep" role="separator" />
-              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId)); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={14} />{t("editor.addSectionBefore")}</button></li>
-              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId) + 1); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={14} />{t("editor.addSectionAfter")}</button></li>
+              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId)); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={16} />{t("editor.addSectionBefore")}</button></li>
+              <li><button className="cl-tree__menuitem" onClick={() => { props.onAddSection(menu.band, indexOfSection(props.bands, menu.band, menu.sectionId) + 1); setMenu(null); }} role="menuitem" type="button"><CirclePlus aria-hidden="true" size={16} />{t("editor.addSectionAfter")}</button></li>
             </>
           ) : null}
           <li className="cl-tree__menusep" role="separator" />
-          <li><button className="cl-tree__menuitem" onClick={() => { props.onEditCode(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button"><Code2 aria-hidden="true" size={14} />{t("store.themes.editCode")}</button></li>
+          <li><button className="cl-tree__menuitem" onClick={() => { props.onEditCode(menu.band, menu.sectionId, menu.path); setMenu(null); }} role="menuitem" type="button"><Code2 aria-hidden="true" size={16} />{t("store.themes.editCode")}</button></li>
         </ul>
       ) : null}
     </div>
