@@ -2590,3 +2590,6 @@ Kalles 的 section／block schema 有 194 檔帶尾逗號（非嚴格 JSON），
 - 我方改為 `shops.money_format`／`shops.money_with_currency_format` 兩欄，`money*` 過濾器與 `shop.money_format`
   全部讀店級值；鐵律 10 的 `HK$1,480` 只是範例，不再是預設。新店預設值＝本尊各幣別預設表（官方未逐字公開 ⇒
   先以 `{{amount}}` 前綴幣別符號的通用形，登記 V；HKD 依 hoko 實測取 `${{amount}}`）。
+- 落地（2026-09-03 同日）：`docs/dev/d81-shop-money-format.md`；真店 admin 四欄實讀＝HTML with `HK${{amount}} HKD`／
+  HTML without `${{amount}}`／Email 兩欄同值（external-facts §G15）⇒ HKD 種子取這組；既有 HKD 店回填同值
+  （demo 前台自此顯示 `$1,480.00`）。未取得項登記 91 §3.77。

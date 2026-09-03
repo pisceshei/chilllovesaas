@@ -59,7 +59,7 @@ RSpec.describe "Theme JS runtime batch", type: :request do
     expect(html).not_to include('\\\\B') # 雙反斜線＝heredoc 又吃回去
 
     drop = ThemeEngine::ShopDrop.new(shop)
-    expect(drop.money_format).to eq("HK${{amount}}")
+    expect(drop.money_format).to eq("${{amount}}")
   end
 
   it "JS4 request.locale 物件化（iso_code 可取）；JS5 🔴 t 佔位無尾空格插值" do

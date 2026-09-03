@@ -72,7 +72,7 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 | 平台功能 | 本尊新版顧客帳戶登入連結 `/customer_authentication/redirect?locale=…`／`https://shopify.com/{id}/account`；我方 `/account/login`／`/account/register` | 報告保留 |
 | 版權 | placeholder 插圖本體（本尊版權圖 vs 我方自繪；外框屬性已對齊） | Normalizer `[placeholder]` |
 | 平台注入 | `content_for_header` 內容（本尊 perf-kit／trekkie／shop-js／digital-wallet／preloads；我方 canonical＋hreflang＋JSON-LD） | head 資產集合差列出、不擋 |
-| 金額格式 | 本尊 hoko（HKD）顯示 `$19.99`，我方 `HK$19.99`（鐵律 10 範例）；本尊 shop 級 `money_format` 我方未建 | **待裁定**（§4） |
+| 金額格式 | 本尊 hoko（HKD）顯示 `$19.99`，我方原 `HK$19.99`（鐵律 10 範例）；本尊 shop 級 `money_format` 我方原未建 | **已收口**（D81 包 2026-09-03：`shops.money_format`／`money_with_currency_format`，`docs/dev/d81-shop-money-format.md`） |
 | dev 環境 | canonical-url／hreflang 主機在本機（`mirror.chilllove.example`／`mirror.lvh.me`）與頁面主機不一致——config 層，production 同一網域 | 報告保留 |
 
 ## §4 使用者裁定（2026-09-03 已裁定，實作待開包）
@@ -80,6 +80,7 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 1. **路由前綴**：D80——跟隨本尊市場／語言設定（主市場預設語言無前綴、額外語言 `/{lang}`、子資料夾市場 `/{lang}-{country}`）；
    67 §F.1(b)「恆有前綴」作廢。實作前 `CAND_PREFIX` 抹除只是過渡。
 2. **貨幣顯示格式**：D81——店級 `money_format`／`money_with_currency_format` 跟隨本尊；鐵律 10 `HK$` 只是範例。
+   **已落地**（2026-09-03，`docs/dev/d81-shop-money-format.md`）：hoko 快照帶兩鍵、鏡像店對齊後商品卡／購物車抽屜／頁首三段收斂。
 
 ## §5 首頁對表結果（2026-09-03，本機 mirror vs hoko.vip 快照）
 

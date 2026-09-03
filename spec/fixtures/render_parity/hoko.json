@@ -10,6 +10,9 @@
     "customer_accounts_enabled": true,
     "taxes_included": true,
     "_taxes_included": "本尊購物車抽屜稅注為「已含税。优惠和运费将在结账时一起计算。」（cart.taxes_included=true 分支）",
+    "money_format": "${{amount}}",
+    "money_with_currency_format": "HK${{amount}} HKD",
+    "_money_format": "本尊 admin Settings › General › Change currency formatting（2026-09-03 實讀）：HTML without currency ${{amount}}、HTML with currency HK${{amount}} HKD、Email 兩欄同值；首頁 window.money_format 同值、購物車抽屜總額 HK$0.00 HKD",
     "_timezone": "本尊時區未取得（首頁未渲染時間）；沿用建店預設"
   },
   "theme": {

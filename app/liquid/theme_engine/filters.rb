@@ -2,9 +2,9 @@
 
 # 平台層 filters（包 30；PoC ~70 filters 生產移植；對照 docs/research/26 §3）。
 #
-# 🔴 money 族：輸入＝**integer cents**（鐵律 3 儲存尺度）；顯示一律兩位小數
-#   （2026-08-12 裁定二）。符號經 registers[:money_symbol]（v1 由 shop.store_currency
-#   解析；完整 locale 格式鏈＝包 34，91 §3.48 登記）。
+# 🔴 money 族：輸入＝**integer cents**（鐵律 3 儲存尺度）；顯示形＝店級 `money_format`／
+#   `money_with_currency_format`（D81；registers[:money_format]／[:money_with_currency_format] 由
+#   Runtime 與 Notifications::Renderer 以 shop 兩欄注入；渲染邏輯一份＝ThemeEngine::MoneyFormat）。
 module ThemeEngine
   module Filters
     # ---- localization ------------------------------------------------------
@@ -165,23 +165,27 @@ module ThemeEngine
     # 官方名稱表的整張插圖（我方自繪；形態與 class 規則見 PlaceholderSvg 檔頭）。
     def placeholder_svg_tag(input, cls = nil) = PlaceholderSvg.tag(input, cls)
 
-    # ---- money（integer cents → 字串）--------------------------------------
-    def money(input) = format_money(input, "%<sym>s%<amt>s")
-    def money_with_currency(input)
-      cur = @context.registers[:currency] || ""
-      "#{format_money(input, '%<sym>s%<amt>s')} #{cur}".rstrip
+    # ---- money（integer cents → 店級格式字串；D81）-----------------------------
+    # 官方逐字（filters/money 族，取證 2026-09-03，external-facts §G15）：money＝"Formats a given price based on
+    # the store's HTML without currency setting."（例 1000 ⇒ `$10.00`）；money_with_currency＝"…based on the
+    # store's HTML with currency setting."（例 `$10.00 CAD`）；money_without_currency＝"…without the currency
+    # symbol."（例 `10.00`）；money_without_trailing_zeros＝"…excluding the decimal separator and trailing
+    # zeros."（例 `$10`）。空值（nil／空字串）⇒ 空輸出（hoko.vip 佔位商品卡
+    # `{{ card_product.compare_at_price | money }}` ⇒ `<s …> </s>`；官方對空值未逐字，V）。
+    # registers 缺席（獨立 harness）⇒ 官方例的 `${{amount}}`。
+    def money(input) = with_cents(input) { |c| MoneyFormat.render(c, money_pattern) }
+    def money_with_currency(input) = with_cents(input) { |c| MoneyFormat.render(c, money_with_currency_pattern) }
+    def money_without_currency(input) = with_cents(input) { |c| MoneyFormat.amount_only(c, money_pattern) }
+    def money_without_trailing_zeros(input)
+      with_cents(input) { |c| MoneyFormat.strip_trailing_zeros(MoneyFormat.render(c, money_pattern)) }
     end
-    def money_without_currency(input) = format_money(input, "%<amt>s")
-    def money_without_trailing_zeros(input) = format_money(input, "%<sym>s%<amt>s").sub(/\.00\z/, "")
 
-    def format_money(input, pattern)
-      # 空值（nil／空字串）⇒ 空輸出（hoko.vip 佔位商品卡 `{{ card_product.compare_at_price | money }}` ⇒ `<s …> </s>`；
-      # 官方 money 文件對空值未逐字，登記 V）
-      return "" if input.nil? || input == ""
+    def money_pattern = @context.registers[:money_format] || "${{amount}}"
+    def money_with_currency_pattern = @context.registers[:money_with_currency_format] || money_pattern
 
-      sym = @context.registers[:money_symbol] || "$"
-      amt = format("%.2f", input.to_f / 100.0).gsub(/\B(?=(\d{3})+(?!\d))/, ",")
-      format(pattern, sym: sym, amt: amt)
+    def with_cents(input)
+      cents = MoneyFormat.coerce(input)
+      cents.nil? ? "" : yield(cents)
     end
 
     # ---- string / misc -----------------------------------------------------
@@ -534,7 +538,7 @@ module ThemeEngine
     def unit_price_with_measurement(input, measurement = nil)
       return "" if input.nil?
 
-      price = format_money(input, "%<sym>s%<amt>s")
+      price = money(input) # 店級格式（D81）
       ref_value = dig_measurement(measurement, "reference_value")
       ref_unit = dig_measurement(measurement, "reference_unit")
       return price if ref_unit.to_s.empty?

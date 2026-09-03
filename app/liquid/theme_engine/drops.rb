@@ -1642,24 +1642,22 @@ module ThemeEngine
     def id = @shop.id
     def name = @shop.name
     def currency = @shop.store_currency
-    def domain = @shop.custom_domain.presence || "#{@shop.subdomain}.chilllove.example"
-    def permanent_domain = "#{@shop.subdomain}.chilllove.example"
+    # 官方逐字（objects/shop，2026-09-03）：domain＝"The primary domain of the store."；permanent_domain＝
+    # "The `.myshopify.com` domain of the store."——我方永久網域＝`{subdomain}.{base_host}`（與 ShopifyGlobal
+    # `Shopify.shop`、Notifications::Payloads 同一 host 鏈；先前硬編 `chilllove.example` 是 PoC 殘留，91 §3.75 登記）。
+    def domain = @shop.custom_domain.presence || permanent_domain
+    def permanent_domain = "#{@shop.subdomain}.#{Chilllove::TenantResolver.base_host}"
     def url = "https://#{domain}"
     def secure_url = url
     def email = nil
-    # PR-8（對表軸）：Ella JS 動態價格全靠 window.money_format pattern——
-    # 恆 nil ⇒ 全部退 fallback 錯形。回 Shopify 形 cents pattern，與 money
-    # filter 同一符號源（鐵律 7/10：格式邏輯一份）。
-    def money_format
-      symbol = { "HKD" => "HK$" }.fetch(@shop.store_currency, "#{@shop.store_currency} ")
-      "#{symbol}{{amount}}"
-    end
-
-    # ---- 引擎缺口 PR-5（objects/shop 逐字，取證 2026-09-02）------------------------
-    # money_with_currency_format："The money format of the store with the currency included."
-    #   ——形照 filters/money_with_currency 官方例 `$10.00 CAD`（"HTML with currency" 設定）
-    #   ⇒ money_format＋空白＋幣別碼。
-    def money_with_currency_format = "#{money_format} #{@shop.store_currency}"
+    # D81（2026-09-03）：店級設定直出。官方 objects/shop 逐字：money_format＝"The money format of the store."、
+    # money_with_currency_format＝"The money format of the store with the currency included."。本尊 admin
+    # Settings › General › Change currency formatting 四欄（真店 pnrjnw-sy 2026-09-03 實讀，external-facts §G15）：
+    # HTML with currency `HK${{amount}} HKD`／HTML without currency `${{amount}}`／Email 兩欄同值。
+    # Ella JS（snippets/global-script.liquid）把這個字串原樣塞進 `window.money_format` 自己做 formatMoney ⇒
+    # 與 money 過濾器同一字串來源（鐵律 7：格式邏輯一份＝ThemeEngine::MoneyFormat）。
+    def money_format = @shop.money_format
+    def money_with_currency_format = @shop.money_with_currency_format
 
     # description："The description of the store."——shops 表無對應欄（`grep -n description db/schema.rb`
     #   於 shops 段零命中）⇒ 宣告 nil、不計 miss；欄位隨店家設定線補。

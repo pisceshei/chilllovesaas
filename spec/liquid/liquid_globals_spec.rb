@@ -24,7 +24,7 @@ RSpec.describe "ThemeEngine liquid globals（PR-13）" do
   end
   let(:filter_harness) do
     h = Class.new { include ThemeEngine::Filters }.new
-    # format_money 讀 @context.registers[:money_symbol]（無 ⇒ "$"）
+    # money 族讀 @context.registers[:money_format]（無 ⇒ 官方例 ${{amount}}；D81）
     h.instance_variable_set(:@context, Struct.new(:registers).new({}))
     h
   end

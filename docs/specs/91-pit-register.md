@@ -4048,3 +4048,21 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   進 about:blank）都會繼承 admin CSP——一律改成讓 iframe **導航到真實預覽 URL**（帶 ThemeCsp）。改預覽路徑的 PR
   必須在真實 admin 頁看一次預覽（不能只靠 jsdom）。
 - **⚪ 登記**：D80／D81 實作待開包；「逐 section／逐控件與本尊功能對照」（使用者原話）待逐一驗收，第一個單位＝Announcement bar。
+
+### 3.77 D81 店級貨幣格式的未取得與範圍外（2026-09-03）
+
+全文：`docs/dev/d81-shop-money-format.md` §5；證據 `docs/dev/external-facts.md` §G15。
+
+- **V 各幣別預設符號表**：官方只公開 17 個 `amount_no_decimals` 預設幣別，符號表未公開 ⇒ 非 HKD 新店種子為 `CODE {{amount}}`／
+  `{{amount}} CODE` 通用形（HKD 依真店四欄實讀）；商家可改，設定 UI 未做（下條）。
+- **⚪ 設定 UI 與 GraphQL**：本尊 Settings › General › Change currency formatting 對話框（四欄）與 Admin GraphQL
+  `shop.currencyFormats` 我方未建；ShopType 守則「無消費端不開欄」⇒ 隨店家設定線一起做。
+- **⚪ Email with／without currency 兩欄**：真店預設與 HTML 兩欄同值；我方通知信共用 HTML 兩欄。
+- **V 過濾器邊界**：`amount_no_decimals` 恰 .50 捨入、負值形（我方 `$-10.50`）、非整數／非數字輸入、
+  `money_without_trailing_zeros` 對非全零小數（我方保留 `€1.480,50`）——官方未逐字；擬以副本主題 Custom Liquid 探針實測，
+  本輪因本尊編輯器分頁在背景（`document.visibilityState = "hidden"`）側欄不載入而未執行，待前景分頁補測。
+- **登記 本尊編輯器分頁必須在前景**：Chrome MCP 新建分頁不會成為前景，`visibilityState` 為 hidden 時編輯器側欄停在骨架
+  （預覽 iframe 仍會載入）⇒ 逐控件對照（Announcement bar 起）開工前需使用者把該分頁切到前景。
+- **登記 migration 非交易重跑**：MySQL DDL 不可回滾，`add_column` 成功後 `execute` 被 strong_migrations 擋下 ⇒ 第二次跑撞
+  Duplicate column；固定處理＝逐欄 `column_exists?` 守衛＋回填 `safety_assured`（本包已改）。
+- **已收口**：`ShopDrop#permanent_domain`／`#domain` 硬編 `chilllove.example`（3.75 登記）⇒ 改 `{subdomain}.{base_host}`。

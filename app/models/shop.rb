@@ -99,6 +99,9 @@ class Shop < ApplicationRecord
   }
   validates :custom_domain, uniqueness: { case_sensitive: false }, allow_nil: true
   validates :status, inclusion: { in: STATUSES }
+  # D81：店級金額格式兩欄（本尊 Settings › General › Change currency formatting）；新店依幣別種子。
+  validates :money_format, :money_with_currency_format, presence: true, length: { maximum: 255 }
+  before_validation :seed_money_formats, on: :create
 
   after_create :create_default_publication
   after_create :create_default_location
@@ -275,5 +278,14 @@ class Shop < ApplicationRecord
   # @see docs/specs/12-spec-tenancy-auth-permissions.md F1
   def custom_domain_verified?
     status == "active" && custom_domain.present?
+  end
+
+  private
+
+  # D81 種子：呼叫端明給（will_save_change）者不覆寫；表見 Shop::MoneyFormatDefaults。
+  def seed_money_formats
+    defaults = MoneyFormatDefaults.for(store_currency)
+    self.money_format = defaults[0] unless will_save_change_to_money_format?
+    self.money_with_currency_format = defaults[1] unless will_save_change_to_money_with_currency_format?
   end
 end

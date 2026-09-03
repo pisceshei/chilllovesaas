@@ -664,17 +664,14 @@ module ThemeEngine
     def base_registers
       { runtime: self, locale_dict: @locale_dict, file_system: SnippetFS.new(@source),
         template_factory: PARTIAL_NAMER,
-        money_symbol: money_symbol, currency: @shop.store_currency,
+        # D81：店級金額格式兩欄直注（渲染邏輯一份＝ThemeEngine::MoneyFormat）。
+        money_format: @shop.money_format, money_with_currency_format: @shop.money_with_currency_format,
+        currency: @shop.store_currency,
         render_flags: @render_flags,
         # paginate tag 的頁碼與 parts URL 來源（步 12）：request_params＝字串鍵
         # query 參數；request_path＝**帶前綴**的站內路徑（parts 連結是買家可點 URL）。
         request_params: @params, request_path: "#{@url_prefix}#{@path}",
         asset_base: @asset_base || "/admin/store/preview/#{@theme.id}/assets" }
-    end
-
-    # v1 符號表：只對店預設幣別 HKD 承諾正確（鐵律 10 的完整 locale 鏈＝包 34；91 §3.48）。
-    def money_symbol
-      { "HKD" => "HK$" }.fetch(@shop.store_currency, "#{@shop.store_currency} ")
     end
 
     def collect_errors(label, tpl)
