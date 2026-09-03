@@ -303,6 +303,9 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
     - **17.3 零未清意見即自動前進**：驗收與 CI 皆無問題 ⇒ **自動進入下一項任務，
       不需使用者確認，直到整個階段完成**（既有記憶 `full-automation-authorized` 升格於此）。
       🔴 例外：命中 18.3 人工合併清單的 PR，雙零後**通知使用者等人工合併**。
+      🔴 **D83（2026-09-04 使用者裁定）覆寫本例外**：使用者授權 Claude Code 工作階段**代行合併，含 18.3 清單的 PR**，CI
+      `quality`＋`test` 綠即 `gh pr merge --squash --match-head-commit <head>`，**不需等使用者確認**，合併後通知即可（仍不是
+      workflow 自動合併；使用者可隨時收回）。
       18.4 啟用前，workflow 自動合併仍維持關閉；但 D31／D32 明文授權的互動式 Codex
       可對**未命中 18.3**的 PR，在 18.1 四條件齊且帶 `--match-head-commit` 時代行 CLI 合併。
       這是使用者授權的互動式代行，不是 workflow 自動合併，也不得翻 `AUTO_MERGE`。
@@ -462,7 +465,9 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       `gh pr merge --squash --match-head-commit <head>`；在此之前 D31／D32 代行授權保持凍結、
       18.4 workflow 自動合併不得啟用。部署管線就緒後（合併版總方案 CD 包）合併即
       自動部署＋healthcheck，紅則自動 rollback。
-    - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
+    - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併；🔴 D83 2026-09-04：「人工」＝使用者本人**或其明文授權的 Claude Code
+      工作階段**——該階段可在 CI 兩測綠後直接 `gh pr merge --squash --match-head-commit`，不需等使用者確認；這仍不是 workflow
+      自動合併，`AUTO_MERGE` 維持 false）：
       改 **`.github/workflows/` 下任何檔**（現有兩支之外，日後新增的 deploy／
       自動合併 workflow 同樣在內——`claude-review.yml` 另有反竄改：其自身驗收失效，
       job 顯示 success 但只跑十幾秒、無判詞）、**改機械閘門判準**——**`scripts/` 下全部腳本**
@@ -601,6 +606,8 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       預覽，與每一個前台頁面）——都必須與 Shopify 本尊在**同一主題、同一資料**下的渲染**完全一樣**：HTML 結構與屬性、
       CSS（含主題資產與 `<style data-shopify>`）、**尺寸大小**（盒模型、字級、行高、間距、斷點）、以及**全部參數**
       （section／block／theme settings 的值域、預設、條件顯示與 Liquid 物件語義）。
+      🔴 **精確到 CSS 級別**（2026-09-04 使用者第二次裁定，D83）：「一樣」的判準是**每個元素的 computed style 逐屬性相等**
+      （字型族／字級／字重／行高／顏色／盒模型／定位／轉場等全部屬性，不只肉眼相似），主題編輯器預覽與買家前台頁面**兩者皆是**。
     - **22.2 驗收＝零差異**：把真店資料鏡像進 demo／mirror 店後：①逐段 HTML diff 到零（正規化只抹**身分差**——主機、
       CDN 路徑、雜湊／流水 id、時間戳；不得抹語義差）；②同視窗、同寬度並排量 computed CSS 與幾何
       （`getComputedStyle`／`getBoundingClientRect`）逐元素到零；③編輯器每個控件改值 ⇒ 預覽變化與本尊逐項相同。
@@ -609,13 +616,17 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
     - **22.3 唯一例外**：佔位插圖本體（版權，自繪；外框屬性仍對齊）與本尊平台注入（perf-kit／trekkie／shop-js／Sidekick）。
       鐵律 8／9 在此的讀法：**主題本身的 CSS／資產是商家授權的主題原檔，照原樣輸出**；我方不抄 Shopify admin 的 CSS
       原始碼與品牌資產，但渲染結果的量測值必須相等。
+      🔴 **已購授權主題原檔直接完整複製**（2026-09-04 使用者裁定，D83）：Ella 7.2.0 是使用者已購買授權的主題，其 Liquid／CSS／JS／
+      資產／locale 原檔**直接、完整地複製**到我方渲染（`test/fixtures/themes/ella-7.2.0` 即原檔），使用者裁定**沒有任何版權問題**；
+      鐵律 9 的「不得隨平台散布」讀法不變（不預載給其他商家），與 1:1 複製原檔給本專案渲染**不衝突**。
     - **22.4 憑證在倉庫**：每包附對表報告（`render_parity:diff` 的段數／相同數／差異片段）與 computed 量測輸出，腳本與
       快照可重跑（`app/services/render_parity`、`spec/fixtures/render_parity`）；只有截圖或「看起來一樣」不算證據
       （鐵律 13.3／19 同款）。量測環境須先消融本機污染（memory `measurement-env-contamination`：本機 Chrome 擴充功能
       注入 `font-weight:500 !important`）。
     - 沿革：2026-09-03 使用者「你做的都必須要和右邊的 live preview 和買家前台要和 shopify 本尊完全一樣。包括他的 css 和
       尺寸以及全部的參數」（E8 開包依據，`docs/dev/e8-render-parity.md`）；2026-09-04 重申「所有的步驟出來的實際預覽和
-      買家前台的實際渲染效果都要和 shopify 本尊完全一樣，包括尺寸大小等等，這要寫入規範和鐵律中」⇒ 升格本條（D82）。
+      買家前台的實際渲染效果都要和 shopify 本尊完全一樣，包括尺寸大小等等，這要寫入規範和鐵律中」⇒ 升格本條（D82）；
+      同日再裁定「所有功能和渲染效果必須和shopify本尊完全一致，包括主題編輯器預覽和買家前台頁面，要精確到css級別，也沒有任何版權問題，已經購買了的，直接完全複製過去。另外如果有需要人工合併的、我授權你幫我合併，不需要等我確認」⇒ 22.1 加「精確到 CSS 級別」、22.3 加「已購授權主題原檔直接完整複製」，合併授權入 17.3／18.3（D83）。
 
 ## 驗收基準
 

@@ -2604,3 +2604,20 @@ Kalles 的 section／block schema 有 194 檔帶尾逗號（非嚴格 JSON），
 - 現況登記（2026-09-04）：首頁 18/21 段相同；其餘頁首輪（本機 mirror vs hoko 快照）：cart 12/15、collections/frontpage 11/15、
   collections/all 10/15、search 8/12、product 7/15，差異分析進行中；computed CSS 量測尚未開始（本機 Chrome 有 font-weight 注入
   污染，須消融或用乾淨 profile）。
+- 2026-09-04 追加：E8b 頁面批（PR #316）最終本機對表：首頁 18/21、collections/all 12/15、collections/frontpage 12/15、
+  products/acme-tee 11/15、pages/contact 13/16、search 9/12、cart 12/15、404 9/12；餘段全為登記類（平台 head 注入、新版顧客帳戶 URL、
+  動態結帳按鈕）。CSS 級判準與 Ella 原檔複製條款見 D83。
+
+## D83（2026-09-04）渲染判準精確到 CSS 級別、已購 Ella 原檔直接完整複製；授權 Claude Code 工作階段代行合併（含 18.3 清單）
+
+使用者裁定原文：「所有功能和渲染效果必須和shopify本尊完全一致，包括主題編輯器預覽和買家前台頁面，要精確到css級別，也沒有任何版權問題，已經購買了的，直接完全複製過去。另外如果有需要人工合併的、我授權你幫我合併，不需要等我確認」。
+
+- **判準加嚴**：鐵律 22.1 加「精確到 CSS 級別」——每個元素的 computed style 逐屬性相等，主題編輯器預覽與買家前台頁面皆適用；
+  22.2② 的 computed 量測自此是**必做**而非「有則附」。
+- **版權裁定**：鐵律 22.3 加「已購授權主題原檔直接完整複製」——Ella 7.2.0 為使用者已購買授權的主題，其原檔（Liquid／CSS／JS／資產／
+  locale）直接完整複製到我方渲染，使用者裁定沒有任何版權問題；鐵律 9「不得隨平台散布」（不預載給其他商家）讀法不變。
+- **合併授權**：使用者授權 Claude Code 工作階段代行合併，**含 18.3 人工合併清單的 PR**（改 CLAUDE.md／AGENTS.md／scripts／
+  workflows／`config/ci.rb` 等）；D40 模式下合併前提＝CI `quality`＋`test` 綠；合併指令一律 `gh pr merge --squash --match-head-commit <head>`；
+  合併後通知使用者即可，不需事前確認。這不是 workflow 自動合併（`AUTO_MERGE` 維持 false），使用者可隨時收回。
+  首個依本裁定代合的 18.3 PR＝本裁定自身的 PR（改 CLAUDE.md／AGENTS.md）。
+- **落點**：CLAUDE.md 鐵律 22.1／22.3／沿革、17.3 例外覆寫、18.3 標題；AGENTS.md 前言與鐵律 22 摘要；memory `full-automation-authorized`。
