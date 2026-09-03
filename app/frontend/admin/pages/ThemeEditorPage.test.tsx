@@ -1515,7 +1515,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
     const spy = vi.spyOn(iframe.contentWindow!, "postMessage");
     fireEvent.load(iframe);
-    const names = spy.mock.calls.map((c) => c[0] as { type: string }).filter((m) => m.type === "cl:names").at(-1) as
+    const names = spy.mock.calls.map((c) => c[0] as { type: string }).filter((m) => m.type === "cl:names").at(-1) as unknown as
       { sections: Record<string, string>; blocks: Record<string, Record<string, string>>; labels: Record<string, string> };
     expect(names.sections).toEqual({ gh: "Hero", hero: "Hero", demo: "Blocks demo" });
     expect(names.blocks.demo).toEqual({ p1: "父塊" });
