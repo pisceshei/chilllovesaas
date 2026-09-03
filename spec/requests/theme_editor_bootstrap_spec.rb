@@ -384,4 +384,18 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(blocks.dig("_leaf", "blocks")).to eq([])
     expect(blocks.dig("_leaf", "settings").map { |d| d["id"] }).to eq([ "label" ])
   end
+  it "E14 🔴 nameTranslations：實例 name 的 t: 鍵 → 翻譯（來源檔＋DB 模板）；無翻譯的鍵不列" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    ActsAsTenant.with_tenant(shop) do
+      Template.create!(shop_id: shop.id, theme_id: theme.id, key: "page.contact", template_type: "page",
+                       content: { "sections" => { "promo" => { "type" => "hero", "name" => "t:names.promo", "settings" => {} } },
+                                  "order" => [ "promo" ] })
+    end
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { nameTranslations } }
+    GQL
+    translations = response.parsed_body.dig("data", "theme", "nameTranslations")
+    expect(translations).to eq({ "t:names.promo" => "促銷條" }) # footer-group.json 的 section name ＋ DB 模板同鍵；
+    # block 的 t:names.nope 無翻譯 ⇒ 不列（前端 fail-open 顯示原鍵）
+  end
 end

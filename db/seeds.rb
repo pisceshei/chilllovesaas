@@ -53,6 +53,24 @@ end
 # 帳密全對、卻一直退回登入頁，而且錯誤訊息（刻意地）不會說出真正原因。
 assignment = UserStoreAssignment.find_or_create_by!(staff_member_id: staff.id, shop_id: shop.id)
 
+# E3b（2026-09-03）：本尊新店預設導覽——主選單 Home／Catalog／Contact（真店 pnrjnw-sy 編輯器實測 header 顯示
+# 首頁／目錄／聯絡我們，同一份預設的 zh-Hant 文案）。demo 店沒有 main-menu 時 header 整條選單是空的，
+# 與本尊預覽對不上。只在選單不存在時建立（find_or_create），不覆寫商家已編輯的項目。
+menu_created = false
+ActsAsTenant.with_tenant(shop) do
+  main_menu = Menu.find_or_create_by!(handle: "main-menu") do |record|
+    menu_created = true
+    record.title = "Main menu"
+  end
+  if menu_created
+    [ [ "Home", "frontpage", nil ], [ "Catalog", "catalog", nil ], [ "Contact", "http", "/pages/contact" ] ]
+      .each_with_index do |(title, item_type, url), index|
+      MenuItem.create!(shop_id: shop.id, menu: main_menu, title:, item_type:, url:, position: index + 1)
+    end
+  end
+end
+puts "#{menu_created ? 'Created' : 'Preserved'} main-menu."
+
 puts "#{shop_created ? 'Created' : 'Preserved'} empty shop #{shop.subdomain.inspect}."
 puts "#{assignment.previously_new_record? ? 'Created' : 'Preserved'} store assignment "      "staff##{staff.id} → shop##{shop.id}."
 puts "#{staff_created ? 'Created' : 'Preserved'} owner #{staff.email.inspect}."

@@ -132,3 +132,16 @@ URL 狀態。給商家在後台客製主題用；對應 Shopify「Customize」�
   `blockDown`／`moveUp`／`moveDown`／`sectionType`／`mobilePreview`）。
 - CSS：`.cl-tree__*` 一族（列高 `--editor-row-h`、縮排 `--editor-indent`、hover／active／hidden 態、右鍵選單、Preview 列），
   全部取 `app/assets/tokens.css` tokens。
+
+## E3b（2026-09-03）：與本尊並排對照後的修正
+- **群組帶**：`ThemeType#layout_group_refs` 與 `PageRenderer#layout_group_names` 同一正則
+  `/(?:\{%-?\s*|^\s*)sections\s+'([^']+)'/`——認 `{% sections 'x' %}` 與 `{% liquid … sections 'x' … %}` 行內形
+  （Ella popup-group／general-group）。位置以匹配起點相對 `content_for_layout` 判 before／after。
+- **`nameTranslations`**：bootstrap 新欄，鍵＝模板／群組 JSON（來源檔＋DB `Template`）中 section／block 實例的 `t:` 名，
+  值＝schema locale 翻譯；缺翻譯不列。前端 `translateName` 用於樹列、面板標題、改名預設值；改名寫回的是新文字（覆蓋 `t:` 鍵）。
+- **佔位插圖**：`ThemeEngine::PlaceholderSvg.tag(name, cls)`（規則見該檔檔頭與 external-facts §F5）。
+- **左樹 1:1**：CSS 值取自 `docs/research/100` §8.1（列距 30、14px/20px、chevron／icon 16、名稱 +53、白卡 8px 內縮
+  圓角 12、標題列 36／16px 半粗、選中淺灰底）；lucide icon size 16。
+- **demo seed**：`db/seeds.rb` 建 `main-menu`（Home／Catalog／Contact），只在缺少時建立。
+- 測試：ED42（t: 名翻譯三處）、E14（nameTranslations 來源檔＋DB、缺翻譯不列）、E11／E17（liquid 標籤行內形群組）、
+  PS1–PS5（插圖 class／viewBox／名稱表／escape）；突變 M18–M22（worklog `2026-09-03-主題編輯器E3b-對照修正.md`）。

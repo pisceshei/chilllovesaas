@@ -382,7 +382,9 @@ module ThemeEngine
       src = runtime.raw_layout_source
       return [] if src.nil?
 
-      src.scan(/\{%-?\s*sections\s+'([^']+)'/).flatten.uniq
+      # E3b：兩種語法都要認——`{% sections 'x' %}` 與 `{% liquid … sections 'x' … %}` 行內形
+      # （Ella popup-group／general-group 走後者；只認前者會讓 section_id 端點對這些群組回 404）。
+      src.scan(/(?:\{%-?\s*|^\s*)sections\s+'([^']+)'/).flatten.uniq
     end
 
     # A2：`?variant=` → Integer；非數字／缺席 ⇒ nil（壞值忽略＝ours，

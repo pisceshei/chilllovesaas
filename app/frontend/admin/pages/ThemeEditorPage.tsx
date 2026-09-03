@@ -51,6 +51,7 @@ const EDITOR_QUERY = `
       sectionCatalog
       sectionSchemas
       themeBlocks
+      nameTranslations
       settingsSchema
       themeSettingsJson
       themeSettingsLockVersion
@@ -149,6 +150,8 @@ interface EditorData {
     sectionSchemas: Record<string, { name: string; settings: SettingDef[];
                                      max_blocks?: number | null; blocks?: BlockDef[] } & Availability>;
     themeBlocks?: Record<string, BlockDef>;
+    /** E3b：實例 `name` 的 `t:` 鍵 → 翻譯（只含實際出現的鍵） */
+    nameTranslations?: Record<string, string>;
     settingsSchema: { name: string; settings: SettingDef[] }[];
     themeSettingsJson: Record<string, unknown>;
     themeSettingsLockVersion: number | null;
@@ -447,6 +450,9 @@ export function ThemeEditorPage() {
   const tplOf = (band: string) => (band === "template" ? draftRef.current : groupDraftsRef.current[band] ?? null);
   const sectionOf = (band: string, sectionId: string): SectionEntry | null => tplOf(band)?.sections?.[sectionId] ?? null;
   const sectionName = (type: string) => data?.sectionSchemas?.[type]?.name ?? type;
+  /** E3b：實例 `name` 是 `t:` 鍵時顯示翻譯（本尊顯示 "Announcement bar"，不顯示鍵）；缺鍵 fail-open 顯示原鍵。 */
+  const translateName = (value: string | undefined): string | undefined =>
+    (value && value.startsWith("t:") ? (data?.nameTranslations?.[value] ?? value) : value);
   const blockDef = (sectionType: string, path: BlockPath, blockType: string): BlockDef | undefined => {
     const local = data?.sectionSchemas?.[sectionType]?.blocks?.find((d) => d.type === blockType);
     return path.length === 1 ? (local ?? themeBlocks[blockType]) : (themeBlocks[blockType] ?? local);
@@ -1046,7 +1052,7 @@ export function ThemeEditorPage() {
     if (!node || !section) return;
     const def = path.length > 0 ? blockDef(section.type, path, node.type) : undefined;
     selectNode(band, sectionId, path);
-    setRenameValue(node.name ?? (path.length === 0 ? sectionName(node.type) : (def?.name ?? node.type)));
+    setRenameValue(translateName(node.name) ?? (path.length === 0 ? sectionName(node.type) : (def?.name ?? node.type)));
     setRenaming(true);
   };
 
@@ -1130,7 +1136,7 @@ export function ThemeEditorPage() {
   const previewSrc = `/admin/store/preview/${themeId}${previewPath === "/" ? "" : previewPath}?editor=1`;
   const hasRightPanel = panel === "sections" && Boolean(selected && selectedId) && (selectedPath.length === 0 || Boolean(selectedBlock));
   const panelTitle = selected
-    ? (selectedBlock ? (selectedBlock.name ?? selectedBlockDef?.name ?? selectedBlock.type) : (selected.name ?? sectionName(selected.type)))
+    ? (selectedBlock ? (translateName(selectedBlock.name) ?? selectedBlockDef?.name ?? selectedBlock.type) : (translateName(selected.name) ?? sectionName(selected.type)))
     : "";
 
   // E3：Add section picker 的候選（依帶過濾 enabled_on／disabled_on；limit 達標灰化並標 (n/limit)）
@@ -1249,6 +1255,7 @@ export function ThemeEditorPage() {
                   return next;
                 })}
                 sectionName={sectionName}
+                translateName={translateName}
                 selection={selectedId ? { band: selectedBand, sectionId: selectedId, path: selectedPath } : null}
               />
             </div>
