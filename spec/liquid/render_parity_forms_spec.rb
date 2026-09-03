@@ -54,9 +54,12 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8）" do
                                   "blocks" => { "x" => { "type" => "leaf", "settings" => {},
                                                          "blocks" => { "y" => { "type" => "leaf", "settings" => {} } },
                                                          "block_order" => %w[y] },
+                                                "x2" => { "type" => "leaf", "settings" => {},
+                                                          "blocks" => { "y" => { "type" => "leaf", "settings" => {} } },
+                                                          "block_order" => %w[y] },
                                                 "dyn" => { "type" => "leaf2", "static" => true,
                                                            "settings" => { "product" => "{{ closest.product }}" } } },
-                                  "block_order" => %w[x] } },
+                                  "block_order" => %w[x x2] } },
         "order" => %w[a b off c bl]
       ),
       "sections/header-group.json" => JSON.generate(
@@ -197,6 +200,8 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8）" do
     y = html[/<div id="shopify-block-(#{PREFIX}__y)" class="shopify-block"><i data-bid="\1"/, 1]
     expect(y).to be_present
     expect(y.split("__").first).not_to eq(x.split("__").first) # 巢狀子 block 前綴不同
+    # 同 key `y` 分別掛在 x 與 x2 之下 ⇒ 前綴必須不同（seed 含完整路徑；本尊 `static-collection-list` 在兩個 section 前綴不同）
+    expect(html.scan(/<div id="shopify-block-(#{PREFIX})__y" class="shopify-block">/).flatten.uniq.size).to eq(2)
     st = html[/<div id="shopify-block-(#{PREFIX}__static-leaf)" class="shopify-block"><i data-bid="\1"/, 1]
     expect(st).to be_present
     expect(html).to include("<ol><li>#{x}</li></ol>") # section.blocks 的 drop 與 content_for 路徑同值
