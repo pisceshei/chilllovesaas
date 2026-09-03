@@ -37,7 +37,8 @@ RSpec.describe "Theme Shopify global & section assets", type: :request do
   it "SG1 🔴 window.Shopify 注入：designMode 依語境、routes.root 帶前綴、theme/currency 齊" do
     html = render_home
     expect(html).to include("window.Shopify = window.Shopify || {}")
-    expect(html).to include('Shopify.designMode = false')
+    # E6：官方逐字 "Otherwise, it's set to `undefined`."（100 §9.5）⇒ 公開頁不輸出該鍵
+    expect(html).not_to include("Shopify.designMode =")
     expect(html).to include('Shopify.routes = { root: "/en-hk/" }')
     expect(html).to include(%(Shopify.currency = { active: "HKD"))
     expect(html).to include("Shopify.formatMoney = function")

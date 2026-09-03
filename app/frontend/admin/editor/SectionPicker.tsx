@@ -28,6 +28,8 @@ export interface PickerItem {
 export interface SectionPickerProps {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
+  /** x 貼此元素右緣（左欄卡片）；未給 ⇒ 錨點右緣 */
+  edgeRef?: RefObject<HTMLElement | null>;
   kind: "section" | "block";
   /** 扁平清單（已依可用性過濾、含灰化資訊）；分類收合區由本元件依 `category` 分組 */
   items: PickerItem[];
@@ -37,7 +39,7 @@ export interface SectionPickerProps {
   renderPreview?: (item: PickerItem) => ReactNode;
 }
 
-export function SectionPicker({ open, anchorRef, kind, items, onPick, onClose, renderPreview }: SectionPickerProps) {
+export function SectionPicker({ open, anchorRef, edgeRef, kind, items, onPick, onClose, renderPreview }: SectionPickerProps) {
   const t = useT();
   const [ query, setQuery ] = useState("");
   const [ tab, setTab ] = useState<"main" | "apps">("main");
@@ -72,7 +74,7 @@ export function SectionPicker({ open, anchorRef, kind, items, onPick, onClose, r
   );
 
   return (
-    <Popover anchorRef={anchorRef} dismissOnOutsideClick label={kind === "section" ? t("editor.sectionPicker") : t("editor.addBlock")} onClose={onClose} open={open} placement="right-start">
+    <Popover anchorRef={anchorRef} dismissOnOutsideClick edgeRef={edgeRef} label={kind === "section" ? t("editor.sectionPicker") : t("editor.addBlock")} onClose={onClose} open={open} placement="right-start">
       <div className="cl-picker" data-kind={kind}>
         <div className="cl-picker__list">
           <label className="cl-picker__search">

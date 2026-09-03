@@ -73,6 +73,8 @@ export interface PopoverProps {
    * picker 貼左欄右緣、與該列同高，`docs/research/100` §4／§8.1）。超出視窗底時整體上移。
    */
   placement?: "bottom-start" | "right-start";
+  /** `right-start` 時 x 改取此元素的右緣（本尊 picker 貼左欄卡片右緣，不是該列按鈕右緣；y 仍取錨點頂） */
+  edgeRef?: RefObject<HTMLElement | null>;
 }
 
 export function Popover({
@@ -83,6 +85,7 @@ export function Popover({
   label,
   dismissOnOutsideClick = false,
   placement = "bottom-start",
+  edgeRef,
 }: PopoverProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [ position, setPosition ] = useState<{ top: number; left: number } | null>(null);
@@ -106,7 +109,8 @@ export function Popover({
       const height = panel.offsetHeight;
       // 貼下緣左對齊；超出視窗就翻到另一側（不做完整的碰撞偵測，個位數情境夠用）
       if (placement === "right-start") {
-        const left = Math.max(8, Math.min(box.right + 8, window.innerWidth - width - 8));
+        const edge = edgeRef?.current?.getBoundingClientRect();
+        const left = Math.max(8, Math.min((edge ? edge.right : box.right) + 8, window.innerWidth - width - 8));
         const top = Math.max(8, Math.min(box.top, window.innerHeight - height - 8));
         setPosition({ top, left });
         return;
@@ -132,7 +136,7 @@ export function Popover({
       window.removeEventListener("resize", place);
       observer?.disconnect();
     };
-  }, [open, anchorRef, placement]);
+  }, [open, anchorRef, placement, edgeRef]);
 
   useEffect(() => {
     if (!open || !dismissOnOutsideClick) return;

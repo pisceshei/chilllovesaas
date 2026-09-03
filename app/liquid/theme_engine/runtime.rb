@@ -567,87 +567,9 @@ module ThemeEngine
 
     # 步 16a：編輯器橋（design_mode 專屬；14 §F3 postMessage 契約——同源 iframe，
     # origin 用 location.origin 嚴格比對、不用 *）。
-    EDITOR_BRIDGE_JS = <<~JS.freeze
-      <script>(function(){
-        var current=null;
-        // PR-7（引擎缺口）：wrapper id 帶 `template--x__`／`sections--x__` 前綴，編輯器仍以裸 key 定址
-        function sectionKey(domId){ var raw=domId.replace("shopify-section-",""); var i=raw.lastIndexOf("__"); return i>=0 ? raw.slice(i+2) : raw; }
-        function findSection(key){ return document.getElementById("shopify-section-"+key) || document.querySelector("[id^='shopify-section-'][id$='__"+key+"']"); }
-        // PR-28：hover 工具列（四 op 直達；視覺自有——鐵律 9）
-        var bar=document.createElement("div");
-        bar.id="cl-preview-toolbar";
-        bar.style.cssText="position:absolute;z-index:2147483646;display:none;gap:2px;background:#1a1a2e;border-radius:6px;padding:2px;";
-        [["up","\u2191"],["down","\u2193"],["duplicate","\u29c9"],["remove","\u2715"]].forEach(function(pair){
-          var b=document.createElement("button");
-          b.type="button"; b.textContent=pair[1];
-          b.setAttribute("data-cl-op",pair[0]);
-          b.style.cssText="all:unset;cursor:pointer;color:#fff;font:12px system-ui;padding:3px 6px;";
-          bar.appendChild(b);
-        });
-        document.addEventListener("DOMContentLoaded",function(){ document.body.appendChild(bar); });
-        var barTarget=null;
-        document.addEventListener("mouseover",function(ev){
-          var host=ev.target.closest("[id^='shopify-section-']");
-          if(!host){ if(!bar.contains(ev.target)){ bar.style.display="none"; barTarget=null; } return; }
-          barTarget=sectionKey(host.id);
-          var r=host.getBoundingClientRect();
-          bar.style.display="flex";
-          bar.style.top=(window.scrollY+r.top+4)+"px";
-          bar.style.left=(window.scrollX+r.right-96)+"px";
-        });
-        bar.addEventListener("click",function(ev){
-          var op=ev.target && ev.target.getAttribute && ev.target.getAttribute("data-cl-op");
-          if(!op||!barTarget) return;
-          ev.preventDefault(); ev.stopPropagation();
-          parent.postMessage({type:"cl:op",op:op,id:barTarget},location.origin);
-        });
-        function outline(el,on){ if(el) el.style.outline = on ? "2px solid #005bd1" : ""; }
-        window.addEventListener("message",function(ev){
-          if(ev.origin !== location.origin) return;
-          var d=ev.data||{};
-          if(d.type==="cl:highlight"){
-            var el=findSection(d.id);
-            if(d.blockId && el){
-              var hit=null;
-              el.querySelectorAll("[data-shopify-editor-block]").forEach(function(b){
-                try{ if(JSON.parse(b.getAttribute("data-shopify-editor-block")).id===d.blockId) hit=b; }catch(e){}
-              });
-              if(hit) el=hit; // PR-17：block 級錨點——高亮縮到 block 元素
-            }
-            outline(current,false); current=el; outline(el,true);
-            if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
-          }
-          if(d.type==="cl:replace"){
-            var target=findSection(d.id);
-            if(target && typeof d.html==="string"){
-              var tpl=document.createElement("template");
-              tpl.innerHTML=d.html;
-              var next=tpl.content.querySelector("[id^='shopify-section-']")||tpl.content.firstElementChild;
-              if(next){ target.replaceWith(next); if(current===target) { current=next; outline(next,true); } }
-            }
-          }
-        });
-        document.addEventListener("click",function(ev){
-          // PR-23：站內連結不逃出編輯器——攔下改由父頁換預覽 src
-          var link=ev.target.closest("a[href]");
-          if(link){
-            var href=link.getAttribute("href")||"";
-            if(href.charAt(0)==="/" && href.indexOf("/admin/")!==0){
-              ev.preventDefault();
-              parent.postMessage({type:"cl:navigate",path:href},location.origin);
-            }
-          }
-          var host=ev.target.closest("[id^='shopify-section-']");
-          if(!host) return;
-          var msg={type:"cl:select",id:sectionKey(host.id)};
-          var blockEl=ev.target.closest("[data-shopify-editor-block]");
-          if(blockEl && host.contains(blockEl)){
-            try{ msg.blockId=JSON.parse(blockEl.getAttribute("data-shopify-editor-block")).id; }catch(e){}
-          }
-          parent.postMessage(msg,location.origin);
-        },true);
-      })();</script>
-    JS
+    # E6：橋腳本抽成 `app/assets/javascripts/editor-bridge.js`（同一份給引擎注入與 vitest（jsdom）執行），
+    # 載入時讀進常數（平台檔隨版本部署，與 FontLibrary registry 同類）。契約見該檔檔頭。
+    EDITOR_BRIDGE_JS = "<script>#{File.read(Rails.root.join('app/assets/javascripts/editor-bridge.js'))}</script>".freeze
 
     def base_registers
       { runtime: self, locale_dict: @locale_dict, file_system: SnippetFS.new(@source),
