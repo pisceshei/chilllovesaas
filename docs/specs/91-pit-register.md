@@ -4082,6 +4082,8 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **V `_announcement-text` Text 標籤右側小圖示**（疑為翻譯／動態來源入口）未點驗。
 - **待驗（下一輪）**：section 級「…」選單項；隱藏後樹／預覽形態；拖曳排序；Undo／Redo；Save 啟用時機；改值時預覽更新方式。
 - **登記 Ella 標籤 bug**：`_group-announcement-bar` 的 `padding_bottom` 標籤鍵是 `t:settings.left`（本尊面板顯示兩個 Left），兩邊同形，不修主題。
+- **E11 追加**：section 級 Add section 選擇器的「Generate」列是否仍存在待驗（100 §V V13 為 8 月觀察，本輪本尊分頁轉背景未及點驗）；
+  color 列在有相容 metafield 定義時是否出現動態來源圖示未取得（我方 E11 起 color 列一律不出圖示）。
 
 ### 3.75b E8b 頁面批（2026-09-04）的未取得與範圍外
 

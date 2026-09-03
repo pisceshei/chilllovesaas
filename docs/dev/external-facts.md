@@ -1376,6 +1376,9 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   （section 級在 header group 複製灰化）；section 邊界「+」。
 - **section schema 引用 theme block**：Ella `announcement-bar` schema `blocks: [{type:"@app"},{type:"_group-announcement-bar"},{type:"_group-sale-banner"}]`
   ⇒ 本尊樹列名「Announcement」「Sale banner」（取 `blocks/*.liquid` 的 `name`）、面板為該 block 的完整設定。
+- **E11 追加（同日真店實測）**：`_group-announcement-bar` 面板八個 color 列（Background／Headings／Text／Links／Hover links／Borders／
+  Shadow 等）皆為「色票＋hex 文字框」，**無**動態來源圖示；block 級 Add block 選擇器（section 級與 `_group-announcement` 級）**無**「Generate」列。
+  **未取得**：section 級 Add section 選擇器是否有「Generate」（100 §V V13 為 8 月觀察）；color 列在有相容 metafield 定義的店是否出現連接圖示。
 
 ### G17. 頁面批對表的官方逐字與真店觀察（E8b 依據，取證 2026-09-04）
 

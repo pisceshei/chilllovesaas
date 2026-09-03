@@ -596,6 +596,27 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       都須依鐵律 19 綁證據；舊 head、舊 run、舊 PID、舊時間的結果只作快照，不得冒充下一步現值。
       工作單位結束時缺本地 handoff、四段缺項或證據對不上該單位輸入，均視為交接未完成。
 
+22. **渲染 1:1 鐵律（2026-09-04 使用者裁定；與鐵律 12／13 同級，違反＝該輪／該 PR 作廢）**：
+    - **22.1 射程**：主題編輯器的 live preview 與買家前台的**實際渲染輸出**——每一步（每個 section／block／設定值改動後的
+      預覽，與每一個前台頁面）——都必須與 Shopify 本尊在**同一主題、同一資料**下的渲染**完全一樣**：HTML 結構與屬性、
+      CSS（含主題資產與 `<style data-shopify>`）、**尺寸大小**（盒模型、字級、行高、間距、斷點）、以及**全部參數**
+      （section／block／theme settings 的值域、預設、條件顯示與 Liquid 物件語義）。
+    - **22.2 驗收＝零差異**：把真店資料鏡像進 demo／mirror 店後：①逐段 HTML diff 到零（正規化只抹**身分差**——主機、
+      CDN 路徑、雜湊／流水 id、時間戳；不得抹語義差）；②同視窗、同寬度並排量 computed CSS 與幾何
+      （`getComputedStyle`／`getBoundingClientRect`）逐元素到零；③編輯器每個控件改值 ⇒ 預覽變化與本尊逐項相同。
+      差異只有兩種合法去處：**修到一致**，或登記為**平台差異**（`docs/specs/91` §3——本尊平台注入腳本、本尊新版
+      顧客帳戶 URL 這類非主題渲染）。「視覺差不多」「我方設計語言」都不是放行理由。
+    - **22.3 唯一例外**：佔位插圖本體（版權，自繪；外框屬性仍對齊）與本尊平台注入（perf-kit／trekkie／shop-js／Sidekick）。
+      鐵律 8／9 在此的讀法：**主題本身的 CSS／資產是商家授權的主題原檔，照原樣輸出**；我方不抄 Shopify admin 的 CSS
+      原始碼與品牌資產，但渲染結果的量測值必須相等。
+    - **22.4 憑證在倉庫**：每包附對表報告（`render_parity:diff` 的段數／相同數／差異片段）與 computed 量測輸出，腳本與
+      快照可重跑（`app/services/render_parity`、`spec/fixtures/render_parity`）；只有截圖或「看起來一樣」不算證據
+      （鐵律 13.3／19 同款）。量測環境須先消融本機污染（memory `measurement-env-contamination`：本機 Chrome 擴充功能
+      注入 `font-weight:500 !important`）。
+    - 沿革：2026-09-03 使用者「你做的都必須要和右邊的 live preview 和買家前台要和 shopify 本尊完全一樣。包括他的 css 和
+      尺寸以及全部的參數」（E8 開包依據，`docs/dev/e8-render-parity.md`）；2026-09-04 重申「所有的步驟出來的實際預覽和
+      買家前台的實際渲染效果都要和 shopify 本尊完全一樣，包括尺寸大小等等，這要寫入規範和鐵律中」⇒ 升格本條（D82）。
+
 ## 驗收基準
 
 - 每個功能過 `docs/specs/11` §0 七維度（安全／資料／併發／效能／可觀測／測試／合規）；各 spec 末尾有該模組驗收清單。
