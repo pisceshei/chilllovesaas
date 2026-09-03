@@ -81,6 +81,11 @@ function stubFetch(saveErrors: { message: string; code: string }[] = [], bootstr
       const publishBody = { data: { themePublish: { theme: { id: "gid://chilllove/Theme/7", role: "published" }, userErrors: [] } } };
       return { json: vi.fn().mockResolvedValue(publishBody), ok: true, status: 200 } as unknown as Response;
     }
+    // E3：Preview 資源列（PreviewResourceRow）的產品查詢
+    if (request.query.includes("editorPreviewProducts")) {
+      const productsBody = { data: { products: { nodes: [ { id: "gid://chilllove/Product/1", title: "Acme Tee", handle: "acme-tee" } ] } } };
+      return { json: vi.fn().mockResolvedValue(productsBody), ok: true, status: 200 } as unknown as Response;
+    }
     if (request.query.includes("themeEditorBaseTemplate")) {
       const baseBody = { data: { theme: { templateJson: { sections: { base: { type: "hero", settings: {} } }, order: [ "base" ] } } } };
       return { json: vi.fn().mockResolvedValue(baseBody), ok: true, status: 200 } as unknown as Response;
@@ -892,4 +897,183 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent(details, new Event("toggle"));
     expect(router.state.location.search).toContain("category=Colors");
   });
+  // ── E3：左樹（docs/research/100 §2）──
+  const nodeNames = (tree: { getAllByRole: (role: "button") => HTMLElement[] }) => tree.getAllByRole("button")
+    .filter((node: HTMLElement) => node.hasAttribute("aria-pressed"))
+    .map((node: HTMLElement) => node.querySelector(".cl-tree__name")?.textContent?.trim());
+
+  function renderEditorAt(path: string) {
+    const router = createMemoryRouter(
+      [ { path: "*", element: <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" /> } ],
+      { initialEntries: [ path ] },
+    );
+    render(<RouterProvider router={router} />);
+    return router;
+  }
+
+  it("ED35 🔴 巢狀 block：theme block 子層展開／選取寫 ?block=p1__l1；容器內新增子 block 進 save payload", async () => {
+    const nested = JSON.parse(JSON.stringify(BOOTSTRAP)) as typeof BOOTSTRAP;
+    const theme = nested.data.theme as unknown as Record<string, unknown>;
+    theme.themeBlocks = {
+      _parent: { type: "_parent", name: "父塊", settings: [ { id: "label", type: "text", label: "標籤", default: "P" } ], blocks: [ "_leaf" ] },
+      _leaf: { type: "_leaf", name: "葉塊", settings: [ { id: "txt", type: "text", label: "文字" } ], blocks: [] },
+    };
+    const demo = (theme.templateJson as { sections: Record<string, { blocks?: Record<string, unknown>; block_order?: string[] }> }).sections.demo;
+    demo.blocks = { p1: { type: "_parent", blocks: { l1: { type: "_leaf", settings: { txt: "葉子文字" } } }, block_order: [ "l1" ] } };
+    const fetchMock = stubFetch([], nested);
+    const router = renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getByRole("button", { name: "展開 Blocks demo" }));
+    fireEvent.click(tree.getByRole("button", { name: "展開 父塊" }));
+    expect(nodeNames(tree)).toEqual([ "Hero", "Hero", "Blocks demo", "父塊", "葉塊" ]);
+
+    // 葉塊列＝名稱＋summary（第一個文字設定）；選取 ⇒ 路徑以 __ 串進 URL、面板出葉塊控件
+    fireEvent.click(tree.getByRole("button", { name: /^葉塊/ }));
+    expect(router.state.location.search).toContain("block=p1__l1");
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    expect(settings.getByDisplayValue("葉子文字")).toBeInTheDocument();
+
+    // 容器（父塊）自己的「新增區塊」列只列它接受的子型別
+    const p1Li = tree.getByRole("button", { name: "父塊" }).closest("li")!;
+    fireEvent.click(within(p1Li).getByRole("button", { name: "新增區塊" }));
+    fireEvent.click(within(p1Li).getByRole("button", { name: "＋ 葉塊" }));
+    expect(nodeNames(tree)).toEqual([ "Hero", "Hero", "Blocks demo", "父塊", "葉塊", "葉塊" ]);
+
+    fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { blocks: Record<string, { blocks: Record<string, unknown>; block_order: string[] }> }> } } };
+    const p1 = sent.variables.content.sections.demo.blocks.p1;
+    expect(p1.block_order).toEqual([ "l1", "_leaf" ]);
+    expect(Object.keys(p1.blocks)).toEqual([ "l1", "_leaf" ]);
+  });
+
+  it("ED36 🔴 右鍵選單：Paste 灰化／Hide⇄Show／Rename 寫 JSON name／Add section after 插到指定位置／Edit code", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.contextMenu(tree.getAllByRole("button", { name: "Hero" })[1]); // 範本帶 hero
+    let menu = within(screen.getByRole("menu"));
+    expect(menu.getByRole("menuitem", { name: "貼上" })).toBeDisabled();
+    expect(menu.getByRole("menuitem", { name: /編輯代碼/ })).toBeInTheDocument();
+    fireEvent.click(menu.getByRole("menuitem", { name: /隱藏/ }));
+    expect(screen.queryByRole("menu")).toBeNull(); // 點項目即關
+    expect(tree.getByLabelText("顯示 hero")).toBeInTheDocument();
+
+    fireEvent.contextMenu(tree.getAllByRole("button", { name: "Hero" })[1]);
+    menu = within(screen.getByRole("menu"));
+    expect(menu.getByRole("menuitem", { name: /顯示/ })).toBeInTheDocument(); // 隱藏態 ⇒ 反轉為 Show
+    fireEvent.click(menu.getByRole("menuitem", { name: "重新命名" }));
+    const nameInput = screen.getByLabelText("名稱") as HTMLInputElement;
+    expect(nameInput.value).toBe("Hero"); // 預設＝schema name
+    fireEvent.change(nameInput, { target: { value: "主視覺" } });
+    fireEvent.keyDown(nameInput, { key: "Enter" });
+    expect(tree.getByRole("button", { name: "主視覺" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "主視覺" })).toBeInTheDocument(); // 面板標題同步
+
+    fireEvent.contextMenu(tree.getByRole("button", { name: "主視覺" }));
+    fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "在後面新增區段" }));
+    fireEvent.click(within(screen.getByRole("list", { name: "可新增的區段" })).getByRole("button", { name: "促銷條" }));
+    expect(nodeNames(tree)).toEqual([ "Hero", "主視覺", "promo", "Blocks demo" ]); // 插在 hero 之後、demo 之前
+
+    fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { name?: string; disabled?: boolean }>; order: string[] } } };
+    expect(sent.variables.content.order).toEqual([ "hero", "promo", "demo" ]);
+    expect(sent.variables.content.sections.hero).toMatchObject({ name: "主視覺", disabled: true });
+  });
+
+  it("ED37 🔴 鍵盤：Shift+↓/↑ 沿可視列移動選取（收合的 block 跳過）；Shift+Enter 聚焦面板；Ctrl+Shift+O/P 展開／收合全部", async () => {
+    stubFetch();
+    const router = renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true }); // 無選取 ⇒ 第一列（頁首帶 gh）
+    expect(within(screen.getByRole("complementary", { name: "設定" })).getByDisplayValue("群組頁首")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true }); // 範本帶 hero
+    expect(within(screen.getByRole("complementary", { name: "設定" })).getByDisplayValue("首頁英雄")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Enter", shiftKey: true }); // 開啟選中元素 ⇒ 焦點進第一個控件
+    expect(document.activeElement).toBe(within(screen.getByRole("complementary", { name: "設定" })).getByLabelText("標題"));
+
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true }); // demo（收合 ⇒ 其 block 不在可視列）
+    expect(tree.getByRole("button", { name: "Blocks demo" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true }); // 末列 ⇒ 停住
+    expect(tree.getByRole("button", { name: "Blocks demo" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.keyDown(window, { key: "ArrowUp", shiftKey: true });
+    expect(tree.getAllByRole("button", { name: "Hero" })[1]).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.keyDown(window, { key: "o", ctrlKey: true, shiftKey: true }); // 展開全部
+    expect(tree.getByRole("button", { name: "父塊" })).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true }); // demo
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true }); // 父塊（展開後進入可視列）
+    expect(tree.getByRole("button", { name: "父塊" })).toHaveAttribute("aria-pressed", "true");
+    expect(router.state.location.search).toContain("block=p1");
+
+    fireEvent.keyDown(window, { key: "p", ctrlKey: true, shiftKey: true }); // 收合全部
+    expect(tree.queryByRole("button", { name: "父塊" })).toBeNull();
+  });
+
+  it("ED38 🔴 群組帶 Add section：enabled_on.groups 過濾＋limit 達標灰化 (n/limit)；footer 帶按鈕在列之上；範本帶只列模板可用者", async () => {
+    const boot = JSON.parse(JSON.stringify(BOOTSTRAP)) as typeof BOOTSTRAP;
+    const theme = boot.data.theme as unknown as Record<string, unknown>;
+    (theme.sectionGroups as unknown[]).push({
+      name: "footer-group", label: "Footer group", type: "footer", position: "after",
+      path: "sections/footer-group.json", json: { sections: {}, order: [] }, lockVersion: null });
+    (theme.sectionCatalog as unknown[]).push({ type: "sid-probe", name: "Sid probe", preset: { settings: {}, blocks: null } });
+    const schemas = theme.sectionSchemas as Record<string, unknown>;
+    schemas["sid-probe"] = { name: "Sid probe", settings: [], enabled_on: { groups: [ "header" ] }, limit: 1 };
+    schemas.promo = { name: "促銷條", settings: [], enabled_on: { templates: [ "index" ] } };
+    stubFetch([], boot);
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    // footer 類群組：Add section 緊接標題（列之上；本尊 100 §2）
+    const footer = tree.getByText("Footer group").closest("section")!;
+    expect(footer.querySelector("h4 + button")?.getAttribute("aria-label")).toBe("新增區段：Footer group");
+
+    fireEvent.click(tree.getByRole("button", { name: "新增區段：Header group" }));
+    let picker = within(screen.getByRole("list", { name: "可新增的區段" }));
+    expect(picker.getByRole("button", { name: "Sid probe" })).toBeInTheDocument();
+    expect(picker.queryByRole("button", { name: "促銷條" })).toBeNull(); // 只限 index 模板 ⇒ 群組不列
+    fireEvent.click(picker.getByRole("button", { name: "Sid probe" }));
+    expect(nodeNames(tree)).toEqual([ "Hero", "Sid probe", "Hero", "Blocks demo" ]); // 進頁首帶尾端
+
+    fireEvent.click(tree.getByRole("button", { name: "新增區段：Header group" }));
+    picker = within(screen.getByRole("list", { name: "可新增的區段" }));
+    expect(picker.getByRole("button", { name: "Sid probe (1/1)" })).toBeDisabled(); // limit 達標
+
+    fireEvent.click(tree.getByRole("button", { name: "新增區段" })); // 範本帶
+    picker = within(screen.getByRole("list", { name: "可新增的區段" }));
+    expect(picker.getByRole("button", { name: "促銷條" })).toBeInTheDocument();
+    expect(picker.queryByRole("button", { name: /Sid probe/ })).toBeNull(); // 只限群組 ⇒ 範本帶不列
+  });
+
+  it("ED39 🔴 資源模板的 Preview 列：選產品 ⇒ ?previewPath=；命中者出「編輯」連結", async () => {
+    stubFetch();
+    const router = renderEditorAt("/admin/themes/7/editor?template=product");
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "預覽" }));
+    fireEvent.click(await screen.findByRole("option", { name: "Acme Tee" }));
+    expect(router.state.location.search).toContain("previewPath=%2Fproducts%2Facme-tee");
+    expect(await tree.findByLabelText("編輯")).toHaveAttribute("href", "/admin/products/1");
+    expect(screen.queryByRole("option")).toBeNull(); // 選後即關
+  });
+
+  it("ED40 🔴 URL 還原 ?section=&block= ⇒ 祖先自動展開＋block 選中；隱藏 block 灰列＋眼睛常駐", async () => {
+    stubFetch();
+    renderEditorAt("/admin/themes/7/editor?section=demo&block=p1");
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    // 還原走載入後的 effect（資料到了才有 section 可展開）⇒ 以 findBy 等它
+    expect(await tree.findByRole("button", { name: "父塊" })).toHaveAttribute("aria-pressed", "true");
+    expect(await within(screen.getByRole("complementary", { name: "設定" })).findByLabelText("標籤")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "h", ctrlKey: true, shiftKey: true });
+    expect(tree.getByLabelText("顯示 p1").className).toContain("is-persistent");
+    expect(tree.getByRole("button", { name: "父塊" }).closest(".cl-tree__row")?.className).toContain("is-hidden");
+  });
+
 });
