@@ -46,7 +46,11 @@ RSpec.describe "ThemeEngine external video media（PR-22）" do
 
     video = drop.media.first
     expect([ video.host, video.external_id ]).to eq(%w[youtube vj01PAffOac])
-    expect(video.preview_image).to be_nil # 無縮圖資料面（主題 default 寬容）
+    # E12：YouTube 外部影片的 preview_image＝供應商縮圖（官方 objects/media "A preview image of the media."；先前 nil ⇒
+    # `image_url` 自 E12 起對 nil 印 Liquid 錯誤，Ella 商品圖庫規格 EG1 會紅）
+    expect(video.preview_image).to be_a(ThemeEngine::ExternalPreviewImageDrop)
+    expect(video.preview_image.url).to eq("https://i.ytimg.com/vi/vj01PAffOac/hqdefault.jpg")
+    expect([ video.preview_image.width, video.preview_image.height ]).to eq([ 480, 360 ])
   end
 
   it "EV2 🔴 全鏈：media drop → external_video_url → iframe（PR-16 duck-type 接上）" do

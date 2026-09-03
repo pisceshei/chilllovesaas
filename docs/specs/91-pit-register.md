@@ -4108,3 +4108,14 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   骨架（平台 web component＋店級 token），我方無結帳線 ⇒ 空；屬平台結帳功能，待結帳包實作，不在本批。
 - **⚪ 新版顧客帳戶 URL**：本尊 header／cart_drawer／cart 的登入連結是 `/customer_authentication/redirect?locale=…`、註冊是 `https://shopify.com/{shop_id}/account?…`（新版顧客帳戶）；我方 `/account/login`／`/account/register`（舊版形），待顧客帳戶包裁定。
 - **更正（PR-8 記錄）**：`/collections/all` 的 zh 標題 PR-8（2026-09-03）記「商品」；E8b 以 hoko.vip 2026-09-03 快照與 2026-09-04 live（`/collections/all.json` 404 ⇒ 虛擬系列）皆「产品」取代，PT5／CT5 期望值同步改。
+
+### 3.79 E12 computed-CSS 對表（2026-09-04）的未取得與更正
+
+- **更正（E8b #52）**：`image_url` 對 nil 不是「空字串」而是 Liquid 錯誤「invalid url input」（hoko 商品頁 sticky-atc 逐字）；E8b 看到的空字串來自 `{% assign %}` 吞錯。
+- **V recommendations 補位規則**：共同系列成員不足時本尊仍回其他商品（hoko 兩卡）；排序與挑選規則官方未逐字，我方以建立時間升冪補位。
+- **V 關閉 `<details>` 子樹的報告值差**：搜尋 modal 圖示我方 25px、本尊 18px 只在關閉的 details 內出現（inline 同為 18px；命中規則完全相同、inline !important 亦不改變、改 flex 才改變）；開啟後一致。根因未取得；量測一律 `--open-details 1`。
+- **V 本尊 CDN 的主題 CSS 處理管線**：hoko `base.css` 壓縮＋`-webkit-` 前綴＋巢狀攤平（399KB vs 我方原檔 461KB）；Chrome 152 對原檔巢狀語法的 computed 相同，管線本身未逐字。
+- **V 外部影片縮圖**：YouTube 以供應商公開 `hqdefault.jpg`（480×360）代位本尊的 preview image（本尊存成自家 CDN 檔，尺寸未取得）；Vimeo 需 oEmbed 未做 ⇒ nil ⇒ `image_url` 印錯誤；外部影片 `aspect_ratio` 仍 nil。
+- **V 文章圖片模型**：我方 Article 無精選圖片欄位／關聯 ⇒ `article.image` 恆 nil；`image_url` 自 E12 起對 nil 印「invalid url input」（本尊對無圖文章同形），Minimog 一致性探針對 article 模板白名單此錯誤。功能本身待做。
+- **⚪ 商品頁 countdown 數字寬**：`product-countdown` 的秒數文字隨擷取時刻不同（47px vs 41px），屬時間性內容，不登記為形差。
+- **登記 768／390 兩寬**：首頁 390 open-details＝20/21（同 1280）；768 結果與其餘頁面兩寬待補（§2）。

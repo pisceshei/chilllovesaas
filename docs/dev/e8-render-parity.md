@@ -93,7 +93,7 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 | 49 | 無圖商品的 featured_media | /collections/all 三張真商品卡 `card--text`、商品頁 `data-product-variant-media=""` | `ProductDrop#featured_image`＝真實首圖或 nil（不退佔位 drop；E8 §3.75 登記缺口收口） | PP13 |
 | 50 | 篩選集合 | 新店只出 `filter.v.availability`／`filter.v.price.*`（Brand／Type／選項要在 Search & Discovery 加） | `Facets` 預設 `enabled`＝availability＋price（設定面未做，V） | PP10 |
 | 51 | 排序選項名稱 | zh-CN 九項「特色／最相关／畅销／按字母顺序排序，A-Z／…／日期，从新到旧」 | `CollectionDrop::SORT_OPTION_NAMES` 依語系（其他語系未取得，V） | PP14 |
-| 52 | `image_url` 對 nil | add-to-cart-button `featured_media.preview_image \| image_url` 無圖 ⇒ `data-product-variant-media=""` | nil ⇒ 空字串（不再退佔位 URL） | PP14 |
+| 52 | `image_url` 對 nil | add-to-cart-button `featured_media.preview_image \| image_url` 無圖 ⇒ `data-product-variant-media=""` | ~~nil ⇒ 空字串~~ **2026-09-04 E12 更正**：nil ⇒ Liquid 錯誤「invalid url input」；空字串是 `{% assign %}` 吞錯的結果（e12 §1b #1） | PP14 |
 | 53 | `url_param_escape`／`url_escape` | 官方例：空白 `%20`、`/` 保留、param 版 `&` ⇒ `%26`；hoko 分享連結 `text=Acme%20Tee` | `ERB::Util.url_encode`＋還原 `/`（url_escape 再還原 `&`）；先前 CGI.escape ⇒ `+`／`%2F` | PP15 |
 | 54 | 集合頁卡片佔位框 | 集合頁四張卡的佔位名＝`collection-apparel-3`（探針實測）⇒ hoko 四張卡皆 448×448 框 | FRAMES 加 `collection-apparel-3`（其餘 collection-apparel-N 未取得，V） | PP15 |
 | 55 | `closest` 依模板資源 | 官方："The currently rendered template resource of the same type"（external-facts §G18）；hoko 集合頁標題塊 `<h1>{{ closest.collection.title }}</h1>` ⇒ `<h1>产品</h1>` | `ClosestDrop.from_template`（product／collection／article／blog／page；先前只填 product ⇒ 標題塊整塊消失） | PP16 |

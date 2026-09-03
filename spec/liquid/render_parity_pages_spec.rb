@@ -33,7 +33,7 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
       "templates/collection.json" => JSON.generate("sections" => { "f" => { "type" => "fac", "settings" => { "d" => "{{ closest.collection.description }}", "t" => "<h1>{{ closest.collection.title }}</h1>" } } }, "order" => %w[f]),
       "sections/pg.liquid" => "<pg>default</pg>{% for link in linklists.main-menu.links %}<lk>{{ link.title }}={{ link.current }}</lk>{% endfor %}{% schema %}{ \"name\": \"PG\" }{% endschema %}",
       "sections/misc2.liquid" => "<u>[{{ '<p>Health & Love potions</p>' | url_escape }}][{{ '<p>Health & Love potions</p>' | url_param_escape }}][{{ 'Acme Tee' | url_param_escape }}]</u>" \
-                                 "<ph>{{ 'collection-apparel-3' | placeholder_svg_tag: 'placeholder-svg' }}</ph><vo>{{ product.variants.first.options | join: '/' }}</vo>{% for block in section.blocks %}<cb>{{ block.id }}|{{ block.type }}</cb>{% endfor %}<pcd>{% if section.settings.cd != blank %}[{{ section.settings.cd }}]{% endif %}</pcd>" \
+                                 "<ph>{{ 'collection-apparel-3' | placeholder_svg_tag: 'placeholder-svg' }}</ph><vo>{{ product.variants.first.options | join: '/' }}</vo><pv>{% for m in product.media %}[{{ m.media_type }}:{{ m.preview_image | image_url: width: 100 }}]{% endfor %}</pv>{% for block in section.blocks %}<cb>{{ block.id }}|{{ block.type }}</cb>{% endfor %}<pcd>{% if section.settings.cd != blank %}[{{ section.settings.cd }}]{% endif %}</pcd>" \
                                  "{% schema %}{ \"name\": \"M2\", \"blocks\": [ { \"type\": \"html\", \"name\": \"HTML\" } ] }{% endschema %}",
       "sections/misc.liquid" => "<m>[{{ 1700000000 | date: '%Y-%m-%d' }}][{{ '1700000000' | date: '%Y' }}][{{ 'now' | date: '%s' | plus: 31536000 | date: '%Y' }}]" \
                                 "[{{ cart.currency.symbol }}|{{ cart.currency.iso_code }}|{{ cart.currency.name }}][{{ product.selected_or_first_available_variant.option1 }}]" \
@@ -120,7 +120,7 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     expect(en).not_to include("Brand") # E8b：預設只出 availability＋price（hoko 新店無 Brand／Type 篩選）
   end
 
-  it "PP14 🔴 sort_options 名稱依語系（zh 九項逐字）；`nil | image_url` 為空字串" do
+  it "PP14 🔴 sort_options 名稱依語系（zh 九項逐字）；`nil | image_url` ＝ Liquid 錯誤 invalid url input（E12 更正）" do
     ActsAsTenant.with_tenant(shop) do
       Collection.create!(shop_id: shop.id, title: "All", handle: "c1", collection_type: "manual", description_html: "", sort_order: "manual")
     end
@@ -128,7 +128,8 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
                                   .render("/collections/c1", params: { "_facets_qs" => "" }).html
     expect(zh).to include("<so>manual=特色;most-relevant=最相关;best-selling=畅销;title-ascending=按字母顺序排序，A-Z;title-descending=按字母顺序排序，Z-A;" \
                           "price-ascending=价格，从低到高;price-descending=价格，从高到低;created-ascending=日期，从旧到新;created-descending=日期，从新到旧;</so>")
-    expect(zh).to include("<iu>[]</iu>")
+    # E12：`nil | image_url` ＝ Liquid 錯誤（hoko sticky-atc 逐字「invalid url input」；錯誤訊息帶檔名與行號，格式同 hoko）
+    expect(zh).to match(%r{<iu>\[Liquid error \(sections/fac line \d+\): invalid url input\]</iu>})
     en = ThemeEngine::PageRenderer.new(theme: theme, shop: shop, publication: online_store, source: source, locale: "en")
                                   .render("/collections/c1", params: { "_facets_qs" => "" }).html
     expect(en).to include("<so>manual=Featured;")
@@ -199,6 +200,17 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     expect(pre).to include("<lk>首頁=false</lk><lk>聯絡我們=true</lk>")
     expect(render("/pages/contact").html).to include("<lk>首頁=false</lk><lk>聯絡我們=true</lk>")
     expect(render("/").html).not_to include("聯絡我們=true")
+  end
+
+  it "PP21 🔴 外部影片 preview_image：YouTube ⇒ 供應商縮圖 URL（image_url 直出）；Vimeo 未做 ⇒ Liquid 錯誤 invalid url input" do
+    ActsAsTenant.with_tenant(shop) do
+      pid = Product.find_by!(handle: "p1").id
+      Media.create!(shop_id: shop.id, product_id: pid, media_type: "external_video", external_host: "youtube", external_id: "vj01PAffOac", position: 1, source_url: "https://www.youtube.com/watch?v=vj01PAffOac", status: "ready")
+      Media.create!(shop_id: shop.id, product_id: pid, media_type: "external_video", external_host: "vimeo", external_id: "123456", position: 2, source_url: "https://vimeo.com/123456", status: "ready")
+    end
+    html = render("/products/p1").html
+    expect(html).to include("[external_video:https://i.ytimg.com/vi/vj01PAffOac/hqdefault.jpg]")
+    expect(html).to match(%r{\[external_video:Liquid error \(sections/misc2 line \d+\): invalid url input\]})
   end
 
   it "PP13 🔴 無圖商品 featured_media／featured_image 為空（卡片 card--text）；無圖變體亦空" do

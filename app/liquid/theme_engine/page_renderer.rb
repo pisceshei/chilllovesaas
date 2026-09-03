@@ -360,6 +360,19 @@ module ThemeEngine
       # PR-7：編輯器 draft 覆蓋最優先（未儲存的即時預覽）
       return [ @draft_sections[key], Runtime.template_scope(template_key) ] if @draft_sections&.key?(key)
 
+      # E12：SRA 的完整 id 帶宿主（`template--product__x`／`sections--popup-group__x`）⇒ 先到宿主找，**與當頁 URL 無關**
+      # （hoko.vip `/search?section_id=template--19763396411495__recently_viewed_products_WcH46k` 200；Ella recently-viewed JS
+      # 正是在任何頁面打 /search 取商品頁模板的段）。官方：section 可 "in the context of any page" 渲染。找不到再退回當頁模板。
+      if (m = sid.to_s.match(/\Atemplate--([\w.\-]+)__/)) && m[1] != template_key
+        host_tj = runtime.template_json(m[1])
+        host_data = host_tj && (host_tj["sections"] || {})[key]
+        return [ host_data, Runtime.template_scope(m[1]) ] if host_data
+      elsif (m = sid.to_s.match(/\Asections--([\w-]+)__/))
+        g = runtime.load_json("sections/#{m[1]}.json")
+        found = g && (g["sections"] || {})[key]
+        return [ found, { kind: "sections", name: m[1] } ] if found
+      end
+
       tj = runtime.template_json(template_key)
       data = tj && (tj["sections"] || {})[key]
       return [ data, Runtime.template_scope(template_key) ] if data

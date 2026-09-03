@@ -180,6 +180,16 @@ RSpec.describe "Storefront G2 search line", type: :request do
       expect(response.parsed_body).to eq({ "products" => [], "intent" => "complementary" })
     end
 
+    it "R4 🔴 共同系列不足 limit ⇒ 其他可見商品依建立時間升冪補位（hoko.vip acme-tee ⇒ bolt-mug、cosy-lamp）；不在任何系列亦同" do
+      lone = make_product(title: "孤品", handle: "lone-item", price: 1000, at: Time.zone.parse("2026-04-01"))
+      get "/recommendations/products.json", params: { product_id: lone.id, limit: 2 }
+      expect(response.parsed_body["products"].map { |row| row["handle"] }).to eq(%w[sandal-candle rose-soap]) # 建立序：1 月、2 月
+      get "/recommendations/products.json", params: { product_id: serum.id, limit: 4 }
+      handles = response.parsed_body["products"].map { |row| row["handle"] }
+      expect(handles.first(2)).to match_array(%w[rose-soap sandal-candle]) # 共同系列成員在前
+      expect(handles.last).to eq("lone-item") # 補位在後
+    end
+
     it "R2 🔴 官方三錯誤形：缺 product_id 422／intent 非法 422／未發布 404（逐字訊息）" do
       get "/recommendations/products.json"
       expect(response).to have_http_status(:unprocessable_content)
