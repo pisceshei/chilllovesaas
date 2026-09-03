@@ -49,6 +49,8 @@ module Types
     field :theme_blocks, GraphQL::Types::JSON, null: false
     # E3b：實例 `name` 的 `t:` 鍵翻譯表（只含實際出現的鍵）
     field :name_translations, GraphQL::Types::JSON, null: false
+    # E4：font_picker 的字型清單（平台字典 `config/storefront_fonts.yml`：families／system／library 三段扁平化）
+    field :font_library, GraphQL::Types::JSON, null: false
     # PR-11：模板→預覽路徑對映（資源語境——product 模板編輯帶真商品）。
     # 取各型第一個已發布資源；無資源的型不出鍵（前端回落首頁）。
     field :preview_paths, GraphQL::Types::JSON, null: false
@@ -201,6 +203,21 @@ module Types
         next
       end
       keys.to_h { |key| [ key, translate.call(key) ] }.reject { |key, value| value == key }
+    end
+
+    def font_library
+      registry = ThemeEngine::FontLibrary.registry
+      families = (registry["families"] || {}).map do |key, family|
+        { "key" => key, "name" => family["display_name"] || key, "system" => false,
+          "handles" => (family["variants"] || {}).keys }
+      end
+      system = (registry["system"] || {}).map do |key, family|
+        { "key" => key, "name" => family["display_name"] || key, "system" => true, "handles" => [ "n4" ] }
+      end
+      library = ThemeEngine::FontLibrary.library.map do |key, family|
+        { "key" => key, "name" => family["display_name"] || key, "system" => false, "handles" => Array(family["handles"]) }
+      end
+      (system + families + library).uniq { |entry| entry["key"] }
     end
 
     def section_schemas

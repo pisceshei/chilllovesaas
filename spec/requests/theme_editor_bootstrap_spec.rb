@@ -419,4 +419,17 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(schemas.dig("hero", "theme_settings")).to eq([])
   end
 
+  it "E17 fontLibrary：system／自 host／官方表列三段扁平化（key／name／system／handles）" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { fontLibrary } }
+    GQL
+    fonts = response.parsed_body.dig("data", "theme", "fontLibrary")
+    jost = fonts.find { |f| f["key"] == "jost" }
+    expect(jost.slice("name", "system")).to eq({ "name" => "Jost", "system" => false })
+    expect(jost["handles"]).to include("n4", "n7")
+    expect(fonts.find { |f| f["key"] == "system_ui" }["system"]).to be(true)
+    expect(fonts.find { |f| f["key"] == "assistant" }["handles"]).to include("n4")
+  end
+
 end

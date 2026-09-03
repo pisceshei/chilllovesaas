@@ -253,8 +253,9 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
     expect(settings.getByText("版面")).toBeInTheDocument(); // header 結構元素
     expect(settings.getByLabelText("標題")).toHaveValue("首頁英雄"); // schema label＋實例值
-    expect(settings.getByLabelText("間距")).toHaveValue("24"); // 🔴 default 補位
-    expect(settings.getByText(/圖片/)).toBeInTheDocument(); // 資源型唯讀（16e）
+    expect(settings.getByLabelText("間距")).toHaveValue(24); // 🔴 default 補位（E4：滑桿＋數字框，取數字框）
+    expect(settings.getByText("圖片", { selector: "label" })).toBeInTheDocument(); // image_picker：標籤＋Select 虛線框（E4）
+    expect(settings.getByRole("button", { name: /選取/ })).toBeInTheDocument();
 
     fireEvent.change(settings.getByLabelText("對齊"), { target: { value: "center" } });
 
@@ -277,9 +278,12 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const settings = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
     expect(settings.getByText("Colors")).toBeInTheDocument();
     const control = settings.getByLabelText("品牌色");
-    expect(control).toHaveValue("#a9502c"); // 生效值（DB/檔案 current）
+    expect(control).toHaveTextContent("#A9502C"); // 生效值（DB/檔案 current）；E4：色票鈕顯示 HEX
 
-    fireEvent.change(control, { target: { value: "#123456" } });
+    fireEvent.click(control); // E4：開 popover → HEX 欄 → blur 寫回
+    const hex = screen.getByLabelText("Hex");
+    fireEvent.change(hex, { target: { value: "123456" } });
+    fireEvent.blur(hex);
     fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
     await vi.waitFor(() => expect(callsTo(fetchMock, "themeSettingsUpsert")).toHaveLength(1));
     const sent = JSON.parse(String(callsTo(fetchMock, "themeSettingsUpsert")[0].body)) as {
@@ -340,7 +344,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.click(tree.getByRole("button", { name: "展開 Blocks demo" })); // E3：section 預設收合
     fireEvent.click(tree.getByRole("button", { name: "父塊" }));
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
-    expect(settings.getByText("（block）", { exact: false })).toBeInTheDocument();
+    expect(settings.getByRole("heading", { name: "父塊" })).toBeInTheDocument(); // E4：標題列＝type icon＋顯示名
     const labelInput = settings.getByLabelText("標籤");
     fireEvent.change(labelInput, { target: { value: "改標籤" } });
 
@@ -419,7 +423,10 @@ describe("ThemeEditorPage（步 16a shell）", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "佈景主題設定" })); // E2：頂欄面板切換器
     const settings = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
-    fireEvent.change(settings.getByLabelText("品牌色"), { target: { value: "#123456" } });
+    fireEvent.click(settings.getByLabelText("品牌色")); // E4：色票鈕 → popover HEX
+    const hex = screen.getByLabelText("Hex");
+    fireEvent.change(hex, { target: { value: "123456" } });
+    fireEvent.blur(hex);
 
     await vi.waitFor(() => {
       const calls = fetchMock.mock.calls.filter((c) => String(c[0]).includes("/draft_page"));
@@ -496,6 +503,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
 
     fireEvent.click(tree.getAllByRole("button", { name: "Hero" })[1]); // 範本帶
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    fireEvent.click(settings.getByRole("button", { name: "自訂 CSS" })); // E4：收合區預設收起
     fireEvent.change(settings.getByLabelText("自訂 CSS"), {
       target: { value: "p { color: red; }" },
     });

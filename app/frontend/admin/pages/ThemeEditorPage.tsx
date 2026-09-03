@@ -1,20 +1,23 @@
-import { Search, Trash2, X } from "lucide-react";
+import { Box, Layers, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
-import { Button } from "../components/Button";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { CreateTemplateDialog } from "../editor/CreateTemplateDialog";
 import { EditorTopBar, type EditorPanel } from "../editor/EditorTopBar";
+import { ImagePickerModal } from "../editor/ImagePickerModal";
 import { isTypingTarget, shortcutFor } from "../editor/editorShortcuts";
 import { PreviewResourceRow } from "../editor/PreviewResourceRow";
 import { SectionsTree, type BlockDefLite } from "../editor/SectionsTree";
+import { SettingRow, type ControlContext, type FontFamily, type MenuOption, type SchemeOption, type SettingDef } from "../editor/SettingControls";
+import { SettingsPanel } from "../editor/SettingsPanel";
+import { evaluateVisibleIf } from "../editor/visibleIf";
 import { ShortcutsDialog } from "../editor/ShortcutsDialog";
 import { splitTemplateKey } from "../editor/TemplateSwitcher";
 import {
   allExpandableKeys, blockOrderOf, decodeBlockPath, encodeBlockPath, findBlockPath, flattenRows, getBlock,
   getContainer, orderOf, rowKey, sectionAllowedIn, type BlockPath, type SectionEntry, type TemplateJson,
-  type TreeBand,
+  type TreeBand, type BlockEntry,
 } from "../editor/treeModel";
 import { useT } from "../i18n/I18nContext";
 import { useToast } from "../lib/ToastContext";
@@ -52,10 +55,12 @@ const EDITOR_QUERY = `
       sectionSchemas
       themeBlocks
       nameTranslations
+      fontLibrary
       settingsSchema
       themeSettingsJson
       themeSettingsLockVersion
     }
+    menus { handle title }
   }
 `;
 
@@ -103,22 +108,6 @@ const SAVE_MUTATION = `
   }
 `;
 
-/** 26 §5 型別子集：16d 先接 T0 純值控件；資源選擇器唯讀（16e 射程）。 */
-interface SettingDef {
-  id?: string;
-  type: string;
-  label?: string;
-  info?: string;
-  content?: string;
-  default?: unknown;
-  placeholder?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  unit?: string;
-  options?: { value: string; label: string }[];
-}
-
 interface BlockDef extends BlockDefLite {
   settings?: SettingDef[];
   /** theme block 可接受的子型別（"@theme"＝全部；E3 `themeBlocks`） */
@@ -152,10 +141,14 @@ interface EditorData {
     themeBlocks?: Record<string, BlockDef>;
     /** E3b：實例 `name` 的 `t:` 鍵 → 翻譯（只含實際出現的鍵） */
     nameTranslations?: Record<string, string>;
+    /** E4：font_picker 字型清單（平台字典） */
+    fontLibrary?: FontFamily[];
     settingsSchema: { name: string; settings: SettingDef[] }[];
     themeSettingsJson: Record<string, unknown>;
     themeSettingsLockVersion: number | null;
   } | null;
+  /** E4：link_list 控件的選單清單 */
+  menus?: MenuOption[];
 }
 
 /** PR-23：買家路徑 → 模板型（預覽內導航同步左欄模板；99/96 路由對映） */
@@ -183,128 +176,9 @@ function humanize(name: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const RESOURCE_TEMPLATE_TYPES = new Set([ "product", "collection", "page", "blog", "article" ]);
 const GROUP_TEMPLATE_TYPES = RESOURCE_TEMPLATE_TYPES;
 
-/** schema 驅動控件（26 §5 對映）：T0 純值型可編輯；資源選擇器唯讀（16e）。 */
-function SettingControl({ def, value, onChange }: {
-  def: SettingDef;
-  value: unknown;
-  onChange: (value: unknown) => void;
-}) {
-  const t = useT();
-  // header/paragraph＝側欄結構元素，無值（26 §5「schema 解析必須接受」）
-  if (def.type === "header") return <h4 className="cl-editor__group">{def.content}</h4>;
-  if (def.type === "paragraph") return <p className="cl-card-note">{def.content}</p>;
-  if (!def.id) return null;
-
-  // 🔴 值解析＝實例值 ?? schema default（本尊語義：未覆寫顯示預設）
-  const effective = value ?? def.default;
-  const inputId = `setting-${def.id}`;
-  const label = def.label ?? def.id;
-
-  let control: ReactNode;
-  switch (def.type) {
-    case "checkbox":
-      control = (
-        <input checked={Boolean(effective)} id={inputId}
-          onChange={(event) => onChange(event.target.checked)} type="checkbox" />
-      );
-      break;
-    case "number":
-      control = (
-        <input className="cl-field__input" id={inputId} max={def.max} min={def.min}
-          onChange={(event) => onChange(event.target.value === "" ? null : Number(event.target.value))}
-          placeholder={def.placeholder} type="number" value={effective == null ? "" : Number(effective)} />
-      );
-      break;
-    case "range":
-      control = (
-        <span className="cl-editor__range">
-          <input id={inputId} max={def.max} min={def.min}
-            onChange={(event) => onChange(Number(event.target.value))}
-            step={def.step} type="range" value={Number(effective ?? def.min ?? 0)} />
-          <span className="cl-card-note">{String(effective ?? "")}{def.unit ?? ""}</span>
-        </span>
-      );
-      break;
-    case "select":
-    case "text_alignment": {
-      const options = def.type === "text_alignment"
-        ? [ { value: "left", label: t("editor.alignLeft") },
-            { value: "center", label: t("editor.alignCenter") },
-            { value: "right", label: t("editor.alignRight") } ]
-        : def.options ?? [];
-      control = (
-        <select className="cl-field__input" id={inputId}
-          onChange={(event) => onChange(event.target.value)} value={String(effective ?? "")}>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
-      );
-      break;
-    }
-    case "radio":
-      control = (
-        <span role="radiogroup">
-          {(def.options ?? []).map((option) => (
-            <label className="cl-editor__radio" key={option.value}>
-              <input checked={String(effective ?? "") === option.value} name={inputId}
-                onChange={() => onChange(option.value)} type="radio" value={option.value} />
-              {option.label}
-            </label>
-          ))}
-        </span>
-      );
-      break;
-    case "textarea":
-    case "richtext":
-    case "inline_richtext":
-    case "html":
-    case "liquid":
-      control = (
-        <textarea className="cl-field__input" id={inputId}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={def.placeholder} rows={3} value={String(effective ?? "")} />
-      );
-      break;
-    case "color":
-      control = HEX_RE.test(String(effective ?? "")) ? (
-        <input id={inputId} onChange={(event) => onChange(event.target.value)}
-          type="color" value={String(effective)} />
-      ) : (
-        <input className="cl-field__input" id={inputId}
-          onChange={(event) => onChange(event.target.value)} value={String(effective ?? "")} />
-      );
-      break;
-    case "text":
-    case "url":
-    case "video_url":
-    case "color_background":
-    case "font_picker":
-      control = (
-        <input className="cl-field__input" id={inputId}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={def.placeholder} value={String(effective ?? "")} />
-      );
-      break;
-    default:
-      // 資源選擇器（image_picker/product/collection/*_list…）＝16e 射程，先唯讀
-      control = <code>{JSON.stringify(effective ?? null)}</code>;
-  }
-
-  return (
-    <div className="cl-field">
-      <label className="cl-field__label" htmlFor={inputId}>{label}</label>
-      {control}
-      {def.info ? <p className="cl-card-note">{def.info}</p> : null}
-    </div>
-  );
-}
-
-/** schema 未覆蓋鍵（或整型缺 schema）＝16b 原 typeof 分派，保持可編輯。 */
 function FallbackControl({ name, value, onChange }: {
   name: string;
   value: unknown;
@@ -345,6 +219,11 @@ export function ThemeEditorPage() {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
+  // E4：右欄「…」Copy 的剪貼簿（Paste 在左樹右鍵）；image_picker 的檔案庫 modal；Custom CSS 收合狀態（URL customCss=true）
+  const [clipboard, setClipboard] = useState<{ kind: "section" | "block"; entry: BlockEntry } | null>(null);
+  const [imagePicker, setImagePicker] = useState<{ def: SettingDef; value: string; onChange: (value: string) => void } | null>(null);
+  const [customCssOpen, setCustomCssOpen] = useState(() => searchParams.get("customCss") === "true");
+  const [menus, setMenus] = useState<MenuOption[]>([]);
   const [draft, setDraft] = useState<TemplateJson | null>(null);
   // PR-5：群組帶（24 §1 本尊樹形）——群組 draft 與模板同語義（{sections, order}），寫回走 themeFileUpsert。
   const [groupDrafts, setGroupDrafts] = useState<Record<string, TemplateJson>>({});
@@ -404,6 +283,7 @@ export function ThemeEditorPage() {
       const result = await requestAdminGraphQL<EditorData, { id: string; key: string }>(
         EDITOR_QUERY, { id: gid, key: templateKey }, signal);
       setData(result.theme);
+      setMenus(result.menus ?? []);
       setDraft(result.theme?.templateJson ? cloneTpl(result.theme.templateJson) : null);
       setLockVersion(result.theme?.templateLockVersion ?? null);
       const groups = result.theme?.sectionGroups ?? [];
@@ -824,6 +704,74 @@ export function ThemeEditorPage() {
     tpl.order = order;
   });
 
+  // ── E4：右欄「…」的 Duplicate／Copy 與左樹 Paste（section 與任意深度 block 同語義；static 不可複製）──
+  const uniqueId = (taken: (id: string) => boolean, base: string) => {
+    let candidate = `${base}-copy`;
+    let n = 2;
+    while (taken(candidate)) candidate = `${base}-copy-${n++}`;
+    return candidate;
+  };
+  const duplicateNode = (band: string, sectionId: string, path: BlockPath) => {
+    if (path.length === 0) { duplicateSection(band, sectionId); return; }
+    const sectionNow = sectionOf(band, sectionId);
+    const containerNow = sectionNow ? getContainer(sectionNow, path) : null;
+    const id = path[path.length - 1];
+    if (!containerNow?.blocks?.[id] || containerNow.blocks[id].static) return;
+    const newId = uniqueId((candidate) => Boolean(containerNow.blocks?.[candidate]), id);
+    withSection(band, sectionId, (section) => {
+      const container = getContainer(section, path);
+      const source = container?.blocks?.[id];
+      if (!container?.blocks || !source) return;
+      container.blocks[newId] = JSON.parse(JSON.stringify(source)) as BlockEntry;
+      const order = [ ...blockOrderOf(container) ];
+      order.splice(order.indexOf(id) + 1, 0, newId);
+      container.block_order = order;
+    });
+    selectNode(band, sectionId, [ ...path.slice(0, -1), newId ]);
+  };
+  const copyNode = (band: string, sectionId: string, path: BlockPath) => {
+    const section = sectionOf(band, sectionId);
+    const node = section ? getBlock(section, path) : null;
+    if (!node) return;
+    setClipboard({ kind: path.length === 0 ? "section" : "block", entry: JSON.parse(JSON.stringify(node)) as BlockEntry });
+  };
+  /** 貼上：section 貼在目標 section 之後（同帶）；block 貼進目標容器（目標是 block ⇒ 其後；目標是 section ⇒ 尾端）。 */
+  const pasteNode = (band: string, sectionId: string, path: BlockPath) => {
+    if (!clipboard) return;
+    if (clipboard.kind === "section") {
+      const tplNow = tplOf(band);
+      const base = (clipboard.entry.type ?? "section").replace(/[^A-Za-z0-9_-]/g, "");
+      const newId = uniqueId((candidate) => Boolean(tplNow?.sections?.[candidate]), base);
+      applyOp(band, (tpl) => {
+        tpl.sections ??= {};
+        tpl.sections[newId] = JSON.parse(JSON.stringify(clipboard.entry)) as SectionEntry;
+        const order = [ ...orderOf(tpl) ];
+        order.splice(order.indexOf(sectionId) + 1, 0, newId);
+        tpl.order = order;
+      });
+      selectNode(band, newId, []);
+      return;
+    }
+    const sectionNow = sectionOf(band, sectionId);
+    const containerPath = path.length === 0 ? [] : path.slice(0, -1);
+    const containerNow = sectionNow ? getBlock(sectionNow, containerPath) : null;
+    if (!containerNow) return;
+    const newId = uniqueId((candidate) => Boolean(containerNow.blocks?.[candidate]), clipboard.entry.type.replace(/[^A-Za-z0-9_-]/g, ""));
+    withSection(band, sectionId, (section) => {
+      const container = getBlock(section, containerPath);
+      if (!container) return;
+      container.blocks ??= {};
+      const entry = JSON.parse(JSON.stringify(clipboard.entry)) as BlockEntry;
+      delete entry.static;
+      container.blocks[newId] = entry;
+      const order = [ ...blockOrderOf(container) ];
+      const at = path.length === 0 ? order.length : order.indexOf(path[path.length - 1]) + 1;
+      order.splice(at, 0, newId);
+      container.block_order = order;
+    });
+    selectNode(band, sectionId, [ ...containerPath, newId ]);
+  };
+
   /** add-section（24 §3：新 entry 內容取 preset；E3：插到指定帶的指定位置，預設尾端）。 */
   const addSection = (catalogEntry: NonNullable<EditorData["theme"]>["sectionCatalog"][number]) => {
     const target = pickerFor ?? { band: "template", atIndex: null };
@@ -1139,6 +1087,48 @@ export function ThemeEditorPage() {
     ? (selectedBlock ? (translateName(selectedBlock.name) ?? selectedBlockDef?.name ?? selectedBlock.type) : (translateName(selected.name) ?? sectionName(selected.type)))
     : "";
 
+
+  // ── E4：控件語境——色階（color_scheme_group 的值 × role 對映）、字型清單、選單清單、Editing Scheme 入口 ──
+  const schemeGroupDef = (data?.settingsSchema ?? []).flatMap((group) => group.settings).find((def) => def.type === "color_scheme_group");
+  const schemes = useMemo<SchemeOption[]>(() => {
+    const raw = schemeGroupDef?.id ? settingsDraft?.[schemeGroupDef.id] : null;
+    if (!raw || typeof raw !== "object") return [];
+    const role = (schemeGroupDef?.role ?? {}) as Record<string, unknown>;
+    const roleKey = (name: string, fallback: string): string => {
+      const entry = role[name];
+      if (typeof entry === "string") return entry;
+      if (entry && typeof entry === "object" && typeof (entry as { solid?: unknown }).solid === "string") return (entry as { solid: string }).solid;
+      return fallback;
+    };
+    return Object.entries(raw as Record<string, { settings?: Record<string, unknown> }>).map(([ id, scheme ], index) => {
+      const values = scheme?.settings ?? {};
+      const read = (key: string, fallback: string) => (typeof values[key] === "string" && values[key] ? String(values[key]) : fallback);
+      return {
+        id,
+        label: t("editor.schemeLabel", { n: String(index + 1) }),
+        background: read(roleKey("background", "background"), "#ffffff"),
+        text: read(roleKey("text", "foreground"), "#000000"),
+        button: read(roleKey("primary_button", "primary_button_background"), "#000000"),
+      };
+    });
+  }, [ schemeGroupDef, settingsDraft, t ]);
+  const controlCtx = useMemo<ControlContext>(() => ({
+    schemes,
+    fonts: data?.fontLibrary ?? [],
+    menus,
+    onEditScheme: (schemeId) => {
+      const group = (data?.settingsSchema ?? []).find((g) => g.settings.some((def) => def.type === "color_scheme_group"));
+      switchPanel("theme");
+      if (group) { setOpenCategory(group.name); syncStateParams({ category: group.name, colorScheme: schemeId }); }
+    },
+    onOpenImagePicker: (request) => setImagePicker(request),
+  }), [ schemes, data?.fontLibrary, data?.settingsSchema, menus ]); // eslint-disable-line react-hooks/exhaustive-deps
+  const themeRefDefs = useMemo<SettingDef[]>(() => {
+    const refs = selected ? (data?.sectionSchemas?.[selected.type] as { theme_settings?: string[] } | undefined)?.theme_settings ?? [] : [];
+    if (refs.length === 0) return [];
+    return (data?.settingsSchema ?? []).flatMap((group) => group.settings).filter((def) => def.id && refs.includes(def.id));
+  }, [ data, selected ]);
+
   // E3：Add section picker 的候選（依帶過濾 enabled_on／disabled_on；limit 達標灰化並標 (n/limit)）
   const pickerBand = pickerFor ? bands.find((b) => b.band === pickerFor.band) : null;
   const pickerEntries = (data?.sectionCatalog ?? []).map((entry) => {
@@ -1243,7 +1233,9 @@ export function ThemeEditorPage() {
                 expanded={expanded}
                 onAddBlock={addBlockAt}
                 onAddSection={(band, atIndex) => { setPickerQuery(""); setPickerFor((current) => (current?.band === band && current.atIndex === atIndex ? null : { band, atIndex })); }}
+                canPaste={clipboard !== null}
                 onEditCode={openCode}
+                onPaste={pasteNode}
                 onMove={moveNode}
                 onRemove={removeNode}
                 onRename={startRename}
@@ -1277,8 +1269,9 @@ export function ThemeEditorPage() {
                   open={openCategory === group.name}
                 >
                   <summary>{group.name}</summary>
-                  {group.settings.map((def, index) => (
-                    <SettingControl
+                  {group.settings.filter((def) => evaluateVisibleIf(def.visible_if, { settings: settingsDraft ?? {} })).map((def, index) => (
+                    <SettingRow
+                      ctx={controlCtx}
                       def={def}
                       key={def.id ?? `static-${index}`}
                       onChange={(value) => def.id && setThemeSetting(def.id, value)}
@@ -1329,124 +1322,62 @@ export function ThemeEditorPage() {
           />
         </main>
 
-        {!fullscreen && hasRightPanel && selected && selectedId ? (
-          <aside aria-label={t("editor.settingsPanel")} className="cl-editor__settings">
-            <div className="cl-editor__paneltitle">
-              {renaming ? (
-                <input
-                  aria-label={t("editor.renamePrompt")}
-                  autoFocus
-                  className="cl-field__input"
-                  onBlur={commitRename}
-                  onChange={(event) => setRenameValue(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") { event.preventDefault(); commitRename(); }
-                    if (event.key === "Escape") { event.preventDefault(); setRenaming(false); }
-                  }}
-                  value={renameValue}
-                />
-              ) : (
-                <h3>{panelTitle}</h3>
-              )}
-              <button aria-label={t("common.close")} className="cl-editor__iconbtn" onClick={deselect} type="button">
-                <X aria-hidden="true" size={16} />
-              </button>
-            </div>
-            <div className="cl-editor__panelbody">
-              {selectedBlock ? (
-                (() => {
-                  const defs = selectedBlockDef?.settings ?? [];
-                  const covered = new Set(defs.map((d) => d.id).filter(Boolean));
-                  const extras = Object.entries(selectedBlock.settings ?? {}).filter(([ key ]) => !covered.has(key));
-                  return (
-                    <>
-                      <p className="cl-card-note"><code>{selectedBlock.type}</code>（block）{selectedBlock.disabled ? ` — ${t("editor.hidden")}` : ""}</p>
-                      {defs.map((def, index) => (
-                        <SettingControl
-                          def={def}
-                          key={def.id ?? `static-${index}`}
-                          onChange={(value) => def.id && setBlockSetting(def.id, value)}
-                          value={def.id ? (selectedBlock.settings ?? {})[def.id] : undefined}
-                        />
-                      ))}
-                      {extras.map(([ key, value ]) => (
-                        <FallbackControl key={key} name={key}
-                          onChange={(next) => setBlockSetting(key, next)} value={value} />
-                      ))}
-                      {selectedBlock.static ? null : (
-                        <Button
-                          onClick={() => removeNode(selectedBand, selectedId, selectedPath)}
-                          size="small"
-                          variant="critical"
-                        >
-                          <Trash2 aria-hidden="true" size={13} /> {t("editor.blockRemove", { id: selectedBlockId ?? "" })}
-                        </Button>
-                      )}
-                    </>
-                  );
-                })()
-              ) : (
-                <>
-                  <p className="cl-card-note"><code>{selected.type}</code>{selected.disabled ? ` — ${t("editor.hidden")}` : ""}</p>
-                  {(() => {
-                    const schema = data?.sectionSchemas?.[selected.type];
-                    const defs = schema?.settings ?? [];
-                    const covered = new Set(defs.map((def) => def.id).filter(Boolean));
-                    const extras = Object.entries(selected.settings ?? {}).filter(([ key ]) => !covered.has(key));
-                    return (
-                      <>
-                        {defs.map((def, index) => (
-                          <SettingControl
-                            def={def}
-                            key={def.id ?? `static-${index}`}
-                            onChange={(value) => def.id && setSetting(selectedId, def.id, value)}
-                            value={def.id ? (selected.settings ?? {})[def.id] : undefined}
-                          />
-                        ))}
-                        {extras.map(([ key, value ]) => (
-                          <FallbackControl
-                            key={key}
-                            name={key}
-                            onChange={(next) => setSetting(selectedId, key, next)}
-                            value={value}
-                          />
-                        ))}
-                      </>
-                    );
-                  })()}
-                  {/* PR-18：官方「At the bottom of section properties, click Custom CSS」；
-                      section 級上限 500 字（help add-css 逐字） */}
-                  <details className="cl-editor__acc cl-editor__customcss">
-                    <summary>{t("editor.customCss")}</summary>
-                    <textarea
-                      aria-label={t("editor.customCss")}
-                      className="cl-field__input"
-                      maxLength={500}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        applyOp(selectedBand, (tpl) => {
-                          const entry = tpl.sections?.[selectedId];
-                          if (!entry) return;
-                          if (value) entry.custom_css = value;
-                          else delete entry.custom_css;
-                        });
-                      }}
-                      rows={4}
-                      value={selected.custom_css ?? ""}
-                    />
-                  </details>
-                  <Button
-                    onClick={() => { removeSection(selectedBand, selectedId); deselect(); }}
-                    size="small"
-                    variant="critical"
-                  >
-                    <Trash2 aria-hidden="true" size={13} /> {t("editor.removeSection")}
-                  </Button>
-                </>
-              )}
-            </div>
-          </aside>
-        ) : null}
+        {!fullscreen && hasRightPanel && selected && selectedId ? (() => {
+          const node = selectedBlock ?? selected;
+          const defs = selectedBlock ? (selectedBlockDef?.settings ?? []) : (data?.sectionSchemas?.[selected.type]?.settings ?? []);
+          const covered = new Set(defs.map((def) => def.id).filter(Boolean));
+          const extras = Object.entries(node.settings ?? {}).filter(([ key ]) => !covered.has(key));
+          const onChange = (key: string, value: unknown) => (selectedBlock ? setBlockSetting(key, value) : setSetting(selectedId, key, value));
+          return (
+            <SettingsPanel
+              ctx={controlCtx}
+              customCss={selectedBlock ? undefined : {
+                value: selected.custom_css ?? "",
+                open: customCssOpen,
+                onToggle: (open) => { setCustomCssOpen(open); syncStateParams({ customCss: open ? "true" : null }); },
+                onChange: (value) => applyOp(selectedBand, (tpl) => {
+                  const entry = tpl.sections?.[selectedId];
+                  if (!entry) return;
+                  if (value) entry.custom_css = value;
+                  else delete entry.custom_css;
+                }),
+              }}
+              defs={defs}
+              extras={extras.map(([ key, value ]) => (
+                <FallbackControl key={key} name={key} onChange={(next) => onChange(key, next)} value={value} />
+              ))}
+              kind={selectedBlock ? "block" : "section"}
+              menu={{
+                onCopy: () => copyNode(selectedBand, selectedId, selectedPath),
+                onDuplicate: selectedBlock?.static ? undefined : () => duplicateNode(selectedBand, selectedId, selectedPath),
+                onRename: () => startRename(selectedBand, selectedId, selectedPath),
+                onToggleHidden: () => toggleNodeDisabled(selectedBand, selectedId, selectedPath),
+                hidden: Boolean(node.disabled),
+                onEditCode: () => openCode(selectedBand, selectedId, selectedPath),
+                onRemove: selectedBlock?.static ? undefined : () => removeNode(selectedBand, selectedId, selectedPath),
+              }}
+              onChange={onChange}
+              onClose={deselect}
+              onRenameCancel={() => setRenaming(false)}
+              onRenameChange={setRenameValue}
+              onRenameCommit={commitRename}
+              removeLabel={selectedBlock ? t("editor.blockRemove", { id: selectedBlockId ?? "" }) : t("editor.removeSection")}
+              renameValue={renameValue}
+              renaming={renaming}
+              scope={{ block: selectedBlock?.settings, section: selected.settings ?? {}, settings: settingsDraft ?? {} }}
+              themeSettings={selectedBlock ? undefined : { defs: themeRefDefs, values: settingsDraft ?? {}, onChange: setThemeSetting }}
+              title={panelTitle}
+              typeIcon={selectedBlock ? <Box size={16} /> : <Layers size={16} />}
+              values={node.settings ?? {}}
+            />
+          );
+        })() : null}
+        <ImagePickerModal
+          onClose={() => setImagePicker(null)}
+          onPick={(value) => { imagePicker?.onChange(value); setImagePicker(null); }}
+          open={imagePicker !== null}
+          title={imagePicker?.def.label ?? imagePicker?.def.id ?? ""}
+        />
       </div>
 
       <ShortcutsDialog onClose={() => setShortcutsOpen(false)} open={shortcutsOpen} />
