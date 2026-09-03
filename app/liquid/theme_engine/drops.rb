@@ -2135,6 +2135,13 @@ module ThemeEngine
 
         resolve_settings_image(val)
       when "font_picker" then FontLibrary.drop(val) # 步 13a：handle → 真 font drop（97 §1）
+      when "link_list"
+        # E3c：`link_list` 型 setting 回 linklist 物件（Ella header：`header_settings.menu.links`），
+        # 不是 handle 字串——原本回字串 ⇒ `.links` 為 nil ⇒ 整條主選單空白（demo 店 2026-09-03 實錘）。
+        # 走 `linklists` 全域 drop 查（同一 shop 語境與 url 前綴）；空值或查無 ⇒ nil（for 迴圈自然為空）。
+        return nil if val.nil? || val == ""
+
+        @context&.[]("linklists")&.liquid_method_missing(val.to_s)
       when "video_url"
         # 官方：空 ⇒ nil；非空 ⇒ URL 字串＋id/type（PR-16；解析不出 host 的
         # 值一樣回 nil——不可播的 URL 對主題等同未填）
