@@ -10,7 +10,8 @@
   `font-weight:500 !important` 注入（memory `measurement-env-contamination`；鐵律 22.4 量測環境消融）。
 - 子命令：
   - `capture <url> <out.json> [--width 1280] [--height 900] [--wait 1500] [--open-details 1] [--cookie "n=v; n2=v2"]`：（E13：`--cookie` 導航前以
-    `Network.setCookie` 設到目標 URL，量登入牆後的編輯器預覽；JSON 只記 cookie name）`Page.navigate` → `loadEventFired` →
+    `Network.setCookie` 設到目標 URL，量登入牆後的編輯器預覽；JSON 只記 cookie name；E14：`--block "pat1,pat2"` 導航前
+    `Network.setBlockedURLs`，擋本尊編輯器執行期才量得到設計模式頁，JSON 記 `blocked`）`Page.navigate` → `loadEventFired` →
     `document.fonts.ready` → settle → 逐元素收集（見 §1）；另記診斷（頁內例外、console error／warn、載入失敗、4xx／5xx）。
   - `diff <ref.json> <cand.json> [--out report.md] [--limit 60]`：逐段（section wrapper）→ 逐元素（鍵）→ 逐屬性；輸出段落表＋差異明細。
   - `inspect <url> <selector> [--props a,b] [--all 1]`：`CSS.getMatchedStylesForNode` 列命中規則（來源樣式表、selector、宣告）。

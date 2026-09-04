@@ -4134,3 +4134,19 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **⚪ 時間性 countdown**：商品頁 `main` 與購物車頁 `cart-section` 的倒數文字寬隨擷取時刻不同（同 §3.79）。
 - **登記 本機 staff cookie 產生法為倉庫外腳本**：`issue_local_session.rb`（建指派＋`Session.issue!`＋加密 cookie＋`Rack::Utils.escape`）產物是憑證，
   不入倉；重跑法寫在 e13 doc §0／§5。若日後要在 bt3 量生產預覽，需另裁定（在生產建 session 列＝管理者操作）。
+
+### 3.81 E14 本尊編輯器預覽擷取（A′）取得後的更正、未取得與範圍外（2026-09-04）
+
+- **更正 §3.80 第一條**：A′ 已取得（2026-09-04）——取法＝使用者從編輯器分頁 DevTools 貼出預覽文件請求（`pnrjnw-sy.myshopify.com/?oseid=…`），
+  headless 以 `--block "visual-preview-modules,storefront-modules"` 量（e13 doc §4）。§3.80 所寫「需前景視窗」只是前置，前景後仍需 DevTools。
+- **更正 §3.80 第二條**：本尊對 iframe 的注入＝上述兩支執行期；量測時擋掉，其覆疊層／CSS 仍**未量到**（V 保留，射程縮小為「執行期覆疊層」）。
+- **V 商品頁 A′**：擋掉執行期後 recommendations／recently-viewed 的 fetch 被 abort（攔截器補 `oseid` 的責任在該執行期）⇒ 骨架未換；該段以 E12 店面對表為準。
+- **V `__root__` 兩項**：本尊 DOM 的 `PopupModal-product-tabs-video`／`PopupModal-…__popup_link_desc_video` 抽屜來源（伺服器 HTML 與 section fetch 皆無）；
+  `#Drawer-Search` 內容 `margin-inline-start: auto` 的報告值 920 vs 0（`offsetLeft` 皆 920、命中規則相同——量測面，同 §3.79 details 案）。
+- **V 在地名只有 zh-CN**：字典由本尊 zh-CN 店面輸出整理；其他語言退英文名（本尊在地名未取得）。
+- **🔴 假設（待使用者確認）**：以本尊渲染輸出整理的國家／子區域清單作平台字典 `config/country_option_tags.json`（地名事實資料，非文案）。不接受 ⇒ 退回
+  ISO 3166（countries gem）並登記集合／命名差（external-facts §G20 列全）。
+- **⚪ 編輯器標記契約差**：本尊 `data-shopify-editor-section="{&quot;id&quot;:&quot;sections--{gid}__key&quot;,&quot;type&quot;:…,&quot;disabled&quot;:false}"`
+  （完整 id、雙引號 HTML 跳脫、含 disabled）、block id `{section full id}__{block key}`、`<style data-shopify data-shopify-editor="{accessedSettings:[…]}">`
+  ；我方單引號裸 JSON、裸 key。Ella 的 JS 不讀這些屬性（`grep shopify-editor assets/*.js` 零命中），只供各自的編輯器執行期；computed 無差。
+- **⚪ `__head__` 平台注入**：`OnlineStoreEditorShopifyGlobalData`／`OnlineStoreEditorData`（3.2MB JSON）／storefront-modules 兩支 script——本尊編輯器管線。

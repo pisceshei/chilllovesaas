@@ -164,10 +164,12 @@ module ThemeEngine
         # ——v1 無 offsite provider ⇒ false/空；先前靠 miss-nil 碰巧 falsy，現落實）。
         "additional_checkout_buttons" => false,
         "content_for_additional_checkout_buttons" => "",
-        # 運費試算表單的國家 select（Ella cart-shipping-calculator:28）：值域＝
-        # active market ∩ 有費率 zone（85 §6 官方交集句，與結帳頁國家下拉同源——鐵律 7）。
-        # ⚠ 顯示名暫用國碼（國家名字典隨 markets 幣別/在地化包，登記 86）。
-        "all_country_option_tags" => country_option_tags(shop)
+        # E14（2026-09-04 A′ 實測更正）：`all_country_option_tags`＝全部國家（官方 "Creates an <option> tag for each country."；
+        # 本尊編輯器設計模式渲染 Ella cart-shipping-calculator 出 238 個 option），`country_option_tags`＝運送區域內國家
+        # （active market ∩ 有費率 zone——與結帳頁國家下拉同源，鐵律 7）。先前把前者做成後者的語義且格式只有國碼
+        # （E12／E13 店面對表看不到：cart drawer 內容在非設計模式為互動時才取）。形＝ThemeEngine::CountryOptionTags。
+        "all_country_option_tags" => CountryOptionTags.all(locale:),
+        "country_option_tags" => CountryOptionTags.only(sellable_country_codes(shop), locale:)
       }
     end
 
@@ -188,12 +190,9 @@ module ThemeEngine
       @global_assigns[key.to_s] = value
     end
 
-    # `<option>` 串（86 §6 官方 all_country_option_tags 對位）。HTML escape 不需要
-    # ——值域是 RateResolver 驗過形的大寫 ISO 國碼。
-    def country_option_tags(shop)
+    # `country_option_tags` 的值域（85 §6 官方交集句：market ∩ 有費率 zone；大寫 ISO 碼）；形交給 CountryOptionTags。
+    def sellable_country_codes(shop)
       ActsAsTenant.with_tenant(shop) { Checkouts::RateResolver.sellable_countries(shop:) }
-                  .map { |code| %(<option value="#{code}">#{code}</option>) }
-                  .join
     end
 
     # ---- 來源讀取與快取 -----------------------------------------------------

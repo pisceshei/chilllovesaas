@@ -1447,3 +1447,33 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   `read_network_requests`（pattern hoko.vip）零請求，重載後亦同 ⇒ 預覽未載入；`?preview_theme_id=143506604135` 在乾淨 headless Chrome 可直接渲染
   副本主題（`Shopify.theme.role = "unpublished"`、`name = "Copy of ella-7-2-0-theme-source"`），與 live 首頁 computed 20/21（差本尊預覽列）。
   未取得：本尊編輯器預覽文件 URL、其對 iframe 的注入內容、是否需 cookie／簽名短效。
+
+### G20. 本尊編輯器預覽文件與 `all_country_option_tags`（E14 依據，取證 2026-09-04）
+
+- **本尊編輯器預覽文件（使用者 Chrome DevTools › Network › Doc，2026-09-04 貼出；票證值不記）**：`https://pnrjnw-sy.myshopify.com/?oseid=<id>`、
+  `…?oseid=<id>&source=visualPreviewInitialLoad`（×2）；不在 hoko.vip（篩 hoko.vip 643 筆零命中）。curl 不帶 source：200、4.29MB、
+  `<html class="no-js shopify-design-mode" lang="zh-CN">`、`Shopify.designMode = true`、20 個 `id="shopify-section-…"`、20 個 `data-shopify-editor-section`；
+  帶 source：200、3.24MB、零 section、`<main>` 空殼。head 另有 `<script id="OnlineStoreEditorShopifyGlobalData">var Shopify = { designMode: true, oseid: …`、
+  `<script id="OnlineStoreEditorData" type="application/json">`（3.2MB）、`storefront-modules-*.js`／`async-storefront-modules-*.index.js`
+  （`cdn.shopify.com/shopifycloud/online-store-web/assets/main/`）；Ella 的 `theme-editor.js` 兩邊都載。
+- **執行期改寫導航（第一方 JS，`storefront-modules-cae8441683331fb43e63ceb73316c396cf575554.1.js`，192KB，2026-09-04 逐字片段）**：
+  `const Gi="shopify-section",ji="OnlineStoreEditorData",bt="oseid",Et="osectx"`；`…{oseid:Br,oseResourceUpdatedAt:fu})}),d=`https://${s}${i}?${f}`;
+  r?.ignoreInBrowserHistory?window.location.replace(d):window.location.assign(d)`；`throw Hp("oseid could not be accessed from window.Shopify.oseid in
+  LocationBehavior.ts.")`。headless 只擋 visual-preview 時仍被改寫到 `?ose=…`（`Shopify.theme.id` 143469576295、`html.js no-touch`）；擋
+  `storefront-modules` 後保持設計模式（theme 143506604135、20 段）。hoko.vip live 快照不含 `storefront-modules`（`grep -l` 零命中）。
+- **`all_country_option_tags`（<https://shopify.dev/docs/api/liquid/objects/all_country_option_tags>，2026-09-04）**逐字："Creates an `<option>` tag
+  for each country."；每個 option 有 `data-provinces`＝子區域 JSON 陣列，無子區域為空陣列。
+  **`country_option_tags`（<https://shopify.dev/docs/api/liquid/objects/country_option_tags>，2026-09-04）**逐字："Creates an `<option>` tag for each
+  country and region that's included in a shipping zone on the Shipping page of the Shopify admin."；"An attribute called `data-provinces` is set for
+  each `<option>`, and contains a JSON-encoded array of the country or region's subregions."；例 `<option value="Afghanistan" data-provinces="[]">Afghanistan</option>`；
+  同頁另一句："To return all countries and regions included in the store's shipping zones, use `all_country_option_tags`."（與前頁矛盾；順序未逐字）。
+- **本尊實測（A′ 設計模式渲染 Ella cart-shipping-calculator，zh-CN 店面，2026-09-04）**：238 個 option；首項 `<option value="---" data-provinces="[]">---</option>`；
+  `value`＝英文國名（`value="Côte d'Ivoire"` 保留 `'`）、文字＝zh-CN 在地名（`香港特别行政区`）、`data-provinces="[[&quot;Hong Kong Island&quot;,&quot;香港岛&quot;],…]"`
+  （`&quot;`／`&#39;` 跳脫；37 國有子區域，共 1128）；順序＝在地名的碼位排序（Python `sorted` 同序）。hoko 只有 HK 運送區域仍出 238 ⇒ 「全部國家」。
+  與 ISO 3166（countries gem 8.1.0，MIT）對照：本尊少 21 碼（AQ／AS／AX／BV／CM／CU／FM／GU／HM／IR／KP／MD／MH／MP／PR／PS／PW／SY／TL／VC／VI）、
+  多 9 個非 ISO 名（Timor Leste／Republic of Cameroon／St. Vincent／Aland Islands／Palestinian Territory, Occupied／Moldova, Republic of／
+  Tristan da Cunha／Kosovo／Ascension Island）、23 個命名差、37 國中 12 國省份數不同（HK 三區非 ISO）；gem 的 zh 譯名為 nil。
+  未取得：其他語言的在地名、順序規則的官方說明、value 的英文名與 checkout 國家名是否同源。
+- **Ella `sections/section-product-tabs.liquid` L317–L320**：inline script `if (document.getElementById('PopupModal-product-tabs-video')) return;` 建
+  `<side-drawer … id="PopupModal-product-tabs-video" data-moved="true">`——本尊設計模式 DOM 有此抽屜與 `PopupModal-…__popup_link_desc_video`，
+  但兩邊伺服器 HTML 與 multitasking bar 的 section fetch 回應皆無該字串；來源未取得。

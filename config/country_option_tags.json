@@ -1,0 +1,8703 @@
+[
+  {
+    "code": "AF",
+    "name": "Afghanistan",
+    "labels": {
+      "zh-CN": "阿富汗"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AX",
+    "name": "Aland Islands",
+    "labels": {
+      "zh-CN": "奥兰群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AL",
+    "name": "Albania",
+    "labels": {
+      "zh-CN": "阿尔巴尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "DZ",
+    "name": "Algeria",
+    "labels": {
+      "zh-CN": "阿尔及利亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AD",
+    "name": "Andorra",
+    "labels": {
+      "zh-CN": "安道尔"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AO",
+    "name": "Angola",
+    "labels": {
+      "zh-CN": "安哥拉"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AI",
+    "name": "Anguilla",
+    "labels": {
+      "zh-CN": "安圭拉"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AG",
+    "name": "Antigua And Barbuda",
+    "labels": {
+      "zh-CN": "安提瓜和巴布达"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AR",
+    "name": "Argentina",
+    "labels": {
+      "zh-CN": "阿根廷"
+    },
+    "provinces": [
+      {
+        "name": "Buenos Aires",
+        "labels": {
+          "zh-CN": "布宜诺斯艾利斯省"
+        }
+      },
+      {
+        "name": "Catamarca",
+        "labels": {
+          "zh-CN": "卡塔马卡省"
+        }
+      },
+      {
+        "name": "Chaco",
+        "labels": {
+          "zh-CN": "查科省"
+        }
+      },
+      {
+        "name": "Chubut",
+        "labels": {
+          "zh-CN": "丘布特省"
+        }
+      },
+      {
+        "name": "Ciudad Autónoma de Buenos Aires",
+        "labels": {
+          "zh-CN": "布宜诺斯艾利斯自治市"
+        }
+      },
+      {
+        "name": "Corrientes",
+        "labels": {
+          "zh-CN": "科连特斯省"
+        }
+      },
+      {
+        "name": "Córdoba",
+        "labels": {
+          "zh-CN": "科尔多瓦省"
+        }
+      },
+      {
+        "name": "Entre Ríos",
+        "labels": {
+          "zh-CN": "恩特雷里奥斯省"
+        }
+      },
+      {
+        "name": "Formosa",
+        "labels": {
+          "zh-CN": "福爾摩沙省"
+        }
+      },
+      {
+        "name": "Jujuy",
+        "labels": {
+          "zh-CN": "胡胡伊省"
+        }
+      },
+      {
+        "name": "La Pampa",
+        "labels": {
+          "zh-CN": "拉潘帕省"
+        }
+      },
+      {
+        "name": "La Rioja",
+        "labels": {
+          "zh-CN": "拉里奥哈省"
+        }
+      },
+      {
+        "name": "Mendoza",
+        "labels": {
+          "zh-CN": "门多萨省"
+        }
+      },
+      {
+        "name": "Misiones",
+        "labels": {
+          "zh-CN": "米西奧內斯省"
+        }
+      },
+      {
+        "name": "Neuquén",
+        "labels": {
+          "zh-CN": "内乌肯省"
+        }
+      },
+      {
+        "name": "Río Negro",
+        "labels": {
+          "zh-CN": "内格罗河省"
+        }
+      },
+      {
+        "name": "Salta",
+        "labels": {
+          "zh-CN": "萨尔塔省"
+        }
+      },
+      {
+        "name": "San Juan",
+        "labels": {
+          "zh-CN": "圣胡安省"
+        }
+      },
+      {
+        "name": "San Luis",
+        "labels": {
+          "zh-CN": "圣路易省"
+        }
+      },
+      {
+        "name": "Santa Cruz",
+        "labels": {
+          "zh-CN": "圣克鲁斯省"
+        }
+      },
+      {
+        "name": "Santa Fe",
+        "labels": {
+          "zh-CN": "聖大非省"
+        }
+      },
+      {
+        "name": "Santiago Del Estero",
+        "labels": {
+          "zh-CN": "圣地亚哥－德尔埃斯特罗省"
+        }
+      },
+      {
+        "name": "Tierra Del Fuego",
+        "labels": {
+          "zh-CN": "火地岛省"
+        }
+      },
+      {
+        "name": "Tucumán",
+        "labels": {
+          "zh-CN": "图库曼省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "AM",
+    "name": "Armenia",
+    "labels": {
+      "zh-CN": "亚美尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AW",
+    "name": "Aruba",
+    "labels": {
+      "zh-CN": "阿鲁巴"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AC",
+    "name": "Ascension Island",
+    "labels": {
+      "zh-CN": "阿森松岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AU",
+    "name": "Australia",
+    "labels": {
+      "zh-CN": "澳大利亚"
+    },
+    "provinces": [
+      {
+        "name": "Australian Capital Territory",
+        "labels": {
+          "zh-CN": "澳大利亞首都特區"
+        }
+      },
+      {
+        "name": "New South Wales",
+        "labels": {
+          "zh-CN": "新南威爾士州"
+        }
+      },
+      {
+        "name": "Northern Territory",
+        "labels": {
+          "zh-CN": "北領地"
+        }
+      },
+      {
+        "name": "Queensland",
+        "labels": {
+          "zh-CN": "昆士蘭州"
+        }
+      },
+      {
+        "name": "South Australia",
+        "labels": {
+          "zh-CN": "南澳大利亚州"
+        }
+      },
+      {
+        "name": "Tasmania",
+        "labels": {
+          "zh-CN": "塔斯馬尼亞州"
+        }
+      },
+      {
+        "name": "Victoria",
+        "labels": {
+          "zh-CN": "維多利亞州"
+        }
+      },
+      {
+        "name": "Western Australia",
+        "labels": {
+          "zh-CN": "西澳大利亚州"
+        }
+      }
+    ]
+  },
+  {
+    "code": "AT",
+    "name": "Austria",
+    "labels": {
+      "zh-CN": "奥地利"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AZ",
+    "name": "Azerbaijan",
+    "labels": {
+      "zh-CN": "阿塞拜疆"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BS",
+    "name": "Bahamas",
+    "labels": {
+      "zh-CN": "巴哈马"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BH",
+    "name": "Bahrain",
+    "labels": {
+      "zh-CN": "巴林"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BD",
+    "name": "Bangladesh",
+    "labels": {
+      "zh-CN": "孟加拉国"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BB",
+    "name": "Barbados",
+    "labels": {
+      "zh-CN": "巴巴多斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BY",
+    "name": "Belarus",
+    "labels": {
+      "zh-CN": "白俄罗斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BE",
+    "name": "Belgium",
+    "labels": {
+      "zh-CN": "比利时"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BZ",
+    "name": "Belize",
+    "labels": {
+      "zh-CN": "伯利兹"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BJ",
+    "name": "Benin",
+    "labels": {
+      "zh-CN": "贝宁"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BM",
+    "name": "Bermuda",
+    "labels": {
+      "zh-CN": "百慕大"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BT",
+    "name": "Bhutan",
+    "labels": {
+      "zh-CN": "不丹"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BO",
+    "name": "Bolivia",
+    "labels": {
+      "zh-CN": "玻利维亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BA",
+    "name": "Bosnia And Herzegovina",
+    "labels": {
+      "zh-CN": "波斯尼亚和黑塞哥维那"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BW",
+    "name": "Botswana",
+    "labels": {
+      "zh-CN": "博茨瓦纳"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BR",
+    "name": "Brazil",
+    "labels": {
+      "zh-CN": "巴西"
+    },
+    "provinces": [
+      {
+        "name": "Acre",
+        "labels": {
+          "zh-CN": "阿克里州"
+        }
+      },
+      {
+        "name": "Alagoas",
+        "labels": {
+          "zh-CN": "阿拉戈斯州"
+        }
+      },
+      {
+        "name": "Amapá",
+        "labels": {
+          "zh-CN": "阿马帕"
+        }
+      },
+      {
+        "name": "Amazonas",
+        "labels": {
+          "zh-CN": "亚马孙州"
+        }
+      },
+      {
+        "name": "Bahia",
+        "labels": {
+          "zh-CN": "巴伊亚"
+        }
+      },
+      {
+        "name": "Ceará",
+        "labels": {
+          "zh-CN": "塞阿腊"
+        }
+      },
+      {
+        "name": "Distrito Federal",
+        "labels": {
+          "zh-CN": "聯邦區"
+        }
+      },
+      {
+        "name": "Espírito Santo",
+        "labels": {
+          "zh-CN": "圣埃斯皮里图州"
+        }
+      },
+      {
+        "name": "Goiás",
+        "labels": {
+          "zh-CN": "戈亚斯"
+        }
+      },
+      {
+        "name": "Maranhão",
+        "labels": {
+          "zh-CN": "马拉尼昂州"
+        }
+      },
+      {
+        "name": "Mato Grosso",
+        "labels": {
+          "zh-CN": "马托格罗索州"
+        }
+      },
+      {
+        "name": "Mato Grosso do Sul",
+        "labels": {
+          "zh-CN": "南马托格罗索州"
+        }
+      },
+      {
+        "name": "Minas Gerais",
+        "labels": {
+          "zh-CN": "米纳斯吉拉斯"
+        }
+      },
+      {
+        "name": "Paraná",
+        "labels": {
+          "zh-CN": "巴拉那州"
+        }
+      },
+      {
+        "name": "Paraíba",
+        "labels": {
+          "zh-CN": "帕拉伊巴"
+        }
+      },
+      {
+        "name": "Pará",
+        "labels": {
+          "zh-CN": "帕拉"
+        }
+      },
+      {
+        "name": "Pernambuco",
+        "labels": {
+          "zh-CN": "伯南布哥"
+        }
+      },
+      {
+        "name": "Piauí",
+        "labels": {
+          "zh-CN": "皮奧伊州"
+        }
+      },
+      {
+        "name": "Rio Grande do Norte",
+        "labels": {
+          "zh-CN": "北里约格朗德"
+        }
+      },
+      {
+        "name": "Rio Grande do Sul",
+        "labels": {
+          "zh-CN": "南里奥格兰德州"
+        }
+      },
+      {
+        "name": "Rio de Janeiro",
+        "labels": {
+          "zh-CN": "里約熱內盧州"
+        }
+      },
+      {
+        "name": "Rondônia",
+        "labels": {
+          "zh-CN": "朗多尼亚州"
+        }
+      },
+      {
+        "name": "Roraima",
+        "labels": {
+          "zh-CN": "羅賴馬州"
+        }
+      },
+      {
+        "name": "Santa Catarina",
+        "labels": {
+          "zh-CN": "圣卡塔琳娜州"
+        }
+      },
+      {
+        "name": "Sergipe",
+        "labels": {
+          "zh-CN": "塞尔希培州"
+        }
+      },
+      {
+        "name": "São Paulo",
+        "labels": {
+          "zh-CN": "圣保罗州"
+        }
+      },
+      {
+        "name": "Tocantins",
+        "labels": {
+          "zh-CN": "托坎廷斯"
+        }
+      }
+    ]
+  },
+  {
+    "code": "IO",
+    "name": "British Indian Ocean Territory",
+    "labels": {
+      "zh-CN": "英属印度洋领地"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BN",
+    "name": "Brunei",
+    "labels": {
+      "zh-CN": "文莱"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BG",
+    "name": "Bulgaria",
+    "labels": {
+      "zh-CN": "保加利亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BF",
+    "name": "Burkina Faso",
+    "labels": {
+      "zh-CN": "布基纳法索"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BI",
+    "name": "Burundi",
+    "labels": {
+      "zh-CN": "布隆迪"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KH",
+    "name": "Cambodia",
+    "labels": {
+      "zh-CN": "柬埔寨"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CA",
+    "name": "Canada",
+    "labels": {
+      "zh-CN": "加拿大"
+    },
+    "provinces": [
+      {
+        "name": "Alberta",
+        "labels": {
+          "zh-CN": "艾伯塔"
+        }
+      },
+      {
+        "name": "British Columbia",
+        "labels": {
+          "zh-CN": "不列颠哥伦比亚"
+        }
+      },
+      {
+        "name": "Manitoba",
+        "labels": {
+          "zh-CN": "曼尼托巴"
+        }
+      },
+      {
+        "name": "New Brunswick",
+        "labels": {
+          "zh-CN": "新不倫瑞克"
+        }
+      },
+      {
+        "name": "Newfoundland and Labrador",
+        "labels": {
+          "zh-CN": "紐芬蘭與拉布拉多"
+        }
+      },
+      {
+        "name": "Northwest Territories",
+        "labels": {
+          "zh-CN": "西北地区"
+        }
+      },
+      {
+        "name": "Nova Scotia",
+        "labels": {
+          "zh-CN": "新斯科舍"
+        }
+      },
+      {
+        "name": "Nunavut",
+        "labels": {
+          "zh-CN": "努納武特"
+        }
+      },
+      {
+        "name": "Ontario",
+        "labels": {
+          "zh-CN": "安大略"
+        }
+      },
+      {
+        "name": "Prince Edward Island",
+        "labels": {
+          "zh-CN": "愛德華王子島"
+        }
+      },
+      {
+        "name": "Quebec",
+        "labels": {
+          "zh-CN": "魁北克"
+        }
+      },
+      {
+        "name": "Saskatchewan",
+        "labels": {
+          "zh-CN": "薩斯喀徹溫"
+        }
+      },
+      {
+        "name": "Yukon",
+        "labels": {
+          "zh-CN": "育空"
+        }
+      }
+    ]
+  },
+  {
+    "code": "CV",
+    "name": "Cape Verde",
+    "labels": {
+      "zh-CN": "佛得角"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BQ",
+    "name": "Caribbean Netherlands",
+    "labels": {
+      "zh-CN": "荷属加勒比区"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KY",
+    "name": "Cayman Islands",
+    "labels": {
+      "zh-CN": "开曼群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CF",
+    "name": "Central African Republic",
+    "labels": {
+      "zh-CN": "中非共和国"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TD",
+    "name": "Chad",
+    "labels": {
+      "zh-CN": "乍得"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CL",
+    "name": "Chile",
+    "labels": {
+      "zh-CN": "智利"
+    },
+    "provinces": [
+      {
+        "name": "Antofagasta",
+        "labels": {
+          "zh-CN": "安托法加斯塔大区"
+        }
+      },
+      {
+        "name": "Araucanía",
+        "labels": {
+          "zh-CN": "阿劳卡尼亚大区"
+        }
+      },
+      {
+        "name": "Arica and Parinacota",
+        "labels": {
+          "zh-CN": "阿里卡和帕里纳科塔大区"
+        }
+      },
+      {
+        "name": "Atacama",
+        "labels": {
+          "zh-CN": "阿塔卡马大区"
+        }
+      },
+      {
+        "name": "Aysén",
+        "labels": {
+          "zh-CN": "伊瓦涅斯将军艾森大区"
+        }
+      },
+      {
+        "name": "Biobío",
+        "labels": {
+          "zh-CN": "比奥比奥大区"
+        }
+      },
+      {
+        "name": "Coquimbo",
+        "labels": {
+          "zh-CN": "科金博大区"
+        }
+      },
+      {
+        "name": "Los Lagos",
+        "labels": {
+          "zh-CN": "湖大区"
+        }
+      },
+      {
+        "name": "Los Ríos",
+        "labels": {
+          "zh-CN": "河大区"
+        }
+      },
+      {
+        "name": "Magallanes",
+        "labels": {
+          "zh-CN": "麦哲伦-智利南极大区"
+        }
+      },
+      {
+        "name": "Maule",
+        "labels": {
+          "zh-CN": "马乌莱大区"
+        }
+      },
+      {
+        "name": "O'Higgins",
+        "labels": {
+          "zh-CN": "奥伊金斯将军解放者大区"
+        }
+      },
+      {
+        "name": "Santiago",
+        "labels": {
+          "zh-CN": "圣地亚哥首都大区"
+        }
+      },
+      {
+        "name": "Tarapacá",
+        "labels": {
+          "zh-CN": "塔拉帕卡大区"
+        }
+      },
+      {
+        "name": "Valparaíso",
+        "labels": {
+          "zh-CN": "瓦尔帕莱索大区"
+        }
+      },
+      {
+        "name": "Ñuble",
+        "labels": {
+          "zh-CN": "Ñuble"
+        }
+      }
+    ]
+  },
+  {
+    "code": "CN",
+    "name": "China",
+    "labels": {
+      "zh-CN": "中国"
+    },
+    "provinces": [
+      {
+        "name": "Anhui",
+        "labels": {
+          "zh-CN": "安徽省"
+        }
+      },
+      {
+        "name": "Beijing",
+        "labels": {
+          "zh-CN": "北京市"
+        }
+      },
+      {
+        "name": "Chongqing",
+        "labels": {
+          "zh-CN": "重庆市"
+        }
+      },
+      {
+        "name": "Fujian",
+        "labels": {
+          "zh-CN": "福建省"
+        }
+      },
+      {
+        "name": "Gansu",
+        "labels": {
+          "zh-CN": "甘肃省"
+        }
+      },
+      {
+        "name": "Guangdong",
+        "labels": {
+          "zh-CN": "广东省"
+        }
+      },
+      {
+        "name": "Guangxi",
+        "labels": {
+          "zh-CN": "广西壮族自治区"
+        }
+      },
+      {
+        "name": "Guizhou",
+        "labels": {
+          "zh-CN": "贵州省"
+        }
+      },
+      {
+        "name": "Hainan",
+        "labels": {
+          "zh-CN": "海南省"
+        }
+      },
+      {
+        "name": "Hebei",
+        "labels": {
+          "zh-CN": "河北省"
+        }
+      },
+      {
+        "name": "Heilongjiang",
+        "labels": {
+          "zh-CN": "黑龙江省"
+        }
+      },
+      {
+        "name": "Henan",
+        "labels": {
+          "zh-CN": "河南省"
+        }
+      },
+      {
+        "name": "Hubei",
+        "labels": {
+          "zh-CN": "湖北省"
+        }
+      },
+      {
+        "name": "Hunan",
+        "labels": {
+          "zh-CN": "湖南省"
+        }
+      },
+      {
+        "name": "Inner Mongolia",
+        "labels": {
+          "zh-CN": "内蒙古自治区"
+        }
+      },
+      {
+        "name": "Jiangsu",
+        "labels": {
+          "zh-CN": "江苏省"
+        }
+      },
+      {
+        "name": "Jiangxi",
+        "labels": {
+          "zh-CN": "江西省"
+        }
+      },
+      {
+        "name": "Jilin",
+        "labels": {
+          "zh-CN": "吉林省"
+        }
+      },
+      {
+        "name": "Liaoning",
+        "labels": {
+          "zh-CN": "辽宁省"
+        }
+      },
+      {
+        "name": "Ningxia",
+        "labels": {
+          "zh-CN": "宁夏回族自治区"
+        }
+      },
+      {
+        "name": "Qinghai",
+        "labels": {
+          "zh-CN": "青海省"
+        }
+      },
+      {
+        "name": "Shaanxi",
+        "labels": {
+          "zh-CN": "陕西省"
+        }
+      },
+      {
+        "name": "Shandong",
+        "labels": {
+          "zh-CN": "山东省"
+        }
+      },
+      {
+        "name": "Shanghai",
+        "labels": {
+          "zh-CN": "上海市"
+        }
+      },
+      {
+        "name": "Shanxi",
+        "labels": {
+          "zh-CN": "山西省"
+        }
+      },
+      {
+        "name": "Sichuan",
+        "labels": {
+          "zh-CN": "四川省"
+        }
+      },
+      {
+        "name": "Tianjin",
+        "labels": {
+          "zh-CN": "天津市"
+        }
+      },
+      {
+        "name": "Xinjiang",
+        "labels": {
+          "zh-CN": "新疆维吾尔自治区"
+        }
+      },
+      {
+        "name": "Xizang",
+        "labels": {
+          "zh-CN": "西藏自治区"
+        }
+      },
+      {
+        "name": "Yunnan",
+        "labels": {
+          "zh-CN": "云南省"
+        }
+      },
+      {
+        "name": "Zhejiang",
+        "labels": {
+          "zh-CN": "浙江省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "CX",
+    "name": "Christmas Island",
+    "labels": {
+      "zh-CN": "圣诞岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CC",
+    "name": "Cocos (Keeling) Islands",
+    "labels": {
+      "zh-CN": "科科斯（基林）群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CO",
+    "name": "Colombia",
+    "labels": {
+      "zh-CN": "哥伦比亚"
+    },
+    "provinces": [
+      {
+        "name": "Amazonas",
+        "labels": {
+          "zh-CN": "亚马孙省"
+        }
+      },
+      {
+        "name": "Antioquia",
+        "labels": {
+          "zh-CN": "安蒂奥基亚省"
+        }
+      },
+      {
+        "name": "Arauca",
+        "labels": {
+          "zh-CN": "阿劳卡省"
+        }
+      },
+      {
+        "name": "Atlántico",
+        "labels": {
+          "zh-CN": "大西洋省"
+        }
+      },
+      {
+        "name": "Bogotá, D.C.",
+        "labels": {
+          "zh-CN": "波哥大"
+        }
+      },
+      {
+        "name": "Bolívar",
+        "labels": {
+          "zh-CN": "玻利瓦尔省"
+        }
+      },
+      {
+        "name": "Boyacá",
+        "labels": {
+          "zh-CN": "博亚卡省"
+        }
+      },
+      {
+        "name": "Caldas",
+        "labels": {
+          "zh-CN": "卡尔达斯省"
+        }
+      },
+      {
+        "name": "Caquetá",
+        "labels": {
+          "zh-CN": "卡克塔省"
+        }
+      },
+      {
+        "name": "Casanare",
+        "labels": {
+          "zh-CN": "卡萨纳雷省"
+        }
+      },
+      {
+        "name": "Cauca",
+        "labels": {
+          "zh-CN": "考卡省"
+        }
+      },
+      {
+        "name": "Cesar",
+        "labels": {
+          "zh-CN": "塞萨尔省"
+        }
+      },
+      {
+        "name": "Chocó",
+        "labels": {
+          "zh-CN": "乔科省"
+        }
+      },
+      {
+        "name": "Cundinamarca",
+        "labels": {
+          "zh-CN": "昆迪納馬卡省"
+        }
+      },
+      {
+        "name": "Córdoba",
+        "labels": {
+          "zh-CN": "科爾多瓦省 (哥倫比亞)"
+        }
+      },
+      {
+        "name": "Guainía",
+        "labels": {
+          "zh-CN": "瓜伊尼亚省"
+        }
+      },
+      {
+        "name": "Guaviare",
+        "labels": {
+          "zh-CN": "瓜维亚雷省"
+        }
+      },
+      {
+        "name": "Huila",
+        "labels": {
+          "zh-CN": "乌伊拉省"
+        }
+      },
+      {
+        "name": "La Guajira",
+        "labels": {
+          "zh-CN": "瓜希拉省"
+        }
+      },
+      {
+        "name": "Magdalena",
+        "labels": {
+          "zh-CN": "马格达莱纳省"
+        }
+      },
+      {
+        "name": "Meta",
+        "labels": {
+          "zh-CN": "梅塔省"
+        }
+      },
+      {
+        "name": "Nariño",
+        "labels": {
+          "zh-CN": "纳里尼奥省"
+        }
+      },
+      {
+        "name": "Norte de Santander",
+        "labels": {
+          "zh-CN": "北桑坦德省"
+        }
+      },
+      {
+        "name": "Putumayo",
+        "labels": {
+          "zh-CN": "普图马约省"
+        }
+      },
+      {
+        "name": "Quindío",
+        "labels": {
+          "zh-CN": "金迪奥省"
+        }
+      },
+      {
+        "name": "Risaralda",
+        "labels": {
+          "zh-CN": "里萨拉尔达省"
+        }
+      },
+      {
+        "name": "San Andrés, Providencia y Santa Catalina",
+        "labels": {
+          "zh-CN": "聖安德列斯-普羅維登西亞和聖卡塔利娜群島省"
+        }
+      },
+      {
+        "name": "Santander",
+        "labels": {
+          "zh-CN": "桑坦德省"
+        }
+      },
+      {
+        "name": "Sucre",
+        "labels": {
+          "zh-CN": "苏克雷省"
+        }
+      },
+      {
+        "name": "Tolima",
+        "labels": {
+          "zh-CN": "托利马省"
+        }
+      },
+      {
+        "name": "Valle del Cauca",
+        "labels": {
+          "zh-CN": "考卡山谷省"
+        }
+      },
+      {
+        "name": "Vaupés",
+        "labels": {
+          "zh-CN": "沃佩斯省"
+        }
+      },
+      {
+        "name": "Vichada",
+        "labels": {
+          "zh-CN": "比查达省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "KM",
+    "name": "Comoros",
+    "labels": {
+      "zh-CN": "科摩罗"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CG",
+    "name": "Congo",
+    "labels": {
+      "zh-CN": "刚果（布）"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CD",
+    "name": "Congo, The Democratic Republic Of The",
+    "labels": {
+      "zh-CN": "刚果（金）"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CK",
+    "name": "Cook Islands",
+    "labels": {
+      "zh-CN": "库克群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CR",
+    "name": "Costa Rica",
+    "labels": {
+      "zh-CN": "哥斯达黎加"
+    },
+    "provinces": [
+      {
+        "name": "Alajuela",
+        "labels": {
+          "zh-CN": "阿拉胡埃拉省"
+        }
+      },
+      {
+        "name": "Cartago",
+        "labels": {
+          "zh-CN": "卡塔戈省"
+        }
+      },
+      {
+        "name": "Guanacaste",
+        "labels": {
+          "zh-CN": "瓜纳卡斯特省"
+        }
+      },
+      {
+        "name": "Heredia",
+        "labels": {
+          "zh-CN": "埃雷迪亚省"
+        }
+      },
+      {
+        "name": "Limón",
+        "labels": {
+          "zh-CN": "利蒙省"
+        }
+      },
+      {
+        "name": "Puntarenas",
+        "labels": {
+          "zh-CN": "蓬塔雷纳斯省"
+        }
+      },
+      {
+        "name": "San José",
+        "labels": {
+          "zh-CN": "圣何塞省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "HR",
+    "name": "Croatia",
+    "labels": {
+      "zh-CN": "克罗地亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CW",
+    "name": "Curaçao",
+    "labels": {
+      "zh-CN": "库拉索"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CY",
+    "name": "Cyprus",
+    "labels": {
+      "zh-CN": "塞浦路斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CZ",
+    "name": "Czech Republic",
+    "labels": {
+      "zh-CN": "捷克"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CI",
+    "name": "Côte d'Ivoire",
+    "labels": {
+      "zh-CN": "科特迪瓦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "DK",
+    "name": "Denmark",
+    "labels": {
+      "zh-CN": "丹麦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "DJ",
+    "name": "Djibouti",
+    "labels": {
+      "zh-CN": "吉布提"
+    },
+    "provinces": []
+  },
+  {
+    "code": "DM",
+    "name": "Dominica",
+    "labels": {
+      "zh-CN": "多米尼克"
+    },
+    "provinces": []
+  },
+  {
+    "code": "DO",
+    "name": "Dominican Republic",
+    "labels": {
+      "zh-CN": "多米尼加共和国"
+    },
+    "provinces": []
+  },
+  {
+    "code": "EC",
+    "name": "Ecuador",
+    "labels": {
+      "zh-CN": "厄瓜多尔"
+    },
+    "provinces": []
+  },
+  {
+    "code": "EG",
+    "name": "Egypt",
+    "labels": {
+      "zh-CN": "埃及"
+    },
+    "provinces": [
+      {
+        "name": "6th of October",
+        "labels": {
+          "zh-CN": "10 月 6 日"
+        }
+      },
+      {
+        "name": "Al Sharqia",
+        "labels": {
+          "zh-CN": "東部省"
+        }
+      },
+      {
+        "name": "Alexandria",
+        "labels": {
+          "zh-CN": "亞歷山大省"
+        }
+      },
+      {
+        "name": "Aswan",
+        "labels": {
+          "zh-CN": "阿斯旺省"
+        }
+      },
+      {
+        "name": "Asyut",
+        "labels": {
+          "zh-CN": "艾斯尤特省"
+        }
+      },
+      {
+        "name": "Beheira",
+        "labels": {
+          "zh-CN": "布海拉省"
+        }
+      },
+      {
+        "name": "Beni Suef",
+        "labels": {
+          "zh-CN": "贝尼苏韦夫省"
+        }
+      },
+      {
+        "name": "Cairo",
+        "labels": {
+          "zh-CN": "开罗省"
+        }
+      },
+      {
+        "name": "Dakahlia",
+        "labels": {
+          "zh-CN": "代蓋赫利耶省"
+        }
+      },
+      {
+        "name": "Damietta",
+        "labels": {
+          "zh-CN": "杜姆亞特省"
+        }
+      },
+      {
+        "name": "Faiyum",
+        "labels": {
+          "zh-CN": "法尤姆省"
+        }
+      },
+      {
+        "name": "Gharbia",
+        "labels": {
+          "zh-CN": "西部省"
+        }
+      },
+      {
+        "name": "Giza",
+        "labels": {
+          "zh-CN": "吉薩省"
+        }
+      },
+      {
+        "name": "Helwan",
+        "labels": {
+          "zh-CN": "赫勒万"
+        }
+      },
+      {
+        "name": "Ismailia",
+        "labels": {
+          "zh-CN": "伊斯梅利亚省"
+        }
+      },
+      {
+        "name": "Kafr el-Sheikh",
+        "labels": {
+          "zh-CN": "謝赫村省"
+        }
+      },
+      {
+        "name": "Luxor",
+        "labels": {
+          "zh-CN": "盧克索省"
+        }
+      },
+      {
+        "name": "Matrouh",
+        "labels": {
+          "zh-CN": "馬特魯省"
+        }
+      },
+      {
+        "name": "Minya",
+        "labels": {
+          "zh-CN": "明亞省"
+        }
+      },
+      {
+        "name": "Monufia",
+        "labels": {
+          "zh-CN": "米努夫省"
+        }
+      },
+      {
+        "name": "New Valley",
+        "labels": {
+          "zh-CN": "新河谷省"
+        }
+      },
+      {
+        "name": "North Sinai",
+        "labels": {
+          "zh-CN": "北西奈省"
+        }
+      },
+      {
+        "name": "Port Said",
+        "labels": {
+          "zh-CN": "塞得港省"
+        }
+      },
+      {
+        "name": "Qalyubia",
+        "labels": {
+          "zh-CN": "蓋盧比尤省"
+        }
+      },
+      {
+        "name": "Qena",
+        "labels": {
+          "zh-CN": "基納省"
+        }
+      },
+      {
+        "name": "Red Sea",
+        "labels": {
+          "zh-CN": "红海省"
+        }
+      },
+      {
+        "name": "Sohag",
+        "labels": {
+          "zh-CN": "索哈傑省"
+        }
+      },
+      {
+        "name": "South Sinai",
+        "labels": {
+          "zh-CN": "南西奈省"
+        }
+      },
+      {
+        "name": "Suez",
+        "labels": {
+          "zh-CN": "蘇伊士省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "SV",
+    "name": "El Salvador",
+    "labels": {
+      "zh-CN": "萨尔瓦多"
+    },
+    "provinces": [
+      {
+        "name": "Ahuachapán",
+        "labels": {
+          "zh-CN": "阿瓦查潘"
+        }
+      },
+      {
+        "name": "Cabañas",
+        "labels": {
+          "zh-CN": "卡瓦尼亚斯"
+        }
+      },
+      {
+        "name": "Chalatenango",
+        "labels": {
+          "zh-CN": "查拉特南戈"
+        }
+      },
+      {
+        "name": "Cuscatlán",
+        "labels": {
+          "zh-CN": "库斯卡特兰"
+        }
+      },
+      {
+        "name": "La Libertad",
+        "labels": {
+          "zh-CN": "拉利伯塔德"
+        }
+      },
+      {
+        "name": "La Paz",
+        "labels": {
+          "zh-CN": "拉巴斯"
+        }
+      },
+      {
+        "name": "La Unión",
+        "labels": {
+          "zh-CN": "拉乌尼翁"
+        }
+      },
+      {
+        "name": "Morazán",
+        "labels": {
+          "zh-CN": "莫拉桑"
+        }
+      },
+      {
+        "name": "San Miguel",
+        "labels": {
+          "zh-CN": "圣米格尔"
+        }
+      },
+      {
+        "name": "San Salvador",
+        "labels": {
+          "zh-CN": "聖薩爾瓦多"
+        }
+      },
+      {
+        "name": "San Vicente",
+        "labels": {
+          "zh-CN": "圣维森特"
+        }
+      },
+      {
+        "name": "Santa Ana",
+        "labels": {
+          "zh-CN": "圣安娜"
+        }
+      },
+      {
+        "name": "Sonsonate",
+        "labels": {
+          "zh-CN": "松索纳特"
+        }
+      },
+      {
+        "name": "Usulután",
+        "labels": {
+          "zh-CN": "乌苏卢坦"
+        }
+      }
+    ]
+  },
+  {
+    "code": "GQ",
+    "name": "Equatorial Guinea",
+    "labels": {
+      "zh-CN": "赤道几内亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ER",
+    "name": "Eritrea",
+    "labels": {
+      "zh-CN": "厄立特里亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "EE",
+    "name": "Estonia",
+    "labels": {
+      "zh-CN": "爱沙尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SZ",
+    "name": "Eswatini",
+    "labels": {
+      "zh-CN": "斯威士兰"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ET",
+    "name": "Ethiopia",
+    "labels": {
+      "zh-CN": "埃塞俄比亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "FK",
+    "name": "Falkland Islands (Malvinas)",
+    "labels": {
+      "zh-CN": "福克兰群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "FO",
+    "name": "Faroe Islands",
+    "labels": {
+      "zh-CN": "法罗群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "FJ",
+    "name": "Fiji",
+    "labels": {
+      "zh-CN": "斐济"
+    },
+    "provinces": []
+  },
+  {
+    "code": "FI",
+    "name": "Finland",
+    "labels": {
+      "zh-CN": "芬兰"
+    },
+    "provinces": []
+  },
+  {
+    "code": "FR",
+    "name": "France",
+    "labels": {
+      "zh-CN": "法国"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GF",
+    "name": "French Guiana",
+    "labels": {
+      "zh-CN": "法属圭亚那"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PF",
+    "name": "French Polynesia",
+    "labels": {
+      "zh-CN": "法属波利尼西亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TF",
+    "name": "French Southern Territories",
+    "labels": {
+      "zh-CN": "法属南部领地"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GA",
+    "name": "Gabon",
+    "labels": {
+      "zh-CN": "加蓬"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GM",
+    "name": "Gambia",
+    "labels": {
+      "zh-CN": "冈比亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GE",
+    "name": "Georgia",
+    "labels": {
+      "zh-CN": "格鲁吉亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "DE",
+    "name": "Germany",
+    "labels": {
+      "zh-CN": "德国"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GH",
+    "name": "Ghana",
+    "labels": {
+      "zh-CN": "加纳"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GI",
+    "name": "Gibraltar",
+    "labels": {
+      "zh-CN": "直布罗陀"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GR",
+    "name": "Greece",
+    "labels": {
+      "zh-CN": "希腊"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GL",
+    "name": "Greenland",
+    "labels": {
+      "zh-CN": "格陵兰"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GD",
+    "name": "Grenada",
+    "labels": {
+      "zh-CN": "格林纳达"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GP",
+    "name": "Guadeloupe",
+    "labels": {
+      "zh-CN": "瓜德罗普"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GT",
+    "name": "Guatemala",
+    "labels": {
+      "zh-CN": "危地马拉"
+    },
+    "provinces": [
+      {
+        "name": "Alta Verapaz",
+        "labels": {
+          "zh-CN": "上維拉帕斯省"
+        }
+      },
+      {
+        "name": "Baja Verapaz",
+        "labels": {
+          "zh-CN": "下維拉帕斯省"
+        }
+      },
+      {
+        "name": "Chimaltenango",
+        "labels": {
+          "zh-CN": "奇馬爾特南戈省"
+        }
+      },
+      {
+        "name": "Chiquimula",
+        "labels": {
+          "zh-CN": "奇基穆拉省"
+        }
+      },
+      {
+        "name": "El Progreso",
+        "labels": {
+          "zh-CN": "普羅格雷索省"
+        }
+      },
+      {
+        "name": "Escuintla",
+        "labels": {
+          "zh-CN": "埃斯昆特拉省"
+        }
+      },
+      {
+        "name": "Guatemala",
+        "labels": {
+          "zh-CN": "瓜地馬拉省"
+        }
+      },
+      {
+        "name": "Huehuetenango",
+        "labels": {
+          "zh-CN": "韋韋特南戈省"
+        }
+      },
+      {
+        "name": "Izabal",
+        "labels": {
+          "zh-CN": "伊薩瓦爾省"
+        }
+      },
+      {
+        "name": "Jalapa",
+        "labels": {
+          "zh-CN": "哈拉帕省"
+        }
+      },
+      {
+        "name": "Jutiapa",
+        "labels": {
+          "zh-CN": "胡蒂亞帕省"
+        }
+      },
+      {
+        "name": "Petén",
+        "labels": {
+          "zh-CN": "貝登省"
+        }
+      },
+      {
+        "name": "Quetzaltenango",
+        "labels": {
+          "zh-CN": "克薩爾特南戈省"
+        }
+      },
+      {
+        "name": "Quiché",
+        "labels": {
+          "zh-CN": "基切省"
+        }
+      },
+      {
+        "name": "Retalhuleu",
+        "labels": {
+          "zh-CN": "雷塔盧萊烏省"
+        }
+      },
+      {
+        "name": "Sacatepéquez",
+        "labels": {
+          "zh-CN": "薩卡特佩克斯省"
+        }
+      },
+      {
+        "name": "San Marcos",
+        "labels": {
+          "zh-CN": "聖馬科斯省"
+        }
+      },
+      {
+        "name": "Santa Rosa",
+        "labels": {
+          "zh-CN": "聖羅薩省"
+        }
+      },
+      {
+        "name": "Sololá",
+        "labels": {
+          "zh-CN": "索洛拉省"
+        }
+      },
+      {
+        "name": "Suchitepéquez",
+        "labels": {
+          "zh-CN": "蘇奇特佩克斯省"
+        }
+      },
+      {
+        "name": "Totonicapán",
+        "labels": {
+          "zh-CN": "托托尼卡潘省"
+        }
+      },
+      {
+        "name": "Zacapa",
+        "labels": {
+          "zh-CN": "薩卡帕省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "GG",
+    "name": "Guernsey",
+    "labels": {
+      "zh-CN": "根西岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GN",
+    "name": "Guinea",
+    "labels": {
+      "zh-CN": "几内亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GW",
+    "name": "Guinea Bissau",
+    "labels": {
+      "zh-CN": "几内亚比绍"
+    },
+    "provinces": []
+  },
+  {
+    "code": "GY",
+    "name": "Guyana",
+    "labels": {
+      "zh-CN": "圭亚那"
+    },
+    "provinces": []
+  },
+  {
+    "code": "HT",
+    "name": "Haiti",
+    "labels": {
+      "zh-CN": "海地"
+    },
+    "provinces": []
+  },
+  {
+    "code": "VA",
+    "name": "Holy See (Vatican City State)",
+    "labels": {
+      "zh-CN": "梵蒂冈"
+    },
+    "provinces": []
+  },
+  {
+    "code": "HN",
+    "name": "Honduras",
+    "labels": {
+      "zh-CN": "洪都拉斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "HK",
+    "name": "Hong Kong",
+    "labels": {
+      "zh-CN": "香港特别行政区"
+    },
+    "provinces": [
+      {
+        "name": "Hong Kong Island",
+        "labels": {
+          "zh-CN": "香港岛"
+        }
+      },
+      {
+        "name": "Kowloon",
+        "labels": {
+          "zh-CN": "九龙"
+        }
+      },
+      {
+        "name": "New Territories",
+        "labels": {
+          "zh-CN": "新界"
+        }
+      }
+    ]
+  },
+  {
+    "code": "HU",
+    "name": "Hungary",
+    "labels": {
+      "zh-CN": "匈牙利"
+    },
+    "provinces": []
+  },
+  {
+    "code": "IS",
+    "name": "Iceland",
+    "labels": {
+      "zh-CN": "冰岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "IN",
+    "name": "India",
+    "labels": {
+      "zh-CN": "印度"
+    },
+    "provinces": [
+      {
+        "name": "Andaman and Nicobar Islands",
+        "labels": {
+          "zh-CN": "安达曼-尼科巴群岛"
+        }
+      },
+      {
+        "name": "Andhra Pradesh",
+        "labels": {
+          "zh-CN": "安得拉邦"
+        }
+      },
+      {
+        "name": "Arunachal Pradesh",
+        "labels": {
+          "zh-CN": "阿鲁纳恰尔邦"
+        }
+      },
+      {
+        "name": "Assam",
+        "labels": {
+          "zh-CN": "阿萨姆邦"
+        }
+      },
+      {
+        "name": "Bihar",
+        "labels": {
+          "zh-CN": "比哈尔邦"
+        }
+      },
+      {
+        "name": "Chandigarh",
+        "labels": {
+          "zh-CN": "昌迪加尔"
+        }
+      },
+      {
+        "name": "Chhattisgarh",
+        "labels": {
+          "zh-CN": "恰蒂斯加尔邦"
+        }
+      },
+      {
+        "name": "Dadra and Nagar Haveli",
+        "labels": {
+          "zh-CN": "达德拉-纳加尔哈维利"
+        }
+      },
+      {
+        "name": "Daman and Diu",
+        "labels": {
+          "zh-CN": "达曼-第乌"
+        }
+      },
+      {
+        "name": "Delhi",
+        "labels": {
+          "zh-CN": "德里"
+        }
+      },
+      {
+        "name": "Goa",
+        "labels": {
+          "zh-CN": "果阿邦"
+        }
+      },
+      {
+        "name": "Gujarat",
+        "labels": {
+          "zh-CN": "古吉拉特邦"
+        }
+      },
+      {
+        "name": "Haryana",
+        "labels": {
+          "zh-CN": "哈里亚纳邦"
+        }
+      },
+      {
+        "name": "Himachal Pradesh",
+        "labels": {
+          "zh-CN": "喜马偕尔邦"
+        }
+      },
+      {
+        "name": "Jammu and Kashmir",
+        "labels": {
+          "zh-CN": "查谟－克什米尔邦"
+        }
+      },
+      {
+        "name": "Jharkhand",
+        "labels": {
+          "zh-CN": "贾坎德邦"
+        }
+      },
+      {
+        "name": "Karnataka",
+        "labels": {
+          "zh-CN": "卡纳塔克邦"
+        }
+      },
+      {
+        "name": "Kerala",
+        "labels": {
+          "zh-CN": "喀拉拉邦"
+        }
+      },
+      {
+        "name": "Ladakh",
+        "labels": {
+          "zh-CN": "Ladakh"
+        }
+      },
+      {
+        "name": "Lakshadweep",
+        "labels": {
+          "zh-CN": "拉克沙群島"
+        }
+      },
+      {
+        "name": "Madhya Pradesh",
+        "labels": {
+          "zh-CN": "中央邦"
+        }
+      },
+      {
+        "name": "Maharashtra",
+        "labels": {
+          "zh-CN": "马哈拉施特拉邦"
+        }
+      },
+      {
+        "name": "Manipur",
+        "labels": {
+          "zh-CN": "曼尼普尔邦"
+        }
+      },
+      {
+        "name": "Meghalaya",
+        "labels": {
+          "zh-CN": "梅加拉亚邦"
+        }
+      },
+      {
+        "name": "Mizoram",
+        "labels": {
+          "zh-CN": "米佐拉姆邦"
+        }
+      },
+      {
+        "name": "Nagaland",
+        "labels": {
+          "zh-CN": "那加兰邦"
+        }
+      },
+      {
+        "name": "Odisha",
+        "labels": {
+          "zh-CN": "奥里萨邦"
+        }
+      },
+      {
+        "name": "Puducherry",
+        "labels": {
+          "zh-CN": "本地治里"
+        }
+      },
+      {
+        "name": "Punjab",
+        "labels": {
+          "zh-CN": "旁遮普邦"
+        }
+      },
+      {
+        "name": "Rajasthan",
+        "labels": {
+          "zh-CN": "拉贾斯坦邦"
+        }
+      },
+      {
+        "name": "Sikkim",
+        "labels": {
+          "zh-CN": "锡金邦"
+        }
+      },
+      {
+        "name": "Tamil Nadu",
+        "labels": {
+          "zh-CN": "泰米尔纳德邦"
+        }
+      },
+      {
+        "name": "Telangana",
+        "labels": {
+          "zh-CN": "特伦甘纳邦"
+        }
+      },
+      {
+        "name": "Tripura",
+        "labels": {
+          "zh-CN": "特里普拉邦"
+        }
+      },
+      {
+        "name": "Uttar Pradesh",
+        "labels": {
+          "zh-CN": "北方邦"
+        }
+      },
+      {
+        "name": "Uttarakhand",
+        "labels": {
+          "zh-CN": "北阿坎德邦"
+        }
+      },
+      {
+        "name": "West Bengal",
+        "labels": {
+          "zh-CN": "西孟加拉邦"
+        }
+      }
+    ]
+  },
+  {
+    "code": "ID",
+    "name": "Indonesia",
+    "labels": {
+      "zh-CN": "印度尼西亚"
+    },
+    "provinces": [
+      {
+        "name": "Aceh",
+        "labels": {
+          "zh-CN": "亞齊"
+        }
+      },
+      {
+        "name": "Bali",
+        "labels": {
+          "zh-CN": "Bali"
+        }
+      },
+      {
+        "name": "Bangka Belitung",
+        "labels": {
+          "zh-CN": "邦加-勿里洞省"
+        }
+      },
+      {
+        "name": "Banten",
+        "labels": {
+          "zh-CN": "万丹省"
+        }
+      },
+      {
+        "name": "Bengkulu",
+        "labels": {
+          "zh-CN": "明古魯省"
+        }
+      },
+      {
+        "name": "Gorontalo",
+        "labels": {
+          "zh-CN": "哥伦打洛省"
+        }
+      },
+      {
+        "name": "Jakarta",
+        "labels": {
+          "zh-CN": "雅加达"
+        }
+      },
+      {
+        "name": "Jambi",
+        "labels": {
+          "zh-CN": "占碑省"
+        }
+      },
+      {
+        "name": "Jawa Barat",
+        "labels": {
+          "zh-CN": "西爪哇省"
+        }
+      },
+      {
+        "name": "Jawa Tengah",
+        "labels": {
+          "zh-CN": "中爪哇省"
+        }
+      },
+      {
+        "name": "Jawa Timur",
+        "labels": {
+          "zh-CN": "东爪哇省"
+        }
+      },
+      {
+        "name": "Kalimantan Barat",
+        "labels": {
+          "zh-CN": "西加里曼丹省"
+        }
+      },
+      {
+        "name": "Kalimantan Selatan",
+        "labels": {
+          "zh-CN": "南加里曼丹省"
+        }
+      },
+      {
+        "name": "Kalimantan Tengah",
+        "labels": {
+          "zh-CN": "中加里曼丹省"
+        }
+      },
+      {
+        "name": "Kalimantan Timur",
+        "labels": {
+          "zh-CN": "東加里曼丹省"
+        }
+      },
+      {
+        "name": "Kalimantan Utara",
+        "labels": {
+          "zh-CN": "北加里曼丹省"
+        }
+      },
+      {
+        "name": "Kepulauan Riau",
+        "labels": {
+          "zh-CN": "廖内群岛省"
+        }
+      },
+      {
+        "name": "Lampung",
+        "labels": {
+          "zh-CN": "楠榜省"
+        }
+      },
+      {
+        "name": "Maluku",
+        "labels": {
+          "zh-CN": "马鲁古省"
+        }
+      },
+      {
+        "name": "Maluku Utara",
+        "labels": {
+          "zh-CN": "北马鲁古省"
+        }
+      },
+      {
+        "name": "North Sumatra",
+        "labels": {
+          "zh-CN": "北苏门答腊省"
+        }
+      },
+      {
+        "name": "Nusa Tenggara Barat",
+        "labels": {
+          "zh-CN": "西努沙登加拉省"
+        }
+      },
+      {
+        "name": "Nusa Tenggara Timur",
+        "labels": {
+          "zh-CN": "東努沙登加拉省"
+        }
+      },
+      {
+        "name": "Papua",
+        "labels": {
+          "zh-CN": "巴布亚省"
+        }
+      },
+      {
+        "name": "Papua Barat",
+        "labels": {
+          "zh-CN": "西巴布亞省"
+        }
+      },
+      {
+        "name": "Riau",
+        "labels": {
+          "zh-CN": "廖內省"
+        }
+      },
+      {
+        "name": "South Sumatra",
+        "labels": {
+          "zh-CN": "南苏门答腊省"
+        }
+      },
+      {
+        "name": "Sulawesi Barat",
+        "labels": {
+          "zh-CN": "西苏拉威西省"
+        }
+      },
+      {
+        "name": "Sulawesi Selatan",
+        "labels": {
+          "zh-CN": "南苏拉威西省"
+        }
+      },
+      {
+        "name": "Sulawesi Tengah",
+        "labels": {
+          "zh-CN": "中苏拉威西省"
+        }
+      },
+      {
+        "name": "Sulawesi Tenggara",
+        "labels": {
+          "zh-CN": "东南苏拉威西省"
+        }
+      },
+      {
+        "name": "Sulawesi Utara",
+        "labels": {
+          "zh-CN": "北苏拉威西省"
+        }
+      },
+      {
+        "name": "West Sumatra",
+        "labels": {
+          "zh-CN": "西苏门答腊省"
+        }
+      },
+      {
+        "name": "Yogyakarta",
+        "labels": {
+          "zh-CN": "日惹特区"
+        }
+      }
+    ]
+  },
+  {
+    "code": "IQ",
+    "name": "Iraq",
+    "labels": {
+      "zh-CN": "伊拉克"
+    },
+    "provinces": []
+  },
+  {
+    "code": "IE",
+    "name": "Ireland",
+    "labels": {
+      "zh-CN": "爱尔兰"
+    },
+    "provinces": [
+      {
+        "name": "Carlow",
+        "labels": {
+          "zh-CN": "卡洛郡"
+        }
+      },
+      {
+        "name": "Cavan",
+        "labels": {
+          "zh-CN": "卡文郡"
+        }
+      },
+      {
+        "name": "Clare",
+        "labels": {
+          "zh-CN": "克莱尔郡"
+        }
+      },
+      {
+        "name": "Cork",
+        "labels": {
+          "zh-CN": "科克郡"
+        }
+      },
+      {
+        "name": "Donegal",
+        "labels": {
+          "zh-CN": "多尼戈爾郡"
+        }
+      },
+      {
+        "name": "Dublin",
+        "labels": {
+          "zh-CN": "都柏林地區"
+        }
+      },
+      {
+        "name": "Galway",
+        "labels": {
+          "zh-CN": "戈尔韦郡"
+        }
+      },
+      {
+        "name": "Kerry",
+        "labels": {
+          "zh-CN": "凱里郡"
+        }
+      },
+      {
+        "name": "Kildare",
+        "labels": {
+          "zh-CN": "基尔代尔郡"
+        }
+      },
+      {
+        "name": "Kilkenny",
+        "labels": {
+          "zh-CN": "基爾肯尼郡"
+        }
+      },
+      {
+        "name": "Laois",
+        "labels": {
+          "zh-CN": "萊伊什郡"
+        }
+      },
+      {
+        "name": "Leitrim",
+        "labels": {
+          "zh-CN": "利特里姆郡"
+        }
+      },
+      {
+        "name": "Limerick",
+        "labels": {
+          "zh-CN": "利默里克郡"
+        }
+      },
+      {
+        "name": "Longford",
+        "labels": {
+          "zh-CN": "朗福德郡"
+        }
+      },
+      {
+        "name": "Louth",
+        "labels": {
+          "zh-CN": "劳斯郡"
+        }
+      },
+      {
+        "name": "Mayo",
+        "labels": {
+          "zh-CN": "梅奧郡"
+        }
+      },
+      {
+        "name": "Meath",
+        "labels": {
+          "zh-CN": "米斯郡"
+        }
+      },
+      {
+        "name": "Monaghan",
+        "labels": {
+          "zh-CN": "莫纳亨郡"
+        }
+      },
+      {
+        "name": "Offaly",
+        "labels": {
+          "zh-CN": "奧法利郡"
+        }
+      },
+      {
+        "name": "Roscommon",
+        "labels": {
+          "zh-CN": "羅斯康芒郡"
+        }
+      },
+      {
+        "name": "Sligo",
+        "labels": {
+          "zh-CN": "斯萊戈郡"
+        }
+      },
+      {
+        "name": "Tipperary",
+        "labels": {
+          "zh-CN": "蒂珀雷里郡"
+        }
+      },
+      {
+        "name": "Waterford",
+        "labels": {
+          "zh-CN": "沃特福德郡"
+        }
+      },
+      {
+        "name": "Westmeath",
+        "labels": {
+          "zh-CN": "韋斯特米斯郡"
+        }
+      },
+      {
+        "name": "Wexford",
+        "labels": {
+          "zh-CN": "韦克斯福德郡"
+        }
+      },
+      {
+        "name": "Wicklow",
+        "labels": {
+          "zh-CN": "威克洛郡"
+        }
+      }
+    ]
+  },
+  {
+    "code": "IM",
+    "name": "Isle Of Man",
+    "labels": {
+      "zh-CN": "马恩岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "IL",
+    "name": "Israel",
+    "labels": {
+      "zh-CN": "以色列"
+    },
+    "provinces": []
+  },
+  {
+    "code": "IT",
+    "name": "Italy",
+    "labels": {
+      "zh-CN": "意大利"
+    },
+    "provinces": [
+      {
+        "name": "Agrigento",
+        "labels": {
+          "zh-CN": "阿格里真托省"
+        }
+      },
+      {
+        "name": "Alessandria",
+        "labels": {
+          "zh-CN": "亞歷山德里亞省"
+        }
+      },
+      {
+        "name": "Ancona",
+        "labels": {
+          "zh-CN": "安科納省"
+        }
+      },
+      {
+        "name": "Aosta",
+        "labels": {
+          "zh-CN": "瓦莱达奥斯塔"
+        }
+      },
+      {
+        "name": "Arezzo",
+        "labels": {
+          "zh-CN": "阿雷佐省"
+        }
+      },
+      {
+        "name": "Ascoli Piceno",
+        "labels": {
+          "zh-CN": "阿斯科利皮切諾省"
+        }
+      },
+      {
+        "name": "Asti",
+        "labels": {
+          "zh-CN": "阿斯蒂省"
+        }
+      },
+      {
+        "name": "Avellino",
+        "labels": {
+          "zh-CN": "阿韋利諾省"
+        }
+      },
+      {
+        "name": "Bari",
+        "labels": {
+          "zh-CN": "巴里省"
+        }
+      },
+      {
+        "name": "Barletta-Andria-Trani",
+        "labels": {
+          "zh-CN": "巴爾萊塔-安德里亞-特蘭尼省"
+        }
+      },
+      {
+        "name": "Belluno",
+        "labels": {
+          "zh-CN": "貝盧諾省"
+        }
+      },
+      {
+        "name": "Benevento",
+        "labels": {
+          "zh-CN": "貝內文托省"
+        }
+      },
+      {
+        "name": "Bergamo",
+        "labels": {
+          "zh-CN": "貝加莫省"
+        }
+      },
+      {
+        "name": "Biella",
+        "labels": {
+          "zh-CN": "比耶拉省"
+        }
+      },
+      {
+        "name": "Bologna",
+        "labels": {
+          "zh-CN": "博洛尼亚省"
+        }
+      },
+      {
+        "name": "Bolzano",
+        "labels": {
+          "zh-CN": "波爾扎諾自治省"
+        }
+      },
+      {
+        "name": "Brescia",
+        "labels": {
+          "zh-CN": "布雷西亞省"
+        }
+      },
+      {
+        "name": "Brindisi",
+        "labels": {
+          "zh-CN": "布林迪西省"
+        }
+      },
+      {
+        "name": "Cagliari",
+        "labels": {
+          "zh-CN": "卡利亞里省"
+        }
+      },
+      {
+        "name": "Caltanissetta",
+        "labels": {
+          "zh-CN": "卡爾塔尼塞塔省"
+        }
+      },
+      {
+        "name": "Campobasso",
+        "labels": {
+          "zh-CN": "坎波巴索省"
+        }
+      },
+      {
+        "name": "Caserta",
+        "labels": {
+          "zh-CN": "卡塞塔省"
+        }
+      },
+      {
+        "name": "Catania",
+        "labels": {
+          "zh-CN": "卡塔尼亞省"
+        }
+      },
+      {
+        "name": "Catanzaro",
+        "labels": {
+          "zh-CN": "卡坦札羅省"
+        }
+      },
+      {
+        "name": "Chieti",
+        "labels": {
+          "zh-CN": "基耶蒂省"
+        }
+      },
+      {
+        "name": "Como",
+        "labels": {
+          "zh-CN": "科莫省"
+        }
+      },
+      {
+        "name": "Cosenza",
+        "labels": {
+          "zh-CN": "科森札省"
+        }
+      },
+      {
+        "name": "Cremona",
+        "labels": {
+          "zh-CN": "克雷莫納省"
+        }
+      },
+      {
+        "name": "Crotone",
+        "labels": {
+          "zh-CN": "克羅托內省"
+        }
+      },
+      {
+        "name": "Cuneo",
+        "labels": {
+          "zh-CN": "庫內奧省"
+        }
+      },
+      {
+        "name": "Enna",
+        "labels": {
+          "zh-CN": "恩納省"
+        }
+      },
+      {
+        "name": "Fermo",
+        "labels": {
+          "zh-CN": "費爾莫省"
+        }
+      },
+      {
+        "name": "Ferrara",
+        "labels": {
+          "zh-CN": "費拉拉省"
+        }
+      },
+      {
+        "name": "Firenze",
+        "labels": {
+          "zh-CN": "佛羅倫斯省"
+        }
+      },
+      {
+        "name": "Foggia",
+        "labels": {
+          "zh-CN": "福賈省"
+        }
+      },
+      {
+        "name": "Forlì-Cesena",
+        "labels": {
+          "zh-CN": "費利-切塞納省"
+        }
+      },
+      {
+        "name": "Frosinone",
+        "labels": {
+          "zh-CN": "弗罗西诺内省"
+        }
+      },
+      {
+        "name": "Gallura Nord-Est Sardegna",
+        "labels": {
+          "zh-CN": "奧爾比亞-坦皮奧省"
+        }
+      },
+      {
+        "name": "Genova",
+        "labels": {
+          "zh-CN": "熱那亞廣域市"
+        }
+      },
+      {
+        "name": "Gorizia",
+        "labels": {
+          "zh-CN": "戈里齊亞省"
+        }
+      },
+      {
+        "name": "Grosseto",
+        "labels": {
+          "zh-CN": "格羅塞托省"
+        }
+      },
+      {
+        "name": "Imperia",
+        "labels": {
+          "zh-CN": "因佩里亞省"
+        }
+      },
+      {
+        "name": "Isernia",
+        "labels": {
+          "zh-CN": "伊塞爾尼亞省"
+        }
+      },
+      {
+        "name": "L'Aquila",
+        "labels": {
+          "zh-CN": "阿奎拉省"
+        }
+      },
+      {
+        "name": "La Spezia",
+        "labels": {
+          "zh-CN": "拉斯佩齊亞省"
+        }
+      },
+      {
+        "name": "Latina",
+        "labels": {
+          "zh-CN": "拉蒂纳省"
+        }
+      },
+      {
+        "name": "Lecce",
+        "labels": {
+          "zh-CN": "萊切省"
+        }
+      },
+      {
+        "name": "Lecco",
+        "labels": {
+          "zh-CN": "萊科省"
+        }
+      },
+      {
+        "name": "Livorno",
+        "labels": {
+          "zh-CN": "利佛諾省"
+        }
+      },
+      {
+        "name": "Lodi",
+        "labels": {
+          "zh-CN": "洛迪省"
+        }
+      },
+      {
+        "name": "Lucca",
+        "labels": {
+          "zh-CN": "盧卡省"
+        }
+      },
+      {
+        "name": "Macerata",
+        "labels": {
+          "zh-CN": "馬切拉塔省"
+        }
+      },
+      {
+        "name": "Mantova",
+        "labels": {
+          "zh-CN": "曼托瓦省"
+        }
+      },
+      {
+        "name": "Massa-Carrara",
+        "labels": {
+          "zh-CN": "馬薩-卡拉拉省"
+        }
+      },
+      {
+        "name": "Matera",
+        "labels": {
+          "zh-CN": "馬泰拉省"
+        }
+      },
+      {
+        "name": "Medio Campidano",
+        "labels": {
+          "zh-CN": "米迪奧-坎皮達諾省"
+        }
+      },
+      {
+        "name": "Messina",
+        "labels": {
+          "zh-CN": "墨西拿省"
+        }
+      },
+      {
+        "name": "Milano",
+        "labels": {
+          "zh-CN": "米蘭省"
+        }
+      },
+      {
+        "name": "Modena",
+        "labels": {
+          "zh-CN": "摩德納省"
+        }
+      },
+      {
+        "name": "Monza e Brianza",
+        "labels": {
+          "zh-CN": "蒙薩和布里安薩省"
+        }
+      },
+      {
+        "name": "Napoli",
+        "labels": {
+          "zh-CN": "那不勒斯廣域市"
+        }
+      },
+      {
+        "name": "Novara",
+        "labels": {
+          "zh-CN": "諾瓦拉省"
+        }
+      },
+      {
+        "name": "Nuoro",
+        "labels": {
+          "zh-CN": "努奧羅省"
+        }
+      },
+      {
+        "name": "Ogliastra",
+        "labels": {
+          "zh-CN": "奧里亞斯特拉省"
+        }
+      },
+      {
+        "name": "Oristano",
+        "labels": {
+          "zh-CN": "奧里斯塔諾省"
+        }
+      },
+      {
+        "name": "Padova",
+        "labels": {
+          "zh-CN": "帕多瓦省"
+        }
+      },
+      {
+        "name": "Palermo",
+        "labels": {
+          "zh-CN": "巴勒莫省"
+        }
+      },
+      {
+        "name": "Parma",
+        "labels": {
+          "zh-CN": "帕爾馬省"
+        }
+      },
+      {
+        "name": "Pavia",
+        "labels": {
+          "zh-CN": "帕維亞省"
+        }
+      },
+      {
+        "name": "Perugia",
+        "labels": {
+          "zh-CN": "佩魯賈省"
+        }
+      },
+      {
+        "name": "Pesaro e Urbino",
+        "labels": {
+          "zh-CN": "佩薩羅-烏爾比諾省"
+        }
+      },
+      {
+        "name": "Pescara",
+        "labels": {
+          "zh-CN": "佩斯卡拉省"
+        }
+      },
+      {
+        "name": "Piacenza",
+        "labels": {
+          "zh-CN": "皮亚琴察省"
+        }
+      },
+      {
+        "name": "Pisa",
+        "labels": {
+          "zh-CN": "比薩省"
+        }
+      },
+      {
+        "name": "Pistoia",
+        "labels": {
+          "zh-CN": "皮斯托亞省"
+        }
+      },
+      {
+        "name": "Pordenone",
+        "labels": {
+          "zh-CN": "波代諾內省"
+        }
+      },
+      {
+        "name": "Potenza",
+        "labels": {
+          "zh-CN": "波坦察省"
+        }
+      },
+      {
+        "name": "Prato",
+        "labels": {
+          "zh-CN": "普拉托省"
+        }
+      },
+      {
+        "name": "Ragusa",
+        "labels": {
+          "zh-CN": "拉古薩省"
+        }
+      },
+      {
+        "name": "Ravenna",
+        "labels": {
+          "zh-CN": "拉韋納省"
+        }
+      },
+      {
+        "name": "Reggio Calabria",
+        "labels": {
+          "zh-CN": "雷焦卡拉布里亞省"
+        }
+      },
+      {
+        "name": "Reggio Emilia",
+        "labels": {
+          "zh-CN": "雷焦艾米利亞省"
+        }
+      },
+      {
+        "name": "Rieti",
+        "labels": {
+          "zh-CN": "列蒂省"
+        }
+      },
+      {
+        "name": "Rimini",
+        "labels": {
+          "zh-CN": "里米尼省"
+        }
+      },
+      {
+        "name": "Roma",
+        "labels": {
+          "zh-CN": "羅馬省"
+        }
+      },
+      {
+        "name": "Rovigo",
+        "labels": {
+          "zh-CN": "羅維戈省"
+        }
+      },
+      {
+        "name": "Salerno",
+        "labels": {
+          "zh-CN": "薩萊諾省"
+        }
+      },
+      {
+        "name": "Sassari",
+        "labels": {
+          "zh-CN": "薩薩里省"
+        }
+      },
+      {
+        "name": "Savona",
+        "labels": {
+          "zh-CN": "薩沃納省"
+        }
+      },
+      {
+        "name": "Siena",
+        "labels": {
+          "zh-CN": "錫耶納省"
+        }
+      },
+      {
+        "name": "Siracusa",
+        "labels": {
+          "zh-CN": "錫拉庫薩省"
+        }
+      },
+      {
+        "name": "Sondrio",
+        "labels": {
+          "zh-CN": "松德里奧省"
+        }
+      },
+      {
+        "name": "Sulcis Iglesiente",
+        "labels": {
+          "zh-CN": "卡博尼亞-伊格萊西亞斯省"
+        }
+      },
+      {
+        "name": "Taranto",
+        "labels": {
+          "zh-CN": "塔蘭托省"
+        }
+      },
+      {
+        "name": "Teramo",
+        "labels": {
+          "zh-CN": "泰拉莫省"
+        }
+      },
+      {
+        "name": "Terni",
+        "labels": {
+          "zh-CN": "特爾尼省"
+        }
+      },
+      {
+        "name": "Torino",
+        "labels": {
+          "zh-CN": "都靈省"
+        }
+      },
+      {
+        "name": "Trapani",
+        "labels": {
+          "zh-CN": "特拉帕尼省"
+        }
+      },
+      {
+        "name": "Trento",
+        "labels": {
+          "zh-CN": "特倫托自治省"
+        }
+      },
+      {
+        "name": "Treviso",
+        "labels": {
+          "zh-CN": "特雷維索省"
+        }
+      },
+      {
+        "name": "Trieste",
+        "labels": {
+          "zh-CN": "的里雅斯特省"
+        }
+      },
+      {
+        "name": "Udine",
+        "labels": {
+          "zh-CN": "烏迪內省"
+        }
+      },
+      {
+        "name": "Varese",
+        "labels": {
+          "zh-CN": "瓦雷澤省"
+        }
+      },
+      {
+        "name": "Venezia",
+        "labels": {
+          "zh-CN": "威尼斯省"
+        }
+      },
+      {
+        "name": "Verbano-Cusio-Ossola",
+        "labels": {
+          "zh-CN": "韋爾巴諾-庫西亞-奧索拉省"
+        }
+      },
+      {
+        "name": "Vercelli",
+        "labels": {
+          "zh-CN": "韋爾切利省"
+        }
+      },
+      {
+        "name": "Verona",
+        "labels": {
+          "zh-CN": "維羅納省"
+        }
+      },
+      {
+        "name": "Vibo Valentia",
+        "labels": {
+          "zh-CN": "維博瓦倫蒂亞省"
+        }
+      },
+      {
+        "name": "Vicenza",
+        "labels": {
+          "zh-CN": "維琴察省"
+        }
+      },
+      {
+        "name": "Viterbo",
+        "labels": {
+          "zh-CN": "维泰博省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "JM",
+    "name": "Jamaica",
+    "labels": {
+      "zh-CN": "牙买加"
+    },
+    "provinces": []
+  },
+  {
+    "code": "JP",
+    "name": "Japan",
+    "labels": {
+      "zh-CN": "日本"
+    },
+    "provinces": [
+      {
+        "name": "Aichi",
+        "labels": {
+          "zh-CN": "愛知縣"
+        }
+      },
+      {
+        "name": "Akita",
+        "labels": {
+          "zh-CN": "秋田县"
+        }
+      },
+      {
+        "name": "Aomori",
+        "labels": {
+          "zh-CN": "青森縣"
+        }
+      },
+      {
+        "name": "Chiba",
+        "labels": {
+          "zh-CN": "千葉縣"
+        }
+      },
+      {
+        "name": "Ehime",
+        "labels": {
+          "zh-CN": "爱媛县"
+        }
+      },
+      {
+        "name": "Fukui",
+        "labels": {
+          "zh-CN": "福井縣"
+        }
+      },
+      {
+        "name": "Fukuoka",
+        "labels": {
+          "zh-CN": "福冈县"
+        }
+      },
+      {
+        "name": "Fukushima",
+        "labels": {
+          "zh-CN": "福岛县"
+        }
+      },
+      {
+        "name": "Gifu",
+        "labels": {
+          "zh-CN": "岐阜县"
+        }
+      },
+      {
+        "name": "Gunma",
+        "labels": {
+          "zh-CN": "群馬縣"
+        }
+      },
+      {
+        "name": "Hiroshima",
+        "labels": {
+          "zh-CN": "广岛县"
+        }
+      },
+      {
+        "name": "Hokkaidō",
+        "labels": {
+          "zh-CN": "北海道"
+        }
+      },
+      {
+        "name": "Hyōgo",
+        "labels": {
+          "zh-CN": "兵库县"
+        }
+      },
+      {
+        "name": "Ibaraki",
+        "labels": {
+          "zh-CN": "茨城縣"
+        }
+      },
+      {
+        "name": "Ishikawa",
+        "labels": {
+          "zh-CN": "石川縣"
+        }
+      },
+      {
+        "name": "Iwate",
+        "labels": {
+          "zh-CN": "岩手县"
+        }
+      },
+      {
+        "name": "Kagawa",
+        "labels": {
+          "zh-CN": "香川县"
+        }
+      },
+      {
+        "name": "Kagoshima",
+        "labels": {
+          "zh-CN": "鹿儿岛县"
+        }
+      },
+      {
+        "name": "Kanagawa",
+        "labels": {
+          "zh-CN": "神奈川縣"
+        }
+      },
+      {
+        "name": "Kumamoto",
+        "labels": {
+          "zh-CN": "熊本縣"
+        }
+      },
+      {
+        "name": "Kyōto",
+        "labels": {
+          "zh-CN": "京都府"
+        }
+      },
+      {
+        "name": "Kōchi",
+        "labels": {
+          "zh-CN": "高知县"
+        }
+      },
+      {
+        "name": "Mie",
+        "labels": {
+          "zh-CN": "三重县"
+        }
+      },
+      {
+        "name": "Miyagi",
+        "labels": {
+          "zh-CN": "宮城縣"
+        }
+      },
+      {
+        "name": "Miyazaki",
+        "labels": {
+          "zh-CN": "宮崎縣"
+        }
+      },
+      {
+        "name": "Nagano",
+        "labels": {
+          "zh-CN": "长野县"
+        }
+      },
+      {
+        "name": "Nagasaki",
+        "labels": {
+          "zh-CN": "长崎县"
+        }
+      },
+      {
+        "name": "Nara",
+        "labels": {
+          "zh-CN": "奈良县"
+        }
+      },
+      {
+        "name": "Niigata",
+        "labels": {
+          "zh-CN": "新潟县"
+        }
+      },
+      {
+        "name": "Okayama",
+        "labels": {
+          "zh-CN": "岡山縣"
+        }
+      },
+      {
+        "name": "Okinawa",
+        "labels": {
+          "zh-CN": "沖繩縣"
+        }
+      },
+      {
+        "name": "Saga",
+        "labels": {
+          "zh-CN": "佐贺县"
+        }
+      },
+      {
+        "name": "Saitama",
+        "labels": {
+          "zh-CN": "埼玉縣"
+        }
+      },
+      {
+        "name": "Shiga",
+        "labels": {
+          "zh-CN": "滋贺县"
+        }
+      },
+      {
+        "name": "Shimane",
+        "labels": {
+          "zh-CN": "岛根县"
+        }
+      },
+      {
+        "name": "Shizuoka",
+        "labels": {
+          "zh-CN": "靜岡縣"
+        }
+      },
+      {
+        "name": "Tochigi",
+        "labels": {
+          "zh-CN": "栃木縣"
+        }
+      },
+      {
+        "name": "Tokushima",
+        "labels": {
+          "zh-CN": "德岛县"
+        }
+      },
+      {
+        "name": "Tottori",
+        "labels": {
+          "zh-CN": "鳥取縣"
+        }
+      },
+      {
+        "name": "Toyama",
+        "labels": {
+          "zh-CN": "富山縣"
+        }
+      },
+      {
+        "name": "Tōkyō",
+        "labels": {
+          "zh-CN": "東京都"
+        }
+      },
+      {
+        "name": "Wakayama",
+        "labels": {
+          "zh-CN": "和歌山县"
+        }
+      },
+      {
+        "name": "Yamagata",
+        "labels": {
+          "zh-CN": "山形县"
+        }
+      },
+      {
+        "name": "Yamaguchi",
+        "labels": {
+          "zh-CN": "山口县"
+        }
+      },
+      {
+        "name": "Yamanashi",
+        "labels": {
+          "zh-CN": "山梨县"
+        }
+      },
+      {
+        "name": "Ōita",
+        "labels": {
+          "zh-CN": "大分县"
+        }
+      },
+      {
+        "name": "Ōsaka",
+        "labels": {
+          "zh-CN": "大阪府"
+        }
+      }
+    ]
+  },
+  {
+    "code": "JE",
+    "name": "Jersey",
+    "labels": {
+      "zh-CN": "泽西岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "JO",
+    "name": "Jordan",
+    "labels": {
+      "zh-CN": "约旦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KZ",
+    "name": "Kazakhstan",
+    "labels": {
+      "zh-CN": "哈萨克斯坦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KE",
+    "name": "Kenya",
+    "labels": {
+      "zh-CN": "肯尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KI",
+    "name": "Kiribati",
+    "labels": {
+      "zh-CN": "基里巴斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "XK",
+    "name": "Kosovo",
+    "labels": {
+      "zh-CN": "科索沃"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KW",
+    "name": "Kuwait",
+    "labels": {
+      "zh-CN": "科威特"
+    },
+    "provinces": [
+      {
+        "name": "Al Ahmadi",
+        "labels": {
+          "zh-CN": "艾哈迈迪省"
+        }
+      },
+      {
+        "name": "Al Asimah",
+        "labels": {
+          "zh-CN": "科威特省"
+        }
+      },
+      {
+        "name": "Al Farwaniyah",
+        "labels": {
+          "zh-CN": "費爾瓦尼耶省"
+        }
+      },
+      {
+        "name": "Al Jahra",
+        "labels": {
+          "zh-CN": "傑赫拉省"
+        }
+      },
+      {
+        "name": "Hawalli",
+        "labels": {
+          "zh-CN": "哈瓦利省"
+        }
+      },
+      {
+        "name": "Mubarak Al-Kabeer",
+        "labels": {
+          "zh-CN": "大穆巴拉克省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "KG",
+    "name": "Kyrgyzstan",
+    "labels": {
+      "zh-CN": "吉尔吉斯斯坦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LA",
+    "name": "Lao People's Democratic Republic",
+    "labels": {
+      "zh-CN": "老挝"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LV",
+    "name": "Latvia",
+    "labels": {
+      "zh-CN": "拉脱维亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LB",
+    "name": "Lebanon",
+    "labels": {
+      "zh-CN": "黎巴嫩"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LS",
+    "name": "Lesotho",
+    "labels": {
+      "zh-CN": "莱索托"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LR",
+    "name": "Liberia",
+    "labels": {
+      "zh-CN": "利比里亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LY",
+    "name": "Libyan Arab Jamahiriya",
+    "labels": {
+      "zh-CN": "利比亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LI",
+    "name": "Liechtenstein",
+    "labels": {
+      "zh-CN": "列支敦士登"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LT",
+    "name": "Lithuania",
+    "labels": {
+      "zh-CN": "立陶宛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LU",
+    "name": "Luxembourg",
+    "labels": {
+      "zh-CN": "卢森堡"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MO",
+    "name": "Macao",
+    "labels": {
+      "zh-CN": "澳门特别行政区"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MG",
+    "name": "Madagascar",
+    "labels": {
+      "zh-CN": "马达加斯加"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MW",
+    "name": "Malawi",
+    "labels": {
+      "zh-CN": "马拉维"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MY",
+    "name": "Malaysia",
+    "labels": {
+      "zh-CN": "马来西亚"
+    },
+    "provinces": [
+      {
+        "name": "Johor",
+        "labels": {
+          "zh-CN": "柔佛州"
+        }
+      },
+      {
+        "name": "Kedah",
+        "labels": {
+          "zh-CN": "吉打"
+        }
+      },
+      {
+        "name": "Kelantan",
+        "labels": {
+          "zh-CN": "吉兰丹"
+        }
+      },
+      {
+        "name": "Kuala Lumpur",
+        "labels": {
+          "zh-CN": "吉隆坡"
+        }
+      },
+      {
+        "name": "Labuan",
+        "labels": {
+          "zh-CN": "纳闽"
+        }
+      },
+      {
+        "name": "Melaka",
+        "labels": {
+          "zh-CN": "马六甲"
+        }
+      },
+      {
+        "name": "Negeri Sembilan",
+        "labels": {
+          "zh-CN": "森美兰"
+        }
+      },
+      {
+        "name": "Pahang",
+        "labels": {
+          "zh-CN": "彭亨"
+        }
+      },
+      {
+        "name": "Penang",
+        "labels": {
+          "zh-CN": "槟城"
+        }
+      },
+      {
+        "name": "Perak",
+        "labels": {
+          "zh-CN": "霹靂州"
+        }
+      },
+      {
+        "name": "Perlis",
+        "labels": {
+          "zh-CN": "玻璃市"
+        }
+      },
+      {
+        "name": "Putrajaya",
+        "labels": {
+          "zh-CN": "布城"
+        }
+      },
+      {
+        "name": "Sabah",
+        "labels": {
+          "zh-CN": "沙巴"
+        }
+      },
+      {
+        "name": "Sarawak",
+        "labels": {
+          "zh-CN": "砂拉越"
+        }
+      },
+      {
+        "name": "Selangor",
+        "labels": {
+          "zh-CN": "雪蘭莪"
+        }
+      },
+      {
+        "name": "Terengganu",
+        "labels": {
+          "zh-CN": "登嘉樓"
+        }
+      }
+    ]
+  },
+  {
+    "code": "MV",
+    "name": "Maldives",
+    "labels": {
+      "zh-CN": "马尔代夫"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ML",
+    "name": "Mali",
+    "labels": {
+      "zh-CN": "马里"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MT",
+    "name": "Malta",
+    "labels": {
+      "zh-CN": "马耳他"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MQ",
+    "name": "Martinique",
+    "labels": {
+      "zh-CN": "马提尼克"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MR",
+    "name": "Mauritania",
+    "labels": {
+      "zh-CN": "毛里塔尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MU",
+    "name": "Mauritius",
+    "labels": {
+      "zh-CN": "毛里求斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "YT",
+    "name": "Mayotte",
+    "labels": {
+      "zh-CN": "马约特"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MX",
+    "name": "Mexico",
+    "labels": {
+      "zh-CN": "墨西哥"
+    },
+    "provinces": [
+      {
+        "name": "Aguascalientes",
+        "labels": {
+          "zh-CN": "阿瓜斯卡連特斯州"
+        }
+      },
+      {
+        "name": "Baja California",
+        "labels": {
+          "zh-CN": "下加利福尼亞州"
+        }
+      },
+      {
+        "name": "Baja California Sur",
+        "labels": {
+          "zh-CN": "南下加利福尼亞州"
+        }
+      },
+      {
+        "name": "Campeche",
+        "labels": {
+          "zh-CN": "坎佩切州"
+        }
+      },
+      {
+        "name": "Chiapas",
+        "labels": {
+          "zh-CN": "恰帕斯州"
+        }
+      },
+      {
+        "name": "Chihuahua",
+        "labels": {
+          "zh-CN": "奇瓦瓦州"
+        }
+      },
+      {
+        "name": "Ciudad de México",
+        "labels": {
+          "zh-CN": "墨西哥城"
+        }
+      },
+      {
+        "name": "Coahuila",
+        "labels": {
+          "zh-CN": "科阿韋拉州"
+        }
+      },
+      {
+        "name": "Colima",
+        "labels": {
+          "zh-CN": "科利馬州"
+        }
+      },
+      {
+        "name": "Durango",
+        "labels": {
+          "zh-CN": "杜蘭戈州"
+        }
+      },
+      {
+        "name": "Guanajuato",
+        "labels": {
+          "zh-CN": "瓜納華托州"
+        }
+      },
+      {
+        "name": "Guerrero",
+        "labels": {
+          "zh-CN": "格雷羅州"
+        }
+      },
+      {
+        "name": "Hidalgo",
+        "labels": {
+          "zh-CN": "伊達爾戈州"
+        }
+      },
+      {
+        "name": "Jalisco",
+        "labels": {
+          "zh-CN": "哈利斯科州"
+        }
+      },
+      {
+        "name": "Michoacán",
+        "labels": {
+          "zh-CN": "米却肯州"
+        }
+      },
+      {
+        "name": "Morelos",
+        "labels": {
+          "zh-CN": "莫雷洛斯州"
+        }
+      },
+      {
+        "name": "México",
+        "labels": {
+          "zh-CN": "墨西哥州"
+        }
+      },
+      {
+        "name": "Nayarit",
+        "labels": {
+          "zh-CN": "納亞里特州"
+        }
+      },
+      {
+        "name": "Nuevo León",
+        "labels": {
+          "zh-CN": "新萊昂州"
+        }
+      },
+      {
+        "name": "Oaxaca",
+        "labels": {
+          "zh-CN": "瓦哈卡州"
+        }
+      },
+      {
+        "name": "Puebla",
+        "labels": {
+          "zh-CN": "普埃布拉州"
+        }
+      },
+      {
+        "name": "Querétaro",
+        "labels": {
+          "zh-CN": "克雷塔羅州"
+        }
+      },
+      {
+        "name": "Quintana Roo",
+        "labels": {
+          "zh-CN": "金塔納羅奧州"
+        }
+      },
+      {
+        "name": "San Luis Potosí",
+        "labels": {
+          "zh-CN": "聖路易斯波托西州"
+        }
+      },
+      {
+        "name": "Sinaloa",
+        "labels": {
+          "zh-CN": "錫那羅亞州"
+        }
+      },
+      {
+        "name": "Sonora",
+        "labels": {
+          "zh-CN": "索諾拉州"
+        }
+      },
+      {
+        "name": "Tabasco",
+        "labels": {
+          "zh-CN": "塔巴斯科州"
+        }
+      },
+      {
+        "name": "Tamaulipas",
+        "labels": {
+          "zh-CN": "塔毛利帕斯州"
+        }
+      },
+      {
+        "name": "Tlaxcala",
+        "labels": {
+          "zh-CN": "特拉斯卡拉州"
+        }
+      },
+      {
+        "name": "Veracruz",
+        "labels": {
+          "zh-CN": "韋拉克魯斯州"
+        }
+      },
+      {
+        "name": "Yucatán",
+        "labels": {
+          "zh-CN": "尤卡坦州"
+        }
+      },
+      {
+        "name": "Zacatecas",
+        "labels": {
+          "zh-CN": "薩卡特卡斯州"
+        }
+      }
+    ]
+  },
+  {
+    "code": "MD",
+    "name": "Moldova, Republic of",
+    "labels": {
+      "zh-CN": "摩尔多瓦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MC",
+    "name": "Monaco",
+    "labels": {
+      "zh-CN": "摩纳哥"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MN",
+    "name": "Mongolia",
+    "labels": {
+      "zh-CN": "蒙古"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ME",
+    "name": "Montenegro",
+    "labels": {
+      "zh-CN": "黑山"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MS",
+    "name": "Montserrat",
+    "labels": {
+      "zh-CN": "蒙特塞拉特"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MA",
+    "name": "Morocco",
+    "labels": {
+      "zh-CN": "摩洛哥"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MZ",
+    "name": "Mozambique",
+    "labels": {
+      "zh-CN": "莫桑比克"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MM",
+    "name": "Myanmar",
+    "labels": {
+      "zh-CN": "缅甸"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NA",
+    "name": "Namibia",
+    "labels": {
+      "zh-CN": "纳米比亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NR",
+    "name": "Nauru",
+    "labels": {
+      "zh-CN": "瑙鲁"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NP",
+    "name": "Nepal",
+    "labels": {
+      "zh-CN": "尼泊尔"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NL",
+    "name": "Netherlands",
+    "labels": {
+      "zh-CN": "荷兰"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NC",
+    "name": "New Caledonia",
+    "labels": {
+      "zh-CN": "新喀里多尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NZ",
+    "name": "New Zealand",
+    "labels": {
+      "zh-CN": "新西兰"
+    },
+    "provinces": [
+      {
+        "name": "Auckland",
+        "labels": {
+          "zh-CN": "奥克兰大区"
+        }
+      },
+      {
+        "name": "Bay of Plenty",
+        "labels": {
+          "zh-CN": "普伦蒂湾大区"
+        }
+      },
+      {
+        "name": "Canterbury",
+        "labels": {
+          "zh-CN": "坎特伯雷"
+        }
+      },
+      {
+        "name": "Chatham Islands",
+        "labels": {
+          "zh-CN": "查塔姆群岛"
+        }
+      },
+      {
+        "name": "Gisborne",
+        "labels": {
+          "zh-CN": "吉斯伯恩大区"
+        }
+      },
+      {
+        "name": "Hawke's Bay",
+        "labels": {
+          "zh-CN": "霍克湾大区"
+        }
+      },
+      {
+        "name": "Manawatu-Wanganui",
+        "labels": {
+          "zh-CN": "马纳瓦图－旺加努伊"
+        }
+      },
+      {
+        "name": "Marlborough",
+        "labels": {
+          "zh-CN": "马尔堡"
+        }
+      },
+      {
+        "name": "Nelson",
+        "labels": {
+          "zh-CN": "Nelson"
+        }
+      },
+      {
+        "name": "Northland",
+        "labels": {
+          "zh-CN": "北地大区"
+        }
+      },
+      {
+        "name": "Otago",
+        "labels": {
+          "zh-CN": "奥塔哥大区"
+        }
+      },
+      {
+        "name": "Southland",
+        "labels": {
+          "zh-CN": "南地大区"
+        }
+      },
+      {
+        "name": "Taranaki",
+        "labels": {
+          "zh-CN": "塔拉纳基大区"
+        }
+      },
+      {
+        "name": "Tasman",
+        "labels": {
+          "zh-CN": "塔斯曼"
+        }
+      },
+      {
+        "name": "Waikato",
+        "labels": {
+          "zh-CN": "懷卡托"
+        }
+      },
+      {
+        "name": "Wellington",
+        "labels": {
+          "zh-CN": "惠灵顿大区"
+        }
+      },
+      {
+        "name": "West Coast",
+        "labels": {
+          "zh-CN": "西岸大区"
+        }
+      }
+    ]
+  },
+  {
+    "code": "NI",
+    "name": "Nicaragua",
+    "labels": {
+      "zh-CN": "尼加拉瓜"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NE",
+    "name": "Niger",
+    "labels": {
+      "zh-CN": "尼日尔"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NG",
+    "name": "Nigeria",
+    "labels": {
+      "zh-CN": "尼日利亚"
+    },
+    "provinces": [
+      {
+        "name": "Abia",
+        "labels": {
+          "zh-CN": "阿比亚州"
+        }
+      },
+      {
+        "name": "Abuja Federal Capital Territory",
+        "labels": {
+          "zh-CN": "聯邦首都特區"
+        }
+      },
+      {
+        "name": "Adamawa",
+        "labels": {
+          "zh-CN": "阿達馬瓦"
+        }
+      },
+      {
+        "name": "Akwa Ibom",
+        "labels": {
+          "zh-CN": "阿夸伊博姆州"
+        }
+      },
+      {
+        "name": "Anambra",
+        "labels": {
+          "zh-CN": "阿南布拉州"
+        }
+      },
+      {
+        "name": "Bauchi",
+        "labels": {
+          "zh-CN": "包奇州"
+        }
+      },
+      {
+        "name": "Bayelsa",
+        "labels": {
+          "zh-CN": "巴耶尔萨州"
+        }
+      },
+      {
+        "name": "Benue",
+        "labels": {
+          "zh-CN": "贝努埃州"
+        }
+      },
+      {
+        "name": "Borno",
+        "labels": {
+          "zh-CN": "博尔诺州"
+        }
+      },
+      {
+        "name": "Cross River",
+        "labels": {
+          "zh-CN": "克里斯河州"
+        }
+      },
+      {
+        "name": "Delta",
+        "labels": {
+          "zh-CN": "三角州"
+        }
+      },
+      {
+        "name": "Ebonyi",
+        "labels": {
+          "zh-CN": "埃邦伊州"
+        }
+      },
+      {
+        "name": "Edo",
+        "labels": {
+          "zh-CN": "埃多州"
+        }
+      },
+      {
+        "name": "Ekiti",
+        "labels": {
+          "zh-CN": "埃基蒂州"
+        }
+      },
+      {
+        "name": "Enugu",
+        "labels": {
+          "zh-CN": "埃努古州"
+        }
+      },
+      {
+        "name": "Gombe",
+        "labels": {
+          "zh-CN": "贡贝州"
+        }
+      },
+      {
+        "name": "Imo",
+        "labels": {
+          "zh-CN": "伊莫州"
+        }
+      },
+      {
+        "name": "Jigawa",
+        "labels": {
+          "zh-CN": "吉加瓦州"
+        }
+      },
+      {
+        "name": "Kaduna",
+        "labels": {
+          "zh-CN": "卡杜纳州"
+        }
+      },
+      {
+        "name": "Kano",
+        "labels": {
+          "zh-CN": "卡诺州"
+        }
+      },
+      {
+        "name": "Katsina",
+        "labels": {
+          "zh-CN": "卡齐纳州"
+        }
+      },
+      {
+        "name": "Kebbi",
+        "labels": {
+          "zh-CN": "凯比州"
+        }
+      },
+      {
+        "name": "Kogi",
+        "labels": {
+          "zh-CN": "科吉州"
+        }
+      },
+      {
+        "name": "Kwara",
+        "labels": {
+          "zh-CN": "夸拉州"
+        }
+      },
+      {
+        "name": "Lagos",
+        "labels": {
+          "zh-CN": "拉各斯州"
+        }
+      },
+      {
+        "name": "Nasarawa",
+        "labels": {
+          "zh-CN": "纳萨拉瓦州"
+        }
+      },
+      {
+        "name": "Niger",
+        "labels": {
+          "zh-CN": "尼日尔州"
+        }
+      },
+      {
+        "name": "Ogun",
+        "labels": {
+          "zh-CN": "奥贡州"
+        }
+      },
+      {
+        "name": "Ondo",
+        "labels": {
+          "zh-CN": "翁多州"
+        }
+      },
+      {
+        "name": "Osun",
+        "labels": {
+          "zh-CN": "奥孙州"
+        }
+      },
+      {
+        "name": "Oyo",
+        "labels": {
+          "zh-CN": "奥约州"
+        }
+      },
+      {
+        "name": "Plateau",
+        "labels": {
+          "zh-CN": "高原州"
+        }
+      },
+      {
+        "name": "Rivers",
+        "labels": {
+          "zh-CN": "河流州"
+        }
+      },
+      {
+        "name": "Sokoto",
+        "labels": {
+          "zh-CN": "索科托州"
+        }
+      },
+      {
+        "name": "Taraba",
+        "labels": {
+          "zh-CN": "塔拉巴州"
+        }
+      },
+      {
+        "name": "Yobe",
+        "labels": {
+          "zh-CN": "约贝州"
+        }
+      },
+      {
+        "name": "Zamfara",
+        "labels": {
+          "zh-CN": "扎姆法拉州"
+        }
+      }
+    ]
+  },
+  {
+    "code": "NU",
+    "name": "Niue",
+    "labels": {
+      "zh-CN": "纽埃"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NF",
+    "name": "Norfolk Island",
+    "labels": {
+      "zh-CN": "诺福克岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MK",
+    "name": "North Macedonia",
+    "labels": {
+      "zh-CN": "北马其顿"
+    },
+    "provinces": []
+  },
+  {
+    "code": "NO",
+    "name": "Norway",
+    "labels": {
+      "zh-CN": "挪威"
+    },
+    "provinces": []
+  },
+  {
+    "code": "OM",
+    "name": "Oman",
+    "labels": {
+      "zh-CN": "阿曼"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PK",
+    "name": "Pakistan",
+    "labels": {
+      "zh-CN": "巴基斯坦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PS",
+    "name": "Palestinian Territory, Occupied",
+    "labels": {
+      "zh-CN": "巴勒斯坦领土"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PA",
+    "name": "Panama",
+    "labels": {
+      "zh-CN": "巴拿马"
+    },
+    "provinces": [
+      {
+        "name": "Bocas del Toro",
+        "labels": {
+          "zh-CN": "博卡斯德爾托羅省"
+        }
+      },
+      {
+        "name": "Chiriquí",
+        "labels": {
+          "zh-CN": "奇里基省"
+        }
+      },
+      {
+        "name": "Coclé",
+        "labels": {
+          "zh-CN": "科克萊省"
+        }
+      },
+      {
+        "name": "Colón",
+        "labels": {
+          "zh-CN": "科隆省"
+        }
+      },
+      {
+        "name": "Darién",
+        "labels": {
+          "zh-CN": "達連省"
+        }
+      },
+      {
+        "name": "Emberá",
+        "labels": {
+          "zh-CN": "安貝拉自治區"
+        }
+      },
+      {
+        "name": "Herrera",
+        "labels": {
+          "zh-CN": "埃雷拉省"
+        }
+      },
+      {
+        "name": "Kuna Yala",
+        "labels": {
+          "zh-CN": "雅拉庫納族自治區"
+        }
+      },
+      {
+        "name": "Los Santos",
+        "labels": {
+          "zh-CN": "洛斯桑托斯省"
+        }
+      },
+      {
+        "name": "Ngöbe-Buglé",
+        "labels": {
+          "zh-CN": "恩戈貝布格勒自治區"
+        }
+      },
+      {
+        "name": "Panamá",
+        "labels": {
+          "zh-CN": "巴拿馬省"
+        }
+      },
+      {
+        "name": "Panamá Oeste",
+        "labels": {
+          "zh-CN": "西巴拿馬省"
+        }
+      },
+      {
+        "name": "Veraguas",
+        "labels": {
+          "zh-CN": "貝拉瓜斯省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "PG",
+    "name": "Papua New Guinea",
+    "labels": {
+      "zh-CN": "巴布亚新几内亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PY",
+    "name": "Paraguay",
+    "labels": {
+      "zh-CN": "巴拉圭"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PE",
+    "name": "Peru",
+    "labels": {
+      "zh-CN": "秘鲁"
+    },
+    "provinces": [
+      {
+        "name": "Amazonas",
+        "labels": {
+          "zh-CN": "亚马孙大区"
+        }
+      },
+      {
+        "name": "Apurímac",
+        "labels": {
+          "zh-CN": "阿普里马克大区"
+        }
+      },
+      {
+        "name": "Arequipa",
+        "labels": {
+          "zh-CN": "阿雷基帕大区"
+        }
+      },
+      {
+        "name": "Ayacucho",
+        "labels": {
+          "zh-CN": "阿亚库乔大区"
+        }
+      },
+      {
+        "name": "Cajamarca",
+        "labels": {
+          "zh-CN": "卡哈马卡大区"
+        }
+      },
+      {
+        "name": "Callao",
+        "labels": {
+          "zh-CN": "卡亚俄大区"
+        }
+      },
+      {
+        "name": "Cuzco",
+        "labels": {
+          "zh-CN": "库斯科大区"
+        }
+      },
+      {
+        "name": "Huancavelica",
+        "labels": {
+          "zh-CN": "萬卡韋利卡大區"
+        }
+      },
+      {
+        "name": "Huánuco",
+        "labels": {
+          "zh-CN": "瓦努科大区"
+        }
+      },
+      {
+        "name": "Ica",
+        "labels": {
+          "zh-CN": "伊卡大区"
+        }
+      },
+      {
+        "name": "Junín",
+        "labels": {
+          "zh-CN": "胡宁大区"
+        }
+      },
+      {
+        "name": "La Libertad",
+        "labels": {
+          "zh-CN": "拉利伯塔德大区"
+        }
+      },
+      {
+        "name": "Lambayeque",
+        "labels": {
+          "zh-CN": "兰巴耶克大区"
+        }
+      },
+      {
+        "name": "Lima (departamento)",
+        "labels": {
+          "zh-CN": "利馬大區"
+        }
+      },
+      {
+        "name": "Lima (provincia)",
+        "labels": {
+          "zh-CN": "利馬省"
+        }
+      },
+      {
+        "name": "Loreto",
+        "labels": {
+          "zh-CN": "洛雷托大区"
+        }
+      },
+      {
+        "name": "Madre de Dios",
+        "labels": {
+          "zh-CN": "马德雷德迪奥斯大区"
+        }
+      },
+      {
+        "name": "Moquegua",
+        "labels": {
+          "zh-CN": "莫克瓜大区"
+        }
+      },
+      {
+        "name": "Pasco",
+        "labels": {
+          "zh-CN": "帕斯科大区"
+        }
+      },
+      {
+        "name": "Piura",
+        "labels": {
+          "zh-CN": "皮乌拉地区"
+        }
+      },
+      {
+        "name": "Puno",
+        "labels": {
+          "zh-CN": "普诺大区"
+        }
+      },
+      {
+        "name": "San Martín",
+        "labels": {
+          "zh-CN": "圣马丁大区"
+        }
+      },
+      {
+        "name": "Tacna",
+        "labels": {
+          "zh-CN": "塔克纳大区"
+        }
+      },
+      {
+        "name": "Tumbes",
+        "labels": {
+          "zh-CN": "通贝斯大区"
+        }
+      },
+      {
+        "name": "Ucayali",
+        "labels": {
+          "zh-CN": "乌卡亚利大区"
+        }
+      },
+      {
+        "name": "Áncash",
+        "labels": {
+          "zh-CN": "安卡什大区"
+        }
+      }
+    ]
+  },
+  {
+    "code": "PH",
+    "name": "Philippines",
+    "labels": {
+      "zh-CN": "菲律宾"
+    },
+    "provinces": [
+      {
+        "name": "Abra",
+        "labels": {
+          "zh-CN": "阿布拉省"
+        }
+      },
+      {
+        "name": "Agusan del Norte",
+        "labels": {
+          "zh-CN": "北阿古桑省"
+        }
+      },
+      {
+        "name": "Agusan del Sur",
+        "labels": {
+          "zh-CN": "南阿古桑省"
+        }
+      },
+      {
+        "name": "Aklan",
+        "labels": {
+          "zh-CN": "阿克兰省"
+        }
+      },
+      {
+        "name": "Albay",
+        "labels": {
+          "zh-CN": "阿尔拜省"
+        }
+      },
+      {
+        "name": "Antique",
+        "labels": {
+          "zh-CN": "安蒂克省"
+        }
+      },
+      {
+        "name": "Apayao",
+        "labels": {
+          "zh-CN": "阿巴尧省"
+        }
+      },
+      {
+        "name": "Aurora",
+        "labels": {
+          "zh-CN": "奥罗拉省"
+        }
+      },
+      {
+        "name": "Basilan",
+        "labels": {
+          "zh-CN": "巴西兰省"
+        }
+      },
+      {
+        "name": "Bataan",
+        "labels": {
+          "zh-CN": "巴丹省"
+        }
+      },
+      {
+        "name": "Batanes",
+        "labels": {
+          "zh-CN": "巴丹群島省"
+        }
+      },
+      {
+        "name": "Batangas",
+        "labels": {
+          "zh-CN": "八打雁省"
+        }
+      },
+      {
+        "name": "Benguet",
+        "labels": {
+          "zh-CN": "本格特省"
+        }
+      },
+      {
+        "name": "Biliran",
+        "labels": {
+          "zh-CN": "比利兰省"
+        }
+      },
+      {
+        "name": "Bohol",
+        "labels": {
+          "zh-CN": "保和省"
+        }
+      },
+      {
+        "name": "Bukidnon",
+        "labels": {
+          "zh-CN": "布基农省"
+        }
+      },
+      {
+        "name": "Bulacan",
+        "labels": {
+          "zh-CN": "布拉干省"
+        }
+      },
+      {
+        "name": "Cagayan",
+        "labels": {
+          "zh-CN": "卡加延省"
+        }
+      },
+      {
+        "name": "Camarines Norte",
+        "labels": {
+          "zh-CN": "北甘馬粦省"
+        }
+      },
+      {
+        "name": "Camarines Sur",
+        "labels": {
+          "zh-CN": "南甘馬粦省"
+        }
+      },
+      {
+        "name": "Camiguin",
+        "labels": {
+          "zh-CN": "卡米金省"
+        }
+      },
+      {
+        "name": "Capiz",
+        "labels": {
+          "zh-CN": "卡皮茲省"
+        }
+      },
+      {
+        "name": "Catanduanes",
+        "labels": {
+          "zh-CN": "卡坦端内斯省"
+        }
+      },
+      {
+        "name": "Cavite",
+        "labels": {
+          "zh-CN": "甲米地省"
+        }
+      },
+      {
+        "name": "Cebu",
+        "labels": {
+          "zh-CN": "宿霧省"
+        }
+      },
+      {
+        "name": "Cotabato",
+        "labels": {
+          "zh-CN": "哥打巴托省"
+        }
+      },
+      {
+        "name": "Davao Occidental",
+        "labels": {
+          "zh-CN": "西達沃省"
+        }
+      },
+      {
+        "name": "Davao Oriental",
+        "labels": {
+          "zh-CN": "东达沃省"
+        }
+      },
+      {
+        "name": "Davao de Oro",
+        "labels": {
+          "zh-CN": "康波斯特拉谷省"
+        }
+      },
+      {
+        "name": "Davao del Norte",
+        "labels": {
+          "zh-CN": "北達沃省"
+        }
+      },
+      {
+        "name": "Davao del Sur",
+        "labels": {
+          "zh-CN": "南達沃省"
+        }
+      },
+      {
+        "name": "Dinagat Islands",
+        "labels": {
+          "zh-CN": "迪纳加特群岛"
+        }
+      },
+      {
+        "name": "Eastern Samar",
+        "labels": {
+          "zh-CN": "東薩馬省"
+        }
+      },
+      {
+        "name": "Guimaras",
+        "labels": {
+          "zh-CN": "吉馬拉斯省"
+        }
+      },
+      {
+        "name": "Ifugao",
+        "labels": {
+          "zh-CN": "伊富高省"
+        }
+      },
+      {
+        "name": "Ilocos Norte",
+        "labels": {
+          "zh-CN": "北伊羅戈省"
+        }
+      },
+      {
+        "name": "Ilocos Sur",
+        "labels": {
+          "zh-CN": "南伊羅戈省"
+        }
+      },
+      {
+        "name": "Iloilo",
+        "labels": {
+          "zh-CN": "伊洛伊洛省"
+        }
+      },
+      {
+        "name": "Isabela",
+        "labels": {
+          "zh-CN": "伊莎貝拉省"
+        }
+      },
+      {
+        "name": "Kalinga",
+        "labels": {
+          "zh-CN": "卡林阿省"
+        }
+      },
+      {
+        "name": "La Union",
+        "labels": {
+          "zh-CN": "聯合省"
+        }
+      },
+      {
+        "name": "Laguna",
+        "labels": {
+          "zh-CN": "內湖省"
+        }
+      },
+      {
+        "name": "Lanao del Norte",
+        "labels": {
+          "zh-CN": "北拉瑙省"
+        }
+      },
+      {
+        "name": "Lanao del Sur",
+        "labels": {
+          "zh-CN": "南拉瑙省"
+        }
+      },
+      {
+        "name": "Leyte",
+        "labels": {
+          "zh-CN": "雷伊泰省"
+        }
+      },
+      {
+        "name": "Maguindanao",
+        "labels": {
+          "zh-CN": "馬京達瑙省"
+        }
+      },
+      {
+        "name": "Marinduque",
+        "labels": {
+          "zh-CN": "馬林杜克省"
+        }
+      },
+      {
+        "name": "Masbate",
+        "labels": {
+          "zh-CN": "馬斯巴特省"
+        }
+      },
+      {
+        "name": "Metro Manila",
+        "labels": {
+          "zh-CN": "馬尼拉大都會"
+        }
+      },
+      {
+        "name": "Misamis Occidental",
+        "labels": {
+          "zh-CN": "西米薩米斯省"
+        }
+      },
+      {
+        "name": "Misamis Oriental",
+        "labels": {
+          "zh-CN": "東米薩米斯省"
+        }
+      },
+      {
+        "name": "Mountain Province",
+        "labels": {
+          "zh-CN": "高山省"
+        }
+      },
+      {
+        "name": "Negros Occidental",
+        "labels": {
+          "zh-CN": "西內格羅省"
+        }
+      },
+      {
+        "name": "Negros Oriental",
+        "labels": {
+          "zh-CN": "東內格羅省"
+        }
+      },
+      {
+        "name": "Northern Samar",
+        "labels": {
+          "zh-CN": "北薩馬省"
+        }
+      },
+      {
+        "name": "Nueva Ecija",
+        "labels": {
+          "zh-CN": "新怡詩夏省"
+        }
+      },
+      {
+        "name": "Nueva Vizcaya",
+        "labels": {
+          "zh-CN": "新比斯開省"
+        }
+      },
+      {
+        "name": "Occidental Mindoro",
+        "labels": {
+          "zh-CN": "西民都洛省"
+        }
+      },
+      {
+        "name": "Oriental Mindoro",
+        "labels": {
+          "zh-CN": "東民都洛省"
+        }
+      },
+      {
+        "name": "Palawan",
+        "labels": {
+          "zh-CN": "巴拉望省"
+        }
+      },
+      {
+        "name": "Pampanga",
+        "labels": {
+          "zh-CN": "邦板牙省"
+        }
+      },
+      {
+        "name": "Pangasinan",
+        "labels": {
+          "zh-CN": "邦阿西楠省"
+        }
+      },
+      {
+        "name": "Quezon",
+        "labels": {
+          "zh-CN": "奎松省"
+        }
+      },
+      {
+        "name": "Quirino",
+        "labels": {
+          "zh-CN": "季里諾省"
+        }
+      },
+      {
+        "name": "Rizal",
+        "labels": {
+          "zh-CN": "黎剎省"
+        }
+      },
+      {
+        "name": "Romblon",
+        "labels": {
+          "zh-CN": "朗布隆省"
+        }
+      },
+      {
+        "name": "Samar",
+        "labels": {
+          "zh-CN": "薩馬省"
+        }
+      },
+      {
+        "name": "Sarangani",
+        "labels": {
+          "zh-CN": "薩蘭加尼省"
+        }
+      },
+      {
+        "name": "Siquijor",
+        "labels": {
+          "zh-CN": "錫基霍爾省"
+        }
+      },
+      {
+        "name": "Sorsogon",
+        "labels": {
+          "zh-CN": "索索貢省"
+        }
+      },
+      {
+        "name": "South Cotabato",
+        "labels": {
+          "zh-CN": "南哥打巴托省"
+        }
+      },
+      {
+        "name": "Southern Leyte",
+        "labels": {
+          "zh-CN": "南萊特省"
+        }
+      },
+      {
+        "name": "Sultan Kudarat",
+        "labels": {
+          "zh-CN": "蘇丹庫達拉省"
+        }
+      },
+      {
+        "name": "Sulu",
+        "labels": {
+          "zh-CN": "蘇祿省"
+        }
+      },
+      {
+        "name": "Surigao del Norte",
+        "labels": {
+          "zh-CN": "北苏里高省"
+        }
+      },
+      {
+        "name": "Surigao del Sur",
+        "labels": {
+          "zh-CN": "南苏里高省"
+        }
+      },
+      {
+        "name": "Tarlac",
+        "labels": {
+          "zh-CN": "丹轆省"
+        }
+      },
+      {
+        "name": "Tawi-Tawi",
+        "labels": {
+          "zh-CN": "塔威塔威省"
+        }
+      },
+      {
+        "name": "Zambales",
+        "labels": {
+          "zh-CN": "三描礼士省"
+        }
+      },
+      {
+        "name": "Zamboanga Sibugay",
+        "labels": {
+          "zh-CN": "三寶顏錫布格省"
+        }
+      },
+      {
+        "name": "Zamboanga del Norte",
+        "labels": {
+          "zh-CN": "北三寶顏省"
+        }
+      },
+      {
+        "name": "Zamboanga del Sur",
+        "labels": {
+          "zh-CN": "南三寶顏省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "PN",
+    "name": "Pitcairn",
+    "labels": {
+      "zh-CN": "皮特凯恩群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PL",
+    "name": "Poland",
+    "labels": {
+      "zh-CN": "波兰"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PT",
+    "name": "Portugal",
+    "labels": {
+      "zh-CN": "葡萄牙"
+    },
+    "provinces": [
+      {
+        "name": "Aveiro",
+        "labels": {
+          "zh-CN": "阿威羅區"
+        }
+      },
+      {
+        "name": "Açores",
+        "labels": {
+          "zh-CN": "亚速尔群岛"
+        }
+      },
+      {
+        "name": "Beja",
+        "labels": {
+          "zh-CN": "貝雅區"
+        }
+      },
+      {
+        "name": "Braga",
+        "labels": {
+          "zh-CN": "布拉加區"
+        }
+      },
+      {
+        "name": "Bragança",
+        "labels": {
+          "zh-CN": "布拉干薩區"
+        }
+      },
+      {
+        "name": "Castelo Branco",
+        "labels": {
+          "zh-CN": "布朗庫堡區"
+        }
+      },
+      {
+        "name": "Coimbra",
+        "labels": {
+          "zh-CN": "科英布拉區"
+        }
+      },
+      {
+        "name": "Faro",
+        "labels": {
+          "zh-CN": "法魯區"
+        }
+      },
+      {
+        "name": "Guarda",
+        "labels": {
+          "zh-CN": "瓜達區"
+        }
+      },
+      {
+        "name": "Leiria",
+        "labels": {
+          "zh-CN": "萊里亞區"
+        }
+      },
+      {
+        "name": "Lisboa",
+        "labels": {
+          "zh-CN": "里斯本區"
+        }
+      },
+      {
+        "name": "Madeira",
+        "labels": {
+          "zh-CN": "馬德拉"
+        }
+      },
+      {
+        "name": "Portalegre",
+        "labels": {
+          "zh-CN": "波塔萊格雷區"
+        }
+      },
+      {
+        "name": "Porto",
+        "labels": {
+          "zh-CN": "波爾圖區"
+        }
+      },
+      {
+        "name": "Santarém",
+        "labels": {
+          "zh-CN": "聖塔倫區"
+        }
+      },
+      {
+        "name": "Setúbal",
+        "labels": {
+          "zh-CN": "塞圖巴爾區"
+        }
+      },
+      {
+        "name": "Viana do Castelo",
+        "labels": {
+          "zh-CN": "維亞納堡區"
+        }
+      },
+      {
+        "name": "Vila Real",
+        "labels": {
+          "zh-CN": "雷亞爾城區"
+        }
+      },
+      {
+        "name": "Viseu",
+        "labels": {
+          "zh-CN": "維塞烏區"
+        }
+      },
+      {
+        "name": "Évora",
+        "labels": {
+          "zh-CN": "埃武拉區"
+        }
+      }
+    ]
+  },
+  {
+    "code": "QA",
+    "name": "Qatar",
+    "labels": {
+      "zh-CN": "卡塔尔"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CM",
+    "name": "Republic of Cameroon",
+    "labels": {
+      "zh-CN": "喀麦隆"
+    },
+    "provinces": []
+  },
+  {
+    "code": "RE",
+    "name": "Reunion",
+    "labels": {
+      "zh-CN": "留尼汪"
+    },
+    "provinces": []
+  },
+  {
+    "code": "RO",
+    "name": "Romania",
+    "labels": {
+      "zh-CN": "罗马尼亚"
+    },
+    "provinces": [
+      {
+        "name": "Alba",
+        "labels": {
+          "zh-CN": "阿爾巴縣"
+        }
+      },
+      {
+        "name": "Arad",
+        "labels": {
+          "zh-CN": "阿拉德縣"
+        }
+      },
+      {
+        "name": "Argeș",
+        "labels": {
+          "zh-CN": "阿爾傑什縣"
+        }
+      },
+      {
+        "name": "Bacău",
+        "labels": {
+          "zh-CN": "巴克烏縣"
+        }
+      },
+      {
+        "name": "Bihor",
+        "labels": {
+          "zh-CN": "比霍爾縣"
+        }
+      },
+      {
+        "name": "Bistrița-Năsăud",
+        "labels": {
+          "zh-CN": "比斯特里察-訥瑟烏德縣"
+        }
+      },
+      {
+        "name": "Botoșani",
+        "labels": {
+          "zh-CN": "博托沙尼縣"
+        }
+      },
+      {
+        "name": "Brașov",
+        "labels": {
+          "zh-CN": "布拉索夫縣"
+        }
+      },
+      {
+        "name": "Brăila",
+        "labels": {
+          "zh-CN": "布勒伊拉縣"
+        }
+      },
+      {
+        "name": "București",
+        "labels": {
+          "zh-CN": "布加勒斯特"
+        }
+      },
+      {
+        "name": "Buzău",
+        "labels": {
+          "zh-CN": "布澤烏縣"
+        }
+      },
+      {
+        "name": "Caraș-Severin",
+        "labels": {
+          "zh-CN": "卡拉什-塞維林縣"
+        }
+      },
+      {
+        "name": "Cluj",
+        "labels": {
+          "zh-CN": "克魯日縣"
+        }
+      },
+      {
+        "name": "Constanța",
+        "labels": {
+          "zh-CN": "康斯坦察縣"
+        }
+      },
+      {
+        "name": "Covasna",
+        "labels": {
+          "zh-CN": "科瓦斯納縣"
+        }
+      },
+      {
+        "name": "Călărași",
+        "labels": {
+          "zh-CN": "克勒拉希縣"
+        }
+      },
+      {
+        "name": "Dolj",
+        "labels": {
+          "zh-CN": "多爾日縣"
+        }
+      },
+      {
+        "name": "Dâmbovița",
+        "labels": {
+          "zh-CN": "登博維察縣"
+        }
+      },
+      {
+        "name": "Galați",
+        "labels": {
+          "zh-CN": "加拉茨縣"
+        }
+      },
+      {
+        "name": "Giurgiu",
+        "labels": {
+          "zh-CN": "久爾久縣"
+        }
+      },
+      {
+        "name": "Gorj",
+        "labels": {
+          "zh-CN": "戈爾日縣"
+        }
+      },
+      {
+        "name": "Harghita",
+        "labels": {
+          "zh-CN": "哈爾吉塔縣"
+        }
+      },
+      {
+        "name": "Hunedoara",
+        "labels": {
+          "zh-CN": "胡內多阿拉縣"
+        }
+      },
+      {
+        "name": "Ialomița",
+        "labels": {
+          "zh-CN": "雅洛米察縣"
+        }
+      },
+      {
+        "name": "Iași",
+        "labels": {
+          "zh-CN": "雅西縣"
+        }
+      },
+      {
+        "name": "Ilfov",
+        "labels": {
+          "zh-CN": "伊爾福夫縣"
+        }
+      },
+      {
+        "name": "Maramureș",
+        "labels": {
+          "zh-CN": "馬拉穆列什縣"
+        }
+      },
+      {
+        "name": "Mehedinți",
+        "labels": {
+          "zh-CN": "梅赫丁茨縣"
+        }
+      },
+      {
+        "name": "Mureș",
+        "labels": {
+          "zh-CN": "穆列什縣"
+        }
+      },
+      {
+        "name": "Neamț",
+        "labels": {
+          "zh-CN": "尼亞姆茨縣"
+        }
+      },
+      {
+        "name": "Olt",
+        "labels": {
+          "zh-CN": "奧爾特縣"
+        }
+      },
+      {
+        "name": "Prahova",
+        "labels": {
+          "zh-CN": "普拉霍瓦縣"
+        }
+      },
+      {
+        "name": "Satu Mare",
+        "labels": {
+          "zh-CN": "薩圖馬雷縣"
+        }
+      },
+      {
+        "name": "Sibiu",
+        "labels": {
+          "zh-CN": "錫比烏縣"
+        }
+      },
+      {
+        "name": "Suceava",
+        "labels": {
+          "zh-CN": "蘇恰瓦縣"
+        }
+      },
+      {
+        "name": "Sălaj",
+        "labels": {
+          "zh-CN": "瑟拉日縣"
+        }
+      },
+      {
+        "name": "Teleorman",
+        "labels": {
+          "zh-CN": "特列奧爾曼縣"
+        }
+      },
+      {
+        "name": "Timiș",
+        "labels": {
+          "zh-CN": "蒂米什縣"
+        }
+      },
+      {
+        "name": "Tulcea",
+        "labels": {
+          "zh-CN": "圖爾恰縣"
+        }
+      },
+      {
+        "name": "Vaslui",
+        "labels": {
+          "zh-CN": "瓦斯盧伊縣"
+        }
+      },
+      {
+        "name": "Vrancea",
+        "labels": {
+          "zh-CN": "弗朗恰縣"
+        }
+      },
+      {
+        "name": "Vâlcea",
+        "labels": {
+          "zh-CN": "沃爾恰縣"
+        }
+      }
+    ]
+  },
+  {
+    "code": "RU",
+    "name": "Russia",
+    "labels": {
+      "zh-CN": "俄罗斯"
+    },
+    "provinces": [
+      {
+        "name": "Altai Krai",
+        "labels": {
+          "zh-CN": "阿尔泰边疆区"
+        }
+      },
+      {
+        "name": "Altai Republic",
+        "labels": {
+          "zh-CN": "阿尔泰共和国"
+        }
+      },
+      {
+        "name": "Amur Oblast",
+        "labels": {
+          "zh-CN": "阿穆尔州"
+        }
+      },
+      {
+        "name": "Arkhangelsk Oblast",
+        "labels": {
+          "zh-CN": "阿尔汉格尔斯克州"
+        }
+      },
+      {
+        "name": "Astrakhan Oblast",
+        "labels": {
+          "zh-CN": "阿斯特拉罕州"
+        }
+      },
+      {
+        "name": "Belgorod Oblast",
+        "labels": {
+          "zh-CN": "别尔哥罗德州"
+        }
+      },
+      {
+        "name": "Bryansk Oblast",
+        "labels": {
+          "zh-CN": "布良斯克州"
+        }
+      },
+      {
+        "name": "Chechen Republic",
+        "labels": {
+          "zh-CN": "车臣共和国"
+        }
+      },
+      {
+        "name": "Chelyabinsk Oblast",
+        "labels": {
+          "zh-CN": "车里雅宾斯克州"
+        }
+      },
+      {
+        "name": "Chukotka Autonomous Okrug",
+        "labels": {
+          "zh-CN": "楚科奇自治区"
+        }
+      },
+      {
+        "name": "Chuvash Republic",
+        "labels": {
+          "zh-CN": "楚瓦什共和国"
+        }
+      },
+      {
+        "name": "Irkutsk Oblast",
+        "labels": {
+          "zh-CN": "伊尔库茨克州"
+        }
+      },
+      {
+        "name": "Ivanovo Oblast",
+        "labels": {
+          "zh-CN": "伊万诺沃州"
+        }
+      },
+      {
+        "name": "Jewish Autonomous Oblast",
+        "labels": {
+          "zh-CN": "犹太自治州"
+        }
+      },
+      {
+        "name": "Kabardino-Balkarian Republic",
+        "labels": {
+          "zh-CN": "卡巴爾達-巴爾卡爾共和國"
+        }
+      },
+      {
+        "name": "Kaliningrad Oblast",
+        "labels": {
+          "zh-CN": "加里宁格勒州"
+        }
+      },
+      {
+        "name": "Kaluga Oblast",
+        "labels": {
+          "zh-CN": "卡卢加州"
+        }
+      },
+      {
+        "name": "Kamchatka Krai",
+        "labels": {
+          "zh-CN": "堪察加邊疆區"
+        }
+      },
+      {
+        "name": "Karachay–Cherkess Republic",
+        "labels": {
+          "zh-CN": "卡拉恰伊-切尔克斯共和国"
+        }
+      },
+      {
+        "name": "Kemerovo Oblast",
+        "labels": {
+          "zh-CN": "科麦罗沃州"
+        }
+      },
+      {
+        "name": "Khabarovsk Krai",
+        "labels": {
+          "zh-CN": "哈巴罗夫斯克边疆区"
+        }
+      },
+      {
+        "name": "Khanty-Mansi Autonomous Okrug",
+        "labels": {
+          "zh-CN": "汉特-曼西自治区"
+        }
+      },
+      {
+        "name": "Kirov Oblast",
+        "labels": {
+          "zh-CN": "基洛夫州"
+        }
+      },
+      {
+        "name": "Komi Republic",
+        "labels": {
+          "zh-CN": "科米共和国"
+        }
+      },
+      {
+        "name": "Kostroma Oblast",
+        "labels": {
+          "zh-CN": "科斯特罗马州"
+        }
+      },
+      {
+        "name": "Krasnodar Krai",
+        "labels": {
+          "zh-CN": "克拉斯诺达尔边疆区"
+        }
+      },
+      {
+        "name": "Krasnoyarsk Krai",
+        "labels": {
+          "zh-CN": "克拉斯諾亞爾斯克邊疆區"
+        }
+      },
+      {
+        "name": "Kurgan Oblast",
+        "labels": {
+          "zh-CN": "库尔干州"
+        }
+      },
+      {
+        "name": "Kursk Oblast",
+        "labels": {
+          "zh-CN": "库尔斯克州"
+        }
+      },
+      {
+        "name": "Leningrad Oblast",
+        "labels": {
+          "zh-CN": "列宁格勒州"
+        }
+      },
+      {
+        "name": "Lipetsk Oblast",
+        "labels": {
+          "zh-CN": "利佩茨克州"
+        }
+      },
+      {
+        "name": "Magadan Oblast",
+        "labels": {
+          "zh-CN": "马加丹州"
+        }
+      },
+      {
+        "name": "Mari El Republic",
+        "labels": {
+          "zh-CN": "马里埃尔共和国"
+        }
+      },
+      {
+        "name": "Moscow",
+        "labels": {
+          "zh-CN": "莫斯科"
+        }
+      },
+      {
+        "name": "Moscow Oblast",
+        "labels": {
+          "zh-CN": "莫斯科州"
+        }
+      },
+      {
+        "name": "Murmansk Oblast",
+        "labels": {
+          "zh-CN": "摩爾曼斯克州"
+        }
+      },
+      {
+        "name": "Nizhny Novgorod Oblast",
+        "labels": {
+          "zh-CN": "下诺夫哥罗德州"
+        }
+      },
+      {
+        "name": "Novgorod Oblast",
+        "labels": {
+          "zh-CN": "諾夫哥羅德州"
+        }
+      },
+      {
+        "name": "Novosibirsk Oblast",
+        "labels": {
+          "zh-CN": "新西伯利亚州"
+        }
+      },
+      {
+        "name": "Omsk Oblast",
+        "labels": {
+          "zh-CN": "鄂木斯克州"
+        }
+      },
+      {
+        "name": "Orenburg Oblast",
+        "labels": {
+          "zh-CN": "奧倫堡州"
+        }
+      },
+      {
+        "name": "Oryol Oblast",
+        "labels": {
+          "zh-CN": "奥廖尔州"
+        }
+      },
+      {
+        "name": "Penza Oblast",
+        "labels": {
+          "zh-CN": "奔萨州"
+        }
+      },
+      {
+        "name": "Perm Krai",
+        "labels": {
+          "zh-CN": "彼爾姆邊疆區"
+        }
+      },
+      {
+        "name": "Primorsky Krai",
+        "labels": {
+          "zh-CN": "滨海边疆区"
+        }
+      },
+      {
+        "name": "Pskov Oblast",
+        "labels": {
+          "zh-CN": "普斯科夫州"
+        }
+      },
+      {
+        "name": "Republic of Adygeya",
+        "labels": {
+          "zh-CN": "阿迪格共和国"
+        }
+      },
+      {
+        "name": "Republic of Bashkortostan",
+        "labels": {
+          "zh-CN": "巴什科尔托斯坦共和国"
+        }
+      },
+      {
+        "name": "Republic of Buryatia",
+        "labels": {
+          "zh-CN": "布里亞特共和國"
+        }
+      },
+      {
+        "name": "Republic of Dagestan",
+        "labels": {
+          "zh-CN": "达吉斯坦共和国"
+        }
+      },
+      {
+        "name": "Republic of Ingushetia",
+        "labels": {
+          "zh-CN": "印古什共和国"
+        }
+      },
+      {
+        "name": "Republic of Kalmykia",
+        "labels": {
+          "zh-CN": "卡尔梅克共和国"
+        }
+      },
+      {
+        "name": "Republic of Karelia",
+        "labels": {
+          "zh-CN": "卡累利阿共和国"
+        }
+      },
+      {
+        "name": "Republic of Khakassia",
+        "labels": {
+          "zh-CN": "哈卡斯共和国"
+        }
+      },
+      {
+        "name": "Republic of Mordovia",
+        "labels": {
+          "zh-CN": "莫尔多瓦共和国"
+        }
+      },
+      {
+        "name": "Republic of North Ossetia–Alania",
+        "labels": {
+          "zh-CN": "北奥塞梯-阿兰共和国"
+        }
+      },
+      {
+        "name": "Republic of Tatarstan",
+        "labels": {
+          "zh-CN": "鞑靼斯坦共和国"
+        }
+      },
+      {
+        "name": "Rostov Oblast",
+        "labels": {
+          "zh-CN": "罗斯托夫州"
+        }
+      },
+      {
+        "name": "Ryazan Oblast",
+        "labels": {
+          "zh-CN": "梁赞州"
+        }
+      },
+      {
+        "name": "Saint Petersburg",
+        "labels": {
+          "zh-CN": "圣彼得堡"
+        }
+      },
+      {
+        "name": "Sakha Republic (Yakutia)",
+        "labels": {
+          "zh-CN": "萨哈共和国"
+        }
+      },
+      {
+        "name": "Sakhalin Oblast",
+        "labels": {
+          "zh-CN": "萨哈林州"
+        }
+      },
+      {
+        "name": "Samara Oblast",
+        "labels": {
+          "zh-CN": "萨马拉州"
+        }
+      },
+      {
+        "name": "Saratov Oblast",
+        "labels": {
+          "zh-CN": "萨拉托夫州"
+        }
+      },
+      {
+        "name": "Smolensk Oblast",
+        "labels": {
+          "zh-CN": "斯摩棱斯克州"
+        }
+      },
+      {
+        "name": "Stavropol Krai",
+        "labels": {
+          "zh-CN": "斯塔夫罗波尔边疆区"
+        }
+      },
+      {
+        "name": "Sverdlovsk Oblast",
+        "labels": {
+          "zh-CN": "斯維爾德洛夫斯克州"
+        }
+      },
+      {
+        "name": "Tambov Oblast",
+        "labels": {
+          "zh-CN": "坦波夫州"
+        }
+      },
+      {
+        "name": "Tomsk Oblast",
+        "labels": {
+          "zh-CN": "托木斯克州"
+        }
+      },
+      {
+        "name": "Tula Oblast",
+        "labels": {
+          "zh-CN": "图拉州"
+        }
+      },
+      {
+        "name": "Tver Oblast",
+        "labels": {
+          "zh-CN": "特维尔州"
+        }
+      },
+      {
+        "name": "Tyumen Oblast",
+        "labels": {
+          "zh-CN": "秋明州"
+        }
+      },
+      {
+        "name": "Tyva Republic",
+        "labels": {
+          "zh-CN": "图瓦共和国"
+        }
+      },
+      {
+        "name": "Udmurtia",
+        "labels": {
+          "zh-CN": "乌德穆尔特共和国"
+        }
+      },
+      {
+        "name": "Ulyanovsk Oblast",
+        "labels": {
+          "zh-CN": "乌里扬诺夫斯克州"
+        }
+      },
+      {
+        "name": "Vladimir Oblast",
+        "labels": {
+          "zh-CN": "弗拉基米尔州"
+        }
+      },
+      {
+        "name": "Volgograd Oblast",
+        "labels": {
+          "zh-CN": "伏尔加格勒州"
+        }
+      },
+      {
+        "name": "Vologda Oblast",
+        "labels": {
+          "zh-CN": "沃洛格达州"
+        }
+      },
+      {
+        "name": "Voronezh Oblast",
+        "labels": {
+          "zh-CN": "沃罗涅日州"
+        }
+      },
+      {
+        "name": "Yamalo-Nenets Autonomous Okrug",
+        "labels": {
+          "zh-CN": "亚马尔-涅涅茨自治区"
+        }
+      },
+      {
+        "name": "Yaroslavl Oblast",
+        "labels": {
+          "zh-CN": "雅羅斯拉夫爾州"
+        }
+      },
+      {
+        "name": "Zabaykalsky Krai",
+        "labels": {
+          "zh-CN": "外貝加爾邊疆區"
+        }
+      }
+    ]
+  },
+  {
+    "code": "RW",
+    "name": "Rwanda",
+    "labels": {
+      "zh-CN": "卢旺达"
+    },
+    "provinces": []
+  },
+  {
+    "code": "BL",
+    "name": "Saint Barthélemy",
+    "labels": {
+      "zh-CN": "圣巴泰勒米"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SH",
+    "name": "Saint Helena",
+    "labels": {
+      "zh-CN": "圣赫勒拿"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KN",
+    "name": "Saint Kitts And Nevis",
+    "labels": {
+      "zh-CN": "圣基茨和尼维斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "LC",
+    "name": "Saint Lucia",
+    "labels": {
+      "zh-CN": "圣卢西亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "MF",
+    "name": "Saint Martin",
+    "labels": {
+      "zh-CN": "法属圣马丁"
+    },
+    "provinces": []
+  },
+  {
+    "code": "PM",
+    "name": "Saint Pierre And Miquelon",
+    "labels": {
+      "zh-CN": "圣皮埃尔和密克隆群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "WS",
+    "name": "Samoa",
+    "labels": {
+      "zh-CN": "萨摩亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SM",
+    "name": "San Marino",
+    "labels": {
+      "zh-CN": "圣马力诺"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ST",
+    "name": "Sao Tome And Principe",
+    "labels": {
+      "zh-CN": "圣多美和普林西比"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SA",
+    "name": "Saudi Arabia",
+    "labels": {
+      "zh-CN": "沙特阿拉伯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SN",
+    "name": "Senegal",
+    "labels": {
+      "zh-CN": "塞内加尔"
+    },
+    "provinces": []
+  },
+  {
+    "code": "RS",
+    "name": "Serbia",
+    "labels": {
+      "zh-CN": "塞尔维亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SC",
+    "name": "Seychelles",
+    "labels": {
+      "zh-CN": "塞舌尔"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SL",
+    "name": "Sierra Leone",
+    "labels": {
+      "zh-CN": "塞拉利昂"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SG",
+    "name": "Singapore",
+    "labels": {
+      "zh-CN": "新加坡"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SX",
+    "name": "Sint Maarten",
+    "labels": {
+      "zh-CN": "荷属圣马丁"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SK",
+    "name": "Slovakia",
+    "labels": {
+      "zh-CN": "斯洛伐克"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SI",
+    "name": "Slovenia",
+    "labels": {
+      "zh-CN": "斯洛文尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SB",
+    "name": "Solomon Islands",
+    "labels": {
+      "zh-CN": "所罗门群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SO",
+    "name": "Somalia",
+    "labels": {
+      "zh-CN": "索马里"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ZA",
+    "name": "South Africa",
+    "labels": {
+      "zh-CN": "南非"
+    },
+    "provinces": [
+      {
+        "name": "Eastern Cape",
+        "labels": {
+          "zh-CN": "東開普省"
+        }
+      },
+      {
+        "name": "Free State",
+        "labels": {
+          "zh-CN": "自由邦省"
+        }
+      },
+      {
+        "name": "Gauteng",
+        "labels": {
+          "zh-CN": "豪登省"
+        }
+      },
+      {
+        "name": "KwaZulu-Natal",
+        "labels": {
+          "zh-CN": "夸祖魯-納塔爾省"
+        }
+      },
+      {
+        "name": "Limpopo",
+        "labels": {
+          "zh-CN": "林波波省"
+        }
+      },
+      {
+        "name": "Mpumalanga",
+        "labels": {
+          "zh-CN": "普馬蘭加省"
+        }
+      },
+      {
+        "name": "North West",
+        "labels": {
+          "zh-CN": "西北省"
+        }
+      },
+      {
+        "name": "Northern Cape",
+        "labels": {
+          "zh-CN": "北開普省"
+        }
+      },
+      {
+        "name": "Western Cape",
+        "labels": {
+          "zh-CN": "西開普省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "GS",
+    "name": "South Georgia And The South Sandwich Islands",
+    "labels": {
+      "zh-CN": "南乔治亚和南桑威奇群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "KR",
+    "name": "South Korea",
+    "labels": {
+      "zh-CN": "韩国"
+    },
+    "provinces": [
+      {
+        "name": "Busan",
+        "labels": {
+          "zh-CN": "釜山"
+        }
+      },
+      {
+        "name": "Chungbuk",
+        "labels": {
+          "zh-CN": "忠清北道"
+        }
+      },
+      {
+        "name": "Chungnam",
+        "labels": {
+          "zh-CN": "忠清南道"
+        }
+      },
+      {
+        "name": "Daegu",
+        "labels": {
+          "zh-CN": "大邱廣域市"
+        }
+      },
+      {
+        "name": "Daejeon",
+        "labels": {
+          "zh-CN": "大田广域市"
+        }
+      },
+      {
+        "name": "Gangwon",
+        "labels": {
+          "zh-CN": "江原道"
+        }
+      },
+      {
+        "name": "Gwangju",
+        "labels": {
+          "zh-CN": "光州廣域市"
+        }
+      },
+      {
+        "name": "Gyeongbuk",
+        "labels": {
+          "zh-CN": "庆尚北道"
+        }
+      },
+      {
+        "name": "Gyeonggi",
+        "labels": {
+          "zh-CN": "京畿道"
+        }
+      },
+      {
+        "name": "Gyeongnam",
+        "labels": {
+          "zh-CN": "庆尚南道"
+        }
+      },
+      {
+        "name": "Incheon",
+        "labels": {
+          "zh-CN": "仁川廣域市"
+        }
+      },
+      {
+        "name": "Jeju",
+        "labels": {
+          "zh-CN": "濟州特別自治道"
+        }
+      },
+      {
+        "name": "Jeonbuk",
+        "labels": {
+          "zh-CN": "全羅北道"
+        }
+      },
+      {
+        "name": "Jeonnam",
+        "labels": {
+          "zh-CN": "全羅南道"
+        }
+      },
+      {
+        "name": "Sejong",
+        "labels": {
+          "zh-CN": "世宗特別自治市"
+        }
+      },
+      {
+        "name": "Seoul",
+        "labels": {
+          "zh-CN": "首爾"
+        }
+      },
+      {
+        "name": "Ulsan",
+        "labels": {
+          "zh-CN": "蔚山广域市"
+        }
+      }
+    ]
+  },
+  {
+    "code": "SS",
+    "name": "South Sudan",
+    "labels": {
+      "zh-CN": "南苏丹"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ES",
+    "name": "Spain",
+    "labels": {
+      "zh-CN": "西班牙"
+    },
+    "provinces": [
+      {
+        "name": "A Coruña",
+        "labels": {
+          "zh-CN": "拉科鲁尼亚省"
+        }
+      },
+      {
+        "name": "Albacete",
+        "labels": {
+          "zh-CN": "阿爾瓦塞特省"
+        }
+      },
+      {
+        "name": "Alicante",
+        "labels": {
+          "zh-CN": "阿利坎特省"
+        }
+      },
+      {
+        "name": "Almería",
+        "labels": {
+          "zh-CN": "阿爾梅里亞省"
+        }
+      },
+      {
+        "name": "Asturias",
+        "labels": {
+          "zh-CN": "Asturias"
+        }
+      },
+      {
+        "name": "Badajoz",
+        "labels": {
+          "zh-CN": "巴达霍斯省"
+        }
+      },
+      {
+        "name": "Balears",
+        "labels": {
+          "zh-CN": "巴利阿里群島²"
+        }
+      },
+      {
+        "name": "Barcelona",
+        "labels": {
+          "zh-CN": "巴塞罗那省"
+        }
+      },
+      {
+        "name": "Burgos",
+        "labels": {
+          "zh-CN": "布尔戈斯省"
+        }
+      },
+      {
+        "name": "Cantabria",
+        "labels": {
+          "zh-CN": "坎塔布里亚²"
+        }
+      },
+      {
+        "name": "Castellón",
+        "labels": {
+          "zh-CN": "卡斯特利翁省"
+        }
+      },
+      {
+        "name": "Ceuta",
+        "labels": {
+          "zh-CN": "休达"
+        }
+      },
+      {
+        "name": "Ciudad Real",
+        "labels": {
+          "zh-CN": "雷阿爾城省"
+        }
+      },
+      {
+        "name": "Cuenca",
+        "labels": {
+          "zh-CN": "昆卡省"
+        }
+      },
+      {
+        "name": "Cáceres",
+        "labels": {
+          "zh-CN": "卡塞雷斯省"
+        }
+      },
+      {
+        "name": "Cádiz",
+        "labels": {
+          "zh-CN": "加的斯省"
+        }
+      },
+      {
+        "name": "Córdoba",
+        "labels": {
+          "zh-CN": "科爾多瓦省"
+        }
+      },
+      {
+        "name": "Girona",
+        "labels": {
+          "zh-CN": "赫羅納省"
+        }
+      },
+      {
+        "name": "Granada",
+        "labels": {
+          "zh-CN": "格拉納達省"
+        }
+      },
+      {
+        "name": "Guadalajara",
+        "labels": {
+          "zh-CN": "瓜達拉哈拉省"
+        }
+      },
+      {
+        "name": "Guipúzcoa",
+        "labels": {
+          "zh-CN": "吉普斯夸省"
+        }
+      },
+      {
+        "name": "Huelva",
+        "labels": {
+          "zh-CN": "韋爾瓦省"
+        }
+      },
+      {
+        "name": "Huesca",
+        "labels": {
+          "zh-CN": "韋斯卡省"
+        }
+      },
+      {
+        "name": "Jaén",
+        "labels": {
+          "zh-CN": "哈恩省"
+        }
+      },
+      {
+        "name": "La Rioja",
+        "labels": {
+          "zh-CN": "拉里奥哈"
+        }
+      },
+      {
+        "name": "Las Palmas",
+        "labels": {
+          "zh-CN": "拉斯帕爾馬斯省"
+        }
+      },
+      {
+        "name": "León",
+        "labels": {
+          "zh-CN": "莱昂省"
+        }
+      },
+      {
+        "name": "Lleida",
+        "labels": {
+          "zh-CN": "莱里达省"
+        }
+      },
+      {
+        "name": "Lugo",
+        "labels": {
+          "zh-CN": "卢戈省"
+        }
+      },
+      {
+        "name": "Madrid",
+        "labels": {
+          "zh-CN": "Madrid"
+        }
+      },
+      {
+        "name": "Melilla",
+        "labels": {
+          "zh-CN": "梅利利亚"
+        }
+      },
+      {
+        "name": "Murcia",
+        "labels": {
+          "zh-CN": "Murcia"
+        }
+      },
+      {
+        "name": "Málaga",
+        "labels": {
+          "zh-CN": "馬拉加省"
+        }
+      },
+      {
+        "name": "Navarra",
+        "labels": {
+          "zh-CN": "納瓦拉²"
+        }
+      },
+      {
+        "name": "Ourense",
+        "labels": {
+          "zh-CN": "奥伦塞省"
+        }
+      },
+      {
+        "name": "Palencia",
+        "labels": {
+          "zh-CN": "帕伦西亚省"
+        }
+      },
+      {
+        "name": "Pontevedra",
+        "labels": {
+          "zh-CN": "蓬特韋德拉省"
+        }
+      },
+      {
+        "name": "Salamanca",
+        "labels": {
+          "zh-CN": "萨拉曼卡省"
+        }
+      },
+      {
+        "name": "Santa Cruz de Tenerife",
+        "labels": {
+          "zh-CN": "聖克魯斯-德特內里費省"
+        }
+      },
+      {
+        "name": "Segovia",
+        "labels": {
+          "zh-CN": "塞哥維亞省"
+        }
+      },
+      {
+        "name": "Sevilla",
+        "labels": {
+          "zh-CN": "塞維利亞省"
+        }
+      },
+      {
+        "name": "Soria",
+        "labels": {
+          "zh-CN": "索里亚省"
+        }
+      },
+      {
+        "name": "Tarragona",
+        "labels": {
+          "zh-CN": "塔拉戈纳省"
+        }
+      },
+      {
+        "name": "Teruel",
+        "labels": {
+          "zh-CN": "特魯埃爾省"
+        }
+      },
+      {
+        "name": "Toledo",
+        "labels": {
+          "zh-CN": "托萊多省"
+        }
+      },
+      {
+        "name": "Valencia",
+        "labels": {
+          "zh-CN": "巴倫西亞省"
+        }
+      },
+      {
+        "name": "Valladolid",
+        "labels": {
+          "zh-CN": "巴利亞多利德省"
+        }
+      },
+      {
+        "name": "Vizcaya",
+        "labels": {
+          "zh-CN": "比斯開省"
+        }
+      },
+      {
+        "name": "Zamora",
+        "labels": {
+          "zh-CN": "萨莫拉省"
+        }
+      },
+      {
+        "name": "Zaragoza",
+        "labels": {
+          "zh-CN": "薩拉戈薩省"
+        }
+      },
+      {
+        "name": "Álava",
+        "labels": {
+          "zh-CN": "阿拉瓦省"
+        }
+      },
+      {
+        "name": "Ávila",
+        "labels": {
+          "zh-CN": "阿维拉省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "LK",
+    "name": "Sri Lanka",
+    "labels": {
+      "zh-CN": "斯里兰卡"
+    },
+    "provinces": []
+  },
+  {
+    "code": "VC",
+    "name": "St. Vincent",
+    "labels": {
+      "zh-CN": "圣文森特和格林纳丁斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SD",
+    "name": "Sudan",
+    "labels": {
+      "zh-CN": "苏丹"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SR",
+    "name": "Suriname",
+    "labels": {
+      "zh-CN": "苏里南"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SJ",
+    "name": "Svalbard And Jan Mayen",
+    "labels": {
+      "zh-CN": "斯瓦尔巴和扬马延"
+    },
+    "provinces": []
+  },
+  {
+    "code": "SE",
+    "name": "Sweden",
+    "labels": {
+      "zh-CN": "瑞典"
+    },
+    "provinces": []
+  },
+  {
+    "code": "CH",
+    "name": "Switzerland",
+    "labels": {
+      "zh-CN": "瑞士"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TW",
+    "name": "Taiwan",
+    "labels": {
+      "zh-CN": "台湾"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TJ",
+    "name": "Tajikistan",
+    "labels": {
+      "zh-CN": "塔吉克斯坦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TZ",
+    "name": "Tanzania, United Republic Of",
+    "labels": {
+      "zh-CN": "坦桑尼亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TH",
+    "name": "Thailand",
+    "labels": {
+      "zh-CN": "泰国"
+    },
+    "provinces": [
+      {
+        "name": "Amnat Charoen",
+        "labels": {
+          "zh-CN": "安納乍能府"
+        }
+      },
+      {
+        "name": "Ang Thong",
+        "labels": {
+          "zh-CN": "紅統府"
+        }
+      },
+      {
+        "name": "Bangkok",
+        "labels": {
+          "zh-CN": "曼谷"
+        }
+      },
+      {
+        "name": "Bueng Kan",
+        "labels": {
+          "zh-CN": "汶干府"
+        }
+      },
+      {
+        "name": "Buriram",
+        "labels": {
+          "zh-CN": "武里喃府"
+        }
+      },
+      {
+        "name": "Chachoengsao",
+        "labels": {
+          "zh-CN": "北柳府"
+        }
+      },
+      {
+        "name": "Chai Nat",
+        "labels": {
+          "zh-CN": "猜納府"
+        }
+      },
+      {
+        "name": "Chaiyaphum",
+        "labels": {
+          "zh-CN": "猜也奔府"
+        }
+      },
+      {
+        "name": "Chanthaburi",
+        "labels": {
+          "zh-CN": "尖竹汶府"
+        }
+      },
+      {
+        "name": "Chiang Mai",
+        "labels": {
+          "zh-CN": "清邁府"
+        }
+      },
+      {
+        "name": "Chiang Rai",
+        "labels": {
+          "zh-CN": "清萊府"
+        }
+      },
+      {
+        "name": "Chon Buri",
+        "labels": {
+          "zh-CN": "春武里府"
+        }
+      },
+      {
+        "name": "Chumphon",
+        "labels": {
+          "zh-CN": "春蓬府"
+        }
+      },
+      {
+        "name": "Kalasin",
+        "labels": {
+          "zh-CN": "加拉信府"
+        }
+      },
+      {
+        "name": "Kamphaeng Phet",
+        "labels": {
+          "zh-CN": "甘烹碧府"
+        }
+      },
+      {
+        "name": "Kanchanaburi",
+        "labels": {
+          "zh-CN": "北碧府"
+        }
+      },
+      {
+        "name": "Khon Kaen",
+        "labels": {
+          "zh-CN": "坤敬府"
+        }
+      },
+      {
+        "name": "Krabi",
+        "labels": {
+          "zh-CN": "甲米府"
+        }
+      },
+      {
+        "name": "Lampang",
+        "labels": {
+          "zh-CN": "南邦府"
+        }
+      },
+      {
+        "name": "Lamphun",
+        "labels": {
+          "zh-CN": "南奔府"
+        }
+      },
+      {
+        "name": "Loei",
+        "labels": {
+          "zh-CN": "黎府"
+        }
+      },
+      {
+        "name": "Lopburi",
+        "labels": {
+          "zh-CN": "華富里府"
+        }
+      },
+      {
+        "name": "Mae Hong Son",
+        "labels": {
+          "zh-CN": "湄宏順府"
+        }
+      },
+      {
+        "name": "Maha Sarakham",
+        "labels": {
+          "zh-CN": "瑪哈沙拉堪府"
+        }
+      },
+      {
+        "name": "Mukdahan",
+        "labels": {
+          "zh-CN": "莫拉限府"
+        }
+      },
+      {
+        "name": "Nakhon Nayok",
+        "labels": {
+          "zh-CN": "坤西育府"
+        }
+      },
+      {
+        "name": "Nakhon Pathom",
+        "labels": {
+          "zh-CN": "佛統府"
+        }
+      },
+      {
+        "name": "Nakhon Phanom",
+        "labels": {
+          "zh-CN": "那空拍儂府"
+        }
+      },
+      {
+        "name": "Nakhon Ratchasima",
+        "labels": {
+          "zh-CN": "呵叻府"
+        }
+      },
+      {
+        "name": "Nakhon Sawan",
+        "labels": {
+          "zh-CN": "北欖坡府"
+        }
+      },
+      {
+        "name": "Nakhon Si Thammarat",
+        "labels": {
+          "zh-CN": "洛坤府"
+        }
+      },
+      {
+        "name": "Nan",
+        "labels": {
+          "zh-CN": "楠府"
+        }
+      },
+      {
+        "name": "Narathiwat",
+        "labels": {
+          "zh-CN": "陶公府"
+        }
+      },
+      {
+        "name": "Nong Bua Lam Phu",
+        "labels": {
+          "zh-CN": "廊磨喃蒲府"
+        }
+      },
+      {
+        "name": "Nong Khai",
+        "labels": {
+          "zh-CN": "廊開府"
+        }
+      },
+      {
+        "name": "Nonthaburi",
+        "labels": {
+          "zh-CN": "暖武里府"
+        }
+      },
+      {
+        "name": "Pathum Thani",
+        "labels": {
+          "zh-CN": "巴吞他尼府"
+        }
+      },
+      {
+        "name": "Pattani",
+        "labels": {
+          "zh-CN": "北大年府"
+        }
+      },
+      {
+        "name": "Pattaya",
+        "labels": {
+          "zh-CN": "芭達亞"
+        }
+      },
+      {
+        "name": "Phangnga",
+        "labels": {
+          "zh-CN": "攀牙府"
+        }
+      },
+      {
+        "name": "Phatthalung",
+        "labels": {
+          "zh-CN": "博他侖府"
+        }
+      },
+      {
+        "name": "Phayao",
+        "labels": {
+          "zh-CN": "帕夭府"
+        }
+      },
+      {
+        "name": "Phetchabun",
+        "labels": {
+          "zh-CN": "碧差汶府"
+        }
+      },
+      {
+        "name": "Phetchaburi",
+        "labels": {
+          "zh-CN": "佛丕府"
+        }
+      },
+      {
+        "name": "Phichit",
+        "labels": {
+          "zh-CN": "披集府"
+        }
+      },
+      {
+        "name": "Phitsanulok",
+        "labels": {
+          "zh-CN": "彭世洛府"
+        }
+      },
+      {
+        "name": "Phra Nakhon Si Ayutthaya",
+        "labels": {
+          "zh-CN": "大城府"
+        }
+      },
+      {
+        "name": "Phrae",
+        "labels": {
+          "zh-CN": "帕府"
+        }
+      },
+      {
+        "name": "Phuket",
+        "labels": {
+          "zh-CN": "普吉府"
+        }
+      },
+      {
+        "name": "Prachin Buri",
+        "labels": {
+          "zh-CN": "巴真府"
+        }
+      },
+      {
+        "name": "Prachuap Khiri Khan",
+        "labels": {
+          "zh-CN": "班武里府"
+        }
+      },
+      {
+        "name": "Ranong",
+        "labels": {
+          "zh-CN": "拉廊府"
+        }
+      },
+      {
+        "name": "Ratchaburi",
+        "labels": {
+          "zh-CN": "叻丕府"
+        }
+      },
+      {
+        "name": "Rayong",
+        "labels": {
+          "zh-CN": "羅勇府"
+        }
+      },
+      {
+        "name": "Roi Et",
+        "labels": {
+          "zh-CN": "黎逸府"
+        }
+      },
+      {
+        "name": "Sa Kaeo",
+        "labels": {
+          "zh-CN": "沙繳府"
+        }
+      },
+      {
+        "name": "Sakon Nakhon",
+        "labels": {
+          "zh-CN": "色軍府"
+        }
+      },
+      {
+        "name": "Samut Prakan",
+        "labels": {
+          "zh-CN": "北欖府"
+        }
+      },
+      {
+        "name": "Samut Sakhon",
+        "labels": {
+          "zh-CN": "龍仔厝府"
+        }
+      },
+      {
+        "name": "Samut Songkhram",
+        "labels": {
+          "zh-CN": "夜功府"
+        }
+      },
+      {
+        "name": "Saraburi",
+        "labels": {
+          "zh-CN": "北標府"
+        }
+      },
+      {
+        "name": "Satun",
+        "labels": {
+          "zh-CN": "沙敦府"
+        }
+      },
+      {
+        "name": "Sing Buri",
+        "labels": {
+          "zh-CN": "信武里府"
+        }
+      },
+      {
+        "name": "Sisaket",
+        "labels": {
+          "zh-CN": "四色菊府"
+        }
+      },
+      {
+        "name": "Songkhla",
+        "labels": {
+          "zh-CN": "宋卡府"
+        }
+      },
+      {
+        "name": "Sukhothai",
+        "labels": {
+          "zh-CN": "素可泰府"
+        }
+      },
+      {
+        "name": "Suphan Buri",
+        "labels": {
+          "zh-CN": "素攀武里府"
+        }
+      },
+      {
+        "name": "Surat Thani",
+        "labels": {
+          "zh-CN": "素叻府"
+        }
+      },
+      {
+        "name": "Surin",
+        "labels": {
+          "zh-CN": "素輦府"
+        }
+      },
+      {
+        "name": "Tak",
+        "labels": {
+          "zh-CN": "來興府"
+        }
+      },
+      {
+        "name": "Trang",
+        "labels": {
+          "zh-CN": "董里府"
+        }
+      },
+      {
+        "name": "Trat",
+        "labels": {
+          "zh-CN": "桐艾府"
+        }
+      },
+      {
+        "name": "Ubon Ratchathani",
+        "labels": {
+          "zh-CN": "烏汶府"
+        }
+      },
+      {
+        "name": "Udon Thani",
+        "labels": {
+          "zh-CN": "烏隆府"
+        }
+      },
+      {
+        "name": "Uthai Thani",
+        "labels": {
+          "zh-CN": "烏泰他尼府"
+        }
+      },
+      {
+        "name": "Uttaradit",
+        "labels": {
+          "zh-CN": "程逸府"
+        }
+      },
+      {
+        "name": "Yala",
+        "labels": {
+          "zh-CN": "惹拉府"
+        }
+      },
+      {
+        "name": "Yasothon",
+        "labels": {
+          "zh-CN": "益梭通府"
+        }
+      }
+    ]
+  },
+  {
+    "code": "TL",
+    "name": "Timor Leste",
+    "labels": {
+      "zh-CN": "东帝汶"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TG",
+    "name": "Togo",
+    "labels": {
+      "zh-CN": "多哥"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TK",
+    "name": "Tokelau",
+    "labels": {
+      "zh-CN": "托克劳"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TO",
+    "name": "Tonga",
+    "labels": {
+      "zh-CN": "汤加"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TT",
+    "name": "Trinidad and Tobago",
+    "labels": {
+      "zh-CN": "特立尼达和多巴哥"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TA",
+    "name": "Tristan da Cunha",
+    "labels": {
+      "zh-CN": "特里斯坦-达库尼亚群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TN",
+    "name": "Tunisia",
+    "labels": {
+      "zh-CN": "突尼斯"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TR",
+    "name": "Turkey",
+    "labels": {
+      "zh-CN": "土耳其"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TM",
+    "name": "Turkmenistan",
+    "labels": {
+      "zh-CN": "土库曼斯坦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TC",
+    "name": "Turks and Caicos Islands",
+    "labels": {
+      "zh-CN": "特克斯和凯科斯群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "TV",
+    "name": "Tuvalu",
+    "labels": {
+      "zh-CN": "图瓦卢"
+    },
+    "provinces": []
+  },
+  {
+    "code": "UG",
+    "name": "Uganda",
+    "labels": {
+      "zh-CN": "乌干达"
+    },
+    "provinces": []
+  },
+  {
+    "code": "UA",
+    "name": "Ukraine",
+    "labels": {
+      "zh-CN": "乌克兰"
+    },
+    "provinces": []
+  },
+  {
+    "code": "AE",
+    "name": "United Arab Emirates",
+    "labels": {
+      "zh-CN": "阿拉伯联合酋长国"
+    },
+    "provinces": [
+      {
+        "name": "Abu Dhabi",
+        "labels": {
+          "zh-CN": "阿布扎比"
+        }
+      },
+      {
+        "name": "Ajman",
+        "labels": {
+          "zh-CN": "阿吉曼"
+        }
+      },
+      {
+        "name": "Dubai",
+        "labels": {
+          "zh-CN": "迪拜酋长国"
+        }
+      },
+      {
+        "name": "Fujairah",
+        "labels": {
+          "zh-CN": "富吉拉"
+        }
+      },
+      {
+        "name": "Ras al-Khaimah",
+        "labels": {
+          "zh-CN": "拉斯海玛"
+        }
+      },
+      {
+        "name": "Sharjah",
+        "labels": {
+          "zh-CN": "夏尔迦"
+        }
+      },
+      {
+        "name": "Umm al-Quwain",
+        "labels": {
+          "zh-CN": "欧姆古温"
+        }
+      }
+    ]
+  },
+  {
+    "code": "GB",
+    "name": "United Kingdom",
+    "labels": {
+      "zh-CN": "英国"
+    },
+    "provinces": [
+      {
+        "name": "British Forces",
+        "labels": {
+          "zh-CN": "英国军队"
+        }
+      },
+      {
+        "name": "England",
+        "labels": {
+          "zh-CN": "英格兰"
+        }
+      },
+      {
+        "name": "Northern Ireland",
+        "labels": {
+          "zh-CN": "北爱尔兰"
+        }
+      },
+      {
+        "name": "Scotland",
+        "labels": {
+          "zh-CN": "苏格兰"
+        }
+      },
+      {
+        "name": "Wales",
+        "labels": {
+          "zh-CN": "威尔士"
+        }
+      }
+    ]
+  },
+  {
+    "code": "US",
+    "name": "United States",
+    "labels": {
+      "zh-CN": "美国"
+    },
+    "provinces": [
+      {
+        "name": "Alabama",
+        "labels": {
+          "zh-CN": "亚拉巴马州"
+        }
+      },
+      {
+        "name": "Alaska",
+        "labels": {
+          "zh-CN": "阿拉斯加州"
+        }
+      },
+      {
+        "name": "American Samoa",
+        "labels": {
+          "zh-CN": "美属萨摩亚"
+        }
+      },
+      {
+        "name": "Arizona",
+        "labels": {
+          "zh-CN": "亞利桑那州"
+        }
+      },
+      {
+        "name": "Arkansas",
+        "labels": {
+          "zh-CN": "阿肯色州"
+        }
+      },
+      {
+        "name": "Armed Forces Americas",
+        "labels": {
+          "zh-CN": "美洲武装部队"
+        }
+      },
+      {
+        "name": "Armed Forces Europe",
+        "labels": {
+          "zh-CN": "欧洲武装部队"
+        }
+      },
+      {
+        "name": "Armed Forces Pacific",
+        "labels": {
+          "zh-CN": "太平洋武装部队"
+        }
+      },
+      {
+        "name": "California",
+        "labels": {
+          "zh-CN": "加利福尼亚州"
+        }
+      },
+      {
+        "name": "Colorado",
+        "labels": {
+          "zh-CN": "科羅拉多州"
+        }
+      },
+      {
+        "name": "Connecticut",
+        "labels": {
+          "zh-CN": "康乃狄克州"
+        }
+      },
+      {
+        "name": "Delaware",
+        "labels": {
+          "zh-CN": "特拉华州"
+        }
+      },
+      {
+        "name": "District of Columbia",
+        "labels": {
+          "zh-CN": "華盛頓哥倫比亞特區"
+        }
+      },
+      {
+        "name": "Federated States of Micronesia",
+        "labels": {
+          "zh-CN": "密克罗尼西亚"
+        }
+      },
+      {
+        "name": "Florida",
+        "labels": {
+          "zh-CN": "佛罗里达州"
+        }
+      },
+      {
+        "name": "Georgia",
+        "labels": {
+          "zh-CN": "喬治亞州"
+        }
+      },
+      {
+        "name": "Guam",
+        "labels": {
+          "zh-CN": "关岛"
+        }
+      },
+      {
+        "name": "Hawaii",
+        "labels": {
+          "zh-CN": "夏威夷州"
+        }
+      },
+      {
+        "name": "Idaho",
+        "labels": {
+          "zh-CN": "爱达荷州"
+        }
+      },
+      {
+        "name": "Illinois",
+        "labels": {
+          "zh-CN": "伊利诺伊州"
+        }
+      },
+      {
+        "name": "Indiana",
+        "labels": {
+          "zh-CN": "印第安纳州"
+        }
+      },
+      {
+        "name": "Iowa",
+        "labels": {
+          "zh-CN": "艾奥瓦州"
+        }
+      },
+      {
+        "name": "Kansas",
+        "labels": {
+          "zh-CN": "堪薩斯州"
+        }
+      },
+      {
+        "name": "Kentucky",
+        "labels": {
+          "zh-CN": "肯塔基州"
+        }
+      },
+      {
+        "name": "Louisiana",
+        "labels": {
+          "zh-CN": "路易斯安那州"
+        }
+      },
+      {
+        "name": "Maine",
+        "labels": {
+          "zh-CN": "缅因州"
+        }
+      },
+      {
+        "name": "Marshall Islands",
+        "labels": {
+          "zh-CN": "马绍尔群岛"
+        }
+      },
+      {
+        "name": "Maryland",
+        "labels": {
+          "zh-CN": "马里兰州"
+        }
+      },
+      {
+        "name": "Massachusetts",
+        "labels": {
+          "zh-CN": "麻薩諸塞州"
+        }
+      },
+      {
+        "name": "Michigan",
+        "labels": {
+          "zh-CN": "密歇根州"
+        }
+      },
+      {
+        "name": "Minnesota",
+        "labels": {
+          "zh-CN": "明尼蘇達州"
+        }
+      },
+      {
+        "name": "Mississippi",
+        "labels": {
+          "zh-CN": "密西西比州"
+        }
+      },
+      {
+        "name": "Missouri",
+        "labels": {
+          "zh-CN": "密蘇里州"
+        }
+      },
+      {
+        "name": "Montana",
+        "labels": {
+          "zh-CN": "蒙大拿州"
+        }
+      },
+      {
+        "name": "Nebraska",
+        "labels": {
+          "zh-CN": "內布拉斯加州"
+        }
+      },
+      {
+        "name": "Nevada",
+        "labels": {
+          "zh-CN": "内华达州"
+        }
+      },
+      {
+        "name": "New Hampshire",
+        "labels": {
+          "zh-CN": "新罕布什尔州"
+        }
+      },
+      {
+        "name": "New Jersey",
+        "labels": {
+          "zh-CN": "新泽西州"
+        }
+      },
+      {
+        "name": "New Mexico",
+        "labels": {
+          "zh-CN": "新墨西哥州"
+        }
+      },
+      {
+        "name": "New York",
+        "labels": {
+          "zh-CN": "纽约州"
+        }
+      },
+      {
+        "name": "North Carolina",
+        "labels": {
+          "zh-CN": "北卡罗来纳州"
+        }
+      },
+      {
+        "name": "North Dakota",
+        "labels": {
+          "zh-CN": "北达科他州"
+        }
+      },
+      {
+        "name": "Northern Mariana Islands",
+        "labels": {
+          "zh-CN": "北马里亚纳群岛"
+        }
+      },
+      {
+        "name": "Ohio",
+        "labels": {
+          "zh-CN": "俄亥俄州"
+        }
+      },
+      {
+        "name": "Oklahoma",
+        "labels": {
+          "zh-CN": "奧克拉荷馬州"
+        }
+      },
+      {
+        "name": "Oregon",
+        "labels": {
+          "zh-CN": "俄勒冈州"
+        }
+      },
+      {
+        "name": "Palau",
+        "labels": {
+          "zh-CN": "帕劳"
+        }
+      },
+      {
+        "name": "Pennsylvania",
+        "labels": {
+          "zh-CN": "宾夕法尼亚州"
+        }
+      },
+      {
+        "name": "Puerto Rico",
+        "labels": {
+          "zh-CN": "波多黎各"
+        }
+      },
+      {
+        "name": "Rhode Island",
+        "labels": {
+          "zh-CN": "羅德島州"
+        }
+      },
+      {
+        "name": "South Carolina",
+        "labels": {
+          "zh-CN": "南卡罗来纳州"
+        }
+      },
+      {
+        "name": "South Dakota",
+        "labels": {
+          "zh-CN": "南达科他州"
+        }
+      },
+      {
+        "name": "Tennessee",
+        "labels": {
+          "zh-CN": "田纳西州"
+        }
+      },
+      {
+        "name": "Texas",
+        "labels": {
+          "zh-CN": "得克萨斯州"
+        }
+      },
+      {
+        "name": "Utah",
+        "labels": {
+          "zh-CN": "犹他州"
+        }
+      },
+      {
+        "name": "Vermont",
+        "labels": {
+          "zh-CN": "佛蒙特州"
+        }
+      },
+      {
+        "name": "Virgin Islands",
+        "labels": {
+          "zh-CN": "美属维尔京群岛"
+        }
+      },
+      {
+        "name": "Virginia",
+        "labels": {
+          "zh-CN": "弗吉尼亚州"
+        }
+      },
+      {
+        "name": "Washington",
+        "labels": {
+          "zh-CN": "华盛顿州"
+        }
+      },
+      {
+        "name": "West Virginia",
+        "labels": {
+          "zh-CN": "西維吉尼亞州"
+        }
+      },
+      {
+        "name": "Wisconsin",
+        "labels": {
+          "zh-CN": "威斯康辛州"
+        }
+      },
+      {
+        "name": "Wyoming",
+        "labels": {
+          "zh-CN": "怀俄明州"
+        }
+      }
+    ]
+  },
+  {
+    "code": "UM",
+    "name": "United States Minor Outlying Islands",
+    "labels": {
+      "zh-CN": "美国本土外小岛屿"
+    },
+    "provinces": []
+  },
+  {
+    "code": "UY",
+    "name": "Uruguay",
+    "labels": {
+      "zh-CN": "乌拉圭"
+    },
+    "provinces": [
+      {
+        "name": "Artigas",
+        "labels": {
+          "zh-CN": "阿蒂加斯省"
+        }
+      },
+      {
+        "name": "Canelones",
+        "labels": {
+          "zh-CN": "卡内洛内斯省"
+        }
+      },
+      {
+        "name": "Cerro Largo",
+        "labels": {
+          "zh-CN": "塞罗拉尔戈省"
+        }
+      },
+      {
+        "name": "Colonia",
+        "labels": {
+          "zh-CN": "科洛尼亚省"
+        }
+      },
+      {
+        "name": "Durazno",
+        "labels": {
+          "zh-CN": "杜拉斯诺省"
+        }
+      },
+      {
+        "name": "Flores",
+        "labels": {
+          "zh-CN": "弗洛雷斯省"
+        }
+      },
+      {
+        "name": "Florida",
+        "labels": {
+          "zh-CN": "佛罗里达省"
+        }
+      },
+      {
+        "name": "Lavalleja",
+        "labels": {
+          "zh-CN": "拉瓦耶哈省"
+        }
+      },
+      {
+        "name": "Maldonado",
+        "labels": {
+          "zh-CN": "马尔多纳多省"
+        }
+      },
+      {
+        "name": "Montevideo",
+        "labels": {
+          "zh-CN": "蒙得維的亞省"
+        }
+      },
+      {
+        "name": "Paysandú",
+        "labels": {
+          "zh-CN": "派桑杜省"
+        }
+      },
+      {
+        "name": "Rivera",
+        "labels": {
+          "zh-CN": "里韦拉省"
+        }
+      },
+      {
+        "name": "Rocha",
+        "labels": {
+          "zh-CN": "罗恰省"
+        }
+      },
+      {
+        "name": "Río Negro",
+        "labels": {
+          "zh-CN": "内格罗河省"
+        }
+      },
+      {
+        "name": "Salto",
+        "labels": {
+          "zh-CN": "萨尔托省"
+        }
+      },
+      {
+        "name": "San José",
+        "labels": {
+          "zh-CN": "圣何塞省"
+        }
+      },
+      {
+        "name": "Soriano",
+        "labels": {
+          "zh-CN": "索里亚诺省"
+        }
+      },
+      {
+        "name": "Tacuarembó",
+        "labels": {
+          "zh-CN": "塔夸伦博省"
+        }
+      },
+      {
+        "name": "Treinta y Tres",
+        "labels": {
+          "zh-CN": "三十三人省"
+        }
+      }
+    ]
+  },
+  {
+    "code": "UZ",
+    "name": "Uzbekistan",
+    "labels": {
+      "zh-CN": "乌兹别克斯坦"
+    },
+    "provinces": []
+  },
+  {
+    "code": "VU",
+    "name": "Vanuatu",
+    "labels": {
+      "zh-CN": "瓦努阿图"
+    },
+    "provinces": []
+  },
+  {
+    "code": "VE",
+    "name": "Venezuela",
+    "labels": {
+      "zh-CN": "委内瑞拉"
+    },
+    "provinces": [
+      {
+        "name": "Amazonas",
+        "labels": {
+          "zh-CN": "亞馬遜州"
+        }
+      },
+      {
+        "name": "Anzoátegui",
+        "labels": {
+          "zh-CN": "安索阿特吉州"
+        }
+      },
+      {
+        "name": "Apure",
+        "labels": {
+          "zh-CN": "阿普雷州"
+        }
+      },
+      {
+        "name": "Aragua",
+        "labels": {
+          "zh-CN": "阿拉瓜州"
+        }
+      },
+      {
+        "name": "Barinas",
+        "labels": {
+          "zh-CN": "巴里纳斯州"
+        }
+      },
+      {
+        "name": "Bolívar",
+        "labels": {
+          "zh-CN": "玻利瓦爾州"
+        }
+      },
+      {
+        "name": "Carabobo",
+        "labels": {
+          "zh-CN": "卡拉沃沃州"
+        }
+      },
+      {
+        "name": "Cojedes",
+        "labels": {
+          "zh-CN": "科赫德斯州"
+        }
+      },
+      {
+        "name": "Delta Amacuro",
+        "labels": {
+          "zh-CN": "阿马库罗三角洲州"
+        }
+      },
+      {
+        "name": "Dependencias Federales",
+        "labels": {
+          "zh-CN": "聯邦屬地"
+        }
+      },
+      {
+        "name": "Distrito Capital",
+        "labels": {
+          "zh-CN": "聯邦區 (委內瑞拉)"
+        }
+      },
+      {
+        "name": "Falcón",
+        "labels": {
+          "zh-CN": "法尔孔州"
+        }
+      },
+      {
+        "name": "Guárico",
+        "labels": {
+          "zh-CN": "瓜里科州"
+        }
+      },
+      {
+        "name": "La Guaira",
+        "labels": {
+          "zh-CN": "瓦尔加斯州"
+        }
+      },
+      {
+        "name": "Lara",
+        "labels": {
+          "zh-CN": "拉腊州"
+        }
+      },
+      {
+        "name": "Miranda",
+        "labels": {
+          "zh-CN": "米兰达州"
+        }
+      },
+      {
+        "name": "Monagas",
+        "labels": {
+          "zh-CN": "莫納加斯州"
+        }
+      },
+      {
+        "name": "Mérida",
+        "labels": {
+          "zh-CN": "梅里达州"
+        }
+      },
+      {
+        "name": "Nueva Esparta",
+        "labels": {
+          "zh-CN": "新埃斯帕塔州"
+        }
+      },
+      {
+        "name": "Portuguesa",
+        "labels": {
+          "zh-CN": "波图格萨州"
+        }
+      },
+      {
+        "name": "Sucre",
+        "labels": {
+          "zh-CN": "苏克雷州"
+        }
+      },
+      {
+        "name": "Trujillo",
+        "labels": {
+          "zh-CN": "特鲁希略州"
+        }
+      },
+      {
+        "name": "Táchira",
+        "labels": {
+          "zh-CN": "塔奇拉州"
+        }
+      },
+      {
+        "name": "Yaracuy",
+        "labels": {
+          "zh-CN": "亚拉奎州"
+        }
+      },
+      {
+        "name": "Zulia",
+        "labels": {
+          "zh-CN": "苏利亚州"
+        }
+      }
+    ]
+  },
+  {
+    "code": "VN",
+    "name": "Vietnam",
+    "labels": {
+      "zh-CN": "越南"
+    },
+    "provinces": []
+  },
+  {
+    "code": "VG",
+    "name": "Virgin Islands, British",
+    "labels": {
+      "zh-CN": "英属维尔京群岛"
+    },
+    "provinces": []
+  },
+  {
+    "code": "WF",
+    "name": "Wallis And Futuna",
+    "labels": {
+      "zh-CN": "瓦利斯和富图纳"
+    },
+    "provinces": []
+  },
+  {
+    "code": "EH",
+    "name": "Western Sahara",
+    "labels": {
+      "zh-CN": "西撒哈拉"
+    },
+    "provinces": []
+  },
+  {
+    "code": "YE",
+    "name": "Yemen",
+    "labels": {
+      "zh-CN": "也门"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ZM",
+    "name": "Zambia",
+    "labels": {
+      "zh-CN": "赞比亚"
+    },
+    "provinces": []
+  },
+  {
+    "code": "ZW",
+    "name": "Zimbabwe",
+    "labels": {
+      "zh-CN": "津巴布韦"
+    },
+    "provinces": []
+  }
+]

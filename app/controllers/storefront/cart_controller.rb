@@ -93,7 +93,10 @@ module Storefront
     # `shipping_address[country]`（86 §6 官方參數形；zip/province 收下不用——
     # 我方 zone 為國級，州級登記 85 §4 V）。
     def estimate_rates
-      country = params.dig(:shipping_address, :country).to_s.upcase
+      # E14：Ella 運費試算表單 POST 的是 all_country_option_tags 的 value＝英文國名（本尊形）；國碼照收。字典外的二位碼
+      # 仍交 RateResolver 判（不在 market 就是空陣列——R2）。
+      raw = params.dig(:shipping_address, :country).to_s.strip
+      country = ThemeEngine::CountryOptionTags.code_for(raw) || (raw.match?(/\A[A-Za-z]{2}\z/) ? raw.upcase : "")
       return [] if country.blank?
 
       cart = current_cart
