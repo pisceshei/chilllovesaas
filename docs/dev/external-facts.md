@@ -1477,3 +1477,28 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
 - **Ella `sections/section-product-tabs.liquid` L317–L320**：inline script `if (document.getElementById('PopupModal-product-tabs-video')) return;` 建
   `<side-drawer … id="PopupModal-product-tabs-video" data-moved="true">`——本尊設計模式 DOM 有此抽屜與 `PopupModal-…__popup_link_desc_video`，
   但兩邊伺服器 HTML 與 multitasking bar 的 section fetch 回應皆無該字串；來源未取得。
+
+### G21. 真店五語言的 `all_country_option_tags` 與語言 URL 形（E14b 依據，取證 2026-09-04；使用者授權在真店安裝 Translate & Adapt 並發布語言）
+
+- **真店操作（admin Settings › Languages，使用者 Chrome）**：Add language 流程逐字提示 "This adds Chinese (Traditional) to your store. We'll install an
+  app so you can translate your content into Chinese (Traditional) and publish it for different markets."（Shopify Translate & Adapt，免費）；新增後狀態
+  "Not published"，⋯ 選單 "Publish" ⇒ 確認框 "Publish Chinese (Traditional) without translations?"（"You're about to make Chinese (Traditional) live on your
+  store, but you have not added any translations. Customers browsing in Chinese (Traditional) will see content in your default language."）。已發布：
+  Chinese (Simplified)（Default）／Chinese (Traditional)／English／French／Japanese；hoko.vip 網域指派全部開、`pnrjnw-sy.myshopify.com` 未指派。
+- **語言 URL 形（curl，2026-09-04）**：`hoko.vip/zh-hant/` 200、`hoko.vip/zh-tw/` 404、`hoko.vip/zh-TW/` 404、`hoko.vip/zh-hans/` 404、`hoko.vip/zh-cn/` 404、
+  `hoko.vip/en/`／`/fr/`／`/ja/` 200（發布後；發布前 404）。`/zh-hant/` 頁：`<html class="no-js" lang="zh-TW" dir="ltr">`、`Shopify.locale = "zh-TW"`、
+  `Shopify.country = "TW"`、`<link rel="alternate" hreflang="x-default" href="https://hoko.vip/">`、`hreflang="zh-Hans" href="https://hoko.vip/"`、
+  `hreflang="zh-Hant" href="https://hoko.vip/zh-hant"`；頁內連結 `href="/zh-hant/collections"`。⇒ 預設語言無前綴；其他語言＝小寫語言碼前綴、不帶地區；
+  hreflang 用 script 碼、單一 TW 市場下不帶地區（D80 輸入）。
+- **五語言 `all_country_option_tags`（Section Rendering `hoko.vip/{prefix}/?section_id=sections--19763396870247__cart_drawer_PFLQy3`，live 主題；設計模式外
+  也直出，因 SRA 的 `section.index` 為 nil ⇒ Ella `section_fetch = true`）**：各 238 option、value 恆為同一英文名、子區域英文鍵與順序各語言相同；
+  在地名／順序逐語言不同：zh-CN 首國 不丹（碼位序）、zh-TW 首國 不丹、en 首四 Afghanistan／Åland Islands／Albania／Algeria（Å 排 A 後）、
+  fr 首四 Afghanistan／Afrique du Sud／Albanie／Algérie、ja 首四 アイスランド／アイルランド／アセンション島／アゼルバイジャン（讀音序）。
+  在地名可與 value 不同（en 39 項：`Hong Kong SAR`、`Antigua & Barbuda`、`Congo - Kinshasa`、`Czechia`、`Côte d’Ivoire`〔彎引號〕…）；
+  HK：zh-TW `香港特別行政區`／`香港島`、fr `R.A.S. chinoise de Hong Kong`／`Île de Hong Kong`、ja `中華人民共和国香港特別行政区`。
+  排序規則官方未逐字（ICU 類 collation 的推論不作依據）⇒ 字典直接存每語言觀察序。
+- **Markets（2026-09-04 使用者授權後建立）**：台灣（預設，Taiwan）、美國（id 30683103335，United States）、香港（30683136103，Hong Kong SAR）、日本（30683168871，Japan）、欧盟（30683201639，27 regions；頁面提示 "Customers in 13 regions won’t be able to check out because of missing shipping rates."）。New market 表單（Currency 繼承 HKD、Domain/language hoko.vip • 5 languages）、
+  儲存結果頁與 Markets 頁皆**未見任何費用提示**；help.shopify.com `manual/markets`／`manual/markets/managing-markets`／`manual/markets/pricing` 頁皆無市場數上限或費用句；
+  shopify.com/pricing 各方案共同列 "Localized selling with Shopify Markets"、"Translate your storefront"、"Assign local domains"（無數字）。
+  建市場後 curl：`hoko.vip/en-us/`／`/en-US/`／`/zh-hans-us/`／`/zh-hant-us/`／`/us/`／`/en-hk/`／`/zh-hant-hk/`／`/ja-jp/`／`/hk/`／`/en-de/` 皆 404；
+  首頁 hreflang 仍為 x-default／zh-Hans／zh-Hant／en／fr／ja 六條（無地區）；`Shopify.country = "TW"`；首頁無 `name="country_code"` 選擇器。

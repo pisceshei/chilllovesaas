@@ -52,20 +52,30 @@ module ThemeEngine
       entries.find { |e| e["name"].casecmp?(s) }&.fetch("code")
     end
 
-    def render(list, locale:)
+    # 語言鍵＝本尊 storefront 語言碼（zh-CN／zh-TW／en／fr／ja；E14b 五語言皆為 hoko.vip 發布後的實測輸出）；字典沒有的語言退 en。
+    FALLBACK_LANG = "en"
+
+    def lang_key(locale)
       key = LocaleTags.shopify_code(locale) if locale.present?
-      list.map { |e| [ label(e, key), e ] }
-          .sort_by { |lbl, _| lbl }
-          .map { |lbl, e| option_tag(e["name"], lbl, provinces_json(e, key)) }
+      key.presence && entries.first["labels"].key?(key) ? key : FALLBACK_LANG
+    end
+
+    # 順序＝該語言在本尊輸出裡觀察到的順序（`sort[lang]`）——本尊用的是 ICU 類 collation（en 的 Åland 排在 A 後、
+    # zh 依碼位），執行期不重算，直接複製觀察序。
+    def render(list, locale:)
+      key = lang_key(locale)
+      list.sort_by { |e| e["sort"][key] }
+          .map { |e| option_tag(e["name"], label(e, key), provinces_json(e, key)) }
           .join
     end
 
+    # 字典不變式：每國、每子區域都有全部語言的在地名與 sort（產生器斷言）；語言退路只在 lang_key 一處。
     def label(entry, key)
-      (key && entry["labels"][key]).presence || entry["name"]
+      entry["labels"].fetch(key)
     end
 
     def provinces_json(entry, key)
-      JSON.generate(entry["provinces"].map { |p| [ p["name"], (key && p["labels"][key]).presence || p["name"] ] })
+      JSON.generate(entry["provinces"].map { |p| [ p["name"], p["labels"].fetch(key) ] })
     end
 
     # value／文字只跳脫 `& < > "`（本尊 `value="Côte d'Ivoire"` 保留 `'`）；data-provinces 的 JSON 走完整屬性跳脫（本尊 `&quot;`／`&#39;`）。
