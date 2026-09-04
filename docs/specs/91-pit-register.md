@@ -4150,3 +4150,15 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   （完整 id、雙引號 HTML 跳脫、含 disabled）、block id `{section full id}__{block key}`、`<style data-shopify data-shopify-editor="{accessedSettings:[…]}">`
   ；我方單引號裸 JSON、裸 key。Ella 的 JS 不讀這些屬性（`grep shopify-editor assets/*.js` 零命中），只供各自的編輯器執行期；computed 無差。
 - **⚪ `__head__` 平台注入**：`OnlineStoreEditorShopifyGlobalData`／`OnlineStoreEditorData`（3.2MB JSON）／storefront-modules 兩支 script——本尊編輯器管線。
+
+### 3.82 E14b 國家字典五語言（2026-09-04）的更正、未取得與範圍外
+
+- **更正 §3.81「在地名只有 zh-CN」**：真店已發布 zh-TW／en／fr／ja（使用者授權），字典 v2 含五語言在地名與各語言觀察序；`en` 為字典外語言的退路
+  （本尊會出該語言自己的在地名——V：其他語言未取得）。
+- **更正 §3.81「假設待確認」**：使用者 2026-09-04 裁定「按本尊方式完全複製」⇒ 字典以本尊輸出為準、不用 ISO（假設關閉）。
+- **V 排序規則**：本尊各語言順序不同（en Åland 在 A 後、ja 讀音序、zh 碼位）；官方未逐字 ⇒ 存觀察序，新語言必須重新觀察。
+- **V 市場費用（已建市場後改寫）**：使用者授權後已建 美國／香港／日本／欧盟 四個市場（連同預設 台灣 共五個），Create market 表單、儲存結果頁與 Markets 頁皆無
+  費用或上限提示，pricing 頁列 Markets 為全方案含；官方「市場數／費用」句仍未逐字取得 ⇒ 若帳單出現市場相關費用即回報使用者。
+- **⚪ 真店狀態**：五語言已發布且指派 hoko.vip（買家可見語言切換）；Translate & Adapt 已安裝；使用者裁定保留作測試。
+- **D80 輸入**：本尊語言 URL＝預設無前綴、其他 `/{小寫語言碼}`（`/zh-hant`／`/en`），hreflang script 碼不帶地區（單一市場）——見 external-facts §G21；
+  D80 仍待裁定，我方 `/zh-hant-hk` 恆帶地區形未改。

@@ -29,7 +29,7 @@
 
 | # | 現象（A′ 對表，E14 追加） | 根因 | 修法 | 規格 |
 |---|---|---|---|---|
-| 4 | cart_drawer 368 vs 130 元素：本尊多 238 個 `<option>`（Ella `snippets/cart-shipping-calculator.liquid` L28 `{{ all_country_option_tags }}`）；我方 select 空 | 我方全域 `all_country_option_tags` 做成「market ∩ 有費率 zone」的國碼 option——那是 `country_option_tags` 的語義（官方兩物件頁逐字見 external-facts §G20），格式也不是本尊形；店面對表看不到（非設計模式的 cart drawer 內容互動時才取） | 新 `ThemeEngine::CountryOptionTags`＋平台字典 `config/country_option_tags.json`（本尊 zh-CN 渲染輸出整理：237 國、1128 子區域；ISO 3166 對不上本尊集合）；`all`＝`---`＋全部（依在地名碼位排序）、`only`＝運送區域內國家同形；cart `estimate_rates` 收國名或國碼 | W4／W4b／R5 |
+| 4 | cart_drawer 368 vs 130 元素：本尊多 238 個 `<option>`（Ella `snippets/cart-shipping-calculator.liquid` L28 `{{ all_country_option_tags }}`）；我方 select 空 | 我方全域 `all_country_option_tags` 做成「market ∩ 有費率 zone」的國碼 option——那是 `country_option_tags` 的語義（官方兩物件頁逐字見 external-facts §G20），格式也不是本尊形；店面對表看不到（非設計模式的 cart drawer 內容互動時才取） | 新 `ThemeEngine::CountryOptionTags`＋平台字典 `config/country_option_tags.json`（本尊 zh-CN 渲染輸出整理：237 國、1128 子區域；ISO 3166 對不上本尊集合）；`all`＝`---`＋全部（依該語言的本尊觀察序）、`only`＝運送區域內國家同形；cart `estimate_rates` 收國名或國碼。E14b：字典 v2 五語言（zh-CN／zh-TW／en／fr／ja）在地名與觀察序（external-facts §G21） | W4／W4b／W4c／R5 |
 
 ## §2 結果（本機 dev server，Chrome 152 headless，1280×900；首頁另 768×1024／390×844；全部 `--open-details 1`）
 

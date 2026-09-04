@@ -47,15 +47,19 @@ RSpec.describe "Storefront 顯示對接（Liquid 面）" do
     expect(runtime.global_assigns.fetch("additional_checkout_buttons")).to be(false)
   end
 
-  it "W4 🔴 all_country_option_tags＝`---`＋全部國家（本尊形：英文 value、data-provinces、與運送區域無關）；country_option_tags＝market ∩ 有費率 zone" do
+  it "W4 🔴 all_country_option_tags＝`---`＋全部國家（本尊形：英文 value、en 在地名與觀察序、data-provinces、與運送區域無關）；country_option_tags＝market ∩ 有費率 zone" do
     all = render_liquid("{{ all_country_option_tags }}")
     expect(all).to start_with('<option value="---" data-provinces="[]">---</option>')
     expect(all.scan("<option ").size).to eq(238) # 本尊 A′ 實測 238（含 ---）；集合＝config/country_option_tags.json
-    expect(all).to include('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;Hong Kong Island&quot;],[&quot;Kowloon&quot;,&quot;Kowloon&quot;],[&quot;New Territories&quot;,&quot;New Territories&quot;]]">Hong Kong</option>')
-    expect(all).to include(%(<option value="Côte d'Ivoire" data-provinces="[]">Côte d'Ivoire</option>)) # value 保留 '
+    expect(all).to include('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;Hong Kong Island&quot;],[&quot;Kowloon&quot;,&quot;Kowloon&quot;],[&quot;New Territories&quot;,&quot;New Territories&quot;]]">Hong Kong SAR</option>')
+    expect(all).to include(%(<option value="Côte d'Ivoire" data-provinces="[]">Côte d’Ivoire</option>)) # value 保留 '；en 文字是本尊的彎引號
+    # locale nil ⇒ 退 en：文字＝本尊英文店面的在地名（可與 value 不同）、順序＝本尊 en 觀察序（Åland 排在 Afghanistan 之後，非碼位）
+    expect(all).to start_with('<option value="---" data-provinces="[]">---</option><option value="Afghanistan" data-provinces="[]">Afghanistan</option><option value="Aland Islands" data-provinces="[]">Åland Islands</option>')
+    # 觀察序≠value 序的判別格：本尊 en 把「British Virgin Islands」（value "Virgin Islands, British"）排在 B 段（Brunei 之前），依 value 排會落到 V 段
+    expect(all.index('value="Virgin Islands, British"')).to be < all.index('value="Brunei"')
     # country_option_tags：建店 provision＝HK market＋HK zone＋費率 ⇒ 恰一個 option（本尊形）
     only = render_liquid("{{ country_option_tags }}")
-    expect(only).to eq('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;Hong Kong Island&quot;],[&quot;Kowloon&quot;,&quot;Kowloon&quot;],[&quot;New Territories&quot;,&quot;New Territories&quot;]]">Hong Kong</option>')
+    expect(only).to eq('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;Hong Kong Island&quot;],[&quot;Kowloon&quot;,&quot;Kowloon&quot;],[&quot;New Territories&quot;,&quot;New Territories&quot;]]">Hong Kong SAR</option>')
     # 加一個不在 market 的 zone（有費率）⇒ country_option_tags 不出現（交集語義，殺「只查 zone」）；all 不受運送區域影響
     ActsAsTenant.with_tenant(shop) do
       zone = ShippingZone.create!(shop_id: shop.id, shipping_profile: ShippingProfile.general.sole,
@@ -68,12 +72,28 @@ RSpec.describe "Storefront 顯示對接（Liquid 面）" do
     expect(Liquid::Template.parse("{{ all_country_option_tags }}").render(fresh.global_assigns)).to eq(all)
   end
 
-  it "W4b 🔴 在地名：locale zh-Hans ⇒ 文字與 data-provinces 第二欄用 zh-CN 名、順序依在地名碼位（首國「不丹」）；無在地名的語言退英文" do
+  it "W4b 🔴 在地名：locale zh-Hans ⇒ 文字與 data-provinces 第二欄用 zh-CN 名、順序＝本尊 zh-CN 觀察序（首國「不丹」）；字典沒有的語言退 en" do
     zh = ActsAsTenant.with_tenant(shop) { ThemeEngine::Runtime.new(theme:, shop:, source:, locale: "zh-Hans") }
     out = Liquid::Template.parse("{{ all_country_option_tags }}").render(zh.global_assigns)
     expect(out).to start_with('<option value="---" data-provinces="[]">---</option><option value="Bhutan" data-provinces="[]">不丹</option>')
     expect(out).to include('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;香港岛&quot;],[&quot;Kowloon&quot;,&quot;九龙&quot;],[&quot;New Territories&quot;,&quot;新界&quot;]]">香港特别行政区</option>')
-    fr = ActsAsTenant.with_tenant(shop) { ThemeEngine::Runtime.new(theme:, shop:, source:, locale: "fr") }
-    expect(Liquid::Template.parse("{{ all_country_option_tags }}").render(fr.global_assigns)).to include('>Hong Kong</option>')
+    de = ActsAsTenant.with_tenant(shop) { ThemeEngine::Runtime.new(theme:, shop:, source:, locale: "de") }
+    de_out = Liquid::Template.parse("{{ all_country_option_tags }}").render(de.global_assigns)
+    expect(de_out).to include('>Hong Kong SAR</option>')
+    expect(de_out).to eq(render_liquid("{{ all_country_option_tags }}")) # 字典外語言＝退 en 的整份輸出（含順序），不是沿用未知鍵
+  end
+
+  it "W4c 🔴 五語言字典：zh-Hant／fr／ja 各用本尊該語言店面的在地名與觀察序（E14b，hoko.vip 發布五語言實測）" do
+    render = ->(tag) { ActsAsTenant.with_tenant(shop) { Liquid::Template.parse("{{ all_country_option_tags }}").render(ThemeEngine::Runtime.new(theme:, shop:, source:, locale: tag).global_assigns) } }
+    zh_hant = render.call("zh-Hant")
+    expect(zh_hant).to include('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;香港島&quot;],[&quot;Kowloon&quot;,&quot;九龍&quot;],[&quot;New Territories&quot;,&quot;新界&quot;]]">香港特別行政區</option>')
+    expect(zh_hant).to include('<option value="Taiwan" data-provinces="[]">台灣</option>')
+    fr = render.call("fr")
+    expect(fr).to include('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;Île de Hong Kong&quot;],[&quot;Kowloon&quot;,&quot;Kowloon&quot;],[&quot;New Territories&quot;,&quot;Nouveaux Territoires&quot;]]">R.A.S. chinoise de Hong Kong</option>')
+    expect(fr.scan(/<option value="([^"]*)"/).flatten.first(4)).to eq([ "---", "Afghanistan", "South Africa", "Albania" ]) # 本尊 fr 觀察序（Afrique du Sud 排 A）
+    expect(fr).to include('<option value="South Africa" data-provinces="[[&quot;Eastern Cape&quot;,&quot;Cap oriental&quot;]') # 子區域第二欄＝本尊 fr 名
+    ja = render.call("ja")
+    expect(ja).to start_with('<option value="---" data-provinces="[]">---</option><option value="Iceland" data-provinces="[]">アイスランド</option>') # 本尊 ja 依讀音序，非碼位
+    expect(ja).to include('>中華人民共和国香港特別行政区</option>')
   end
 end
