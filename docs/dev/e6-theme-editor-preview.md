@@ -71,3 +71,14 @@ Hide／Remove）；預覽內右鍵 ⇒ 左樹同款選單開在對應座標；in
   → `previewSrc` 加 `&draft=token` 重載 iframe（真實 URL、ThemeCsp）→ `onPreviewLoad` 還原捲動與重送 `cl:names`／`cl:inspector`。
 - 契約：`show?editor=1&draft=<token>`；token＝`SecureRandom.urlsafe_base64(18)`，cache 鍵 `editor-draft/v1/{shop}/{theme}/{token}`，
   TTL 20 分；非 editor、錯 token、跨主題一律不套（DT2–DT4）。
+
+## §E13 預覽資產 CSRF 與預設市場語言（2026-09-04，computed 對表實錘）
+
+- **資產**：`Admin::StorefrontPreviewController` 加 `skip_forgery_protection only: :asset`——Rails cross-origin JS 防護把 iframe 的每個
+  `<script src>` 打成 422（external-facts §G19），主題 JS 一支都不載，預覽只剩無 JS 的形；與 `Storefront::AssetsController`（S10）同紀律，
+  `draft_page`／`draft_section` 仍受 CSRF（PV1／PV1b）。
+- **語言**：`show` 與 `draft_section` 的 renderer 帶 `locale`／`web_presence`＝`Markets::PrefixIndex.default_hit`（primary market × 第一個
+  presence × 其預設語言；本尊編輯器市場選擇器預設 "Store default"）；先前 `<html lang="">`、`Shopify.locale = ""`（PV2／PV2b／PV3）。
+- **預覽內主題 JS 的無前綴請求**（`Shopify.routes.root = "/"` ⇒ `/recommendations/products` 等）：三支 SRA 端點無前綴時退回同一 `default_hit`
+  （`Storefront::BaseController#effective_hit`；SF-9b），本尊主市場預設語言無前綴故同語言。
+- 結果與主題自身的設計模式差異（popup-group 五段 fixed／`section.index` nil 直出）見 `docs/dev/e13-theme-editor-preview-parity.md`。

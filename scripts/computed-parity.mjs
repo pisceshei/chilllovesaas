@@ -5,6 +5,8 @@
 // 零新依賴：Node ≥ 22 內建 WebSocket／fetch；Chrome 路徑由 --chrome 或 CHROME_PATH 指定。
 //
 //   node scripts/computed-parity.mjs capture <url> <out.json> [--width 1280] [--height 900] [--chrome <path>] [--wait 1500]
+//        [--open-details 1] [--cookie "name=value; name2=value2"]   ← cookie 設在目標 URL（登入牆後的端點，例：主題編輯器預覽
+//        `/admin/store/preview/{theme}/…?editor=1` 需 staff session cookie；值不落 JSON，只記 name）
 //   node scripts/computed-parity.mjs diff <ref.json> <cand.json> [--out report.md] [--limit 60]
 //   node scripts/computed-parity.mjs selftest
 //
@@ -82,6 +84,28 @@ function parseArgs(argv) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// --cookie "a=b; c=d"：導航前以 CDP Network.setCookie 設到目標 URL（E13 主題編輯器預覽對表：`/admin/store/preview/…?editor=1`
+// 在 staff 閘後——鐵律 22.1「兩者皆是」要量編輯器 live preview，就得帶 session cookie 進乾淨 profile 的 headless Chrome）。
+// 值只用於這次 Chrome 行程；capture 的 JSON 只記 cookie name，憑證不落檔。
+function parseCookies(spec) {
+  return String(spec || "").split(/;\s*/).filter(Boolean).map((kv) => {
+    const i = kv.indexOf("=");
+    if (i <= 0) throw new Error("--cookie 需 name=value 形（分號分隔）: " + kv);
+    return { name: kv.slice(0, i).trim(), value: kv.slice(i + 1) };
+  });
+}
+
+async function applyCookies(cdp, opt, url) {
+  const cookies = parseCookies(opt.cookie);
+  if (!cookies.length) return [];
+  await cdp.send("Network.enable");
+  for (const c of cookies) {
+    const r = await cdp.send("Network.setCookie", { name: c.name, value: c.value, url });
+    if (!r.success) throw new Error("Network.setCookie 失敗: " + c.name);
+  }
+  return cookies.map((c) => c.name);
+}
+
 function chromePath(opt) {
   return opt.chrome || process.env.CHROME_PATH ||
     (process.platform === "win32" ? "C:/Program Files/Google/Chrome/Application/chrome.exe" : "google-chrome");
@@ -154,6 +178,7 @@ async function capture(pos, opt) {
     await cdp.send("Runtime.enable");
     await cdp.send("Network.enable");
     await cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 768 });
+    const cookieNames = await applyCookies(cdp, opt, url);
     await cdp.send("Page.navigate", { url });
     await cdp.waitEvent("Page.loadEventFired", 60000);
     await cdp.send("Runtime.evaluate", { expression: "document.fonts.ready.then(() => true)", awaitPromise: true });
@@ -180,7 +205,7 @@ async function capture(pos, opt) {
         diagnostics.http.push(`${e.params.response.status} ${e.params.response.url.slice(0, 160)}`);
       }
     }
-    const data = { capturedAt: new Date().toISOString(), requestedWidth: width, requestedHeight: height, ...r.result.value, diagnostics };
+    const data = { capturedAt: new Date().toISOString(), requestedWidth: width, requestedHeight: height, cookies: cookieNames, ...r.result.value, diagnostics };
     writeFileSync(out, JSON.stringify(data));
     console.log(`captured ${data.count} elements @${data.width}x${data.height} ${url} => ${out}`);
     console.log(`diagnostics: exceptions=${diagnostics.exceptions.length} console=${diagnostics.console.length} failed=${diagnostics.failed.length} http>=400=${diagnostics.http.length}`);
@@ -203,6 +228,7 @@ async function inspect(pos, opt) {
     const cdp = await Cdp.connect(ws);
     await cdp.send("Page.enable"); await cdp.send("Runtime.enable"); await cdp.send("DOM.enable"); await cdp.send("CSS.enable");
     await cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 768 });
+    await applyCookies(cdp, opt, url);
     await cdp.send("Page.navigate", { url });
     await cdp.waitEvent("Page.loadEventFired", 60000);
     await sleep(Number(opt.wait || 1500));
@@ -240,6 +266,7 @@ async function evaljs(pos, opt) {
     const cdp = await Cdp.connect(ws);
     await cdp.send("Page.enable"); await cdp.send("Runtime.enable");
     await cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 768 });
+    await applyCookies(cdp, opt, url);
     await cdp.send("Page.navigate", { url });
     await cdp.waitEvent("Page.loadEventFired", 60000);
     await sleep(Number(opt.wait || 1500));
@@ -359,6 +386,11 @@ function selftest() {
   const footer = r.details.find((d) => d.section === "footer");
   if (!footer || footer.diffs.filter((d) => d.prop === "(element)").length !== 2) throw new Error("selftest: 缺元素未雙向列出");
   if (r.rows.find((x) => x.section === "template--T__hero").score !== 0.5) throw new Error("selftest: score 應為 identical/max(n)");
+  const ck = parseCookies("_cl_admin=abc; x=d=e");
+  if (ck.length !== 2 || ck[0].name !== "_cl_admin" || ck[0].value !== "abc" || ck[1].value !== "d=e") throw new Error("selftest: --cookie 解析錯 " + JSON.stringify(ck));
+  if (parseCookies(undefined).length !== 0) throw new Error("selftest: 無 --cookie 應為空");
+  let threw = false; try { parseCookies("novalue"); } catch { threw = true; }
+  if (!threw) throw new Error("selftest: 無 = 的 cookie 應拒絕");
   console.log("selftest OK");
 }
 

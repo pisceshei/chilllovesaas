@@ -1413,3 +1413,37 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   type; The currently rendered template resource of the same type; Assigned via {% content_for %} tag"。
 - 未取得：無同型資源時各屬性回什麼（官方未逐字）。我方＝nil（Liquid blank）；真店旁證＝hoko.vip /collections/all 無描述時
   Ella text 區塊（`"text": "{{ closest.collection.description }}"`）整塊不輸出（e8 §2b #56）。metaobject 模板我方未做（V）。
+
+### G19. 主題編輯器預覽對表（E13 依據，取證 2026-09-04）
+
+- **Rails cross-origin JavaScript 防護（第一方源碼，本機安裝的 actionpack-8.1.3.1 gem 之 request_forgery_protection.rb——
+  `ActionController::RequestForgeryProtection`，非本倉庫檔案；2026-09-04 逐字）**：
+  `def verify_same_origin_request` L436–L443：`if marked_for_same_origin_verification? && non_xhr_javascript_response?` ⇒
+  `raise ActionController::InvalidCrossOriginRequest, CROSS_ORIGIN_JAVASCRIPT_WARNING`；
+  `def non_xhr_javascript_response?` L457–L459：`%r(\A(?:text|application)/javascript).match?(media_type) && !request.xhr?`；
+  `def mark_for_same_origin_verification!` L446–L448：`@_marked_for_same_origin_verification = request.get?`（在 `verify_authenticity_token`
+  內呼叫）；`def skip_forgery_protection(options = {})` L223–L225：`skip_before_action :verify_authenticity_token, options.reverse_merge(raise: false)`
+  （跳過 before action ⇒ 標記不會被設 ⇒ after action 放行）；`CROSS_ORIGIN_JAVASCRIPT_WARNING` L426–L429："Security warning: an embedded
+  <script> tag on another site requested protected JavaScript. If you know what you're doing, go ahead and disable forgery protection on this
+  action to permit cross-origin JavaScript embedding."。本機 dev log（2026-09-04 07:48，`/admin/store/preview/2/assets/*.js`）逐字同句＋
+  `Completed 422 Unprocessable Content`，21 支 `.js` 全中、`.css` 不中（media type 不匹配）。
+- **官方 `section.index`（<https://shopify.dev/docs/api/liquid/objects/section>，2026-09-04 重取）**逐字："The 1-based index of the current
+  section within its location. Use this property to adjust section behavior based on its position within its location (template, section group)
+  and on the page. The `index` starts at 1 within each location."；回 nil 的情境逐字："When rendered as a static section, While rendering in the
+  online store editor, When using the Section Rendering API"。`index0`："The 0-based index of the current section within its location. This is
+  the same as the `index` property except that the index starts at 0 instead of 1."（§G1 的同一事實，本輪重取以核對編輯器情境。）
+- **Ella 7.2.0 fixture（倉庫內，`test/fixtures/themes/ella-7.2.0`）**：`assets/base.css` L57–L59
+  `.shopify-design-mode .shopify-section-group-popup-group { position: fixed; }`、L61–L64
+  `.shopify-design-mode .shopify-section-group-popup-group:not(.section-multitasking-bar), .shopify-design-mode body:not(.overflow-hidden)
+  .shopify-section-group-popup-group.section-multitasking-bar, .shopify-design-mode .edit-cart-popup { z-index: 99; }`、L12879–L12882
+  `/* allow all blocks to be selectable in editor preview */ .shopify-design-mode .collection-card__content * { pointer-events: auto; }`；
+  `layout/theme.liquid` L11 `<html class="no-js{% if request.design_mode %} shopify-design-mode{% endif %}" lang="{{ request.locale.iso_code }}" …>`；
+  `sections/before-you-leave.liquid` L1–L6 `assign section_fetch = false / if section.index == nil / assign section_fetch = true`（cart-drawer 同）；
+  `assets/before-you-leave.js` L17／L30／L39、`cart-drawer.js` L10／L381、`cart.js` L340／L374 以 `Shopify.designMode` 分支；
+  商品頁 `data-url="/recommendations/products?limit=5"`＋`Shopify.routes.root = "/"`（hoko.vip 快照 2026-09-03 與我方預覽渲染同形）。
+- **本尊編輯器分頁形（使用者 Chrome，2026-09-04）**：admin 頁內 iframe `https://online-store-web.shopifyapps.com/themes/143506604135/editor`
+  （query 參數名 hmac／host／id_token／locale／session／shop／timestamp／_signed_params，2327×1119）＋`/admin/online-store/embedded-modal-host`
+  （620×0）；預覽 iframe 巢狀於前者（跨域）。分頁 `document.visibilityState === "hidden"`／`document.hasFocus() === false`（含新開分頁）時
+  `read_network_requests`（pattern hoko.vip）零請求，重載後亦同 ⇒ 預覽未載入；`?preview_theme_id=143506604135` 在乾淨 headless Chrome 可直接渲染
+  副本主題（`Shopify.theme.role = "unpublished"`、`name = "Copy of ella-7-2-0-theme-source"`），與 live 首頁 computed 20/21（差本尊預覽列）。
+  未取得：本尊編輯器預覽文件 URL、其對 iframe 的注入內容、是否需 cookie／簽名短效。

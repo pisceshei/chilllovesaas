@@ -135,13 +135,11 @@ module Storefront
                           allow_other_host: false
     end
 
-    # 預設落點＝primary market 的 presence × 其預設 locale（67 §F.1(b) 根路徑處置）。
+    # 預設落點＝primary market 的 presence × 其預設 locale（67 §F.1(b) 根路徑處置）；E13 起單一真相在
+    # `Markets::PrefixIndex.default_hit`（編輯器預覽與無前綴 SRA 端點同一落點）。
     def default_prefix
-      ActsAsTenant.with_tenant(current_shop) do
-        market = Market.find_by(is_primary: true) or return nil
-        presence = market.market_web_presences.first or return nil
-        Markets::UrlPrefix.for(presence, presence.default_shop_locale)
-      end
+      hit = Markets::PrefixIndex.default_hit(shop: current_shop) or return nil
+      Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag)
     rescue Markets::UrlPrefix::Error
       nil
     end

@@ -193,7 +193,7 @@ module Storefront
       return {} if theme.nil?
 
       sections_url = params[:sections_url].presence || "/"
-      hit = locale_hit(sections_url.to_s.delete_prefix("/").split("/", 2)[0]) # E12：段的語言跟 sections_url 前綴
+      hit = locale_hit(sections_url.to_s.delete_prefix("/").split("/", 2)[0]) || default_hit # E12：段的語言跟 sections_url 前綴；E13：無前綴退回店預設
       renderer = ThemeEngine::PageRenderer.new(
         theme:, shop: Current.shop, publication: Publication.online_store!,
         host: request.host, cart_json: CartSerializer.cart_json(current_cart.reload),

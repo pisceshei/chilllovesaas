@@ -75,6 +75,23 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(response.parsed_body.dig("sections", "related-products")).to include('<span id="rhello">你好買家</span>')
   end
 
+  it "SF-9b 🔴 無前綴 SRA 端點以店預設 (market, locale) 渲染（E13：編輯器預覽內主題 JS 打無前綴 URL）：預設切 zh-Hant ⇒ 三端點取 zh-Hant 字串" do
+    ActsAsTenant.with_tenant(shop) { presence.set_default_locale!("zh-Hant") }
+    get "/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include('<span id="rhello">你好買家</span>')
+    get "/search/suggest", params: { q: "rose", section_id: "related-products" }
+    expect(response.body).to include('<span id="rhello">你好買家</span>')
+    variant_id = ActsAsTenant.with_tenant(shop) { product.product_variants.first.id }
+    post "/cart/add", params: { id: variant_id, quantity: 1, sections: "related-products", sections_url: "/" }
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("sections", "related-products")).to include('<span id="rhello">你好買家</span>')
+    # 對照：預設仍 en 時無前綴端點回英文（不是硬編 zh-Hant）
+    ActsAsTenant.with_tenant(shop) { presence.set_default_locale!("en") }
+    get "/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
+    expect(response.body).to include('<span id="rhello">Hello shopper</span>')
+  end
+
   it "SF-3 語言不自動重導：帶中文 Accept-Language 打 /en-hk/ 仍 200（不 302 到 zh-hant）" do
     get "/en-hk/", headers: { "Accept-Language" => "zh-TW,zh-Hant;q=0.9" }
     expect(response).to have_http_status(:ok)
