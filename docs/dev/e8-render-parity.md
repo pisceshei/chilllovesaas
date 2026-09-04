@@ -114,6 +114,18 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 |---|---|---|---|---|
 | 66 | 頁首語言／地區選擇器的初始形 | 五語言五市場後首頁只出 `dropdown-localization__button`＋`section-fetcher …-CountryLocalizationList`（Ella `language-country-localization.liquid` 的「show_country ∧ show_language」分支；`/localization` 表單零個）；區段 fetch 回應才有 31 國清單（zh-CN 碼位序、在地名、`($HKD)`、當前 TW）與五語言清單 | 鏡像店同步五語言（MR1）後我方仍只有 1 國 ⇒ 走「只有語言」分支（內嵌整個語言表單、無 section-fetcher）。`Storefront::LocalizationContext#available_countries`＝與當前 presence 同 effective domain 的 active region 市場 regions 聯集，在地名／順序讀 `ThemeEngine::CountryOptionTags` 字典（同 `all_country_option_tags` 來源），`currency`＝店幣別（`Currencies`），`popular?` 恆 false（V）；`localization.country` 同形；`LocalizationDrop` 收 `available_countries:` | LC1–LC4、MR4 |
 
+### §2d 第四批（E16，2026-09-04；頁首區段 fetch 內容的 SRA HTML 段 diff；`docs/dev/e16-header-sra-parity.md`）
+
+hoko `/?section_id=sections--19763396837479__header_default` vs mirror `…sections--header-group__header_default`：`render_parity:diff` 對檔案跑，
+`header_default` 0.989（5 處 differ：3 處新版顧客帳戶連結＝§3 平台功能列、2 處 `return_to`）；`/collections/all?section_id=…` 脈絡 0.984（另 4 處＝主選單
+current 反了）。
+
+| # | 形差 | 本尊（external-facts §G24） | 我方修法 | 規格 |
+|---|---|---|---|---|
+| 67 | section 形的渲染脈絡 | context＝請求頁：`/collections/all?section_id=…` 的主選單「目錄」`aria-current="page"`＋`header__active-menu-item`，首頁項無 | `PageRenderer#build_runtime` 改傳請求路徑（先前 `path: nil` ⇒ `linklists` current 全對 `""`、首頁項誤標） | SR6 |
+| 68 | `{% form 'localization' %}` 預設 `return_to` | 路徑＋**原始 query**（順序、編碼、`&` 不轉義逐字）；前綴根 `/en?…` 不帶尾斜線 | `Runtime` 新 `query_string:` ⇒ registers `request_query`；`FormTag#default_return_to`＝`request_path`（去尾斜線）＋`?`＋query，`&` 不轉義只轉 `"<>`；整頁快取分支只餵進鍵的對 | F6b、SR6–SR8 |
+| 69 | `/localization` 收 PUT | 表單自帶 `_method=put`（官方 form 輸出）⇒ 瀏覽器 POST 經 method override 為 PUT；本尊 PUT 直打 302 | routes 裸與帶前綴兩形 `via: %i[post put]`（先前只 POST ⇒ bt3 mirror 真表單提交 404） | L5 |
+
 ## §3 已登記差異（正規化抹掉或報告中保留、不算引擎缺口）
 
 | 類 | 內容 | 落點 |

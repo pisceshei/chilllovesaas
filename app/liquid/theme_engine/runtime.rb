@@ -69,13 +69,16 @@ module ThemeEngine
                    design_mode: false, page_type: "index", path: "/", host: nil,
                    cart_json: nil, asset_base: nil, web_presence: nil, market: nil, country_code: nil,
                    publication: nil, params: {}, template_suffix: nil,
-                   draft_settings: nil, draft_sections: nil)
+                   draft_settings: nil, draft_sections: nil, query_string: nil)
       @theme, @shop = theme, shop
       @cart_json = cart_json
       @publication = publication
       @params = params || {}
       @template_suffix = template_suffix
       @path = path
+      # E16：原始 query string（順序與編碼照請求）——只餵 `{% form %}` 的 `return_to` 預設值（registers[:request_query]）；
+      # paginate／快取鍵仍走 @params（正規化後的參數）。
+      @query_string = query_string
       # 公開店面傳 "/theme-assets"（包 33 後半）；預設維持登入預覽路徑（包 30 行為不變）。
       @asset_base = asset_base
       # 揮發旗標集（63 §D.5）：drop 讀到 volatile 欄位（inventory_quantity 等）時註冊，
@@ -692,6 +695,7 @@ module ThemeEngine
         # paginate tag 的頁碼與 parts URL 來源（步 12）：request_params＝字串鍵
         # query 參數；request_path＝**帶前綴**的站內路徑（parts 連結是買家可點 URL）。
         request_params: @params, request_path: "#{@url_prefix}#{@path}",
+        request_query: @query_string,
         asset_base: @asset_base || "/admin/store/preview/#{@theme.id}/assets" }
     end
 

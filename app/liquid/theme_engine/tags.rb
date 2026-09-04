@@ -167,7 +167,8 @@ module ThemeEngine
         id = params.delete("id") || default_id(spec, resource)
         klass = params.delete("class") || spec[:class]
         return_to = params.delete("return_to")
-        return_to ||= (context.registers[:request_path] || "/") if spec[:return_to]
+        default_return = return_to.nil? && spec[:return_to]
+        return_to = default_return_to(context) if default_return
 
         inner = nil
         context.stack do
@@ -186,11 +187,14 @@ module ThemeEngine
         hidden = [ [ "form_type", @type ], [ "utf8", "✓" ] ]
         (spec[:hidden] || {}).each { |k, v| hidden << [ k, v ] }
         # E8b：product 型的 `product-id`／`section-id` 不在開頭——本尊放在 `</form>` 之前（尾端）；見下 tail。
-        hidden << [ "return_to", return_to ] if return_to
+        # E16：預設 return_to 的 `&` 本尊**不轉義**（hoko.vip 2026-09-04 逐字
+        # `value="/collections/all?sort_by=price-ascending&section_id=…&page=2"`）⇒ 該值只轉 `"`／`<`／`>`
+        # （本尊對這三個字元的處置＝未取得，91 §3.85）；主題明給的 return_to 照舊 h()。
+        hidden << [ "return_to", default_return ? RawAmp.new(return_to) : return_to ] if return_to
         # 本尊逐字（hoko.vip 2026-09-03，customer／product／contact／customer_login 四形一致）：
         # `<form …>` 緊接 `<input type="hidden" name="form_type" value="…" /><input type="hidden" name="utf8" value="✓" />`
         # 再緊接內容，隱藏欄位之間與前後**無任何空白**。
-        inputs = hidden.map { |k, v| %(<input type="hidden" name="#{k}" value="#{h(v)}" />) }.join
+        inputs = hidden.map { |k, v| %(<input type="hidden" name="#{k}" value="#{v.is_a?(RawAmp) ? v.escaped : h(v)}" />) }.join
         # E8b：本尊 product 表單尾端逐字（hoko.vip 2026-09-03 商品頁）：
         # `…</div><input type="hidden" name="product-id" value="{product.id}" /><input type="hidden" name="section-id" value="{section.id}" /></form>`
         # ——內容與隱藏欄之間無空白；section-id＝當前 section 完整 id（registers[:section_drop]）。
@@ -206,6 +210,23 @@ module ThemeEngine
       private
 
       def h(value) = CGI.escapeHTML(value.to_s)
+
+      # 預設 return_to 的值物件：`&` 保留、只轉 `"`／`<`／`>`（見 render 內註）。
+      RawAmp = Struct.new(:value) do
+        def escaped = value.to_s.gsub('"', "&quot;").gsub("<", "&lt;").gsub(">", "&gt;")
+      end
+
+      # E16 預設 `return_to`＝當前請求的路徑＋原始 query string（external-facts §G24，hoko.vip 2026-09-04 逐字）：
+      #   `/?section_id=…` ⇒ `/?section_id=…`；`/en/?section_id=…`／`/en?section_id=…` ⇒ `/en?section_id=…`
+      #   （前綴根**不帶尾斜線**）；`/collections/all?sort_by=price-ascending&section_id=…&page=2` 原順序原編碼照出。
+      # registers[:request_path]＝帶前綴路徑（Runtime `"#{url_prefix}#{path}"`，前綴根為 `/en/`）；
+      # request_query＝原始 query（nil／空 ⇒ 不加問號）。
+      def default_return_to(context)
+        base = context.registers[:request_path].to_s.presence || "/"
+        base = base.chomp("/") if base.length > 1
+        query = context.registers[:request_query].to_s
+        query.empty? ? base : "#{base}?#{query}"
+      end
 
       def default_id(spec, resource)
         template = spec[:id] or return nil

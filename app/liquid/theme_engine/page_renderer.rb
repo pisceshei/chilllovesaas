@@ -18,11 +18,15 @@ module ThemeEngine
     end
 
     def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil,
-                   cart_json: nil, asset_base: nil, locale: nil, web_presence: nil, market: nil, country_code: nil)
+                   cart_json: nil, asset_base: nil, locale: nil, web_presence: nil, market: nil, country_code: nil,
+                   query_string: nil)
       @theme, @shop, @publication = theme, shop, publication
       @url_prefix, @design_mode, @host = url_prefix, design_mode, host
       @source = source
       @cart_json = cart_json
+      # E16：請求的原始 query string（`{% form 'localization' %}` 預設 `return_to`＝路徑＋query，本尊逐字；
+      # external-facts §G24）。nil ⇒ 只出路徑（search／recommendations／cart 的 section 形沿用）。
+      @query_string = query_string
       @asset_base = asset_base
       @locale = locale
       @web_presence = web_presence
@@ -67,7 +71,7 @@ module ThemeEngine
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
                             asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
-                            market: @market, country_code: @country_code,
+                            market: @market, country_code: @country_code, query_string: @query_string,
                             publication: @publication, params: @params,
                             draft_settings: @draft_settings, draft_sections: @draft_sections)
       template_key = template_key_for(runtime, page_type, record)
@@ -306,7 +310,7 @@ module ThemeEngine
     #   的 section 鍵（DB 實例化隨編輯器寫入面）。
     def render_single_section(path)
       page_type, assigns, = resolve(path)
-      runtime = build_runtime(page_type, assigns)
+      runtime = build_runtime(page_type, assigns, path)
       sid = @params["section_id"].to_s
       data, scope = section_data_for(runtime, page_type, sid)
       return Result.new(status: 404, html: "", page_type: page_type) if data.nil?
@@ -321,7 +325,7 @@ module ThemeEngine
       return Result.new(status: 400, html: "", page_type: nil) if ids.size > max
 
       page_type, assigns, = resolve(path)
-      runtime = build_runtime(page_type, assigns)
+      runtime = build_runtime(page_type, assigns, path)
       map = ids.to_h do |sid|
         data, scope = section_data_for(runtime, page_type, sid)
         [ sid, data && runtime.render_section(Runtime.section_key_from_id(sid), data, scope: scope) ]
@@ -329,12 +333,16 @@ module ThemeEngine
       Result.new(status: 200, html: JSON.generate(map), page_type: page_type, content_type: :json)
     end
 
-    def build_runtime(page_type, assigns)
+    # E16：section 形**繼承請求頁的路徑**（先前 `path: nil`）——本尊 Section Rendering 的 context 就是請求頁
+    # （external-facts §G24：hoko `/collections/all?section_id=…__header_default` 的主選單「目錄」帶
+    # `aria-current="page"`＋`header__active-menu-item`、`return_to` 帶 `/collections/all?…`；我方先前 nil ⇒ 首頁項
+    # 誤標 active、`return_to` 只剩前綴）。`request.path`／`linklists` 的 current／paginate parts／tag 連結同一來源。
+    def build_runtime(page_type, assigns, path)
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
-                            path: nil, host: @host, source: @source, cart_json: @cart_json,
+                            path: path, host: @host, source: @source, cart_json: @cart_json,
                             asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
-                            market: @market, country_code: @country_code,
+                            market: @market, country_code: @country_code, query_string: @query_string,
                             publication: @publication, params: @params)
       assigns.each { |k, v| runtime.assign(k, v) }
       @extra_assigns&.each { |k, v| runtime.assign(k, v) }

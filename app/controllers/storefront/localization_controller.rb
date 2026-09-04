@@ -97,9 +97,24 @@ module Storefront
       @return_prefix_hit = seg.match?(/\A#{Markets::UrlPrefix::SEGMENT.source}\z/) ? locale_hit(seg) : nil
     end
 
+    # E16（external-facts §G24，hoko.vip 2026-09-04 POST /localization 實測）：本尊只取 return_to 的**路徑＋query**、丟掉 scheme／host：
+    #   `https://hoko.vip/collections/all?sort_by=price-ascending` ⇒ 302 同路徑＋query；`https://evil.example/x`／`//evil.example/x` ⇒ `/x`；
+    #   `back` ⇒ `/back`（localization 型不展開 back）；`https://hoko.vip/zh-hant/collections/all?page=2`＋`language_code=en` ⇒ `/en/collections/all?page=2`。
+    # Ella `localization-form.js` 提交前把 return_to 改寫成 `window.location.href`（絕對 URL）⇒ 先前「非 / 開頭一律回根」讓真店表單每次都落回首頁。
+    # open redirect 防線不變：只用路徑＋query（host 永遠是本店；redirect_to 仍 allow_other_host: false）。
     def safe_return_to
       raw = params[:return_to].to_s
-      raw.start_with?("/") && !raw.start_with?("//") ? raw : "/"
+      begin
+        uri = URI.parse(raw)
+        path = uri.path.to_s
+        query = uri.query
+      rescue URI::InvalidURIError
+        path, query = raw.split("?", 2)
+        path = path.to_s.sub(%r{\A[a-z][a-z0-9+.-]*:}i, "").sub(%r{\A//[^/]*}, "")
+      end
+      path = "/#{path}" unless path.start_with?("/")
+      path = path.sub(%r{\A/+}, "/")
+      query.present? ? "#{path}?#{query}" : path
     end
 
     # return_to 剝舊前綴（只剝命中的前綴；無前綴路徑原樣）。

@@ -4194,3 +4194,23 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   價格，輸出差異只有 `Shopify.country`／`localization.country`）。市場獨立幣別落地前必須處理。
 - **⚪ 語言切換後選國失效**：本尊 cookie path＝語言根路徑（`/ja`），換語言即回到市場預設——我方同形；是否要跨語言記住選國屬產品裁定，未開。
 - **登記 E8 對表工具**：`RenderParity::Normalizer` 的 `url_prefix:` 與 rake `CAND_PREFIX` 保留為工具能力（mirror 店已不需要）。
+
+### 3.85 E16 頁首區段 fetch 內容 SRA 對表（2026-09-04）的未取得與範圍外
+
+- **V `return_to` 預設值對 `"`／`<`／`>` 的處置**：本尊 `/?section_id=…&q=a%22b%3Cc` 的 `return_to` 整個不含 `q`（只此一觀測，規則未取得）；我方保留參數並
+  只轉 `&quot;`／`&lt;`／`&gt;`（`&` 照本尊不轉義）。external-facts §G24。
+- **V 整頁（非 section 形）帶 query 的 `return_to`**：Ella 只在 fetch 回來的頁首段渲染 localization 表單，整頁零個 `return_to` ⇒ 本尊整頁形不可觀測。
+  我方進頁快取的整頁只餵**進快取鍵的** query 對（`CACHE_PARAMS` ∪ `filter.*`，原順序），`?utm_…` 不進 `return_to`——整頁 HTML 必須是快取鍵的純函數
+  （否則洩進別的請求的快取命中）；`/search`／`/cart`／預覽／section 形餵原始 query（SR7）。其他主題（整頁內嵌 localization 表單）的本尊值待取。
+- **V section 形的 `request.path`**：我方 `request.path` 仍為無前綴頁面路徑（既有形）；本尊 section 形的 `request.path`（含前綴與否）未讀（Ella 頁首不輸出）。
+- **⚪ 本尊新版顧客帳戶**（§3.83 已登記）：頁首 SRA 剩餘三處 differ 全是 `/customer_authentication/redirect?locale=…`／`https://shopify.com/{id}/account?…`
+  vs 我方 `/account/login`／`/account/register`（e8 §3「平台功能」列），不在本包射程。
+- **登記：Ella `localization-form.js` 提交前改寫 `return_to`＋本尊對絕對 URL 的處置（已修）**：`assets/localization-form.js` 第 170 行
+  `this.elements.returnInput.value = window.location.href;` ⇒ 有 JS 時買家送出的是當前整頁的絕對 URL，伺服端預設值只在無 JS 時生效。本尊
+  `/localization` 只取 return_to 的路徑＋query（同站絕對 URL 保留、外站只剩路徑、`back` ⇒ `/back`；§G24）；我方先前 `safe_return_to` 對非 `/` 開頭一律回根
+  ⇒ 真店表單每次切語言都落回首頁（D80 部署後即存在）。E16 改為同形（L2b）。**V**：本尊對 fragment（`#…`）與無法解析的 return_to 的處置未測。
+- **⚪ `Set-Cookie: localization` 的屬性大小寫**：本尊 `SameSite=Lax`、我方（Rails 8 cookie 序列化）`samesite=lax`；值、path、一年效期同形。瀏覽器對屬性名不分
+  大小寫（RFC 6265 §5.2），不影響行為；逐位元組對位若要求 header 亦同形需改 cookie 序列化層，未開。
+- **登記：`/localization` 的 PUT**：本尊表單自帶 `_method=put`，我方 routes 只收 POST ⇒ bt3 mirror 店真表單提交 404（D80 部署後即存在，D80 實測用的是不帶
+  `_method` 的 curl）；E16 修為 `via: %i[post put]`（裸與帶前綴）。同型檢查：其他自帶 `_method` 的官方表單型（`customer_address` 編輯形 `_method=put`／
+  刪除 `_method=delete`）我方 FormTag 未輸出 `_method`（TYPES 只有 localization 帶）⇒ 不受影響；帳戶地址表單本尊形另包。
