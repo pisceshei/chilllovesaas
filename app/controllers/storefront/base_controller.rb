@@ -8,8 +8,10 @@ module Storefront
   #   `_cl_buyer` 簽名 cookie（cart 家族）。
   # ②租戶恆由 host 解析（TenantResolver middleware 寫 `Current.shop`）：
   #   平台 host（無租戶）一律 404——店面在租戶 host 之外不存在。
-  # ③🔴 市場只由 URL 決定（limits `i18n.locale_prefix.market_determined_by`）：
-  #   本層不讀 GeoIP／cookie 推市場。
+  # ③市場兩層來源（limits `i18n.locale_prefix.market_determined_by: url_then_buyer_selection`；D80 2026-09-04）：
+  #   URL 前綴命中的 presence 決定 (market, locale)；共用主網域上沒有自己 presence 的市場由買家選國寫下的
+  #   `localization` cookie（國碼）覆寫——本尊 POST /localization country_code=US ⇒ `Set-Cookie: localization=US`，
+  #   之後同 URL `Shopify.country = "US"`（external-facts §G23）。語言仍只由 URL 決定；本層不讀 GeoIP。
   class BaseController < ActionController::Base
     include ThemeCsp # 主題渲染面 CSP（Ella 修復 PR-1；concern 檔頭有完整理由）
 
@@ -91,26 +93,46 @@ module Storefront
     # E12：SRA 端點（recommendations／search suggest／cart sections）與整頁一樣**語言只由 URL 前綴決定**——先前三支
     # renderer 一律 `locale: nil` ⇒ 段以英文渲染（hoko.vip 商品頁「Related products」卡片按鈕「售罄」／「加入购物车」，我方
     # 「Sold out」／「Add to cart」，computed 對表按鈕寬 32／80 vs 74／99）。
+    # D80：命中後套買家選國（cookie）覆寫共用市場；同一段同一請求只解析一次。
     def locale_hit(first_segment = params[:locale_prefix])
       seg = first_segment.to_s
       return nil if seg.blank?
 
       @locale_hits ||= {}
-      @locale_hits[seg] ||= Markets::PrefixIndex.resolve(shop: current_shop, domain: current_domain, first_segment: seg)
+      return @locale_hits[seg] if @locale_hits.key?(seg)
+
+      hit = Markets::PrefixIndex.resolve(shop: current_shop, domain: current_domain, first_segment: seg)
+      @locale_hits[seg] = apply_buyer_country(hit)
     end
 
-    # E13（2026-09-04）：無前綴的 SRA 請求（編輯器預覽內主題 JS 打 `Shopify.routes.root + "recommendations/products"` 這類
-    # URL；本尊主市場預設語言無前綴故同語言）退回店的預設 (market, locale)——與根路徑 302 目標同一真相
-    # （Markets::PrefixIndex.default_hit）。不是 GeoIP／cookie 推市場（③ 仍成立）；帶前綴者仍只由前綴決定。
+    # E13（2026-09-04）：無前綴請求退回店的預設 (market, locale)（Markets::PrefixIndex.default_hit）——根路徑、無前綴頁面、
+    # 編輯器預覽內主題 JS 打的無前綴 SRA URL 三者同一落點；D80 起再套買家選國 cookie。帶前綴者仍只由前綴決定語言。
     def default_hit
       return @default_hit if defined?(@default_hit)
 
-      @default_hit = Markets::PrefixIndex.default_hit(shop: current_shop)
+      @default_hit = apply_buyer_country(Markets::PrefixIndex.default_hit(shop: current_shop))
     end
 
     # 前綴命中優先；無前綴 ⇒ 店預設（E13）。
     def effective_hit
       locale_hit || default_hit
+    end
+
+    # 買家選國 cookie（本尊 cookie 名 `localization`，值＝ISO 3166-1 alpha-2；§G23）。髒值一律當沒有。
+    LOCALIZATION_COOKIE = "localization"
+
+    def buyer_country_code
+      return @buyer_country_code if defined?(@buyer_country_code)
+
+      raw = cookies[LOCALIZATION_COOKIE].to_s.strip.upcase
+      @buyer_country_code = raw.match?(MarketRegion::COUNTRY_CODE_FORMAT) ? raw : nil
+    end
+
+    def apply_buyer_country(hit)
+      return hit if hit.nil? || buyer_country_code.nil?
+
+      Markets::PrefixIndex.with_buyer_country(hit, shop: current_shop, domain: current_domain,
+                                                   country_code: buyer_country_code)
     end
 
     def current_domain

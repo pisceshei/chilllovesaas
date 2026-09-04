@@ -19,15 +19,15 @@
     "_timezone": "本尊時區未取得（首頁未渲染時間）；沿用建店預設"
   },
   "markets": [
-    { "name": "美國", "handle": "us", "suffix": "us", "countries": ["US"], "_id": "30683103335" },
-    { "name": "香港", "handle": "hk", "suffix": "hk", "countries": ["HK"], "_id": "30683136103" },
-    { "name": "日本", "handle": "jp", "suffix": "jp", "countries": ["JP"], "_id": "30683168871" },
-    { "name": "欧盟", "handle": "eu", "suffix": "eu",
+    { "name": "美國", "handle": "us", "countries": ["US"], "_id": "30683103335" },
+    { "name": "香港", "handle": "hk", "countries": ["HK"], "_id": "30683136103" },
+    { "name": "日本", "handle": "jp", "countries": ["JP"], "_id": "30683168871" },
+    { "name": "欧盟", "handle": "eu",
       "countries": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"],
       "_id": "30683201639",
       "_countries": "本尊 Markets 頁只顯示「27 regions」（2026-09-04），逐國清單未逐列讀取（V）；此處採 EU 27 成員國（europa.eu 官方清單，2026-09-04 取證，見 external-facts §G22）；成員以外的地區（如 Åland、Réunion）本尊是否納入未取得" }
   ],
-  "_markets": "本尊 Markets（2026-09-04 使用者授權建立，external-facts §G21）：台灣（預設）／美國／香港／日本／欧盟，全部共用 hoko.vip • 5 languages、幣別繼承 HKD、預設語言同店預設 zh-CN；本尊市場不產生 URL 前綴（/en-us、/zh-hant-hk 皆 404）。我方依 67 §F.1(b) 恆帶地區 ⇒ 每個非主市場一個 subfolder presence（suffix＝多國市場的 region 識別字，V-225 暫案 C；單國市場前綴仍取國碼），語言白名單與預設同主市場。前綴形差屬 D80 裁定前的登記差異（e8 doc §3）",
+  "_markets": "本尊 Markets（2026-09-04 使用者授權建立，external-facts §G21）：台灣（預設）／美國／香港／日本／欧盟，全部共用 hoko.vip • 5 languages、幣別繼承 HKD、預設語言同店預設 zh-CN；本尊市場不產生 URL 前綴（/en-us、/zh-hant-hk 皆 404），市場由買家在 localization 表單選國（cookie localization=US）決定。D80 方案 1（2026-09-04 使用者裁定）後我方同形：非主市場不建 presence（無 suffix 鍵；Mirror 會拆掉 E15 期建的 subfolder presence），前綴只有語言段（/zh-hant、/en、/fr、/ja；預設 zh-Hans 無前綴）",
   "theme": {
     "name": "ella-7-2-0-theme-source",
     "fixture_name": "ella",

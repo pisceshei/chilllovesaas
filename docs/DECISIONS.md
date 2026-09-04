@@ -2580,6 +2580,12 @@ Kalles 的 section／block schema 有 194 檔帶尾逗號（非嚴格 JSON），
   redirect 保留前綴、頁快取鍵、E8 對表的 `CAND_PREFIX` 抹除規則一併回收）。
 - 未改完前 E8 對表以 `CAND_PREFIX` 抹掉我方前綴只是**過渡**，不是合規。
 
+**2026-09-04 方案裁定（使用者回覆「1」）**：E15 收尾時提出兩案——方案 1「完全照本尊」（語言前綴 `/{語言碼}`、預設語言無前綴、根路徑直接服務；
+市場不產生前綴，由 `{% form 'localization' %}` 的國家選擇寫 `localization` cookie 決定；hreflang 只列語言碼、x-default 指無前綴 URL）；
+方案 2「只改前綴形、市場仍恆入 URL」。使用者裁定 **1**。實作＝`docs/dev/d80-url-structure.md`（取證 external-facts §G23）；
+規範回寫＝67 §F.1(b)(c)(d)、62 §I.1／§I.2／§I.2-1／§O REG-3／REG-4、`config/limits.yml` `i18n.locale_prefix.*`／`seo.hreflang.*`。
+子資料夾市場（`/{lang}-{suffix}`）與自有網域市場的本尊 hreflang 形未取得 ⇒ 沿用逐國展開登記 V（91 §3.84）。
+
 ## D81（2026-09-03）貨幣顯示格式跟隨本尊（店級 `money_format`／`money_with_currency_format`）
 
 使用者裁定原文：「貨幣顯示格式樣格跟隨 shopify 本尊。」

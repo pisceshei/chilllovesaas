@@ -27,7 +27,7 @@ RSpec.describe "Theme JS runtime batch", type: :request do
   def render_home
     ActsAsTenant.with_tenant(shop) do
       ThemeEngine::PageRenderer.new(theme:, shop:, publication: Publication.online_store!,
-                                    url_prefix: "en-hk").render("/").html
+                                    url_prefix: "").render("/").html
     end
   end
 
@@ -63,8 +63,8 @@ RSpec.describe "Theme JS runtime batch", type: :request do
   end
 
   it "JS4 request.locale 物件化（iso_code 可取）；JS5 🔴 t 佔位無尾空格插值" do
-    drop = ThemeEngine::RequestDrop.new(locale: "zh-hant-hk")
-    expect(drop["locale"]["iso_code"]).to eq("zh-hant-hk")
+    drop = ThemeEngine::RequestDrop.new(locale: "zh-hant")
+    expect(drop["locale"]["iso_code"]).to eq("zh-hant")
 
     # 真渲染路徑：locale 檔 probe.tight＝"Only {{ n}} left"（無尾空格＝Ella 實形）
     ActsAsTenant.with_tenant(shop) do

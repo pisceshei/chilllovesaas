@@ -34,14 +34,14 @@ RSpec.describe "Storefront section wrapper (id scope / group class / group comme
   end
 
   it "SW1 🔴 模板 section 的 wrapper id 帶 template 前綴，且 section.id 同值" do
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<div id="shopify-section-template--index__hero" class="shopify-section">')
     expect(response.body).to include('<div id="shopify-section-template--index__probe" class="shopify-section"><span id="sidp">template--index__probe</span>')
   end
 
   it "SW2 🔴 群組 section：sections 前綴＋群組 class＋BEGIN／END 註解" do
-    get "/en-hk/"
+    get "/"
     expect(response.body).to include("<!-- BEGIN sections: header-group -->")
     expect(response.body).to include('<div id="shopify-section-sections--header-group__header" class="shopify-section shopify-section-group-header-group">')
     expect(response.body).to include("<!-- END sections: header-group -->")

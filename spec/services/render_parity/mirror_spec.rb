@@ -5,7 +5,8 @@ require "rails_helper"
 # 鏡像店（E8／E15）：把 hoko.vip 快照描述冪等地建到一間店。
 # 🔴 假綠殺手：
 #   MR1 來源語言必須真的切到 zh-Hans（只加不切 ⇒ `<html lang>` 仍 en）；E15 五語言必須「已發布＋白名單開放」而不只是
-#       enabled（只 enabled ⇒ PrefixIndex 不解析、切換器不出現）；非主市場必須各有 subfolder presence（否則前綴組不出來）。
+#       enabled（只 enabled ⇒ PrefixIndex 不解析、切換器不出現）；非主市場**不得**有 presence（D80：本尊市場共用主網域、
+#       /en-us 404；E15 期建的 subfolder presence 要被拆掉，否則 hreflang／sitemap 多出一整組 URL）。
 #   MR2 二次呼叫不得產生重複商品／集合／選單項／市場／presence／白名單列（find-or-skip 被拿掉 ⇒ 轉紅）。
 #   MR3 對齊必須收斂：快照外的已發布語言不撤、多出的 region 不刪、預設語言被改不改回、關閉的白名單不重開 ⇒ 轉紅。
 #   MR4 把資料面接到渲染面：available_languages 五項（碼／在地名／順序／前綴）＋頁首語言鈕真的出現。
@@ -30,7 +31,7 @@ RSpec.describe RenderParity::Mirror do
     presence.market_web_presence_locales.order(:position).pluck(:locale_tag, :is_market_default, :open_to_buyers)
   end
 
-  it "MR1 🔴 建店＋對齊：店名／幣別／旗標、五語言（來源 zh-Hans、全部已發布、序同本尊）、五市場（主市場 TW＋四個 subfolder 市場）、主題、3 商品、集合、頁面、選單" do
+  it "MR1 🔴 建店＋對齊：店名／幣別／旗標、五語言（來源 zh-Hans、全部已發布、序同本尊）、五市場（主市場 TW＋四個共用主網域市場、無 presence）、主題、3 商品、集合、頁面、選單" do
     result = described_class.call(subdomain: "mirror-spec", spec: spec)
     shop = result.shop
     expect(shop.name).to eq("我的商店 3")
@@ -49,7 +50,8 @@ RSpec.describe RenderParity::Mirror do
       presence = market.market_web_presences.order(:id).first
       expect(presence.default_shop_locale).to eq("zh-Hans")
       expect(whitelist_of(presence)).to eq(languages.map { |tag| [ tag, tag == "zh-Hans", true ] })
-      expect(languages.map { |tag| Markets::UrlPrefix.for(presence, tag) }).to eq(%w[/zh-hans-tw /zh-hant-tw /en-tw /fr-tw /ja-tw])
+      # D80：預設語言無前綴、其他裸語言段（本尊 hoko.vip：/ 、/zh-hant、/en、/fr、/ja）
+      expect(languages.map { |tag| Markets::UrlPrefix.for(presence, tag) }).to eq([ "", "/zh-hant", "/en", "/fr", "/ja" ])
 
       extras = Market.where(is_primary: false).order(:handle)
       expect(extras.pluck(:handle, :name, :status, :market_type)).to eq(
@@ -61,19 +63,19 @@ RSpec.describe RenderParity::Mirror do
       expect(jp.market_regions.pluck(:country_code)).to eq([ "JP" ])
       expect(eu.market_regions.count).to eq(27)
       expect(eu.market_regions.pluck(:country_code)).to include("FR", "DE", "MT")
-      extras.each do |extra|
-        expect(extra.market_web_presences.count).to eq(1)
-        extra_presence = extra.market_web_presences.first
-        expect(extra_presence).to have_attributes(domain_id: nil, subfolder_suffix: extra.handle, default_shop_locale: "zh-Hans")
-        expect(whitelist_of(extra_presence)).to eq(languages.map { |tag| [ tag, tag == "zh-Hans", true ] })
-      end
-      expect(Markets::UrlPrefix.for(eu.market_web_presences.first, "zh-Hant")).to eq("/zh-hant-eu") # 多國市場 region＝suffix
-      expect(Markets::UrlPrefix.for(hk.market_web_presences.first, "en")).to eq("/en-hk")           # 單國市場 region＝國碼
-      # 前綴 ≡ (market, locale)：五市場 × 五語言全部可解析、互不撞（67 §F.1(c)）
+      extras.each { |extra| expect(extra.market_web_presences.count).to eq(0) } # D80：共用主網域市場無 presence
+      # 前綴 ≡ (presence, locale)：只有主 presence 的四個非預設語言段可解析；舊地區形與市場段都不存在（本尊 /en-us 404）
       domain = Domain.primary.find_by!(shop_id: shop.id)
-      hit = Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "ja-jp")
-      expect([ hit.market.handle, hit.locale_tag ]).to eq(%w[jp ja])
-      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant")).to be_nil # 本尊形 /zh-hant 我方未裁（D80）
+      hit = Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant")
+      expect([ hit.market.handle, hit.locale_tag ]).to eq(%w[tw zh-Hant])
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "ja-jp")).to be_nil
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hans")).to be_nil # 預設語言無前綴形
+      expect(Markets::PrefixIndex.prefix_segments(shop:)).to eq(Set.new(%w[zh-hant en fr ja]))
+      # 買家選國（cookie）⇒ 共用市場覆寫：JP ⇒ 日本市場、presence／語言不變
+      jp_hit = Markets::PrefixIndex.with_buyer_country(hit, shop:, domain:, country_code: "JP")
+      expect([ jp_hit.market.handle, jp_hit.web_presence, jp_hit.locale_tag, jp_hit.effective_country_code ]).to eq([ "jp", presence, "zh-Hant", "JP" ])
+      fr_hit = Markets::PrefixIndex.with_buyer_country(hit, shop:, domain:, country_code: "FR")
+      expect([ fr_hit.market.handle, fr_hit.effective_country_code ]).to eq(%w[eu FR])
 
       expect(Theme.published.first).to have_attributes(name: "ella", version: "7.2.0")
       expect(Product.where(shop_id: shop.id, status: "active").order(:id).pluck(:handle)).to eq(%w[acme-tee bolt-mug cosy-lamp])
@@ -92,36 +94,43 @@ RSpec.describe RenderParity::Mirror do
       expect(Menu.find_by!(handle: "main-menu").menu_items.order(:position).pluck(:title)).to eq(%w[首頁 目錄 聯絡我們])
     end
     expect(result.log).to include(a_string_matching(/\Ashop created/))
-    expect(result.log).to include(a_string_matching(/\Amarket eu regions=27 suffix=eu prefixes=\/zh-hans-eu,/))
+    expect(result.log).to include(a_string_matching(/\Amarket eu regions=27 presence=none/))
+    expect(result.log).to include(a_string_matching(/\Amarket tw country=TW presence default=zh-Hans prefixes=,\/zh-hant,\/en,\/fr,\/ja\z/))
   end
 
   it "MR2 🔴 冪等：第二次呼叫不重複建立（商品／集合／頁面／選單項／主題／市場／region／presence／白名單／語言列數不變），只回報 exists" do
     first = described_class.call(subdomain: "mirror-spec", spec: spec)
     before = counts(first.shop)
-    expect(before).to include(markets: 5, presences: 5, whitelist: 25, regions: 31, locales: 5)
+    expect(before).to include(markets: 5, presences: 1, whitelist: 5, regions: 31, locales: 5)
     again = described_class.call(subdomain: "mirror-spec", spec: spec)
     expect(counts(again.shop)).to eq(before)
     expect(again.log).to include(a_string_matching(/product exists: acme-tee/))
     expect(again.log).to include(a_string_matching(/theme: published theme exists/))
   end
 
-  it "MR3 🔴 對齊收斂：快照外的已發布語言撤發布、多出的 region 刪、被改掉的預設語言與關閉的白名單列復原" do
+  it "MR3 🔴 對齊收斂：快照外的已發布語言撤發布、多出的 region 刪、被改掉的預設語言與關閉的白名單列復原、E15 期的 subfolder presence 拆掉" do
     shop = described_class.call(subdomain: "mirror-spec", spec: spec).shop
     ActsAsTenant.with_tenant(shop) do
       ShopLocale.create!(shop_id: shop.id, locale_tag: "ko", enabled: true, published: true, position: 9)
       us = Market.find_by!(handle: "us")
       us.market_regions.create!(shop_id: shop.id, country_code: "CA")
+      # E15 期建過的 subfolder presence（D80 前的形）——對齊必須拆掉，否則 hreflang／sitemap 多一整組 /zh-hans-us URL
+      us.market_web_presences.create!(shop_id: shop.id, subfolder_suffix: "us", default_shop_locale: "zh-Hans")
+        .market_web_presence_locales.create!(shop_id: shop.id, locale_tag: "zh-Hans", position: 0, is_market_default: true)
       presence = Market.find_by!(is_primary: true).market_web_presences.order(:id).first
       presence.set_default_locale!("en")
       presence.market_web_presence_locales.find_by!(locale_tag: "zh-Hant").close!
     end
 
-    described_class.call(subdomain: "mirror-spec", spec: spec)
+    result = described_class.call(subdomain: "mirror-spec", spec: spec)
+    expect(result.log).to include(a_string_matching(/\Amarket us regions=1 presence=none（共用主網域） removed=1\z/))
 
     ActsAsTenant.with_tenant(shop) do
       expect(ShopLocale.find_by!(locale_tag: "ko")).to have_attributes(published: false, enabled: true) # 不刪列、只撤發布
       expect(ShopLocale.where(published: true).order(:position).pluck(:locale_tag)).to eq(languages)
       expect(Market.find_by!(handle: "us").market_regions.pluck(:country_code)).to eq([ "US" ])
+      expect(Market.find_by!(handle: "us").market_web_presences.count).to eq(0)
+      expect(MarketWebPresence.where(shop_id: shop.id).count).to eq(1)
       presence = Market.find_by!(is_primary: true).market_web_presences.order(:id).first
       expect(presence.default_shop_locale).to eq("zh-Hans")
       expect(whitelist_of(presence)).to eq(languages.map { |tag| [ tag, tag == "zh-Hans", true ] })
@@ -146,14 +155,30 @@ RSpec.describe RenderParity::Mirror do
         expect(available.map { |l| l["iso_code"] }).to eq(%w[zh-CN zh-TW en fr ja])
         expect(available.map { |l| l["endonym_name"] }).to eq(%w[简体中文 繁體中文 English Français 日本語])
         expect(available.map { |l| l["primary"] }).to eq([ true, false, false, false, false ])
-        expect(available.map { |l| l["root_url"] }).to eq(%w[/zh-hans-tw /zh-hant-tw /en-tw /fr-tw /ja-tw])
+        # D80：本尊 language.root_url——預設 "/"、其他 "/zh-hant"（hoko `window.routes.root_url` 於 / 與 /zh-hant/ 各為 "/"／"/zh-hant"）
+        expect(available.map { |l| l["root_url"] }).to eq([ "/", "/zh-hant", "/en", "/fr", "/ja" ])
       end
 
       host! "mirror-spec.lvh.me"
       https!
-      get "/zh-hans-tw/"
+      get "/"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(%(Shopify.locale = "zh-CN"))
+      expect(response.body).to include(%(Shopify.routes.root = "/";))
+      expect(response.body).to include(%(Shopify.country = "TW";))
+      # hreflang 六條＝本尊 hoko.vip 首頁形（x-default／zh-Hans 指根，其餘裸語言段；零地區碼、零市場段）
+      links = response.body.scan(/<link rel="alternate" hreflang="([^"]+)" href="https:\/\/mirror-spec\.lvh\.me([^"]*)">/)
+      expect(links).to eq([ [ "zh-Hans", "/" ], [ "zh-Hant", "/zh-hant/" ], [ "en", "/en/" ], [ "fr", "/fr/" ], [ "ja", "/ja/" ], [ "x-default", "/" ] ])
+      get "/zh-hant/"
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(Shopify.locale = "zh-TW"))
+      expect(response.body).to include(%(Shopify.routes.root = "/zh-hant/";))
+      get "/zh-hans-tw/" # 2026-08-13 舊形（E15 期的 mirror URL）＝沒有這個頁面
+      expect(response).to have_http_status(:not_found)
+      get "/en-us/"      # 本尊 /en-us 404（市場不產生前綴）
+      expect(response).to have_http_status(:not_found)
+      get "/"
+
       # Ella header：show_language 只在 available_languages.size > 1 時為真 ⇒ 語言鈕（icon 型：按鈕＋section-fetcher）出現；
       # 單語言時整段不渲染（E8 首輪即此形，與本尊多語言前的首頁同）
       expect(response.body).to include("dropdown-localization__button")

@@ -5,7 +5,7 @@ require "rails_helper"
 # 公開店面頁面（包 33 後半；67 §F.1(b)(c) 路由紀律＋63 §D.3 頁級快取＋B12/B13）。
 #
 # 🔴 假綠殺手（鐵律 20.2⑤）：
-#   S1/S2 根與無前綴 302（殺：寫成 301——預設市場會變；殺：丟 query）
+#   S1/S2 根與無前綴路徑直接 200（D80；殺：退回 302 補前綴——本尊 / 200、/zh-hans/ 404）
 #   S3  前綴命中匿名可看（殺：storefront 誤掛 staff 閘）
 #   S4  未知／長得像前綴但查無 ⇒ 404 不重導（殺：把一切未知都補預設前綴——前綴≡身分破裂）
 #   S6  快取命中不重渲染＋stamp 動即換 key（殺：key 漏 resource stamp——永遠舊頁）
@@ -26,29 +26,42 @@ RSpec.describe "Storefront pages", type: :request do
     )
   end
 
-  it "S1 🔴 根路徑 ⇒ 302（不是 301）到預設 (market, locale) 前綴（B12；根不是內容頁）" do
+  it "S1 🔴 根路徑直接以預設 (market, locale) 渲染首頁（D80：本尊 / 200、lang=zh-CN；不再 302）" do
     get "/"
-    expect(response).to have_http_status(:found)
-    expect(response.headers["Location"]).to end_with("/en-hk/")
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("首頁英雄")
+    expect(response.body).to include(%(Shopify.routes.root = "/";))
   end
 
-  it "S2 🔴 無前綴路徑 ⇒ 302 補預設前綴，保留路徑與 query（67 §F.1(b)）" do
+  it "S2 🔴 無前綴路徑＝預設語言的內容頁（D80）：直接 200，query 照常進渲染（不補前綴、不重導）；查無的路徑 404" do
+    ActsAsTenant.with_tenant(shop) do
+      v = create(:product_variant, shop:, price_cents: 14_800,
+                 product: create(:product, shop:, status: "active", title: "Rose Serum", handle: "rose"))
+      v.inventory_item.inventory_levels.order(:id).first.update!(available: 5)
+    end
     get "/products/rose?variant=9&x=1"
-    expect(response).to have_http_status(:found)
-    expect(response.headers["Location"]).to end_with("/en-hk/products/rose?variant=9&x=1")
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Rose Serum")
+    expect(response.body).to include(%(Shopify.routes.root = "/";))
+    get "/products/nope"
+    expect(response).to have_http_status(:not_found)
   end
 
   it "S3 前綴命中 ⇒ 匿名 200 渲染主題頁（包 35 起不再帶 X-Robots-Tag noindex——B13 已撤）" do
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("首頁英雄")
     expect(response.headers["X-Robots-Tag"]).to be_nil
   end
 
-  it "S4 🔴 長得像前綴但查無 ⇒ 404（unknown_prefix_status；不補預設前綴、不重導）" do
+  it "S4 🔴 長得像前綴但查無 ⇒ 整條路徑當無前綴頁面 ⇒ 404（D80：本尊 /zh-hans/、/fr-hk/ 皆 404；不補前綴、不重導）" do
     get "/fr-hk/"
     expect(response).to have_http_status(:not_found)
-    get "/zh-hant-hk/" # 白名單只開 en ⇒ 未開放組合同樣 404（§A.5(c)）
+    get "/zh-hant/" # 白名單只開 en ⇒ 未開放組合同樣 404（§A.5(c)）
+    expect(response).to have_http_status(:not_found)
+    get "/en/"      # 預設語言沒有前綴形（本尊 /zh-hans/ 404）
+    expect(response).to have_http_status(:not_found)
+    get "/en-hk/"   # 2026-08-13 舊形不再存在
     expect(response).to have_http_status(:not_found)
   end
 
@@ -68,12 +81,12 @@ RSpec.describe "Storefront pages", type: :request do
     end
 
     allow(ThemeEngine::PageRenderer).to receive(:new).and_call_original
-    2.times { get "/en-hk/products/cache-item" }
+    2.times { get "/products/cache-item" }
     expect(response).to have_http_status(:ok)
     expect(ThemeEngine::PageRenderer).to have_received(:new).once
 
     travel(1.second) { ActsAsTenant.with_tenant(shop) { variant.product.update!(title: "改名") } }
-    get "/en-hk/products/cache-item"
+    get "/products/cache-item"
     expect(ThemeEngine::PageRenderer).to have_received(:new).twice
   end
 
@@ -81,7 +94,7 @@ RSpec.describe "Storefront pages", type: :request do
     memory = ActiveSupport::Cache::MemoryStore.new
     allow(Rails).to receive(:cache).and_return(memory)
     allow(ThemeEngine::PageRenderer).to receive(:new).and_call_original
-    2.times { get "/en-hk/products/no-such" }
+    2.times { get "/products/no-such" }
     expect(response).to have_http_status(:not_found)
     expect(ThemeEngine::PageRenderer).to have_received(:new).twice
   end
@@ -112,7 +125,7 @@ RSpec.describe "Storefront pages", type: :request do
     expect(response).to redirect_to("/admin")
     # 平台 host 打前綴路徑＝無此路由（依測試環境 show_exceptions 設定，raise 或 404 皆為同一事實）。
     begin
-      get "/en-hk/"
+      get "/zh-hant/"
       expect(response).to have_http_status(:not_found)
     rescue ActionController::RoutingError
       # raise 形也證明 constraint 擋住了 catch-all
@@ -139,9 +152,9 @@ RSpec.describe "Storefront pages", type: :request do
       Domain.create!(host: "old.example", domain_type: "redirect", status: "active")
     end
     host! "old.example"
-    get "/en-hk/products/x?a=1"
+    get "/products/x?a=1"
     expect(response).to have_http_status(:moved_permanently)
-    expect(response.headers["Location"]).to eq("https://sf-shop.lvh.me/en-hk/products/x?a=1")
+    expect(response.headers["Location"]).to eq("https://sf-shop.lvh.me/products/x?a=1")
   end
 
   it "S9 canary：限流判別式真的掛上（storefront-page／storefront-cart 兩條，fail-open 防線）" do
@@ -149,10 +162,10 @@ RSpec.describe "Storefront pages", type: :request do
     cart_block = Rack::Attack.throttles.fetch("storefront-cart/ip").block
 
     tenant_env = { "chilllove.shop_id" => shop.id, "REMOTE_ADDR" => "203.0.113.9" }
-    page_get = Rack::Attack::Request.new(Rack::MockRequest.env_for("/en-hk/", method: "GET").merge(tenant_env))
+    page_get = Rack::Attack::Request.new(Rack::MockRequest.env_for("/", method: "GET").merge(tenant_env))
     admin_get = Rack::Attack::Request.new(Rack::MockRequest.env_for("/admin", method: "GET").merge(tenant_env))
     platform_get = Rack::Attack::Request.new(
-      Rack::MockRequest.env_for("/en-hk/", method: "GET").merge("REMOTE_ADDR" => "203.0.113.9")
+      Rack::MockRequest.env_for("/", method: "GET").merge("REMOTE_ADDR" => "203.0.113.9")
     )
     cart_post = Rack::Attack::Request.new(Rack::MockRequest.env_for("/cart/add.js", method: "POST").merge(tenant_env))
 
@@ -189,24 +202,24 @@ RSpec.describe "Storefront cart page", type: :request do
   end
 
   it "C1 🔴 /cart 渲染真車（不再 404）；no-store；加車後重看數量更新（不吃頁快取）" do
-    get "/en-hk/cart"
+    get "/cart"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("data-cart-empty")
     expect(response.headers["Cache-Control"]).to include("no-store")
 
     post "/cart/add.js", params: { items: [ { id: variant.id, quantity: 2 } ] }.to_json,
                          headers: { "CONTENT_TYPE" => "application/json" }
-    get "/en-hk/cart"
+    get "/cart"
     expect(response.body).to match(/車頁測品.* × 2/).and include("購物車（2）")
 
     post "/cart/add.js", params: { items: [ { id: variant.id, quantity: 1 } ] }.to_json,
                          headers: { "CONTENT_TYPE" => "application/json" }
-    get "/en-hk/cart"
+    get "/cart"
     expect(response.body).to include("購物車（3）") # 🔴 殺「/cart 被頁快取吃掉」
   end
 
   it "C2 純瀏覽 /cart 不建車列（cookie 無車 ⇒ 空車渲染、零寫入）" do
-    expect { get "/en-hk/cart" }.not_to change {
+    expect { get "/cart" }.not_to change {
       ActsAsTenant.with_tenant(shop) { Cart.count }
     }
   end

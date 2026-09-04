@@ -9,7 +9,7 @@ require "rails_helper"
 #        （同 storefront S10）。
 #   PV1b 跳過只限 asset：draft_page（POST、寫草稿 cache）在防護開啟下缺 token 仍被擋。
 #   PV2  預覽以店預設市場語言渲染：<html lang>／Shopify.locale／Shopify.country 與公開店面同值（原本 lang=""）。
-#   PV2b 跟的是 presence 預設語言，不是來源語言：預設切到 zh-Hant ⇒ 與 /zh-hant-hk/ 同值。
+#   PV2b 跟的是 presence 預設語言，不是來源語言：預設切到 zh-Hant ⇒ 與根路徑 /（D80：預設語言無前綴）同值。
 #   PV3  draft_section 片段同一語言真相：預設 zh-Hant ⇒ 片段出 zh-Hant 譯文。
 RSpec.describe "Theme editor preview parity (E13)", type: :request do
   let(:shop) { create(:shop, subdomain: "e13-shop") }
@@ -84,7 +84,7 @@ RSpec.describe "Theme editor preview parity (E13)", type: :request do
     expect(response).to have_http_status(:ok)
     preview = head_facts(response.body)
 
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
     storefront = head_facts(response.body)
 
@@ -93,14 +93,15 @@ RSpec.describe "Theme editor preview parity (E13)", type: :request do
     expect(preview).to eq(storefront)
   end
 
-  it "PV2b 🔴 跟 presence 預設語言走（切到 zh-Hant ⇒ 與 /zh-hant-hk/ 同值），不是來源語言" do
+  it "PV2b 🔴 跟 presence 預設語言走（切到 zh-Hant ⇒ 與根路徑 / 同值），不是來源語言" do
     default_zh_hant!
     get "/admin/store/preview/#{theme.id}?editor=1"
     expect(response).to have_http_status(:ok)
     preview = head_facts(response.body)
 
-    get "/zh-hant-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
+    expect(response.body).to include(%(Shopify.locale = "zh-TW"))
 
     expect(preview[:locale]).to be_present
     expect(preview[:locale]).not_to eq("en")

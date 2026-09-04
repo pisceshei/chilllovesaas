@@ -41,16 +41,10 @@ module Storefront
 
     private
 
-    # 帶前綴路由給 locale_prefix；裸路由回預設前綴（search_controller 同構）。
+    # 帶前綴路由的命中前綴；裸路由（或前綴查無）回店預設前綴（D80：預設語言＝""）。search_controller 同構。
     def url_prefix
-      prefix = params[:locale_prefix].to_s
-      return "/#{prefix}" if prefix.present?
-
-      ActsAsTenant.with_tenant(current_shop) do
-        market = Market.find_by(is_primary: true)
-        presence = market&.market_web_presences&.first
-        presence ? Markets::UrlPrefix.for(presence, presence.default_shop_locale) : ""
-      end
+      hit = effective_hit
+      hit ? Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag) : ""
     rescue Markets::UrlPrefix::Error
       ""
     end

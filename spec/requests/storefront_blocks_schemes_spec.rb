@@ -27,7 +27,7 @@ RSpec.describe "Storefront theme blocks and color schemes", type: :request do
   end
 
   it "B1 🔴 {% render child_block %} 變數形不再 parse fatal；B2 巢狀子層渲染（Ella 消費形）" do
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
     # 父 block 渲染＋設定；子層兩個 leaf 依 block_order 進括號內
     expect(response.body).to include('data-tone="warm"')
@@ -39,7 +39,7 @@ RSpec.describe "Storefront theme blocks and color schemes", type: :request do
   end
 
   it "B3 🔴 section.blocks 迭代形＋{% render block %}：第二構造點（ordered_block_drops）的巢狀 children" do
-    get "/en-hk/"
+    get "/"
     # section.blocks → SectionDrop.blocks（ordered_block_drops 遞迴）→ render 變數形
     expect(response.body).to include('data-tone="iter"')
     expect(response.body).to match(
@@ -51,13 +51,13 @@ RSpec.describe "Storefront theme blocks and color schemes", type: :request do
   end
 
   it "C1 色階群組迭代 emit CSS 變數（official 範例形）" do
-    get "/en-hk/"
+    get "/"
     expect(response.body).to include(".color-scheme-1{--bg:#ffffff;--fg:#111111;}")
     expect(response.body).to include(".color-scheme-2{--bg:#101010;--fg:#fafafa;}")
   end
 
   it "C2 color_scheme 型 setting：直接輸出＝id、.settings.background 解引用（官方兩形）" do
-    get "/en-hk/"
+    get "/"
     expect(response.body).to include('<span id="pick">scheme-2</span>')
     expect(response.body).to include('<span id="pickbg">#101010</span>')
   end
@@ -67,11 +67,11 @@ RSpec.describe "Storefront theme blocks and color schemes", type: :request do
     allow(Rails).to receive(:cache).and_return(memory)
     allow(ThemeEngine::PageRenderer).to receive(:new).and_call_original
 
-    2.times { get "/en-hk/" }
+    2.times { get "/" }
     expect(ThemeEngine::PageRenderer).to have_received(:new).once # 第二發吃快取
 
     stub_const("Storefront::PageCache::BOOT_STAMP", Storefront::PageCache::BOOT_STAMP + 1)
-    get "/en-hk/"
+    get "/"
     expect(ThemeEngine::PageRenderer).to have_received(:new).twice # 新 stamp ⇒ 重渲染
   end
 end

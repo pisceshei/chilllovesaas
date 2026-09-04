@@ -194,6 +194,9 @@
 | **1** | **這個前綴根本不存在**（該 (market, locale) 組合不在 ③） | `/zh-hant-ca/products/x`（CA 市場沒開繁中） | 🔴 **404** | 前綴 ≡ (market, locale) 身分（§F.1(c)）。不存在的組合就是**沒有這條路由**——它不是「有頁面但不給看」，是**沒有頁面**。與 §F.1 的路由表是同一張表，不是另一套權限檢查 |
 | **2** | **前綴存在，但屬於別的市場** | 加拿大買家開 `/en-hk/products/x` | 🔴 **200**（可能被地區重導攔**一次**，62 §K.2；爬蟲一律不攔） | 🔴 **這裡回 404 是嚴重事故**：`/en-hk/...` 是 HK 市場 hreflang 集合裡的成員，它必須對任何客戶端回 200（62 §0.2 原則 4）。**「該市場沒開放」對這條 URL 是無意義的判斷——這條 URL 不屬於加拿大市場，它屬於香港市場** |
 | **3** | 曾經開放、後來被商家移除 | HK 市場移除 `en` 之後的 `/en-hk/...` | 🔴 **404**，並**同步**從 hreflang 與 sitemap 移除（62 §I.4 既有掛鉤 ＋ §I.3(b) 失效管線） | 跟隨 29 §1.2（`help`：自市場移除語言 ⇒ 該語言 URL 立即 404）。⚠ **410 是否更正確未查證 ⇒ V-224**；結案前用 404（跟隨本尊） |
+<!-- 2026-09-04 D80 方案 1 更正：本表例子的 `/en-hk/…` 形自 D80 起不存在——預設語言無前綴、市場不入 URL（67 §F.1(b)）。
+     情形 2「前綴屬於別的市場」只對子資料夾／自有網域市場（`/en-ca/…`）成立；共用網域的市場與 primary 共用同一組 URL，沒有這個情形。
+     情形 1／3／4「不可路由 ⇒ 整條路徑當無前綴頁面 ⇒ 404」的判準不變（例：移除 `zh-Hant` 後 `/zh-hant/products/x` 404）。 -->
 | **4** | 語言在 ③ 但 `shop_locales.published = false` | 未發布語言 | 🔴 **404**（§F.1(d) 既有規則，不變） | 未發布語言只有預覽連結可見（29 §1.2） |
 
 🔴 **三條連帶紀律**：
@@ -626,7 +629,7 @@ UNIQUE (shop_id, market_web_presence_id, is_market_default) WHERE is_market_defa
 |---|---|
 | **兩個分區** | 🔴 **「本市場開放」（可增刪、可拖曳排序）** ＋ **「繼承自 {父市場}」（唯讀，附跳轉連結）**。形態沿用 29 §1.5(d)，不新造（§A.5(d) 第 3 條） |
 | **可選值域** | `shop_locales` 中 `published = true` 的語言。🔴 **未發布語言不出現在這個選單裡**——把未發布語言開給市場沒有任何效果（前台仍 404，§A.5(c) 情形 4），只會製造「我開了為什麼沒用」 |
-| **每列顯示** | `endonym`（`繁體中文`／`English`）＋ **該語言在該市場的翻譯進度徽章**（讀 `translation_status`，鐵律 7）＋ **它會產生的 URL 前綴**（`/zh-hant-hk`，§F.1）＋ **它會產生的 hreflang 碼**（`zh-Hant-HK`；多國市場顯示「N 個碼」可展開，62 §I.3(d)） |
+| **每列顯示** | `endonym`（`繁體中文`／`English`）＋ **該語言在該市場的翻譯進度徽章**（讀 `translation_status`，鐵律 7）＋ **它會產生的 URL 前綴**（`/zh-hant`；預設語言顯示「無前綴」；子資料夾市場 `/zh-hant-ca`，§F.1）＋ **它會產生的 hreflang 碼**（`zh-Hant`；子資料夾市場 `zh-Hant-CA`、多國顯示「N 個碼」可展開，62 §I.3(d)） |
 | 🔴 **預設語言** | 單選（radio），恆為開放；改預設 ⇒ 顯示「這會改變本市場自動重導的落點」 |
 | **排序** | 拖曳 ⇒ 寫 `position` ⇒ **前台切換器的順序**。🔴 這是商家唯一能控制切換器順序的地方，**不得**在前台另加一套排序規則（鐵律 7 的形態） |
 | 🔴 **關閉語言的確認對話** | 必須顯示三個數字：**①將 404 的 URL 數**（該市場 × 該語言 × 可索引資源數）**②將從 hreflang 移除的條目數 ③該語言在該市場的既有譯文筆數（不會被刪，只是不再曝光）**。形態與理由同 §E.6(a) 的匯入預覽——**破壞性操作在按下確認前必須有一個數字**。第 ③ 個數字專門用來回答商家的「我的翻譯會不會不見」 |
@@ -1194,7 +1197,7 @@ hreflang_codes(market, locale)      → 標註用。**62 §I.2 已定義，本�
 | 判準 | `url_prefix()` | `hreflang_codes()` | 可否合併 |
 |---|---|---|---|
 | 🔴 **基數（決定性）** | **恰 1 個字串**——一條路由不可能是一個集合 | **N 個碼**（多國市場逐國展開，62 §I.2）；EU 27 國市場 ⇒ 27 個 | 🔴 **不可**。`1 : N` 不是值域差異，是**型別差異**。合併後函式必須回 Set，而路由層拿到 Set 只能取 `.first`——**那一行 `.first` 就是 bug 的全部**（它會在第一個多國市場上選到一個看起來對的國家） |
-| **大小寫** | **全小寫**（`/zh-hant-hk`）——URL 路徑大小寫敏感，混用會造成同一頁兩條 URL | **Title case script ＋ 大寫地區**（`zh-Hant-HK`）——Google 不區分大小寫，但一致性讓 diff 測試可行（62 §I.2） | 🔴 不可（合併後要在呼叫端做大小寫轉換，等於把規則搬到每一個呼叫點） |
+| **大小寫** | **全小寫**（`/zh-hant`、子資料夾 `/zh-hant-ca`）——URL 路徑大小寫敏感，混用會造成同一頁兩條 URL | **Title case script（＋子資料夾形大寫地區）**（`zh-Hant`／`zh-Hant-CA`）——Google 不區分大小寫，但一致性讓 diff 測試可行（62 §I.2） | 🔴 不可（合併後要在呼叫端做大小寫轉換，等於把規則搬到每一個呼叫點） |
 | **值域約束** | 不得與第一路徑段衝突（`products`／`cart`／`.well-known`…）；`UNIQUE (shop_id, domain_id, url_prefix)` | Google 碼合法性：拒 `EU`／`UK`／`es-419`（62 §I.4）；🔴 **驗證器另須「認得」裸碼以巡檢外部標註**（62 §I.4） | 🔴 不可（兩組約束無交集，合併後的驗證器要同時滿足兩邊 ⇒ 取交集 ⇒ 兩邊都變嚴，且沒人說得出為什麼） |
 | **輸入** | `(web_presence, locale)`——**presence 級**（同一市場的兩個 presence 有**不同**前綴） | `(market, locale)`——**market 級**（同一市場的兩個 presence 產生**相同**碼，那正是 62 §I.3(c) 情形 2 的殘留衝突源） | 🔴 不可（連參數都不同一個東西） |
 | 相同處 | 都由同一對 (market, locale) 推導；都恆帶地區；字面常常很像 | 同左 | ⇒ **共用「組字串的原料」，不共用函式** |
@@ -1203,96 +1206,83 @@ hreflang_codes(market, locale)      → 標註用。**62 §I.2 已定義，本�
 
 > **驗收**：`SF-9`（新增）——對一個三國多國市場的同一個 (market, locale)，`url_prefix()` 必須回傳恰一個字串、`hreflang_codes()` 必須回傳三個碼；🔴 **測試中不得出現任何把後者取 `.first` 餵給路由的路徑**（以型別禁止：`url_prefix` 的簽名不接受 `Set`）。
 
-**(b) `url_prefix` 的規則 —— 🔴 恆帶地區，永不裸語言前綴**（2026-08-13 裁定）
+**(b) `url_prefix` 的規則 —— 🔴 本尊形：預設語言無前綴、其他語言 `/{語言碼}`、子資料夾市場 `/{語言碼}-{suffix}`**（2026-09-04 D80 方案 1 使用者裁定）
 
-<!-- 🔴 依 2026-08-13 使用者裁定整表改寫。裁定逐字（重點句）：
-       「不同地區如果同樣有英文，那就在 url 加入識別，香港就是 en-HK，如果加拿大，那就是 en-CA；
-         共用繁體中文，那香港就是 zh-Hant-HK，台灣就是 zh-Hant-TW，以此類推。
-         這是考慮到之後 SEO，和進行區分，避免被 google 等搜索引擎誤判為重複頁面。」
-
-     本表原文（保留供追溯，🔴 **任何人不得改回**）：
-       | primary market ＋ shop 預設語言 | **（無前綴）** | 29 §2.5 |
-       | primary market ＋ 其他語言 | `/{locale_slug}` — `/en`、`/zh-hans` | 29 §2.5「primary 其他語言 → `/{lang}`」 |
-       | 次級市場（子資料夾） | `/{locale_slug}-{subfolder_suffix}` — `/zh-hant-sg` | 29 §1.2 |
-       | 子網域／獨立網域市場 | defaultLocale 在根、alternate 在 `/{locale_slug}` | 29 §2.5 |
-       locale_slug = BCP-47 標籤全小寫，連字號保留    zh-Hant → "zh-hant"    en → "en"
-
-     🔴 **原表忠實復刻了 Shopify／29 §2.5 的模型，它沒有寫錯——它是被裁定換掉判準的。**
-        原表有兩處與裁定直接衝突：
-          ① 「primary market ＋ 其他語言 ⇒ `/en`」——那正是裁定說的「同樣有英文卻不加識別」；
-          ② 「primary market ＋ 預設語言 ⇒ 無前綴」——根路徑與帶前綴頁並存 ⇒ 真重複（62 §I.2-2 結論 3）。
-        ⇒ 這同樣是**明知偏離 Shopify**，登記在 62 §I.2-1（碼）與本節（前綴）。
-        29 §1.2 的 XOR 約束**沒有被推翻**，被推翻的只有「語言-only 子資料夾」那一半（62 §J.1 已改）。 -->
+<!-- 🔴 沿革（鐵律 19.5：保留歷史、追加有日期的更正）：
+     ① 2026-08-13 使用者裁定「恆帶地區、恆有前綴」（裁定逐字「香港就是 en-HK……共用繁體中文，那香港就是 zh-Hant-HK，台灣就是 zh-Hant-TW」），
+        本節當時整表改寫成 `/{lang}-{region}`，並附「根路徑 302」（V-221）、多國市場 suffix（V-225，暫案 C）、「獨立網域也帶前綴」三段推導；
+        該版全文見 `git log -p -- docs/specs/67-multilingual.md`（2026-08-13～2026-09-03 的 HEAD）。
+     ② 2026-09-03 D80：使用者看 E8 對表後裁定「Shopify 本尊不是沒有，而是還沒設定市場和多語言」⇒ 前綴改為跟隨本尊；
+     ③ 2026-09-04 D80 方案裁定「1」＝完全照本尊（含市場由買家選國 cookie 決定、hreflang 只列語言碼）。
+        取證＝external-facts §G23（hoko.vip 五語言五市場 curl：`/` 200 lang=zh-CN、`/zh-hans/` 404、`/zh-hant/` 200、`/en-us` 404、
+        POST /localization 的 302 與 `Set-Cookie: localization=…`）。
+     ⇒ 2026-08-13 版的三段推導（根路徑 302／V-221、多國市場 suffix／V-225、獨立網域也帶前綴）**全部隨裁定作廢**，V-221／V-225 以「裁定覆蓋」結案。
+        2026-08-13 版註釋裡「任何人不得改回」指的是更早（2026-08-13 前）的原表；本次更正把判準改回**與那張原表同形**，依據是使用者 D80 裁定，
+        不是「原表當時就對」。 -->
 
 ```
-🔴 url_prefix(wp, loc) = "/" + downcase( locale_tag(loc) + "-" + region_of(wp.market) )
-   ——恆帶地區、恆有前綴、無例外。與市場是不是 primary 無關、與語言是不是預設無關。
+url_prefix(wp, loc):
+  if wp.subfolder_suffix.present?     ⇒ "/" + downcase(locale_tag(loc)) + "-" + wp.subfolder_suffix     # /en-ca、/fr-ca
+  elsif loc == wp.default_shop_locale ⇒ ""                                                                # 預設語言無前綴（根路徑直接服務）
+  else                                ⇒ "/" + downcase(locale_tag(loc))                                   # /zh-hant、/en、/fr、/ja
 ```
 
-| 情境 | 🔴 前綴（新） | ~~舊~~ | 依據 |
-|---|---|---|---|
-| primary market（HK）＋ 預設語言 `zh-Hant` | `/zh-hant-hk` | ~~（無前綴）~~ | 裁定 ＋ V-221 |
-| primary market（HK）＋ `en` | `/en-hk` | ~~`/en`~~ | 🔴 裁定逐字 |
-| 次級市場 CA ＋ `en` | `/en-ca` | ~~`/en-ca`~~（形態相同但**推導路徑不同**：舊的是「語言 ＋ subfolderSuffix」，新的是「語言 ＋ market 地區」） | 裁定 |
-| 次級市場 TW ＋ `zh-Hant` | `/zh-hant-tw` | ~~`/zh-hant-tw`~~（同上） | 🔴 裁定逐字 |
-| 子網域／獨立網域市場 | 🔴 **一樣帶前綴**（`ca.example.com/en-ca/`、`example.ca/en-ca/`） | ~~defaultLocale 在根~~ | 見下「為什麼獨立網域也要帶」 |
-| **多國市場 EU（FR/DE/BE）＋ `en`** | 🔴 **前綴只有一個**（`/en-eu`？`/en-fr`？）⇒ **見下面的 (b-2)，這是本次修改唯一沒有被裁定直接回答的洞** | — | ⚠ **V-225** |
-
-```
-locale_tag 全小寫，連字號保留        zh-Hant → "zh-hant"    en → "en"
-region 全小寫                        HK → "hk"              TW → "tw"
-結果一律匹配                         ^/[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}$
-```
-
-**🔴 為什麼獨立網域／子網域也要帶前綴**（這一條看起來多餘，其實是防回退的關鍵）：`example.ca` 只賣加拿大，語言前綴看起來是廢話。但 ①**同一個網域上可以有多語言**（`example.ca/en-ca/` 與 `example.ca/fr-ca/`），一旦其中一個沒有前綴，兩者的路由規則就不對稱；②**根路徑一旦是內容頁，就與帶前綴頁重複**（62 §I.2-2 結論 3）；③`url_prefix()` 變成部分函式（有時回空字串）⇒ **每一個呼叫點都要處理空字串**，而那正是 hreflang／sitemap／canonical／`routes` drop 四處各自長出一套拼接邏輯的起點。**恆有前綴讓這個函式是全函式，這比省掉六個字元有價值得多。**
-
-🔴 **根路徑 `/` 的處置**（`limits.i18n.locale_prefix.root_path_behavior: redirect_to_default_prefix`）：
-
-```
-GET /            ⇒ 302 → /{預設 market 的預設 locale 前綴}/      （不是 301：預設市場會變）
-GET /products/x  ⇒ 302 → /{預設前綴}/products/x                  （保留路徑）
-🔴 根路徑**不是內容頁**：不進 sitemap、不進 hreflang、不作為 x-default 的目標（62 §I.2 已改）
-🔴 爬蟲**不豁免**這個重導——它與 62 §K.2 的地區重導是兩件事：
-   地區重導是「依訪客推測市場」（🔒 爬蟲不套用，因為它會讓不同客戶端看到不同內容）；
-   根重導是「這條路徑沒有內容」（對所有客戶端相同）⇒ **不套用爬蟲豁免是正確的，且必須如此**
-   ——若對爬蟲回 200，爬蟲會索引一個與 /{預設前綴}/ 逐位元組相同的頁面，那就是自製重複。
-```
-⚠ **這一條是我方推導，不是裁定明文** ⇒ **V-221**（裁定只說「url 加入識別」，沒說根路徑）。`alt` 佐證：strawberrynet 未觀察到裸根內容頁（62 §附錄 B）。🔴 **結案前照上面實作**——它是三個選項中唯一不製造重複的那個。
-
-**(b-2) ⚠ 多國市場的前綴：唯一沒被裁定回答的洞（V-225）**
-
-裁定舉的四個例子（`en-HK`／`en-CA`／`zh-Hant-HK`／`zh-Hant-TW`）**全部是單國市場**。多國市場（一個 web presence 服務 FR/DE/BE）只有**一條 URL**，但 `region_of(market)` 有三個值。三個選項：
-
-| 選項 | 前綴 | 問題 |
+| 情境 | 前綴 | 依據 |
 |---|---|---|
-| A. 用 presence 的 `subfolderSuffix`（商家自填） | `/en-eu` | 🔴 `EU` 不是 ISO 3166-1 國碼，62 §I.4 明文拒（Google 常見錯誤清單）。**前綴不是 hreflang 碼，所以嚴格說不違規**——但兩者字面幾乎相同，日後一定有人把它當碼用 |
-| B. 取市場的「代表國」 | `/en-fr` | 🔴 對德國買家顯示 `en-fr`，看起來像錯的；且「代表國」沒有非任意的選法 |
-| ✅ **C. 用 presence 的 `subfolderSuffix` 但強制它是 ISO 3166-1 國碼或明確的非國碼標記** | `/en-eu`（並在 admin 明示「`eu` 不是國家碼，它只是這個市場的識別字」） | 需要 admin 文案；且要在 lint 層擋住有人把它送進 hreflang |
-
-**我方暫採 C**（`limits.i18n.locale_prefix.multi_country_region_source: web_presence_subfolder_suffix`），理由：①它是**唯一不需要平台替商家做任意選擇**的選項；②`hreflang_codes()` 那邊已經逐國展開（62 §I.2），所以**碼那一維是對的，前綴這一維只需要唯一與穩定**；③它與 29 §1.2 的既有 `subfolderSuffix` 欄位相容，不加欄位。🔴 **連帶硬規則**：`url_prefix` 的輸出**永遠不得**被當成 hreflang 值使用（`limits.i18n.locale_prefix.never_reused_as_hreflang_code: true`，這就是 (a) 那張表的可執行形態）。⚠ **待使用者裁定 ⇒ V-225**。
-
-> ⚠ **V-162 已由本裁定結案的部分**：「Shopify 對帶 script subtag 的語言用什麼子資料夾字串」這個問題，**對我方已無決策意義**——裁定直接給了 `zh-Hant-HK`／`zh-Hant-TW`，我方前綴即 `/zh-hant-hk`／`/zh-hant-tw`。🔴 **結案理由是「裁定覆蓋」，不是「查到了」**（比照 62 §F.3-1 對 V-119 的處置紀律）。本尊用什麼仍然未知，只是我方不再需要那個答案；若日後做 Shopify 遷移工具，需要重開（併入 V-162 的殘留）。
-
-**(c) 唯一性、保留字，與 🔴 「前綴 ≡ (market, locale) 身分」**
+| 共用網域（primary domain 或市場自有網域）＋ presence 預設語言 | **（無前綴）** | 本尊 `/` 200 `lang="zh-CN"`、`/zh-hans/` 404（§G23）；help「Use subfolders, such as `example.com/de`」 |
+| 共用網域 ＋ 其他已發布語言 | `/{locale_slug}` — `/zh-hant`、`/en`、`/fr`、`/ja` | 本尊 `/zh-hant/`、`/en/collections/all` 200；`Shopify.routes.root = "/zh-hant/"` |
+| 子資料夾市場（`subfolder_suffix` 非空）＋ 任何語言（含該 presence 預設） | `/{locale_slug}-{subfolder_suffix}` — `/en-ca`、`/fr-ca` | help「such as `example.com/fr-ca`」（子資料夾本身就是市場身分；本尊子資料夾市場的預設語言是否也帶段＝V，91 §3.84） |
+| 沒有自己 presence 的市場（hoko 的美國／香港／日本／欧盟） | **不產生任何 URL**——與 primary 共用同一組 URL，市場由買家選國 cookie 決定（見 (c)） | 本尊 `/en-us`、`/zh-hant-hk` 404（§G21） |
 
 ```
-UNIQUE (shop_id, domain_id, url_prefix)          -- 兩個 (market, locale) 不得產生同一前綴
-url_prefix ∉ handle.reserved_first_segments      -- products / collections / pages / blogs / cart /
-                                                 -- checkout / account / search / apps / .well-known / …
-🔴 反向也必須成立（本輪新增，恆帶地區的直接紅利）：
-   url_prefix ⇒ 恰一個 (market, locale)          -- 前綴是身分，不只是裝飾
-   `limits.i18n.locale_prefix.prefix_is_market_locale_identity: true`
+locale_slug = BCP-47 標籤全小寫，連字號保留    zh-Hant → "zh-hant"    en → "en"    pt-BR → "pt-br"（本尊值 V）
+結果一律匹配                                  ^(|/[a-z]{2,3}(-[a-z]{4})?(-[a-z]{2})?)$
 ```
 
-🔴 **「前綴 ≡ 身分」是恆帶地區換來的最大一項結構收益，它讓 §A.5(c) 的邊界情況變成一行路由查表**：
+🔴 **`url_prefix()` 是部分函式（可回空字串）**——2026-08-13 版反對的理由（四處各自拼接）以**單一拼接規則**處理：消費端一律 `prefix + path`、
+根路徑 ⇒ `prefix + "/"`；`Shopify.routes.root` 由 `PageRenderer#root_prefix_path` 統一加尾斜線（`""` ⇒ `"/"`）、`routes.root_url`／
+`localization.language.root_url` 由 drop 層把 `""` 轉 `"/"`。**不得**在任何消費端另寫「前綴為空時」的特例分支。
+
+🔴 **根路徑 `/` 的處置**（`limits.i18n.locale_prefix.root_path_behavior: serve_default_market_locale`）：
 
 ```
-路由解析：剝第一路徑段 → 查 (shop_id, domain_id, prefix) → 命中 ⇒ (market, locale)，繼續
-                                                        → 未命中 ⇒ 🔴 404（§A.5(c) 情形 1／3／4 全部走這裡）
+GET /            ⇒ 200，以 primary market 的第一個 presence × 其預設語言渲染首頁（本尊 `/` 200）
+GET /products/x  ⇒ 200（同上；預設語言的內容頁就在根）
+GET /zh-hans/    ⇒ 404（預設語言沒有前綴形；本尊同）
+GET /fr-hk/      ⇒ 404（「像前綴但查無」＝整條路徑當無前綴頁面，沒有這個頁面）
 ```
-- **在舊規則下這件事做不到**：`/en` 這個前綴在 primary market 是「英文」，但它不帶市場資訊 ⇒ 市場要另外從 GeoIP／cookie 推 ⇒ **同一條 URL 對不同人是不同市場 ⇒ 不同幣別、不同價格、不同 hreflang**。那正是 §F.2 開頭那條「同一 URL 對不同人回不同語言」事故的**市場維度版本**，而且它更嚴重（金額會變）。
-- ⇒ 🔴 **恆帶地區順手修掉了一個 §F.2 沒能覆蓋的洞。** 這一點值得寫下來，因為它是本次裁定**技術上**最站得住的收益（比動機句那個 SEO 因果站得住得多，62 §I.2-2）。
-- 🔴 **連帶紀律**：市場**不得**再從 GeoIP／cookie 推導（`limits.i18n.locale_prefix.market_determined_by: url_only`）。GeoIP 的唯一用途是 62 §K.2 的**一次性重導建議**，與 §F.2 對 `Accept-Language` 的處置完全對稱。
+根路徑**是**內容頁：進 sitemap、進 hreflang（`zh-Hans → /`），並且是 x-default 的目標（62 §I.2 已同輪改）。爬蟲與買家看到同一份。
+
+**(b-2) 子資料夾市場的 region 段＝`subfolder_suffix` 本身**
+
+2026-08-13 版的 V-225（多國市場的前綴要不要「代表國」）隨 D80 結案：本尊 subfolder 是商家在 Markets › Domains 設定的識別字（官方例 `fr-ca`），
+**不從市場國家推導**；多國市場（EU）若設子資料夾就是 `/{lang}-{suffix}`，零 region 市場的 presence 也照樣算得出前綴（前綴不看 regions；
+hreflang 那邊對子資料夾 presence 零 region 仍 raise，62 §I.2）。`limits.i18n.locale_prefix.subfolder_region_source: web_presence_subfolder_suffix`。
+🔴 **連帶硬規則不變**：`url_prefix` 的輸出**永遠不得**被當成 hreflang 值使用（`never_reused_as_hreflang_code: true`，(a) 表的可執行形態）。
+
+**(c) 唯一性、保留字，與 🔴 「前綴 ≡ (presence, locale) 身分」＋市場的第二層來源**
+
+```
+UNIQUE (shop_id, domain_id, url_prefix)          -- 同一 effective domain 上兩個 (presence, locale) 不得產生同一前綴
+                                                 -- （含空前綴：兩個共用同一網域的 presence 的預設語言互撞 ⇒ 第二組拒絕，M9）
+url_prefix ∉ handle.reserved_first_segments      -- products / collections / pages / blogs / cart / … （空前綴不檢查）
+url_prefix（非空）⇒ 恰一個 (presence, locale)     -- 前綴是身分（`prefix_is_market_locale_identity: true`）
+```
+
+```
+路由解析：剝第一路徑段 → 像前綴（SEGMENT 粗篩）才查 (shop_id, domain_id, prefix)
+           → 命中 ⇒ (presence, locale)，前綴剝掉繼續
+           → 未命中／不像前綴 ⇒ 🔴 整條路徑當無前綴路徑，以 primary presence × 預設語言服務（查無頁面 ⇒ 404）
+市場   ：①命中 presence 的市場；②命中的是共用網域 presence 時，再讀買家 `localization` cookie（ISO 3166-1 alpha-2）：
+           該國屬同一網域上「沒有自己 presence」的 active region 市場 ⇒ 換成該市場（語言、presence 不變）；
+           屬 primary 自己 ⇒ 只記國碼；屬子資料夾／自有網域市場、或不屬任何市場 ⇒ 原樣
+           （`limits.i18n.locale_prefix.market_determined_by: url_then_buyer_selection`；cookie 名 `buyer_selection_cookie: localization`）
+```
+- 本尊實測（§G23）：`POST /localization country_code=US` ⇒ 302 回同語言 URL ＋ `Set-Cookie: localization=US; path=/`（切語言時 path＝新語言根路徑
+  `/en`、`/ja`），之後 `GET /` 帶該 cookie ⇒ `Shopify.country = "US"`、語言與幣別不變。**語言仍只由 URL 決定**（§F.2 的 `Accept-Language`／cookie
+  不得改語言的紀律不變）；**GeoIP 仍不參與**（62 §K.2 的一次性重導建議另計）。
+- 2026-08-13 版把「同一 URL 對不同人是不同市場」列為恆帶地區的最大收益；D80 後這件事**就是本尊的形**（同 URL、cookie 決定市場）。我方市場目前
+  無獨立幣別／價格，金額不受影響；日後市場有獨立幣別時，頁快取 key 已含 market（`Storefront::PageCache`），CDN 層的 `Vary` 另登記（91 §3.84）。
 
 **(d) 餵給 62 §I.1 的東西——本檔只提供這三樣**
 
@@ -1304,7 +1294,7 @@ url_prefix ∉ handle.reserved_first_segments      -- products / collections / p
    🔴 依 2026-08-13 白名單裁定，本項從「wp 上的 locale 集合」收窄為「開放集」（§A.5）
 2. absolute_url(resource, wp, loc) = origin(wp) + url_prefix(wp, loc) + canonical_path(resource)
    canonical_path = "/products/" + handle   ← 🔴 handle 不含語言（§D.3），所以這是純拼接
-   🔴 url_prefix 恆非空（(b)）⇒ 本式不再有「前綴為空時要不要多一個斜線」的邊界情形
+   🔴 url_prefix 可為空（(b) D80）⇒ 拼接規則唯一：prefix + path；首頁 path "/" ⇒ prefix + "/"（`Seo::HreflangMatrix.absolute_url`）
 3. 只有 published = true **且 open_to_buyers = true** 的語言進矩陣
    🔴 未發布／未開放語言的 URL 不進 hreflang、不進 sitemap、且 **404**
       （29 §1.2「自市場移除語言 → 該語言 URL 立即 404」＋ §A.5(c)）
@@ -1315,7 +1305,8 @@ url_prefix ∉ handle.reserved_first_segments      -- products / collections / p
      🔴 本輪**三樣全部動了**，但**改的人是 62 號自己**（62 §I.1／§I.2／§I.3(c) 已同輪改完）。
         分工原則沒有變：碼的規則在 62、前綴的規則在 67。本檔仍然不在這裡重寫它們的內容，
         只在此標示「它們已經改了、去哪裡讀」——否則下一個人會照這句話以為 62 §I 還是舊的。 -->
-🔴 **2026-08-13 更新**：碼粒度規則、`hreflang_set()` 的簽名、`dedupe_codes` 的殘留衝突處置**本輪三樣都改了**，改在 **62 §I.1／§I.2／§I.2-1／§I.2-2／§I.3(c)**——**本檔仍然不重寫它們**，分工不變（碼在 62、前綴在 67）。**本檔與 62 的接縫只有三個**：`open_locales(wp)`（§C.8）、`url_prefix()`（(b)）、以及下面這條失效掛鉤。**改任一邊都必須同輪改另一邊**（只改碼不改前綴 ⇒ 62 §I.1 不變量 1 自指破裂；只改前綴不改碼 ⇒ 不變量 4 可達性破裂）。
+🔴 **2026-08-13 更新**：碼粒度規則、`hreflang_set()` 的簽名、`dedupe_codes` 的殘留衝突處置**本輪三樣都改了**，改在 **62 §I.1／§I.2／§I.2-1／§I.2-2／§I.3(c)**——**本檔仍然不重寫它們**，分工不變（碼在 62、前綴在 67）。
+🔴 **2026-09-04 D80 更新**：碼粒度改回本尊形（共用網域一語言一碼、x-default 指無前綴 URL），同輪改在 62 §I.1／§I.2／§I.2-1／§O REG-3／REG-4；本檔 (b)(c) 同輪改。**本檔與 62 的接縫只有三個**：`open_locales(wp)`（§C.8）、`url_prefix()`（(b)）、以及下面這條失效掛鉤。**改任一邊都必須同輪改另一邊**（只改碼不改前綴 ⇒ 62 §I.1 不變量 1 自指破裂；只改前綴不改碼 ⇒ 不變量 4 可達性破裂）。
 
 語言的新增／發布／取消發布**與 per-market 白名單的開關**必須掛上 62 §I.3(b) **既有的**失效管線（market conditions 變更 ⇒ 矩陣與 sitemap 失效，去抖 5 分鐘）——本檔只補一句：**該管線的觸發條件要加上 `shop_locales` 與 `market_web_presence_locales` 的變更**，否則商家發布了新語言，hreflang 會停在舊值好幾天（同 62 §I.3(b) 已警告的病根）。
 
@@ -1752,8 +1743,8 @@ cache_stamp = MAX(
 |---|---|---|---|---|
 | ~~**V-160**~~<br>✅ **後半已答，前半降級** | ~~Shopify handle 的字元數上限；以及 `handleize` 對 `.` 與撇號的實際處置（轉分隔／刪除）~~<br>**後半已答**（68 §C-4 `test`）：`.`→分隔（`A.P.C. → a-p-c`、`B.M.B BREWERY → b-m-b-brewery`）、`/`→分隔（`#AU/NZ → au-nz`）、撇號與引號**刪除**（`Women's → womens`、`16" Cash Drawer → 16-cash-drawer`）⇒ **逐條與我方相同**。<br>**前半（字元上限）**：255 已有二手佐證且**數值恰好相同**（`press`，matrixify）⇒ 從「未查證」降為「二手佐證」，**取得官方出處改由 68 的 V-183 承接** | shopify.dev 商品欄位頁；或以超長標題實測 | 維持 `handle.max_chars: 255`、`.`→分隔、撇號→刪除。**不因未查證而改動** | §D.1 |
 | ~~**V-161**~~<br>✅ **已縮小** | ~~Liquid `handleize` **filter** 對 CJK 的實際輸出（保留／落空／轉寫）~~ ⇒ **已答：保留**（`press`，community.shopify.dev 1060，2024-10，**staff 復現**：輸出保留 emoji、`ŭ`→`u`）。**殘留**：全形字元、以及空輸入／全分隔符輸入的輸出 ⇒ 併入 68 的 **V-181** | 實測（中文選項名的主題渲染）＋ Liquid 沙箱 | <!-- 依 68 §F-3 縮小，原處置：「filter 保留非 ASCII ＋ 空結果落 `h-{sha1}`；與 `Handles::Generate` **不共用實作**」 -->filter **保留非 ASCII**（✅ 已證與本尊一致）；`h-{sha1}` fallback 🔴 **只在空／全分隔符輸入時觸發，不得因結果非 ASCII 觸發**；與 `Handles::Generate` **不共用實作** | §D.5 |
-| ~~**V-162**~~<br>⚠ **決策面已由裁定覆蓋，事實面仍未知** | ~~Shopify 對帶 script subtag 語言（`zh-Hant`／`zh-Hans`）使用的 URL 子資料夾字串~~ | help.shopify.com/manual/markets；實測 | <!-- 依 2026-08-13 locale 碼裁定改寫。原處置：「我方用 `/zh-hant`／`/zh-hans`（理由見 §F.1(b)），**不用 `/zh-tw`**」——那個處置的前提（前綴可以是裸語言）已被裁定消滅。 -->🔴 **裁定直接給了答案**：`zh-Hant-HK`／`zh-Hant-TW` ⇒ 我方前綴 `/zh-hant-hk`／`/zh-hant-tw`。**本尊用什麼我方不再需要知道** ⇒ 決策面結案。<br>🔴 **結案理由是「裁定覆蓋」，不是「查到了」**（比照 62 §F.3-1 對 V-119 的處置紀律——兩者在日後重審時意義完全不同）。<br>**殘留**：做 Shopify 遷移工具時需要本尊的前綴字串以產生 301 對照表 ⇒ 屆時重開 | §F.1(b) |
-| 🔴 **V-221**<br>（2026-08-13，與 62 §附錄 A 同號同條） | **根路徑 `/` 在恆帶地區之後應該是什麼**（裁定只說「url 加入識別」，沒說根路徑）。三選一見 62 §附錄 A V-221 | **使用者裁定**（產品決策，查本尊沒用——本尊的模型是「primary 預設語言在根」，前提不同）；`alt` 佐證：strawberrynet 無裸根內容頁 | 採 `root_path_behavior: redirect_to_default_prefix`（302）。🔴 理由：它消滅系統內**最大的一組真重複**（`/` 與 `/zh-hant-hk/` 逐位元組相同），收益比碼粒度大（62 §I.2-2 結論 3） | §F.1(b) |
+| ~~**V-162**~~<br>⚠ **決策面已由裁定覆蓋，事實面仍未知** | ~~Shopify 對帶 script subtag 語言（`zh-Hant`／`zh-Hans`）使用的 URL 子資料夾字串~~ | help.shopify.com/manual/markets；實測 | <!-- 依 2026-08-13 locale 碼裁定改寫。原處置：「我方用 `/zh-hant`／`/zh-hans`（理由見 §F.1(b)），**不用 `/zh-tw`**」——那個處置的前提（前綴可以是裸語言）已被裁定消滅。 -->🔴 **裁定直接給了答案**：`zh-Hant-HK`／`zh-Hant-TW` ⇒ 我方前綴 `/zh-hant-hk`／`/zh-hant-tw`。**本尊用什麼我方不再需要知道** ⇒ 決策面結案。<br>🔴 **結案理由是「裁定覆蓋」，不是「查到了」**（比照 62 §F.3-1 對 V-119 的處置紀律——兩者在日後重審時意義完全不同）。<br>**殘留**：做 Shopify 遷移工具時需要本尊的前綴字串以產生 301 對照表 ⇒ 屆時重開<br>🔴 **2026-09-04 D80 結案（查到了）**：本尊實測 `/zh-hant/` 200、`Shopify.routes.root = "/zh-hant/"`（external-facts §G23）⇒ 帶 script 的語言子資料夾＝BCP-47 全小寫 `zh-hant`，我方同形；遷移對照表不再需要另查 | §F.1(b) |
+| 🔴 **V-221**<br>（2026-08-13，與 62 §附錄 A 同號同條） | **根路徑 `/` 在恆帶地區之後應該是什麼**（裁定只說「url 加入識別」，沒說根路徑）。三選一見 62 §附錄 A V-221 | **使用者裁定**（產品決策，查本尊沒用——本尊的模型是「primary 預設語言在根」，前提不同）；`alt` 佐證：strawberrynet 無裸根內容頁 | 採 `root_path_behavior: redirect_to_default_prefix`（302）。🔴 理由：它消滅系統內**最大的一組真重複**（`/` 與 `/zh-hant-hk/` 逐位元組相同），收益比碼粒度大（62 §I.2-2 結論 3）<br>🔴 **2026-09-04 D80 方案 1 結案（裁定覆蓋）**：根路徑直接以預設語言服務（`serve_default_market_locale`）、預設語言沒有帶前綴的第二份 ⇒ 該組重複不存在；本尊 `/` 200（§G23） | §F.1(b) |
 | 🔴 **V-225**<br>（2026-08-13 新增） | **多國市場的 URL 前綴用什麼地區碼**——裁定舉的四個例子全是單國市場（`en-HK`／`en-CA`／`zh-Hant-HK`／`zh-Hant-TW`），**多國市場只有一條 URL 但有 N 個國家**，裁定沒有涵蓋 | 使用者一句話裁定 | 暫採 **C：用 presence 的 `subfolderSuffix`**（`/en-eu`），並在 admin 明示「這不是國家碼」；🔴 連帶 `never_reused_as_hreflang_code: true`（碼那一維已由 62 §I.2 逐國展開處理，前綴這一維只需唯一與穩定）。三個選項的完整比較見 §F.1(b-2) | §F.1(b-2) |
 | **V-226**<br>（2026-08-13 新增） | **Shopline 翻譯輸入模式的判準**——我方從 ng-model 綁定（`alt`）反推出「短單行 ⇒ 堆疊、長內容／整組 ⇒ 分頁」，🔴 **但那是推導，他家的實際判準未知**（也可能根本沒有判準，只是歷史累積） | 無可靠途徑（他家的內部設計決策）。**替代途徑＝我方自己的可用性測試** | 🔴 **不需要結案，也不打算結案**：`alt` 級來源本來就不能據以寫死實作（§0.3）。**§E.2-1(b) 的判準是我方的，理由也是我方自己寫的**（一次看完所有語言 vs 富文本實例化成本）——他家的判準是什麼**不影響我方**。本條登記的用途是防止日後有人把 §E.2-1(b) 引用成「Shopline 的規則」 | §E.2-1 |
 | **V-227**<br>（2026-08-13 新增） | **商品層是否要有短摘要（`summary`）與預購說明（`preorder_note`）欄位**——Shopline 兩者都有且都可翻（`alt`），我方兩者都沒有 | **13／63 的欄位決策**，不是 i18n 的決策 | 🔴 **本檔不新增商品欄位**（13／63 有別的 owner，鐵律：不改別人的檔）。**但 i18n 面的答案先寫下來**：若日後加了，`summary` ＝ 必翻 ＋ 堆疊式；`preorder_note` ＝ 必翻（買家據以決定要不要下單）＋ 堆疊式。登記於 §M-10 | §E.2-1(d)、§B.2 |

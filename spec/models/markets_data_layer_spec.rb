@@ -121,15 +121,23 @@ RSpec.describe "Markets 資料層", type: :model do
     end.to raise_error(ActiveRecord::RecordNotUnique)
   end
 
-  it "M9 🔴 前綴 ≡ (market, locale) 身分：同 effective domain 撞同一前綴 ⇒ 第二組拒絕" do
-    # 草稿市場 HK（與 primary 同國，draft 允許重疊）＋子資料夾 presence ⇒ /en-hk 已被 primary 佔用。
+  it "M9 🔴 前綴 ≡ (presence, locale) 身分：同 effective domain 撞同一前綴 ⇒ 第二組拒絕（含 D80 的空前綴／裸語言段）" do
+    # 第二個共用主網域 presence（domain 指向 primary domain、無 suffix）的預設語言也是 ""、zh-Hant 也是 /zh-hant ⇒ 撞 primary。
     draft = Market.create!(name: "HK 草稿", handle: "hk-d", status: "draft", market_type: "region")
     draft.market_regions.create!(country_code: "HK")
-    presence = draft.market_web_presences.create!(subfolder_suffix: "hk", default_shop_locale: "en")
-
-    row = presence.market_web_presence_locales.build(locale_tag: "en", position: 0)
+    shared = draft.market_web_presences.create!(domain: Domain.primary.sole, default_shop_locale: "en")
+    row = shared.market_web_presence_locales.build(locale_tag: "en", position: 0)
     expect(row).not_to be_valid
-    expect(row.errors[:locale_tag].sole).to include("/en-hk")
+    expect(row.errors[:locale_tag].sole).to include("前綴  已被")
+
+    primary_presence.market_web_presence_locales.create!(locale_tag: "zh-Hant", position: 1)
+    zh = shared.market_web_presence_locales.build(locale_tag: "zh-Hant", position: 1)
+    expect(zh).not_to be_valid
+    expect(zh.errors[:locale_tag].sole).to include("/zh-hant")
+
+    # 子資料夾 presence 自成前綴空間（/en-hk），與 primary 的空前綴不撞。
+    sub = draft.market_web_presences.create!(subfolder_suffix: "hk", default_shop_locale: "en")
+    expect(sub.market_web_presence_locales.build(locale_tag: "en", position: 0)).to be_valid
   end
 
   it "M10 白名單同 (presence, locale) 不得重複；空店可刪（刪除順序：markets→domains→shop_locales）" do

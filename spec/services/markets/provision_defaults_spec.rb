@@ -58,25 +58,28 @@ RSpec.describe Markets::ProvisionDefaults do
     expect(ActsAsTenant.with_tenant(shop) { Market.count }).to eq(0)
   end
 
-  it "P5 🔴 PrefixIndex 端到端：/en-hk 命中 (primary, en)；未知／未發布／已關閉 ⇒ nil（404 判準）" do
+  it "P5 🔴 PrefixIndex 端到端（D80）：預設語言 en 無前綴形（en／en-hk 皆 nil）；zh-hant 未發布／已關閉 ⇒ nil、發布且開放 ⇒ 命中" do
     ActsAsTenant.with_tenant(shop) do
       domain = Domain.sole
-      hit = Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "en-hk")
-      expect(hit.market).to eq(Market.find_by!(is_primary: true))
-      expect(hit.locale_tag).to eq("en")
-
-      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "fr-hk")).to be_nil
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "en")).to be_nil
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "en-hk")).to be_nil
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "fr")).to be_nil
+      default = Markets::PrefixIndex.default_hit(shop:)
+      expect(default.market).to eq(Market.find_by!(is_primary: true))
+      expect(default.locale_tag).to eq("en")
 
       # 開了白名單但語言未發布 ⇒ 不可路由（67 §A.5(c) 情形 4）。
-      presence = hit.web_presence
+      presence = default.web_presence
       presence.market_web_presence_locales.create!(locale_tag: "zh-Hant", position: 1)
-      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant-hk")).to be_nil
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant")).to be_nil
 
-      # 發布後可路由；關閉（狀態轉換）後回到 404（情形 3）。
+      # 發布後可路由；關閉（狀態轉換）後回到不可路由（情形 3）。
       ShopLocale.find_by!(locale_tag: "zh-Hant").update!(published: true)
-      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant-hk")).not_to be_nil
+      hit = Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant")
+      expect([ hit.market, hit.locale_tag ]).to eq([ Market.find_by!(is_primary: true), "zh-Hant" ])
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant-hk")).to be_nil # 2026-08-13 舊形
       presence.market_web_presence_locales.find_by!(locale_tag: "zh-Hant").close!
-      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant-hk")).to be_nil
+      expect(Markets::PrefixIndex.resolve(shop:, domain:, first_segment: "zh-hant")).to be_nil
     end
   end
 end

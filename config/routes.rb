@@ -151,7 +151,9 @@ Rails.application.routes.draw do
     #   帶前綴 URL（67 §F.4），POST 不經 GET catch-all ⇒ 必須顯式收。
     #   constraint 正則＝Markets::UrlPrefix::SEGMENT 的字面複本（routes 載入時機不宜
     #   引用 autoload 常量；漂移由 storefront_i18n_spec 的路由格釘住）。
-    scope ":locale_prefix", constraints: { locale_prefix: /[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}/ },
+    #   D80（2026-09-04）：地區段改為可選——共用網域前綴 /zh-hant、子資料夾前綴 /en-ca 兩形都要收；
+    #   預設語言無前綴走上面的裸路由。段是否真是前綴由 controller 的 locale_hit 決定（查無 ⇒ 店預設）。
+    scope ":locale_prefix", constraints: { locale_prefix: /[a-z]{2,3}(-[a-z]{4})?(-[a-z]{2})?/ },
                             format: false do
       get  "cart.js"        => "storefront/cart#show"
       get  "cart.json"      => "storefront/cart#show"

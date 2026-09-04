@@ -46,14 +46,14 @@ RSpec.describe "Storefront G2 search line", type: :request do
 
   describe "/search 頁" do
     it "S1 無 q ⇒ performed=false 只出表單（不渲染結果格）" do
-      get "/en-hk/search"
+      get "/search"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('<span id="sperf">false</span>')
       expect(response.body).not_to include('id="sgrid"')
     end
 
     it "S2 q=玫瑰 ⇒ 混型結果＋object_type＋真分頁＋sort_options 恰 3 值" do
-      get "/en-hk/search?q=#{CGI.escape('玫瑰')}"
+      get "/search?q=#{CGI.escape('玫瑰')}"
       expect(response.body).to include('<h1 id="sterms">玫瑰</h1>')
       expect(response.body).to include('<span id="sperf">true</span>')
       expect(response.body).to include('<span id="scount">3</span>') # 2 商品＋1 頁面
@@ -66,7 +66,7 @@ RSpec.describe "Storefront G2 search line", type: :request do
     end
 
     it "S3 type=page ⇒ 只回頁面型；types 回聲參數" do
-      get "/en-hk/search?q=#{CGI.escape('玫瑰')}&type=page"
+      get "/search?q=#{CGI.escape('玫瑰')}&type=page"
       expect(response.body).to include('<span id="stypes">page</span>')
       expect(response.body).to include('<span id="scount">1</span>')
       expect(response.body).to include('data-ot="page"')
@@ -74,11 +74,11 @@ RSpec.describe "Storefront G2 search line", type: :request do
     end
 
     it "S4 🔴 sort_by=price-ascending ⇒ 皂(2000) 在精華(18800) 前；非商品推尾（第 2 頁）" do
-      get "/en-hk/search?q=#{CGI.escape('玫瑰')}&sort_by=price-ascending"
+      get "/search?q=#{CGI.escape('玫瑰')}&sort_by=price-ascending"
       expect(response.body).to include('<span id="ssort">price-ascending</span>')
       expect(response.body.index('data-h="rose-soap"')).to be < response.body.index('data-h="rose-serum"')
       expect(response.body).not_to include('data-ot="page"') # 頁面被推到第 2 頁
-      get "/en-hk/search?q=#{CGI.escape('玫瑰')}&sort_by=price-ascending&page=2"
+      get "/search?q=#{CGI.escape('玫瑰')}&sort_by=price-ascending&page=2"
       expect(response.body).to include('data-ot="page"')
     end
 
@@ -89,7 +89,7 @@ RSpec.describe "Storefront G2 search line", type: :request do
         Page.create!(shop_id: shop.id, title: "玫瑰未發布", handle: "rose-unpub",
                      body_html: "", published_at: nil)
       end
-      get "/en-hk/search?q=#{CGI.escape('玫瑰')}"
+      get "/search?q=#{CGI.escape('玫瑰')}"
       expect(response.body).to include('<span id="scount">3</span>')
       expect(response.body).not_to include("rose-draft")
       expect(response.body).not_to include("玫瑰未發布")
@@ -146,12 +146,12 @@ RSpec.describe "Storefront G2 search line", type: :request do
     end
 
     it "P4 section 形：section_id=predictive-search 回 HTML（predictive_search 物件）；未知檔 404" do
-      get "/en-hk/search/suggest", params: { q: "玫瑰", section_id: "predictive-search" }
+      get "/search/suggest", params: { q: "玫瑰", section_id: "predictive-search" }
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('<span id="psterms">玫瑰</span>')
-      expect(response.body).to include("玫瑰精華|/en-hk/products/rose-serum")
+      expect(response.body).to include("玫瑰精華|/products/rose-serum")
 
-      get "/en-hk/search/suggest", params: { q: "玫瑰", section_id: "zzz-none" }
+      get "/search/suggest", params: { q: "玫瑰", section_id: "zzz-none" }
       expect(response).to have_http_status(:not_found)
     end
   end
@@ -210,7 +210,7 @@ RSpec.describe "Storefront G2 search line", type: :request do
     end
 
     it "R3 section 形：related-products 以 recommendations 物件渲染" do
-      get "/en-hk/recommendations/products", params: { product_id: serum.id, section_id: "related-products" }
+      get "/recommendations/products", params: { product_id: serum.id, section_id: "related-products" }
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('<span id="rint">related</span>')
       expect(response.body).to include('<span id="rcount">2</span>')

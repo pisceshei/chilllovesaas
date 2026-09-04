@@ -4177,3 +4177,20 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **⚪ 頁首互動內容（區段 fetch）尚未逐字對表**：本包只對齊初始 HTML 分支（section-fetcher＋按鈕）；`?section_id=…__header_default` 回應裡的
   國家清單（31 列、在地名、`($HKD)`）與語言清單已由 LC1／LC2 以資料面對齊，HTML 段 diff 待下一包用 SRA 端點跑。
 - **登記 五語言在地名以外**：字典只有 zh-CN／zh-TW／en／fr／ja，其他語言退 en（同 §3.82）。
+
+### 3.84 D80 方案 1 語言前綴／市場 cookie／hreflang 本尊形（2026-09-04）的未取得與範圍外
+
+- **V 子資料夾／自有網域市場的本尊形**：hoko 全市場共用 hoko.vip，子資料夾市場（`/en-ca`）與自有網域市場的前綴（預設語言是否也帶段）、hreflang
+  （語言碼還是 `en-CA`）、cookie 行為皆未在真店實測；我方沿用 2026-08-13 形（前綴全語言帶 `-{suffix}`、hreflang 逐國展開），external-facts §G23。
+- **V 每語言一組 sitemap 子表**：本尊 index 依非預設語言列 `/zh-hant/sitemap_products_1.xml…`（§G23）；我方仍單組子表＋`xhtml:link` 矩陣。
+  Google 兩形皆收（`xhtml:link` 是 sitemap 標準形），不影響索引正確性；形態對齊登記待做。
+- **V `localization.language.root_url` 的本尊值**：只從 `window.routes.root_url`（`/`／`/zh-hant`）推得同形；`language.root_url` 本尊逐字未讀。
+- **V country-only 提交是否保留當前語言**：本尊只實測到 country＋return_to（預設語言）與 country＋language 兩形；我方 country-only 保留當前語言
+  （POST 前綴／`return_to` 前綴命中），未在本尊以 `/zh-hant/…` 的 return_to 單獨切國家驗證。
+- **V 不屬任何市場的國碼**：本尊處置未測；我方 cookie 照寫、市場原樣（`Shopify.country` 不變）。
+- **V `pt-BR` 類自帶 region 的語言前綴**：我方 `/pt-br`；本尊值未取得（五語言都無 region 子標籤）。
+- **⚪ 舊形 URL 無 301**：`/en-hk/…`、`/zh-hant-hk/…`、`/zh-hans-tw/…` 一律 404（本尊同形）；bt3 mirror 店的舊 URL 也 404——需要時商家自建重導。
+- **⚪ CDN／代理快取的 `Vary`**：市場由 cookie 決定 ⇒ 同 URL 多市場；頁快取 key 已含 market，但回應未加 `Vary: Cookie`（我方市場目前無獨立幣別／
+  價格，輸出差異只有 `Shopify.country`／`localization.country`）。市場獨立幣別落地前必須處理。
+- **⚪ 語言切換後選國失效**：本尊 cookie path＝語言根路徑（`/ja`），換語言即回到市場預設——我方同形；是否要跨語言記住選國屬產品裁定，未開。
+- **登記 E8 對表工具**：`RenderParity::Normalizer` 的 `url_prefix:` 與 rake `CAND_PREFIX` 保留為工具能力（mirror 店已不需要）。

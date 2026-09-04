@@ -45,11 +45,11 @@ RSpec.describe "ThemeEngine filters gap (PR-6)" do
       .to eq("/collections/sale-potions/products/draught-of-immortality")
     expect(render("{{ '/products/x' | within: nothing }}")).to eq("/products/x")
     prefixed = ActsAsTenant.with_tenant(shop) do
-      ThemeEngine::CollectionDrop.new(Collection.find_by!(handle: "sale-potions"), url_prefix: "/en-hk")
+      ThemeEngine::CollectionDrop.new(Collection.find_by!(handle: "sale-potions"), url_prefix: "/zh-hant")
     end
     collection_drop # 建立系列列
-    expect(render("{{ '/en-hk/products/x' | within: collection }}", "collection" => prefixed))
-      .to eq("/en-hk/collections/sale-potions/products/x")
+    expect(render("{{ '/zh-hant/products/x' | within: collection }}", "collection" => prefixed))
+      .to eq("/zh-hant/collections/sale-potions/products/x") # D80：非預設語言的裸語言前綴
   end
 
   it "T3 link_to_tag：系列與部落格兩形" do

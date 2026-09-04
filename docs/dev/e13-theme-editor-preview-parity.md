@@ -116,6 +116,7 @@ node scripts/computed-parity.mjs diff a.json e.json --out report.md
   （行為不變：同一條規則，單一真相）。
 - 無前綴的 `/recommendations/products`、`/search/suggest`、`/cart/add`（含 `sections`）現以店預設語言渲染（先前英文）；帶前綴者不變。
   買家前台頁面自身恆帶前綴（D80 未裁），故只影響直接打無前綴端點的呼叫者（編輯器預覽、外部腳本）。
+  <!-- 2026-09-04 D80 方案 1 更正：買家前台的預設語言頁自此**無前綴**（根路徑直接服務），無前綴端點的語言真相與買家前台同一落點；預覽仍 `url_prefix ""`。 -->
 - 編輯器預覽：主題 JS 現在真的會跑（資產 200）——依賴 `Shopify.designMode` 的主題行為（Ella before-you-leave／cart-drawer 的
   `shopify:section:select` 開啟、promotion popup 選中即彈）自本包起在預覽內生效；預覽語言＝店預設語言（`Shopify.locale`／`country`、`<html lang>`）。
 - `docs/dev/e6-theme-editor-preview.md` §E13 同步；`docs/dev/e12-computed-parity.md` §0 加 `--cookie`。

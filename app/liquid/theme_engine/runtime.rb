@@ -67,7 +67,7 @@ module ThemeEngine
     # template_suffix ⇒ `?view=` 替代模板的 template.suffix（96 §6）。
     def initialize(theme:, shop:, source: nil, url_prefix: "", locale: nil,
                    design_mode: false, page_type: "index", path: "/", host: nil,
-                   cart_json: nil, asset_base: nil, web_presence: nil,
+                   cart_json: nil, asset_base: nil, web_presence: nil, market: nil, country_code: nil,
                    publication: nil, params: {}, template_suffix: nil,
                    draft_settings: nil, draft_sections: nil)
       @theme, @shop = theme, shop
@@ -123,7 +123,8 @@ module ThemeEngine
         "request" => RequestDrop.new(page_type:, design_mode:, locale:, host:, path:),
         # localization 真值（67 §F.2 切換器規則）：有 presence（公開店面）＝開放∧已發布集；
         # 無 presence（預覽面／fragment）＝維持合成單語（包 30 行為不變）。
-        "localization" => web_presence ? Storefront::LocalizationContext.drop(web_presence:, locale_tag: locale || "en")
+        "localization" => web_presence ? Storefront::LocalizationContext.drop(web_presence:, locale_tag: locale || "en",
+                                                                              market:, country_code:)
                                        : LocalizationDrop.new(language:, available_languages: [ language ]),
         "linklists" => LinkListsDrop.new(shop, url_prefix: url_prefix, current_path: "#{url_prefix}#{path}"),
         "template" => TemplateDrop.new(page_type, suffix: @template_suffix),

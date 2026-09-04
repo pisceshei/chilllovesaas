@@ -742,7 +742,7 @@ def hreflang_set(resource, shop):
       .flat_map { |m| resolved_web_presences(m) }       # 🔴 resolved = 沿 lineage 累加（§I.3）
   entries = presences.flat_map { |wp|
       open_locales(wp).flat_map { |loc|                 # 🔴 白名單 ∩ published（67 §A.5／§C.8）
-        hreflang_codes(wp.market, loc).map { |code|     # 🔴 複數：多國市場逐國展開（§I.2）
+        hreflang_codes(wp, loc).map { |code|            # 🔴 複數；D80：共用網域 presence 一語言一碼、子資料夾 presence 逐國展開（§I.2）
           Entry(code: code, url: absolute_url(resource, wp, loc)) } } }
   entries = entries.reject { |e| !resource.published_in?(e.market) }   # 未發佈到該市場 catalog ⇒ 不列
   entries = dedupe_codes(entries)                        # §I.3(c) 碼衝突解析
@@ -755,66 +755,51 @@ def hreflang_set(resource, shop):
 3. **絕對 URL**、含最終網域與 scheme、percent-encoded。
 4. **每個 URL 對任何客戶端回 200 且 self-canonical**（§0.2 原則 4）。
 
-### I.2 碼的粒度規則 —— 🔴 **一律「語言＋地區」，永不輸出裸語言碼**（2026-08-13 裁定覆蓋 Shopify 行為）
+### I.2 碼的粒度規則 —— 🔴 **共用網域＝語言碼（本尊形）；子資料夾 presence＝逐國展開**（2026-09-04 D80 方案 1 使用者裁定）
 
-<!-- 🔴 2026-08-13 使用者裁定推翻本節原有的碼粒度規則。裁定逐字（重點句）：
-     「不同地區如果同樣有英文，那就在 url 加入識別，香港就是 en-HK，如果加拿大，那就是 en-CA；
-       共用繁體中文，那香港就是 zh-Hant-HK，台灣就是 zh-Hant-TW，以此類推。
-       這是考慮到之後 SEO，和進行區分，避免被 google 等搜索引擎誤判為重複頁面。」
-     （原文「如果加拿大，那就是 ca-HK」研判為筆誤——同句前半已給 en-HK，且 ca-HK 不是合法 BCP-47
-       語言碼組合；本檔採 en-CA，並在 §I.2-1「裁定若改」欄註記此研判。）
-
-     本節原文（保留供追溯，🔴 **任何人不得改回**）：
-       ### I.2 碼的粒度規則（對齊實測到的 Shopify 行為）
-       hreflang_code(market, locale):
-         base = locale.language                       # ISO 639-1
-         base += "-" + locale.script if locale.script # ISO 15924，例 Hant（google 明確支援 zh-Hant）
-         return base + "-" + market.single_country if market.regions.size == 1   # ISO 3166-1 alpha-2
-         return base                                  # 多國市場 ⇒ 語言碼
-       「- **單國市場 → 區域限定**（`fr-ca`）；**多國市場 → 語言碼**（`fr`）。
-          此形態取自 `help`／`dev` 對 Shopify 行為的描述。」
-
-     🔴 **原規則沒有錯，它只是不再是我方的規則。** 它忠實描述了 Shopify 的行為（`help`／`dev`，
-        62 §0.4-3 登記的查證結果），我方當時的判斷是「對齊本尊」。2026-08-13 裁定把判準換成
-        「地區必須可從 URL 與標註碼區分」⇒ 「多國市場退回裸語言碼」這一半**與裁定直接衝突**，
-        因為它正是「同樣有英文卻不加識別」的那個情形。
-     🔴 **這是使用者裁定覆蓋 Shopify 行為，不是我方發現 Shopify 寫錯。** 比照 §F.3-1 的既有寫法，
-        明知偏離登記在下面的 §I.2-1，避免下一輪稽核當成遺漏重新開單。 -->
-
-**🔴 `hreflang_code()` 的回傳型別從「一個碼」改成「一組碼」。這是本次修改最容易漏的一件事。**
+<!-- 🔴 沿革（鐵律 19.5）：
+     ① 本節最初（2026-08-12 前）對齊 help／dev 描述的 Shopify 行為：「單國市場 → 語言-國家碼；多國市場 → 語言碼」；
+     ② 2026-08-13 使用者裁定「恆帶地區、多國逐國展開、裸碼一律禁止」，本節整段改寫（含 §I.2-1 明知偏離登記與 §I.2-2 的重複內容辨析），
+        該版全文見 `git log -p -- docs/specs/62-seo-geo.md`；
+     ③ 2026-09-04 D80 方案 1：使用者裁定完全照本尊 ⇒ 本節改回語言碼形。取證不再是 help／dev 的描述，而是 hoko.vip 五語言五市場的實測
+        （external-facts §G23）：每頁六條 `x-default`／`zh-Hans`／`zh-Hant`／`en`／`fr`／`ja`，零地區碼，五個市場（含 27 國的欧盟）完全不進 hreflang。
+        子資料夾／自有網域市場的本尊形未取得（V，91 §3.84），沿用 2026-08-13 的逐國展開。 -->
 
 ```
-hreflang_codes(market, locale) -> Set<String>      # 🔴 複數。原函式名 hreflang_code 已停用
+hreflang_codes(wp, locale) -> Set<String>          # 🔴 仍是複數（型別與 url_prefix 分離，67 §F.1(a)）
   base = locale.language                           # ISO 639-1
-  base += "-" + locale.script if locale.script     # ISO 15924，例 Hant（google 明確支援 zh-Hant）
-  countries = market.regions                       # ISO 3166-1 alpha-2，>=1 個
-  🔴 assert countries.size >= 1                    # 空集合 ⇒ raise，不得退回裸語言碼
-  return countries.map { |c| base + "-" + c }      # 單國 ⇒ 1 個；多國 ⇒ N 個，全部指向同一 URL
+  base += "-" + locale.script if locale.script     # ISO 15924，例 Hant（google 明確支援 zh-Hant）；locale 自帶的 region 不進 base
+  if wp.subfolder_suffix.blank?                    # 共用網域 presence（primary domain 或市場自有網域）
+    return { base }                                #   一語言一碼：zh-Hans／zh-Hant／en／fr／ja（本尊形）
+  countries = wp.market.regions                    # 子資料夾 presence：ISO 3166-1 alpha-2，>=1 個
+  🔴 assert countries.size >= 1                    #   零 region ⇒ raise（逐國展開沒有合法輸出）
+  return countries.map { |c| base + "-" + c }      #   單國 ⇒ 1 個；多國 ⇒ N 個，全部指向同一 URL（V）
 ```
 
-| 情形 | 舊規則（Shopify 行為） | 🔴 新規則（裁定） |
+| 情形 | 2026-08-13 規則 | 🔴 D80 規則（本尊形） |
 |---|---|---|
-| 單國市場 HK ＋ `en` | `en-hk` | `en-HK`（**不變**） |
-| 單國市場 CA ＋ `en` | `en-ca` | `en-CA`（**不變**） |
-| 單國市場 HK ＋ `zh-Hant` | `zh-Hant-HK` | `zh-Hant-HK`（**不變**） |
-| 單國市場 TW ＋ `zh-Hant` | `zh-Hant-TW` | `zh-Hant-TW`（**不變**） |
-| **多國市場 EU（FR/DE/BE）＋ `en`** | **`en`**（一個碼） | 🔴 **`en-FR`／`en-DE`／`en-BE`（三個碼，同一個 URL）** |
-| **多國市場 APAC（SG/MY）＋ `en`** | **`en`**（一個碼） | 🔴 **`en-SG`／`en-MY`（兩個碼，同一個 URL）** |
+| 共用網域 primary（HK／TW）＋ `en` | `en-HK` | **`en`** |
+| 共用網域 ＋ `zh-Hant` | `zh-Hant-HK` | **`zh-Hant`** |
+| 沒有自己 presence 的市場（美國／香港／日本／欧盟 27 國） | 各自逐國展開（五語言 × 31 國＝155 條） | **不進矩陣**（同一組 URL，市場由 cookie 決定） |
+| 子資料夾市場 CA ＋ `en`（`/en-ca`） | `en-CA` | `en-CA`（V：本尊形未取得） |
+| 子資料夾多國市場 EU（FR/DE/BE）＋ `en`（`/en-eu`） | `en-FR`／`en-DE`／`en-BE` | 同左（V） |
 
-- 🔴 **裸語言碼一律禁止**（`limits.seo.hreflang.bare_language_code_forbidden: true`）：任何輸出中出現不帶 ISO 3166-1 地區後綴的 hreflang 值（`en`、`zh-Hant`、`fr`）即 **CI 紅燈**。唯一例外是 **`x-default`**，它本來就不是語言碼。
-- **`x-default`**：指**主網域上、primary market 的預設語言**對應的資源 URL。🔴 **在本次修改後它不再指「無前綴的根路徑」**——因為根路徑已不再是內容頁（67 §F.1(b)：`/` 一律重導到預設 (market, locale) 前綴）。x-default 必須指向那個**帶前綴且回 200** 的 URL，否則 §0.2 原則 4 破裂。
-- 大小寫：輸出小寫語言、Title case script、**大寫地區**（`zh-Hant-HK`）——Google 不區分大小寫，但一致性讓 diff 測試可行。🔴 **URL 前綴的大小寫規則不同**（全小寫，`/zh-hant-hk`），兩者**不得互相借用**，理由見 67 §F.1(a)。
+- 裸語言碼是共用網域的**正常輸出**（`limits.seo.hreflang.bare_language_code_forbidden: false`；§O REG-4 的紅燈掃描已撤）。
+- **`x-default`**：指**主網域上、primary market 的預設語言**對應的資源 URL——D80 後預設語言無前綴，所以它就是**無前綴的同路徑**
+  （本尊每頁 `x-default → https://hoko.vip/…` 無前綴；`limits.seo.hreflang.x_default_target: default_market_locale_url`）。
+- 大小寫：輸出小寫語言、Title case script、（子資料夾形）大寫地區（`zh-Hant`／`zh-Hant-HK`）。🔴 **URL 前綴的大小寫規則不同**（全小寫，`/zh-hant`），
+  兩者**不得互相借用**，理由見 67 §F.1(a)。
 
-#### I.2-1 🔴 明知偏離 Shopify 的一條：hreflang 碼恆帶地區（比照 §F.3-1 的登記形態）
+#### I.2-1 🔴 明知偏離的登記：只剩子資料夾／自有網域 presence 的逐國展開（共用網域已於 D80 回到本尊形）
 
 | | 內容 |
 |---|---|
-| **Shopify 的實際行為** | **單國市場 → 語言-國家碼；多國市場 → 裸語言碼。** 出處：`help.shopify.com/manual/markets/seo` ＋ `shopify.dev/docs/storefronts/themes/seo/hreflang`（`help`／`dev`，查證日 2026-08-12，登記於 §0.4-3）。本尊在多國市場下**就是**輸出 `fr`／`en` 這類裸碼 |
-| **我方的行為** | **恆帶 ISO 3166-1 地區**（`limits.seo.hreflang.always_region_qualified: true`）。多國市場**逐國展開**成 N 個碼，全部指向同一個 URL |
-| **偏離的唯一依據** | 🔴 **使用者 2026-08-13 裁定**：「不同地區如果同樣有英文，那就在 url 加入識別……這是考慮到之後 SEO，和進行區分，避免被 google 等搜索引擎誤判為重複頁面。」**裁定 > Shopify**（沿用 68 §0 凌駕規則 1）。**不是**技術判斷、**不是** Google 規則要求、**不是**查不到而保守 |
+| **Shopify 的實際行為** | **共用主網域（含所有沒有自己 presence 的市場）→ 語言碼**（實測 §G23：hoko.vip 五語言五市場每頁六條、零地區碼）。**子資料夾／自有網域市場 → 未取得**（help／dev 2026-08-12 的描述「單國市場 → 語言-國家碼；多國市場 → 語言碼」只到描述層，未在真店以子資料夾市場實測） |
+| **我方的行為** | 共用網域 presence＝語言碼（**與本尊同形，不再偏離**）；子資料夾／自有網域 presence＝**逐國展開**（`limits.seo.hreflang.subfolder_presence_expands_per_country: true`），多國逐國、全部指向同一 URL |
+| **偏離的唯一依據** | 子資料夾形沒有本尊實測 ⇒ 沿用 2026-08-13 裁定的形（裁定原文「不同地區如果同樣有英文，那就在 url 加入識別……」）；共用網域的偏離已由 **使用者 2026-09-04 D80 方案 1 裁定** 撤銷（裁定 > 前裁定）。**不是**技術判斷、**不是** Google 規則要求 |
 | **合法性** | ✅ **碼本身合法**：Google 的 localized-versions 頁定義 hreflang 值＝ISO 639-1 (+ 可選 ISO 15924) (+ 可選 ISO 3166-1 alpha-2)（`google`，§0.4-5）⇒ `en-BE`、`zh-Hant-TW` 都在值域內。**偏離的是「什麼時候加地區」的產品選擇，不是碼的合法性** |
-| **代價（誠實記錄，不寫「兩邊都好」）** | ① 多國市場的條目數從 1 變成 N（EU 27 國市場 ⇒ 27 條指向同一 URL），矩陣體積與 `<head>` 大小按國家數放大 ⇒ 受 `limits.seo.hreflang.max_expanded_countries_per_market: 40` 約束，超限的處置見 §I.3(c)；② **`x-default` 的定義被連帶改掉**（不再是根路徑）；③ 與 Shopify 匯入／匯出的 hreflang 對照不再逐字相同，遷移比對工具要知道這件事 |
-| **裁定若改** | 本條、`limits.seo.hreflang.always_region_qualified`／`bare_language_code_forbidden`、`limits.i18n.locale_prefix.*` 整組、以及 67 §F.1 **必須連帶重審**。單獨改任何一個都會產生半套狀態（例如 URL 帶地區但 hreflang 不帶 ⇒ 自指不變量破裂）。<br>⚠ **另含一個研判**：裁定原文的 `ca-HK` 我方研判為 `en-CA` 的筆誤（**V-222**）。若研判錯誤，受影響的只有「加拿大那一列的字面值」，**不影響本條的規則本身** |
+| **代價（誠實記錄）** | 只剩子資料夾形：多國子資料夾市場的條目數＝N（受 `max_expanded_countries_per_market: 40` 約束，超限處置見 §I.3(c)）；與本尊子資料夾市場的 hreflang 是否逐字相同**未知**（V）。共用網域形已與本尊逐條相同（mirror 店 MR4 釘六條）。 |
+| **裁定若改** | 本條、`limits.seo.hreflang.shared_domain_code`／`subfolder_presence_expands_per_country`、`limits.i18n.locale_prefix.*` 整組、以及 67 §F.1 **必須連帶重審**。單獨改任何一個都會產生半套狀態（例如 URL 帶地區但 hreflang 不帶 ⇒ 自指不變量破裂）。2026-08-13 的 V-222（`ca-HK` 筆誤研判）隨共用網域回本尊形而失去對象。 |
 
 #### I.2-2 這對 Google 的重複內容判定是好是壞 —— 🔴 **使用者的動機正是這個，所以要寫清楚**
 
@@ -836,6 +821,8 @@ hreflang_codes(market, locale) -> Set<String>      # 🔴 複數。原函式名 
 1. 🔴 **「加了地區碼就不會被判重複」是不成立的。** 判重複與否看的是 URL 與內容；hreflang 是服務訊號不是去重訊號。**本節不背書這個因果。**
 2. ✅ **但裁定的方向仍然對，只是機制不同**：真正降低「被誤判／被誤送」風險的是「**每個 (市場, 語言) 有一條專屬且穩定的 URL，並被一個明確的碼指到**」。恆帶地區把**碼**這一半做到了；**URL** 那一半由 67 §F.1 的前綴規則做到（前綴 ≡ (market, locale) 身分）。**兩半合起來才是裁定要的東西，只做一半沒有意義。**
 3. 🔴 **真正會被判成重複的形態，本次修改沒有動到它，而且它更嚴重**：兩個市場共用同一條 URL 時（`inherit_primary` 常態，§J.2）內容是同一份；以及**根路徑與預設語言頁並存**（`/` 與 `/en-hk/` 內容相同）。後者是我方自己會製造的重複，處置見 67 §F.1(b)——`/` 不是內容頁，一律重導。**這一條的實際 SEO 收益比碼粒度大得多。**
+   <!-- 2026-09-04 D80 更正：預設語言不再有 `/en-hk/` 這種帶前綴頁，根路徑**就是**預設語言頁（唯一一份），「根與預設語言頁並存」的重複形態已不存在；
+        「`/` 不是內容頁、一律重導」自 D80 起作廢（67 §F.1(b)）。第 1、2 句與 V-220 照舊。 -->
 
 ⚠ **未查證**：Google 是否會因 hreflang 碼粒度變細而改變其重複內容群集或 canonical 選擇 ⇒ **V-220**。結案前一律按上面三句實作，**後台文案不得宣稱「加地區碼可避免重複頁面判定」**（同 §H.6-3／§D.3 的既有紀律：只陳述機制，不宣稱效果）。
 
@@ -1206,6 +1193,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | `seo.hreflang.validator_accepts_bare_code_for_audit_only` | **新增 `true`** | 🔴 **認得 ≠ 允許輸出**：巡檢外部標註要能認裸碼並報 lint；我方自己產生裸碼是 CI 紅燈。兩個檢查點兩種嚴重度 | §I.4 |
 | `seo.hreflang.x_default_target` | **新增 `default_market_locale_prefixed_url`** | 🔴 根路徑不再是內容頁（67 §F.1(b)）⇒ x-default 不得再指 `/` | §I.2、§O REG-3 |
 | `i18n.locale_prefix.*`（新子區塊） | **新增** | URL 前綴恆帶地區、禁裸語言前綴、前綴 ≡ (market, locale) 身分、未知前綴 404、根路徑重導 | 67 §F.1(b)(c) |
+| 🔴 **2026-09-04 D80 方案 1 改鍵** | `always_region_qualified: true → false`；`bare_language_code_forbidden: true → false`；`multi_country_market_expands_per_country` → 刪，改 `shared_domain_code: language_only`＋`subfolder_presence_expands_per_country: true`；`x_default_target: default_market_locale_prefixed_url → default_market_locale_url`；`i18n.locale_prefix.*`：`bare_language_prefix_forbidden`／`root_redirect_status`／`multi_country_region_source` 刪，`always_region_qualified: false`、`default_locale_unprefixed: true`、`root_path_behavior: serve_default_market_locale`、`unknown_prefix_behavior: treat_as_unprefixed_path`、`market_determined_by: url_then_buyer_selection`、`buyer_selection_cookie: localization`、`subfolder_region_source` | 使用者裁定（DECISIONS D80 末段）；取證 external-facts §G23 | §I.2、67 §F.1(b)(c) |
 | `i18n.market_locales.*`（新子區塊） | **新增** | per-market 語言白名單（strawberrynet 模型）；🔴 **實體沿用既有 `market_web_presence_locales`，不新建表** | 67 §A.5、§C.8、本檔 §I.3(e) |
 | `naming_contract.*`（新頂層 §23） | **新增** | 鐵律 9 的界線：**可以對齊命名契約，不可以複製樣式表內容**（67 §H.5） | 67 §H.5 |
 
@@ -1256,8 +1244,8 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | REG-1 | 自指 | 每頁 hreflang 集合含自身 |
 | REG-2 | 雙向 | 集合內任兩 URL 互指 |
 | **REG-2b** | 🔴 **dedupe 的頁面無關性**（依 2026-08-13 裁定新增） | 造出「同一 (market, locale) 對應兩個 resolved web presence」的情形（子市場自身有子資料夾 ＋ 繼承父市場 presence），然後**從集合內每一個 URL 各抓一次 hreflang 集合**：🔴 **N 個集合必須逐位元組相同**。若某頁保留了自己那條、別頁丟掉它，REG-2 會在這個情形下靜默失效（§I.3(c) 步驟 2） |
-| REG-3 | x-default | 恰一個，指主網域 primary 預設語言**的帶前綴 URL**；🔴 **不得指向根路徑 `/`**（根已是重導，非 200 ⇒ 會破 REG-6）<!-- 依 2026-08-13 裁定修正，原判準：「恰一個，指主網域 primary 預設語言」——當時根路徑就是預設語言頁 --> |
-| REG-4 | 碼合法性 ＋ 🔴 **恆帶地區** | ISO 639-1(+15924)**(+3166-1 必要)**；拒 `EU`/`UK`/`es-419`；🔴 **全站輸出中不得出現任何不帶地區後綴的 hreflang 值**（掃描 `<head>` 與 sitemap，正則 `hreflang="[a-z]{2,3}(-[A-Za-z]{4})?"` 命中即紅燈；`x-default` 除外）<!-- 依 2026-08-13 裁定擴充，原判準：「ISO 639-1(+15924)(+3166-1)；拒 EU/UK/es-419」——原判準允許裸碼 --> |
+| REG-3 | x-default | 恰一個，指主網域 primary 預設語言的 URL＝**無前綴同路徑**（D80 2026-09-04：根路徑就是預設語言頁、回 200；本尊每頁 `x-default → https://hoko.vip/…` 無前綴）<!-- 沿革：2026-08-13 曾改為「帶前綴 URL、不得指 /」（當時根是 302）；D80 改回。 --> |
+| REG-4 | 碼合法性 ＋ 🔴 **形態依 presence** | ISO 639-1(+15924)(+3166-1)；拒 `EU`/`UK`/`es-419`；🔴 **共用網域 presence 的碼不得帶地區後綴**（本尊零地區碼；掃描 `<head>` 與 sitemap，`hreflang="[a-z]{2,3}(-[A-Za-z]{4})?-[A-Z]{2}"` 出現在共用網域頁即紅燈）；子資料夾 presence 的碼必須帶地區（逐國展開，V）<!-- 沿革：2026-08-13 曾改為「恆帶地區、裸碼即紅燈」；D80 2026-09-04 改回本尊形。 --> |
 | REG-5 | **繼承正確性** | 子市場頁面的集合 ＝ 自身 ∪ 祖先 web presences（改父市場後重測） |
 | REG-6 | **可達性不變量** | hreflang／sitemap 內所有 URL 對任何客戶端直接 200、self-canonical、非 noindex |
 | REG-7 | 失效掛鉤 | 改 market conditions／移除語言／**改 per-market 語言白名單**後，矩陣與 sitemap 在去抖窗內更新 |

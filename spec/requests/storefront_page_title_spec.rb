@@ -47,30 +47,30 @@ RSpec.describe "Storefront page_title per page type", type: :request do
   end
 
   it "PT1 🔴 首頁＝店名；商品／系列／頁面／部落格／文章＝資源標題" do
-    expect(title_of("/en-hk/")).to eq("PT Shop")
-    expect(title_of("/en-hk/products/pt-tee")).to eq("PT Tee")
-    expect(title_of("/en-hk/collections/picks")).to eq("Picks")
-    expect(title_of("/en-hk/pages/about")).to eq("About Us")
-    expect(title_of("/en-hk/blogs/news")).to eq("News")
-    expect(title_of("/en-hk/blogs/news/hello")).to eq("Hello World")
+    expect(title_of("/")).to eq("PT Shop")
+    expect(title_of("/products/pt-tee")).to eq("PT Tee")
+    expect(title_of("/collections/picks")).to eq("Picks")
+    expect(title_of("/pages/about")).to eq("About Us")
+    expect(title_of("/blogs/news")).to eq("News")
+    expect(title_of("/blogs/news/hello")).to eq("Hello World")
   end
 
   it "PT2 🔴 /collections/all＝Products；/collections＝Collections；vendors／types 虛擬系列＝q" do
-    expect(title_of("/en-hk/collections/all")).to eq("Products")
-    expect(title_of("/en-hk/collections")).to eq("Collections")
-    expect(title_of("/en-hk/collections/vendors?q=Acme")).to eq("Acme")
-    expect(title_of("/en-hk/collections/types?q=Mug")).to eq("Mug")
+    expect(title_of("/collections/all")).to eq("Products")
+    expect(title_of("/collections")).to eq("Collections")
+    expect(title_of("/collections/vendors?q=Acme")).to eq("Acme")
+    expect(title_of("/collections/types?q=Mug")).to eq("Mug")
   end
 
   it "PT3 🔴 搜尋：無 q＝Search；有 q＝Search: N results found for \"q\"（N＝search.results_count）" do
-    expect(title_of("/en-hk/search")).to eq("Search")
-    expect(title_of("/en-hk/search?q=zzz-none")).to eq('Search: 0 results found for "zzz-none"')
-    expect(title_of("/en-hk/search?q=PT")).to eq('Search: 1 results found for "PT"')
+    expect(title_of("/search")).to eq("Search")
+    expect(title_of("/search?q=zzz-none")).to eq('Search: 0 results found for "zzz-none"')
+    expect(title_of("/search?q=PT")).to eq('Search: 1 results found for "PT"')
   end
 
   it "PT4 🔴 購物車＝Your Shopping Cart；404＝404 Not Found" do
-    expect(title_of("/en-hk/cart")).to eq("Your Shopping Cart")
-    expect(title_of("/en-hk/nope-404")).to eq("404 Not Found")
+    expect(title_of("/cart")).to eq("Your Shopping Cart")
+    expect(title_of("/nope-404")).to eq("404 Not Found")
   end
 
   it "PT5 🔴 zh-Hant 字串表（hoko.vip 逐字）" do

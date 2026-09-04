@@ -58,7 +58,7 @@ RSpec.describe "Storefront facets", type: :request do
     b = make_product(handle: "sold-out-b", price: 2000, stock: 0)
     make_collection!([ a, b ])
 
-    get "/en-hk/collections/filtered?filter.v.availability=1"
+    get "/collections/filtered?filter.v.availability=1"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('data-h="in-stock-a"')
     expect(response.body).not_to include('data-h="sold-out-b"') # 🔴 列表真被過濾
@@ -73,7 +73,7 @@ RSpec.describe "Storefront facets", type: :request do
                        make_product(handle: "mid", price: 5000),
                        make_product(handle: "dear", price: 9900) ])
 
-    get "/en-hk/collections/filtered?filter.v.price.gte=20.00&filter.v.price.lte=60.00"
+    get "/collections/filtered?filter.v.price.gte=20.00&filter.v.price.lte=60.00"
     expect(response.body).to include('data-h="mid"')
     expect(response.body).not_to include('data-h="cheap"')
     expect(response.body).not_to include('data-h="dear"')
@@ -90,13 +90,13 @@ RSpec.describe "Storefront facets", type: :request do
     make_collection!([ r, b, g ])
 
     # 多值 OR：Red 或 Blue（重複鍵——Rails params 只留最後一值，必從 qs 解析）
-    get "/en-hk/collections/filtered?filter.v.option.Color=Red&filter.v.option.Color=Blue"
+    get "/collections/filtered?filter.v.option.Color=Red&filter.v.option.Color=Blue"
     expect(response.body).to include('data-h="opt-red"')
     expect(response.body).to include('data-h="opt-blue"')
     expect(response.body).not_to include('data-h="opt-green"')
 
     # 跨過濾器 AND：Color 選中 ∧ vendor=Acme ⇒ 只剩 red
-    get "/en-hk/collections/filtered?filter.v.option.Color=Red&filter.v.option.Color=Blue&filter.p.vendor=Acme"
+    get "/collections/filtered?filter.v.option.Color=Red&filter.v.option.Color=Blue&filter.p.vendor=Acme"
     expect(response.body).to include('data-h="opt-red"')
     expect(response.body).not_to include('data-h="opt-blue"')
     # counts＝套用其他過濾器後：vendor 濾 Acme 下 Color 各值 count
@@ -108,7 +108,7 @@ RSpec.describe "Storefront facets", type: :request do
     a = make_product(handle: "u-a", price: 1000, vendor: "Acme")
     make_collection!([ a ])
 
-    get "/en-hk/collections/filtered?filter.p.vendor=Acme&sort_by=price-ascending&page=2"
+    get "/collections/filtered?filter.p.vendor=Acme&sort_by=price-ascending&page=2"
     body = response.body
     # Acme 值自己的 url_to_remove：去掉自家 pair、保 sort_by
     acme_rm = body[/data-v="Acme"[^>]*data-rm="([^"]*)"/, 1]
@@ -128,13 +128,13 @@ RSpec.describe "Storefront facets", type: :request do
                    body_html: "<p>probe</p>", published_at: 1.hour.ago)
     end
 
-    get "/en-hk/search?q=probe"
+    get "/search?q=probe"
     expect(response.body).to include('data-h="probe-acme"')
     expect(response.body).to include('data-h="probe-zeta"')
-    get "/en-hk/search?q=probe&page=2" # fixture paginate by 2 ⇒ 混型在第 2 頁
+    get "/search?q=probe&page=2" # fixture paginate by 2 ⇒ 混型在第 2 頁
     expect(response.body).to include('data-ot="page"') # 未過濾＝混型
 
-    get "/en-hk/search?q=probe&filter.p.vendor=Acme"
+    get "/search?q=probe&filter.p.vendor=Acme"
     expect(response.body).to include('data-h="probe-acme"')
     expect(response.body).not_to include('data-h="probe-zeta"') # 商品被過濾
     expect(response.body).not_to include('data-ot="page"')      # 🔴 非商品全濾除（官方逐字）
@@ -147,13 +147,13 @@ RSpec.describe "Storefront facets", type: :request do
     b = make_product(handle: "cache-b", price: 1000, stock: 0)
     make_collection!([ a, b ])
 
-    get "/en-hk/collections/filtered" # 未過濾先進快取
+    get "/collections/filtered" # 未過濾先進快取
     expect(response.body).to include('data-h="cache-b"')
 
-    get "/en-hk/collections/filtered?filter.v.availability=1"
+    get "/collections/filtered?filter.v.availability=1"
     expect(response.body).not_to include('data-h="cache-b"') # 沒吃到未過濾快取
 
-    get "/en-hk/collections/filtered"
+    get "/collections/filtered"
     expect(response.body).to include('data-h="cache-b"') # 未過濾頁沒被過濾版寫髒
   end
 end

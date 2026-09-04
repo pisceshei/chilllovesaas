@@ -45,9 +45,16 @@ module UrlRedirects
       value
     end
 
+    # D80：「帶前綴」＝第一段是本店**實際存在**的前綴（presence × 白名單列），不是「像前綴」——
+    # 預設語言無前綴、/faq 這種兩三字母段是合法路徑。租戶脈絡缺失（無 tenant）⇒ 形狀粗篩（fail-closed 偏拒絕）。
     def prefixed?(path)
-      first = path.delete_prefix("/").split("/", 2)[0].to_s
-      first.match?(/\A#{Markets::UrlPrefix::SEGMENT.source}\z/)
+      first = path.delete_prefix("/").split("/", 2)[0].to_s.downcase
+      return false unless first.match?(/\A#{Markets::UrlPrefix::SEGMENT.source}\z/)
+
+      shop = ActsAsTenant.current_tenant
+      return true if shop.nil?
+
+      Markets::PrefixIndex.prefix_segments(shop:).include?(first)
     end
 
     def error(field, message, code)

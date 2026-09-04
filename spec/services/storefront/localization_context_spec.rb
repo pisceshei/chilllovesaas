@@ -59,6 +59,18 @@ RSpec.describe Storefront::LocalizationContext do
     expect(codes.size).to eq(31)
   end
 
+  it "LC5 🔴 D80 買家選國：market／country_code 覆寫 ⇒ localization.country 與 market 跟買家走，語言集合仍是 presence 的" do
+    shop = RenderParity::Mirror.call(subdomain: "lc-spec", spec: spec).shop
+    drop = ActsAsTenant.with_tenant(shop) do
+      jp = Market.find_by!(handle: "jp")
+      described_class.drop(web_presence: primary_presence(shop), locale_tag: "zh-Hans", market: jp, country_code: "JP")
+    end
+    expect(drop.invoke_drop("country").slice("iso_code", "name")).to eq("iso_code" => "JP", "name" => "日本")
+    expect(drop.invoke_drop("market")["handle"]).to eq("jp")
+    expect(drop.invoke_drop("available_languages").map { |l| l["root_url"] }).to eq([ "/", "/zh-hant", "/en", "/fr", "/ja" ])
+    expect(drop.invoke_drop("available_countries").size).to eq(31)
+  end
+
   it "LC4 單市場店（建店預設 HK）⇒ available_countries 恰 1 國＝當前國（Ella 據此隱藏地區選擇器）" do
     shop = create(:shop)
     source_tag = ActsAsTenant.with_tenant(shop) { ShopLocale.find_by!(is_source: true).locale_tag }

@@ -58,7 +58,7 @@ RSpec.describe "Storefront G2 collections", type: :request do
                                   product: Product.find_by!(handle: "rose-serum"), position: 9)
       end
 
-      get "/en-hk/collections"
+      get "/collections"
       expect(response).to have_http_status(:ok)
       # 字母序：Autumn 在 Spring 前；Hidden 不出現（真店實證形——96 §1.2）
       expect(response.body.index('data-ch="autumn"')).to be < response.body.index('data-ch="spring"')
@@ -91,7 +91,7 @@ RSpec.describe "Storefront G2 collections", type: :request do
         product
       end
 
-      get "/en-hk/collections/picks"
+      get "/collections/picks"
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("item-draft")
       # position 序＝mid(1)→cheap(2)（第 1 頁只有前兩件——paginate by 2）
@@ -102,16 +102,16 @@ RSpec.describe "Storefront G2 collections", type: :request do
     end
 
     it "C2 🔴 ?page=2 ⇒ 第二頁窗（只剩第 3 件）＋parts 連結帶前綴路徑" do
-      get "/en-hk/collections/picks?page=2"
+      get "/collections/picks?page=2"
       expect(response.body).to include('<span id="cpage">2</span>')
       expect(response.body).to include('data-h="item-dear"')
       expect(response.body).not_to include('data-h="item-mid"')
-      # parts：第 1 頁連結不帶 page 參數、路徑帶 /en-hk 前綴（買家可點形）
-      expect(response.body).to include("1=/en-hk/collections/picks</i>")
+      # parts：第 1 頁連結不帶 page 參數、路徑帶當前語言前綴（預設語言無前綴；買家可點形）
+      expect(response.body).to include("1=/collections/picks</i>")
     end
 
     it "C3 🔴 sort_by=price-descending ⇒ 貴品在前（storefront 鍵對映；sort_by 回傳現值）" do
-      get "/en-hk/collections/picks?sort_by=price-descending"
+      get "/collections/picks?sort_by=price-descending"
       expect(response.body).to include('<span id="csort">price-descending</span>')
       expect(response.body).to include('<span id="cdefsort">manual</span>')
       expect(response.body.index('data-h="item-dear"')).to be < response.body.index('data-h="item-mid"')
@@ -119,7 +119,7 @@ RSpec.describe "Storefront G2 collections", type: :request do
     end
 
     it "C4 /collections/all 虛擬系列：title=Products、全店 discoverable、字母序（96 §2）" do
-      get "/en-hk/collections/all"
+      get "/collections/all"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('<h1 id="ctitle">Products</h1>')
       expect(response.body).to include('<span id="citems">3</span>')
@@ -129,25 +129,25 @@ RSpec.describe "Storefront G2 collections", type: :request do
 
     it "C5 商家自建 handle=all 的真系列壓過虛擬系列" do
       make_collection(title: "我的全部", handle: "all", products: [ cheap ])
-      get "/en-hk/collections/all"
+      get "/collections/all"
       expect(response.body).to include('<h1 id="ctitle">我的全部</h1>')
       expect(response.body).to include('<span id="citems">1</span>')
     end
 
     it "V1 ?view=alt ⇒ 替代模板＋template.suffix；不存在 suffix ⇒ 靜默 fallback（真店實證）" do
-      get "/en-hk/collections/picks?view=alt"
+      get "/collections/picks?view=alt"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('<h1 id="alttitle">替代版 Picks</h1>')
       expect(response.body).to include('<span id="altsuffix">alt</span>')
       expect(response.body).to include('<span id="alttpl">collection</span>')
 
-      get "/en-hk/collections/picks?view=zzz-nonexistent"
+      get "/collections/picks?view=zzz-nonexistent"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('<h1 id="ctitle">Picks</h1>')
     end
 
     it "C6 🔴 content_for block 的 closest.product 與任意參數到達 block（Ella 商品卡形）" do
-      get "/en-hk/collections/picks"
+      get "/collections/picks"
       # closest.product：卡內拿到當前迭代商品（不是 nil、不是頁面 closest）
       expect(response.body).to include('<b class="cardtitle">中品</b>')
       expect(response.body).to include('<b class="cardtitle">平品</b>')
@@ -160,11 +160,11 @@ RSpec.describe "Storefront G2 collections", type: :request do
       memory = ActiveSupport::Cache::MemoryStore.new
       allow(Rails).to receive(:cache).and_return(memory)
 
-      get "/en-hk/collections/picks"
+      get "/collections/picks"
       expect(response.body).to include('<h1 id="ctitle">Picks</h1>')
-      get "/en-hk/collections/picks?view=alt"
+      get "/collections/picks?view=alt"
       expect(response.body).to include('<h1 id="alttitle">替代版 Picks</h1>')
-      get "/en-hk/collections/picks"
+      get "/collections/picks"
       expect(response.body).to include('<h1 id="ctitle">Picks</h1>')
     end
   end

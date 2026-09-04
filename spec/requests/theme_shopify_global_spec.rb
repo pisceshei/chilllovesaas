@@ -30,7 +30,7 @@ RSpec.describe "Theme Shopify global & section assets", type: :request do
   def render_home(design_mode: false)
     ActsAsTenant.with_tenant(shop) do
       ThemeEngine::PageRenderer.new(theme:, shop:, publication: Publication.online_store!,
-                                    url_prefix: "en-hk", design_mode:).render("/").html
+                                    url_prefix: "/zh-hant", design_mode:).render("/").html
     end
   end
 
@@ -40,7 +40,7 @@ RSpec.describe "Theme Shopify global & section assets", type: :request do
     expect(html).to include("<script>var Shopify = Shopify || {};")
     # E6：官方逐字 "Otherwise, it's set to `undefined`."（100 §9.5）⇒ 公開頁不輸出該鍵
     expect(html).not_to include("Shopify.designMode =")
-    expect(html).to include(%(Shopify.routes = Shopify.routes || {};\nShopify.routes.root = "/en-hk/";))
+    expect(html).to include(%(Shopify.routes = Shopify.routes || {};\nShopify.routes.root = "/zh-hant/";))
     expect(html).to include(%(Shopify.currency = {"active":"HKD","rate":"1.0"};))
     expect(html).to include("Shopify.formatMoney = function")
     expect(html).to include("Shopify.CountryProvinceSelector = function")

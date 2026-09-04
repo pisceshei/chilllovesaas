@@ -52,7 +52,7 @@ RSpec.describe "Storefront blog line", type: :request do
   end
 
   it "BA1 /blogs/news：新到舊、隱藏文章不列、tags 聯集、真分頁；文章頁複合 URL＋留言表單" do
-    get "/en-hk/blogs/news"
+    get "/blogs/news"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<h1 id="btitle">News</h1>')
     expect(response.body).to include('<span id="bcount">2</span>') # 官方：不含 hidden
@@ -62,30 +62,30 @@ RSpec.describe "Storefront blog line", type: :request do
     expect(response.body).to include("摘要") # excerpt_or_content：有摘要用摘要
     expect(response.body).to include("|<p>早</p>") # 無摘要退 content
 
-    get "/en-hk/blogs/news/early"
+    get "/blogs/news/early"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<h1 id="atitle">早文</h1>')
     expect(response.body).to include('<span id="aauthor">KEN</span>')
     expect(response.body).to include('<span id="amod">true</span>')
     # form new_comment：action＝comment_post_url（98 §2 真店抓包形）
-    expect(response.body).to include('action="/en-hk/blogs/news/early/comments"')
+    expect(response.body).to include('action="/blogs/news/early/comments"')
     expect(response.body).to include('name="form_type" value="new_comment"')
   end
 
   it "BA2 🔴 隱藏文章 404；未知 blog 404" do
-    get "/en-hk/blogs/news/ghost"
+    get "/blogs/news/ghost"
     expect(response).to have_http_status(:not_found)
-    get "/en-hk/blogs/nope"
+    get "/blogs/nope"
     expect(response).to have_http_status(:not_found)
   end
 
   it "TG1 🔴 tagged 過濾＋`+` 多 tag AND；current_tags 注入" do
-    get "/en-hk/blogs/news/tagged/news"
+    get "/blogs/news/tagged/news"
     expect(response.body).to include('<span id="bcur">news</span>')
     expect(response.body).to include('data-h="news/early"')
     expect(response.body).not_to include('data-h="news/late"') # late 無 news tag
 
-    get "/en-hk/blogs/news/tagged/hot+news"
+    get "/blogs/news/tagged/hot+news"
     expect(response.body).to include('data-h="news/early"') # 兩 tag 都有
     expect(response.body).not_to include('data-h="news/late"')
   end
@@ -98,7 +98,7 @@ RSpec.describe "Storefront blog line", type: :request do
     row = ActsAsTenant.with_tenant(shop) { ArticleComment.last }
     expect(row.status).to eq("pending")
 
-    get "/en-hk/blogs/news/early"
+    get "/blogs/news/early"
     expect(response.body).not_to include("審核中留言") # Liquid 只見 published
     expect(response.body).to include("0 則留言")
 
@@ -107,7 +107,7 @@ RSpec.describe "Storefront blog line", type: :request do
          params: { comment: { author: "訪客二", email: "v2@example.com", body: "直發留言" } }
     expect(ActsAsTenant.with_tenant(shop) { ArticleComment.last }.status).to eq("published")
 
-    get "/en-hk/blogs/news/early?page=1" # 換 key 避開頁快取
+    get "/blogs/news/early?page=1" # 換 key 避開頁快取
     expect(response.body).to include("訪客二:直發留言")
     expect(response.body).to include("1 則留言")
   end
@@ -129,21 +129,21 @@ RSpec.describe "Storefront blog line", type: :request do
         { title: "文", type: "article", resource_id: "gid://chilllove/Article/#{article_a.id}" }
       ]).menu
     end
-    drop = ThemeEngine::LinkListsDrop.new(shop, url_prefix: "/en-hk")
+    drop = ThemeEngine::LinkListsDrop.new(shop, url_prefix: "/zh-hant") # D80：非預設語言的裸語言前綴
     links = ActsAsTenant.with_tenant(shop) do
       drop.liquid_method_missing("probe-menu").links.map { |l| [ l.type, l.url ] }
     end
     expect(links).to eq([
-      [ "frontpage_link", "/en-hk" ],
-      [ "search_link", "/en-hk/search" ],
-      [ "blog_link", "/en-hk/blogs/news" ],
-      [ "article_link", "/en-hk/blogs/news/early" ]
+      [ "frontpage_link", "/zh-hant" ],
+      [ "search_link", "/zh-hant/search" ],
+      [ "blog_link", "/zh-hant/blogs/news" ],
+      [ "article_link", "/zh-hant/blogs/news/early" ]
     ])
     expect(ActsAsTenant.with_tenant(shop) { menu.menu_items.count }).to eq(4)
   end
 
   it "SR1 搜尋 article 型：整頁混型＋suggest articles 鍵" do
-    get "/en-hk/search?q=#{CGI.escape('早')}&type=article"
+    get "/search?q=#{CGI.escape('早')}&type=article"
     expect(response.body).to include('data-ot="article"')
     expect(response.body).to include('data-h="news/early"')
 

@@ -11,7 +11,7 @@ import { useToast } from "../lib/ToastContext";
 /**
  * 設定 › 網址重導（包 36；docs/specs/62 §B.5）。
  *
- * 🔴 路徑一律**無 locale 前綴正規形**——各語言（/en-hk/…）由路由層自動保留前綴，
+ * 🔴 路徑一律**無 locale 前綴正規形**——各語言（/zh-hant/…；預設語言無前綴）由路由層自動保留前綴，
  * 一列覆蓋全部語言（UrlRedirects::Normalize 的 DOC-5 裁定）。
  * 系統列（handle_change 等）唯讀可刪：刪除＝釋放舊 handle（HDL-8）；
  * 改名鏈坍縮由後端不變量維護，人手不可改。

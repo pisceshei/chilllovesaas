@@ -1532,3 +1532,33 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   「Showing results 20 to 27」）**：Austria／Belgium／Bulgaria／Croatia／Cyprus／Czechia／Denmark／Estonia／Finland／France／Germany／Greece／Hungary／
   Ireland／Italy／Latvia／Lithuania／Luxembourg／Malta／Netherlands／Poland／Portugal／Romania／Slovakia／Slovenia／Spain／Sweden（27）。本尊「欧盟」市場
   顯示 27 regions（§G21）但逐國未讀，鏡像店以此 27 國代位（V，91 §3.83）。
+
+### G23. 真店語言 URL 前綴、hreflang、`localization` 表單與 cookie（D80 方案 1 依據，取證 2026-09-04 curl hoko.vip）
+
+- **官方 help「URL structure」（<https://help.shopify.com/en/manual/markets/languages/setup-and-manage>，2026-09-04）**逐字："Use subfolders, such as
+  `example.com/de`, or subdomains, such as `de.example.com`, for language-specific URLs."；子資料夾市場（<https://help.shopify.com/en/manual/markets/domains>，
+  2026-09-04）逐字："If you want a market to use a subfolder of your primary domain, such as `example.com/fr-ca`, instead of a separate domain, then set up
+  target markets using subfolders."。官方 `{% form 'localization' %}`（<https://shopify.dev/docs/api/liquid/tags/form#form-localization>，2026-09-04）逐字：
+  "Generates a form for customers to select their preferred country so that they're shown the appropriate language and currency."（表單 hidden
+  `form_type=localization`／`utf8`／`_method=put`／`return_to`）。cookie 的名稱、path 與效期官方頁未載明（未取得；下列為實測）。
+- **五語言五市場的頁面（curl，2026-09-04）**：`/` 200，`<html lang="zh-CN">`、`Shopify.locale = "zh-CN"`、`Shopify.country = "TW"`、
+  `Shopify.routes.root = "/"`、`window.routes.root_url = "/"`；`/zh-hans/` **404**（預設語言沒有前綴形）；`/zh-hant/` 200，`lang="zh-TW"`、
+  `Shopify.locale = "zh-TW"`、`Shopify.routes.root = "/zh-hant/"`、`root_url = "/zh-hant"`、`cart_url = "/zh-hant/cart"`、主選單 href `/zh-hant/collections/…`；
+  `/en/`、`/en/collections/all`、`/en/products/acme-tee`、`/zh-hant/pages/contact` 皆 200（`Shopify.routes.root = "/en/"`）；市場不產生前綴（§G21：`/en-us`、
+  `/zh-hant-hk` 404）。theme.liquid 的 `<link rel="canonical" href="https://hoko.vip/en/collections/all" canonical-url="https://hoko.vip/">`＝自指帶語言前綴
+  （Ella 主題層輸出；`canonical-url` 是 Ella 屬性）。
+- **hreflang（每頁 `<head>` 六條、零地區碼、零市場段）**：首頁逐字 `x-default→https://hoko.vip/`、`zh-Hans→https://hoko.vip/`、`zh-Hant→https://hoko.vip/zh-hant`、
+  `en→/en`、`fr→/fr`、`ja→/ja`；`/en/collections/all` 同形（x-default／zh-Hans 指 `/collections/all`，其餘 `/{lang}/collections/all`）；
+  `/zh-hant/` 頁集合與首頁逐位元組相同（雙向）。五個市場（台灣／美國／香港／日本／欧盟 27 國）完全不進 hreflang。
+- **`POST /localization`（curl，2026-09-04；三種提交）**：①`country_code=US&return_to=/collections/all` ⇒ 302 `https://hoko.vip/collections/all`、
+  `set-cookie: localization=US; path=/; expires=（一年後）; SameSite=Lax`；②`language_code=en&country_code=TW&return_to=/collections/all` ⇒ 302
+  `/en/collections/all`、`set-cookie: localization=TW; path=/en; …`；③`country_code=JP&language_code=ja&return_to=/zh-hant/collections/all` ⇒ 302
+  `/ja/collections/all`、`set-cookie: localization=JP; path=/ja; …`。⇒ 市場由 cookie 承載、語言由 URL 承載；cookie path＝目標語言的根路徑（換語言即失去
+  先前的選國，本尊如此）。**GET `/` 帶 `Cookie: localization=US`** ⇒ 200、`Shopify.country = "US"`、`Shopify.locale = "zh-CN"`、
+  `Shopify.currency = {"active":"HKD","rate":"1.0"}`（美國市場繼承 HKD）。country-only 提交是否改語言、不屬任何市場的國碼如何處理：未實測（V，91 §3.84）。
+- **sitemap（curl，2026-09-04）**：`/sitemap.xml` index 列 `sitemap_agentic_discovery.xml`、`sitemap_products_1.xml?from=…&to=…`、`sitemap_pages_1.xml`、
+  `sitemap_collections_1.xml`、`sitemap_blogs_1.xml`，再依每個非預設語言列 `/zh-hant/sitemap_*_1.xml`、`/en/…`、`/fr/…`、`/ja/…`（預設語言無前綴、
+  其餘每語言一組子表）；`/sitemap_products_1.xml` 第一條 `<loc>https://hoko.vip/</loc>`。我方仍是單組子表＋`xhtml:link` 矩陣（每語言一組子表＝V，91 §3.84）。
+- 證據檔（倉庫外 scratchpad `d80/`：root.html／zh-hant.html／en.html／en-collections-all.html／en-products-acme-tee.html／zh-hant-pages-contact.html／
+  zh-hans.html／root-us.html／loc-country.headers／loc-lang.headers／loc-both.headers／sitemap.xml／sitemap-products.xml）；重取：
+  `curl -s https://hoko.vip/zh-hant/ | grep -o '<link rel="alternate" hreflang="[^"]*" href="[^"]*">'`。

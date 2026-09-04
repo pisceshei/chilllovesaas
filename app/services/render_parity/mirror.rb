@@ -137,11 +137,20 @@ module RenderParity
         existing = extra.market_regions.pluck(:country_code)
         (wanted - existing).each { |code| extra.market_regions.create!(shop_id: shop.id, country_code: code) }
         extra.market_regions.where.not(country_code: wanted).delete_all if (existing - wanted).any?
+        suffix = m["suffix"].presence
+        if suffix.nil?
+          # D80（2026-09-04）：本尊的非主市場共用主網域、沒有自己的 presence（/en-us 404；市場由買家選國 cookie 決定）
+          # ⇒ 我方同形：不建 presence；E15 期建過的 subfolder presence 一併拆掉（冪等）。
+          removed = extra.market_web_presences.count
+          extra.market_web_presences.destroy_all if removed.positive?
+          note("market #{extra.handle} regions=#{wanted.size} presence=none（共用主網域）#{" removed=#{removed}" if removed.positive?}")
+          next
+        end
         extra_presence = extra.market_web_presences.order(:id).first ||
-                         extra.market_web_presences.create!(shop_id: shop.id, subfolder_suffix: m.fetch("suffix"),
+                         extra.market_web_presences.create!(shop_id: shop.id, subfolder_suffix: suffix,
                                                             default_shop_locale: locale_tag)
-        if extra_presence.domain_id.nil? && extra_presence.subfolder_suffix != m.fetch("suffix")
-          extra_presence.update!(subfolder_suffix: m.fetch("suffix"))
+        if extra_presence.domain_id.nil? && extra_presence.subfolder_suffix != suffix
+          extra_presence.update!(subfolder_suffix: suffix)
         end
         align_presence_locales(shop, extra_presence)
         note("market #{extra.handle} regions=#{wanted.size} suffix=#{extra_presence.subfolder_suffix} " \
