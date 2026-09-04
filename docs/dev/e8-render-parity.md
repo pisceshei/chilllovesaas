@@ -118,7 +118,7 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 
 hoko `/?section_id=sections--19763396837479__header_default` vs mirror `…sections--header-group__header_default`：`render_parity:diff` 對檔案跑，
 `header_default` 0.989（5 處 differ：3 處新版顧客帳戶連結＝§3 平台功能列、2 處 `return_to`）；`/collections/all?section_id=…` 脈絡 0.984（另 4 處＝主選單
-current 反了）。
+current 反了）。修法部署 bt3（`4de1457e`）後兩脈絡皆 0.993、只剩 3 處新版顧客帳戶連結。
 
 | # | 形差 | 本尊（external-facts §G24） | 我方修法 | 規格 |
 |---|---|---|---|---|
