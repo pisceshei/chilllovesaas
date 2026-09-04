@@ -117,6 +117,25 @@
 - 與 §2 基線逐頁逐寬相同；本機出現的 promotion_popup 時序項在 bt3 全部消失（證實為本機 dev 慢送）。
 - bt3 mirror 店實測（`rails runner`，2026-09-04）：五語言（zh-Hans 來源）、五市場各一 presence／白名單 5、`available_countries`＝31（首三 DK 丹麦／BG 保加利亚／HR 克罗地亚、當前 台湾）。
 
+#### D80 部署後（bt3 head `a9c6852`，2026-09-04 13:21–13:26 UTC；ref＝hoko.vip live；cand＝`https://mirror.chilling.com.hk`——根路徑形，不帶 `CAND_PREFIX`）
+
+| 頁面 | 1280 | 768 | 390 | 非全同段 |
+|---|---|---|---|---|
+| / | 20/21 | 20/21 | 20/21 | `__root__` |
+| /collections/all | 14/15 | 14/15 | 14/15 | `__root__` |
+| /collections/frontpage | 14/15 | 14/15 | 14/15 | `__root__` |
+| /products/acme-tee | 13/15 | 13/15 | 13/15 | `__root__`、`template--T__main`（countdown 寬 1px 級） |
+| /pages/contact | 15/16 | 15/16 | 15/16 | `__root__` |
+| /search | 11/12 | 11/12 | 11/12 | `__root__` |
+| /cart | 14/15 | 14/15 | 14/15 | `__root__` |
+| /nope（404） | 11/12 | 11/12 | 11/12 | `__root__` |
+
+- 與「E15 部署後」表逐頁逐寬相同（D80 只改 URL 形、市場來源與 `<head>` 的 hreflang，computed 不量的部分）；重跑：scratchpad `parity_e15.sh`，
+  `CAND_BASE=https://mirror.chilling.com.hk`。
+- bt3 mirror 店實測（curl，2026-09-04）：`/` 200、`Shopify.routes.root = "/"`、hreflang 六條（`zh-Hans`／x-default → `/`，其餘 `/zh-hant/`…，與 hoko 首頁同形）；
+  `/zh-hant/` 200；`/zh-hans-tw/`、`/en-us/` 404；四個非主市場 presence 已拆（`removed=1` ×4）；`POST /localization country_code=US` ⇒ 302＋
+  `localization=US; path=/`，帶 cookie 的 `/` ⇒ `Shopify.country = "US"`。
+
 ## §3 未取得／範圍外（登記 91 §3.79）
 
 - 關閉 `<details>` 子樹的報告值差根因；Shopify CDN 的 CSS 處理管線（壓縮／autoprefixer／nesting 攤平的確切規則）。
