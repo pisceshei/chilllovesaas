@@ -33,7 +33,7 @@ RSpec.describe "Storefront password protection", type: :request do
   end
 
   it "PW1 未啟用＝全站開放；/password 頁本身可達（平台形：零 script、對表類名、noindex）" do
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
 
     get "/password"
@@ -51,7 +51,7 @@ RSpec.describe "Storefront password protection", type: :request do
 
   it "PW2 🔴 啟用後全站 302 → /password；對密碼種簽名 cookie 後放行；改密碼失效舊 cookie" do
     enable_password!
-    get "/en-hk/"
+    get "/"
     expect(response).to redirect_to("/password")
 
     post "/password", params: { password: "wrong" }
@@ -60,11 +60,11 @@ RSpec.describe "Storefront password protection", type: :request do
 
     post "/password", params: { password: "12345" }
     expect(response).to redirect_to("/")
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok) # cookie 放行
 
     shop.update!(storefront_password_digest: BCrypt::Password.create("changed"))
-    get "/en-hk/"
+    get "/"
     expect(response).to redirect_to("/password") # 🔴 舊 cookie 即失效
   end
 

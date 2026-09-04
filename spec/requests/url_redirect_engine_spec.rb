@@ -33,9 +33,9 @@ RSpec.describe "URL redirect 引擎與管理（包 36）", type: :request do
     end
 
     it "E1 🔴 404 命中查表 ⇒ 301 且保留 locale 前綴與 query（HDL-9）" do
-      get "/en-hk/products/old?a=1"
+      get "/products/old?a=1"
       expect(response).to have_http_status(:moved_permanently)
-      expect(response.headers["Location"]).to end_with("/en-hk/products/rose?a=1")
+      expect(response.headers["Location"]).to end_with("/products/rose?a=1")
     end
 
     it "E2 🔴 活頁面先贏：from_path 指向現任商品 ⇒ 照常 200，不重導" do
@@ -45,7 +45,7 @@ RSpec.describe "URL redirect 引擎與管理（包 36）", type: :request do
         v.inventory_item.inventory_levels.order(:id).first.update!(available: 1)
         UrlRedirect.create!(from_path: "/products/live", to_path: "/products/rose", source: "manual")
       end
-      get "/en-hk/products/live"
+      get "/products/live"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("現任商品")
     end
@@ -56,10 +56,10 @@ RSpec.describe "URL redirect 引擎與管理（包 36）", type: :request do
         UrlRedirect.create!(from_path: "/pages/b", to_path: "/pages/c", source: "manual")
         UrlRedirect.create!(from_path: "/products/dead", to_path: "/gone", source: "manual", status_code: 410)
       end
-      get "/en-hk/pages/a"
-      expect(response.headers["Location"]).to end_with("/en-hk/pages/c")
+      get "/pages/a"
+      expect(response.headers["Location"]).to end_with("/pages/c")
 
-      get "/en-hk/products/dead"
+      get "/products/dead"
       expect(response).to have_http_status(:gone)
     end
   end
@@ -99,10 +99,19 @@ RSpec.describe "URL redirect 引擎與管理（包 36）", type: :request do
       expect(ActsAsTenant.with_tenant(shop) { UrlRedirect.count }).to eq(0)
     end
 
-    it "G2 🔴 帶 locale 前綴的輸入 ⇒ PREFIXED_PATH_FORBIDDEN（DOC-5 裁定）；自我迴圈 ⇒ SELF_REDIRECT" do
-      post_graphql(P36_CREATE, variables: { path: "/en-hk/products/x", target: "/products/y" })
+    it "G2 🔴 帶 locale 前綴的輸入 ⇒ PREFIXED_PATH_FORBIDDEN（DOC-5 裁定；D80：前綴＝本店真實存在的 /zh-hant，像前綴的 /faq 不擋）；自我迴圈 ⇒ SELF_REDIRECT" do
+      ActsAsTenant.with_tenant(shop) do
+        ShopLocale.find_by!(locale_tag: "zh-Hant").update!(published: true)
+        Market.find_by!(is_primary: true).market_web_presences.sole
+              .market_web_presence_locales.create!(locale_tag: "zh-Hant", position: 1)
+      end
+      post_graphql(P36_CREATE, variables: { path: "/zh-hant/products/x", target: "/products/y" })
       expect(response.parsed_body.dig("data", "urlRedirectCreate", "userErrors").sole["code"])
         .to eq("PREFIXED_PATH_FORBIDDEN")
+      post_graphql(P36_CREATE, variables: { path: "/products/x", target: "/en/products/y" }) # 預設語言的舊前綴形也不是本店前綴
+      expect(response.parsed_body.dig("data", "urlRedirectCreate", "userErrors")).to eq([])
+      post_graphql(P36_CREATE, variables: { path: "/faq", target: "/pages/faq" }) # 兩三字母段不是前綴
+      expect(response.parsed_body.dig("data", "urlRedirectCreate", "userErrors")).to eq([])
 
       post_graphql(P36_CREATE, variables: { path: "/products/x", target: "/products/x" })
       expect(response.parsed_body.dig("data", "urlRedirectCreate", "userErrors").sole["code"])

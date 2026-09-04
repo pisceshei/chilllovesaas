@@ -7,7 +7,8 @@ module Seo
   # 四條硬性不變量（62 §I.1；REG-6）：自指／雙向（同一函式產同一集合＝天然雙向，
   # 🔴 禁止任何按頁客製）／絕對 URL／每個 URL 回 200 且 self-canonical。
   # 🔴 語言集合＝**開放 ∧ 已發布**（open_locales——與 PrefixIndex／LocalizationContext
-  #   同一開放集，67 §F.1(d) 三處同軸）；恆帶地區、多國逐國展開（Markets::HreflangCodes）。
+  #   同一開放集，67 §F.1(d) 三處同軸）。碼＝Markets::HreflangCodes.for_presence（D80 2026-09-04：共用網域 presence
+  #   一語言一碼 zh-Hant／en，子資料夾 presence 逐國展開）；沒有自己 presence 的共用市場不進矩陣（同一組 URL）。
   module HreflangMatrix
     Entry = Data.define(:code, :url)
 
@@ -15,7 +16,7 @@ module Seo
 
     # @param shop [Shop]
     # @param canonical_path [String] 前綴已剝的正規路徑（"/"＝首頁、"/products/x"…）
-    # @return [Array<Entry>] 含 x-default（62 §I.2：指主網域 primary market 預設語言的帶前綴 URL）
+    # @return [Array<Entry>] 含 x-default（62 §I.2；D80：指主網域 primary market 預設語言的 URL＝無前綴根形）
     def entries(shop:, canonical_path:)
       list = []
       seen = Set.new
@@ -30,7 +31,7 @@ module Seo
             rescue Markets::UrlPrefix::Error
               next # region 來源缺失的組合不可路由（fail-closed），不進矩陣（不變量 4）
             end
-            Markets::HreflangCodes.for(market, tag).each do |code|
+            Markets::HreflangCodes.for_presence(presence, tag).each do |code|
               next if seen.include?(code) # dedupe：先到者勝（primary 序）
 
               seen << code
@@ -66,8 +67,8 @@ module Seo
       "https://#{host}"
     end
 
-    # x-default＝主網域 primary market 預設語言的帶前綴 URL（62 §I.2：根路徑已非內容頁，
-    # 不得指 /）。primary 鏈缺失 ⇒ nil（entries 端 compact 掉）。
+    # x-default＝主網域 primary market 預設語言的 URL（D80：預設語言無前綴 ⇒ 就是無前綴路徑；本尊 hoko 每頁
+    # x-default 指無前綴同路徑，§G23）。primary 鏈缺失 ⇒ nil（entries 端 compact 掉）。
     def x_default_url(shop, canonical_path)
       market = Market.find_by(shop_id: shop.id, is_primary: true) or return nil
       presence = market.market_web_presences.order(:id).first or return nil

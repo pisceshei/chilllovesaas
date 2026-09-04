@@ -32,7 +32,7 @@ RSpec.describe "Theme-surface CSP", type: :request do
   end
 
   it "C1+C2 🔴 storefront：style/script 帶 unsafe-inline、script-src 無 nonce、img 帶 https" do
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
     csp = response.headers["Content-Security-Policy"].to_s
     expect(csp).to include("style-src 'self' 'unsafe-inline'")

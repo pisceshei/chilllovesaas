@@ -11,7 +11,7 @@ require "rails_helper"
 #   SF-6 JSONC（殺：BOM／尾逗號讓 zh-Hant 檔靜默解析失敗、整頁退回英文）
 #   SF-7 連結帶前綴（殺：routes drop 丟前綴——切語言點一下就被踢回預設語言）
 #   SF-11⑤ 關語言不刪譯文（殺：close 做成 delete）
-#   L2  /localization 剝舊前綴（殺：前綴疊加 /zh-hant-hk/en-hk/...）
+#   L2  /localization 剝舊前綴（殺：前綴疊加 /zh-hant/...）
 RSpec.describe "Storefront i18n", type: :request do
   let(:shop) { create(:shop, subdomain: "i18n-shop") }
   let!(:product) do
@@ -53,7 +53,7 @@ RSpec.describe "Storefront i18n", type: :request do
 
   it "SF-1/SF-2 🔴 語言只由 URL 決定：三種 Accept-Language 同 URL 逐位元組同體；無 Vary: Accept-Language" do
     bodies = [ "zh-TW,zh;q=0.9", "en-US,en;q=0.9", "ja" ].map do |al|
-      get "/en-hk/products/rose", headers: { "Accept-Language" => al }
+      get "/products/rose", headers: { "Accept-Language" => al }
       expect(response).to have_http_status(:ok)
       expect(response.headers["Vary"].to_s).not_to include("Accept-Language")
       response.body
@@ -61,16 +61,16 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(bodies.uniq.length).to eq(1)
   end
 
-  it "SF-9 🔴 SRA 端點語言跟 URL 前綴：recommendations／search suggest／cart sections 在 /zh-hant-hk/ 下取 zh-Hant 字串" do
-    get "/zh-hant-hk/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
+  it "SF-9 🔴 SRA 端點語言跟 URL 前綴：recommendations／search suggest／cart sections 在 /zh-hant/ 下取 zh-Hant 字串" do
+    get "/zh-hant/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<span id="rhello">你好買家</span>')
-    get "/en-hk/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
+    get "/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
     expect(response.body).to include('<span id="rhello">Hello shopper</span>')
-    get "/zh-hant-hk/search/suggest", params: { q: "rose", section_id: "related-products" }
+    get "/zh-hant/search/suggest", params: { q: "rose", section_id: "related-products" }
     expect(response.body).to include('<span id="rhello">你好買家</span>')
     variant_id = ActsAsTenant.with_tenant(shop) { product.product_variants.first.id }
-    post "/zh-hant-hk/cart/add", params: { id: variant_id, quantity: 1, sections: "related-products", sections_url: "/zh-hant-hk/" }
+    post "/zh-hant/cart/add", params: { id: variant_id, quantity: 1, sections: "related-products", sections_url: "/zh-hant/" }
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body.dig("sections", "related-products")).to include('<span id="rhello">你好買家</span>')
   end
@@ -92,18 +92,18 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(response.body).to include('<span id="rhello">Hello shopper</span>')
   end
 
-  it "SF-3 語言不自動重導：帶中文 Accept-Language 打 /en-hk/ 仍 200（不 302 到 zh-hant）" do
-    get "/en-hk/", headers: { "Accept-Language" => "zh-TW,zh-Hant;q=0.9" }
+  it "SF-3 語言不自動重導：帶中文 Accept-Language 打 / 仍 200（不 302 到 zh-hant）" do
+    get "/", headers: { "Accept-Language" => "zh-TW,zh-Hant;q=0.9" }
     expect(response).to have_http_status(:ok)
   end
 
   it "SF-5 🔴 三層字串：主題層鍵取主題值；主題缺鍵落平台字串集；zh-Hant 頁取 zh-Hant 兩層" do
-    get "/en-hk/"
+    get "/"
     expect(response.body).to include("Hello shopper")     # ② 主題 default 檔
     expect(response.body).to include(">Checkout<")        # ③ 平台字串集（主題無 cart.checkout）
     expect(response.body).not_to include("cart.checkout") # 不得吐 key 名
 
-    get "/zh-hant-hk/"
+    get "/zh-hant/"
     expect(response.body).to include("你好買家")           # ② 主題 zh-Hant 檔（JSONC）
     expect(response.body).to include(">結帳<")             # ③ 平台 zh-Hant
   end
@@ -115,15 +115,15 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(ThemeEngine::Runtime.tolerant_json(raw)).to eq({ "general" => { "hello" => "你好買家" } })
   end
 
-  it "SF-7 🔴 主題內部連結帶前綴：zh-Hant 頁的 cart 連結是 /zh-hant-hk/cart" do
-    get "/zh-hant-hk/"
-    expect(response.body).to include(%(href="/zh-hant-hk/cart"))
+  it "SF-7 🔴 主題內部連結帶前綴：zh-Hant 頁的 cart 連結是 /zh-hant/cart" do
+    get "/zh-hant/"
+    expect(response.body).to include(%(href="/zh-hant/cart"))
   end
 
   it "CT1 🔴 內容翻譯走 drops：zh-Hant 商品頁出譯名、en 頁出原文（同一資源）" do
-    get "/zh-hant-hk/products/rose"
+    get "/zh-hant/products/rose"
     expect(response.body).to include("玫瑰精華")
-    get "/en-hk/products/rose"
+    get "/products/rose"
     expect(response.body).to include("Rose Serum")
     expect(response.body).not_to include("玫瑰精華")
   end
@@ -133,17 +133,17 @@ RSpec.describe "Storefront i18n", type: :request do
       # zh-Hans enabled 未發布：開進白名單也不得出現在切換器（67 §F.2）。
       presence.market_web_presence_locales.create!(locale_tag: "zh-Hans", position: 2)
     end
-    get "/en-hk/"
+    get "/"
     expect(response.body).to include("en|English")
-    expect(response.body).to include(%(href="/zh-hant-hk"))
+    expect(response.body).to include(%(href="/zh-hant"))
     expect(response.body).not_to include("zh-Hans")
   end
 
-  it "SF-10 🔴 前綴 ≡ 身分：cookie／偽 GeoIP 標頭不改變同 URL 的輸出" do
-    get "/en-hk/products/rose"
+  it "SF-10 🔴 語言 ≡ URL：無關 cookie／偽 GeoIP 標頭／不屬任何市場的 localization cookie 都不改變同 URL 的輸出" do
+    get "/products/rose"
     base = response.body
-    get "/en-hk/products/rose", headers: { "Cookie" => "market=tw; locale=zh-Hant",
-                                           "X-Forwarded-For" => "203.0.113.77" }
+    get "/products/rose", headers: { "Cookie" => "market=tw; locale=zh-Hant; localization=TW",
+                                     "X-Forwarded-For" => "203.0.113.77" }
     expect(response.body).to eq(base)
   end
 
@@ -151,59 +151,88 @@ RSpec.describe "Storefront i18n", type: :request do
     ActsAsTenant.with_tenant(shop) do
       tw = Market.create!(name: "TW", handle: "tw", status: "active", market_type: "region")
       tw.market_regions.create!(country_code: "TW")
-      tw.market_web_presences.create!(subfolder_suffix: "xx", default_shop_locale: "en")
+      tw.market_web_presences.create!(subfolder_suffix: "tw", default_shop_locale: "en")
         .market_web_presence_locales.create!(locale_tag: "en", position: 0, is_market_default: false)
     end
-    get "/en-tw/" # ② 別市場的合法前綴 ⇒ 200
+    get "/en-tw/" # ② 別市場（子資料夾 presence）的合法前綴 ⇒ 200（D80：子資料夾市場全部語言帶 /{lang}-{suffix}）
     expect(response).to have_http_status(:ok)
 
     row = ActsAsTenant.with_tenant(shop) { presence.market_web_presence_locales.find_by!(locale_tag: "zh-Hant") }
     translation_count = ActsAsTenant.with_tenant(shop) { Translation.count }
     ActsAsTenant.with_tenant(shop) { row.close! }
-    get "/zh-hant-hk/" # ③ 關閉 ⇒ 404
+    get "/zh-hant/" # ③ 關閉 ⇒ 404
     expect(response).to have_http_status(:not_found)
     expect(ActsAsTenant.with_tenant(shop) { Translation.count }).to eq(translation_count) # ⑤ 不刪譯文
 
     ActsAsTenant.with_tenant(shop) { row.reopen! }
-    get "/zh-hant-hk/products/rose"
+    get "/zh-hant/products/rose"
     expect(response.body).to include("玫瑰精華") # 重開 ⇒ 譯文原樣回來
   end
 
   it "L1 /localization：切語言 ⇒ 302 到新前綴＋return_to 剝舊前綴；不支援語言落 presence 預設" do
     post "/localization", params: { language_code: "zh-Hant", country_code: "HK",
-                                    return_to: "/en-hk/products/rose" }
+                                    return_to: "/products/rose" }
     expect(response).to have_http_status(:found)
-    expect(response.headers["Location"]).to end_with("/zh-hant-hk/products/rose")
+    expect(response.headers["Location"]).to end_with("/zh-hant/products/rose")
 
-    post "/localization", params: { language_code: "fr", country_code: "HK", return_to: "/en-hk/" }
-    expect(response.headers["Location"]).to end_with("/en-hk/") # fr 未開放 ⇒ 落預設 en
+    post "/localization", params: { language_code: "fr", country_code: "HK", return_to: "/zh-hant/products/rose" }
+    expect(URI.parse(response.headers["Location"]).path).to eq("/zh-hant/products/rose") # fr 未開放 ⇒ 維持當前語言（return_to 前綴）
+    post "/localization", params: { language_code: "fr", country_code: "HK", return_to: "/" }
+    expect(URI.parse(response.headers["Location"]).path).to eq("/") # 無當前語言 ⇒ 落預設 en（無前綴）
   end
 
   it "L2 🔴 帶前綴形也收（RoutesDrop 吐帶前綴 action）；open redirect 擋（// 開頭回根）" do
-    post "/zh-hant-hk/localization", params: { language_code: "en", country_code: "HK",
-                                               return_to: "/zh-hant-hk/products/rose" }
+    post "/zh-hant/localization", params: { language_code: "en", country_code: "HK",
+                                               return_to: "/zh-hant/products/rose" }
     expect(response).to have_http_status(:found)
-    expect(response.headers["Location"]).to end_with("/en-hk/products/rose")
+    expect(URI.parse(response.headers["Location"]).path).to eq("/products/rose") # en＝預設 ⇒ 無前綴
 
     post "/localization", params: { language_code: "en", country_code: "HK", return_to: "//evil.example" }
     uri = URI.parse(response.headers["Location"])
     expect(uri.host.to_s).to satisfy { |h| h.empty? || h == "i18n-shop.lvh.me" }
-    expect(uri.path).to eq("/en-hk/")
+    expect(uri.path).to eq("/")
   end
 
-  it "L3 切國家：country_code=TW ⇒ 落 TW 市場 presence 的前綴" do
+  it "L3 切國家（有自己 presence 的市場）：country_code=TW ⇒ 302 到 TW 市場子資料夾 presence 的前綴" do
     ActsAsTenant.with_tenant(shop) do
       tw = Market.create!(name: "TW", handle: "tw", status: "active", market_type: "region")
       tw.market_regions.create!(country_code: "TW")
-      tw.market_web_presences.create!(subfolder_suffix: "xx", default_shop_locale: "en")
+      tw.market_web_presences.create!(subfolder_suffix: "tw", default_shop_locale: "en")
     end
-    post "/localization", params: { country_code: "TW", language_code: "en", return_to: "/en-hk/" }
+    post "/localization", params: { country_code: "TW", language_code: "en", return_to: "/" }
     expect(response.headers["Location"]).to end_with("/en-tw/")
+    expect(response.cookies["localization"]).to be_nil
   end
 
-  it "L4 帶前綴 cart 路由（主題 POST 形）：/en-hk/cart/add 同語義" do
+  it "L3b 🔴 切國家（共用主網域市場，D80 本尊形）：country_code=US ⇒ 寫 localization cookie、留在同語言 URL；同 URL 之後以美國市場渲染" do
+    ActsAsTenant.with_tenant(shop) do
+      us = Market.create!(name: "美國", handle: "us", status: "active", market_type: "region")
+      us.market_regions.create!(country_code: "US")
+    end
+    # 本尊（hoko.vip 2026-09-04）：country_code=US&return_to=/collections/all ⇒ 302 /collections/all ＋ Set-Cookie: localization=US; path=/
+    post "/localization", params: { country_code: "US", return_to: "/products/rose" }
+    expect(response).to have_http_status(:found)
+    expect(URI.parse(response.headers["Location"]).path).to eq("/products/rose")
+    expect(response.cookies["localization"]).to eq("US")
+    expect(response.headers["Set-Cookie"].to_s).to include("localization=US").and include("path=/")
+    # 本尊：country_code=JP&language_code=ja ⇒ 302 /ja/… ＋ Set-Cookie: localization=JP; path=/ja ⇒ 我方 zh-Hant 同形 path=/zh-hant
+    post "/localization", params: { country_code: "US", language_code: "zh-TW", return_to: "/products/rose" }
+    expect(URI.parse(response.headers["Location"]).path).to eq("/zh-hant/products/rose")
+    expect(response.headers["Set-Cookie"].to_s).to include("localization=US").and include("path=/zh-hant")
+
+    cookies.delete("localization") # 上面的 POST 已把 cookie 寫進整合測試的 cookie jar
+    get "/products/rose"
+    expect(response.body).to include(%(Shopify.country = "HK";)) # 無 cookie ⇒ primary 市場
+    get "/products/rose", headers: { "Cookie" => "localization=US" }
+    expect(response.body).to include(%(Shopify.country = "US";)) # cookie ⇒ 美國市場（頁快取 key 含 market，不互汙）
+    expect(response.body).to include(%(Shopify.locale = "en")) # 語言仍只由 URL 決定
+    get "/products/rose", headers: { "Cookie" => "localization=XX" }
+    expect(response.body).to include(%(Shopify.country = "HK";)) # 不屬任何市場的國碼 ⇒ 原樣
+  end
+
+  it "L4 帶前綴 cart 路由（主題 POST 形）：/zh-hant/cart/add 同語義" do
     variant = ActsAsTenant.with_tenant(shop) { product.product_variants.sole }
-    post "/en-hk/cart/add", params: { id: variant.id, quantity: 1 }
+    post "/zh-hant/cart/add", params: { id: variant.id, quantity: 1 }
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body["items"].sole["variant_id"]).to eq(variant.id)
   end

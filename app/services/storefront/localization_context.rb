@@ -27,10 +27,12 @@ module Storefront
   module LocalizationContext
     module_function
 
-    # @param web_presence [MarketWebPresence]
+    # @param web_presence [MarketWebPresence] URL 身分所屬的 presence（語言集合／root_url 來源）
     # @param locale_tag [String] 當前語言
+    # @param market [Market, nil] 生效市場（D80：買家選國 cookie 覆寫後；nil ⇒ presence 的市場）
+    # @param country_code [String, nil] 買家選定國家（nil ⇒ 市場第一個 region）
     # @return [ThemeEngine::LocalizationDrop]
-    def drop(web_presence:, locale_tag:)
+    def drop(web_presence:, locale_tag:, market: nil, country_code: nil)
       shop = web_presence.shop
       languages = languages_for(web_presence)
       current_code = ThemeEngine::LocaleTags.shopify_code(locale_tag)
@@ -38,11 +40,11 @@ module Storefront
                 { "iso_code" => current_code,
                   "endonym_name" => PlatformLocale.where(tag: locale_tag).pick(:endonym) || locale_tag,
                   "primary" => false,
-                  "root_url" => Markets::UrlPrefix.for(web_presence, locale_tag) }
+                  "root_url" => root_url_for(web_presence, locale_tag) }
 
-      market = web_presence.market
+      market ||= web_presence.market
       countries = available_countries(web_presence, locale_tag)
-      country_code = market.region_country_codes.first
+      country_code ||= market.region_country_codes.first
       country = countries.find { |c| c["iso_code"] == country_code } ||
                 (country_code && country_hash(country_code, market, languages, shop, locale_tag))
 
@@ -64,9 +66,14 @@ module Storefront
           "iso_code" => ThemeEngine::LocaleTags.shopify_code(row.locale_tag), # 本尊碼形（zh-Hans ⇒ zh-CN）
           "endonym_name" => endonyms.fetch(row.locale_tag, row.locale_tag),
           "primary" => row.is_market_default,
-          "root_url" => Markets::UrlPrefix.for(web_presence, row.locale_tag)
+          "root_url" => root_url_for(web_presence, row.locale_tag)
         }
       end
+    end
+
+    # language.root_url（D80）：預設語言於共用網域無前綴 ⇒ "/"（本尊 `window.routes.root_url = "/"`；其他語言 "/zh-hant"）。
+    def root_url_for(web_presence, locale_tag)
+      Markets::UrlPrefix.for(web_presence, locale_tag).presence || "/"
     end
 
     # 與 `web_presence` 同一 effective domain 的 active region 市場 ⇒ regions 聯集（同國只列一次，先命中的市場為準），

@@ -25,7 +25,7 @@ RSpec.describe "Storefront Section Rendering API on any page", type: :request do
   end
 
   it "SR1 🔴 section_id 回單段 HTML（無版面）" do
-    get "/en-hk/?section_id=hero"
+    get "/?section_id=hero"
     expect(response).to have_http_status(:ok)
     expect(response.body).to start_with('<div id="shopify-section-template--index__hero" class="shopify-section">')
     expect(response.body).not_to include("<html")
@@ -33,35 +33,35 @@ RSpec.describe "Storefront Section Rendering API on any page", type: :request do
   end
 
   it "SR2 🔴 任何頁面 URL 都可：/search?section_id=header 回群組段" do
-    get "/en-hk/search?section_id=header"
+    get "/search?section_id=header"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('id="shopify-section-sections--header-group__header"')
     expect(response.body).not_to include("<html")
   end
 
   it "SR3 🔴 sections 回 JSON（逗號與陣列形同義）" do
-    get "/en-hk/?sections=hero,header"
+    get "/?sections=hero,header"
     expect(response).to have_http_status(:ok)
     expect(response.media_type).to eq("application/json")
     json = response.parsed_body
     expect(json.keys).to match_array(%w[hero header])
     expect(json["hero"]).to include("shopify-section-template--index__hero")
 
-    get "/en-hk/?sections[]=hero&sections[]=header"
+    get "/?sections[]=hero&sections[]=header"
     expect(response.parsed_body.keys).to match_array(%w[hero header])
   end
 
   it "SR5 🔴 完整 id 帶宿主模板：在 /search 上請求 template--index__hero 也回該段（Ella recently-viewed 打 /search 取商品頁段）" do
-    get "/en-hk/search?section_id=template--index__hero"
+    get "/search?section_id=template--index__hero"
     expect(response).to have_http_status(:ok)
     expect(response.body).to start_with('<div id="shopify-section-template--index__hero" class="shopify-section">')
-    get "/en-hk/search?section_id=sections--header-group__header"
+    get "/search?section_id=sections--header-group__header"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('id="shopify-section-sections--header-group__header"')
   end
 
   it "SR4 🔴 不存在的 section ⇒ 404" do
-    get "/en-hk/?section_id=zzz-none"
+    get "/?section_id=zzz-none"
     expect(response).to have_http_status(:not_found)
   end
 end

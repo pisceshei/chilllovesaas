@@ -5,7 +5,7 @@ require "rails_helper"
 # SEO 面（包 35；62 §A/§B/§C/§D/§H/§I——REG／SEO 驗收的可請求子集）。
 #
 # 🔴 假綠殺手（鐵律 20.2⑤）：
-#   SEO2 hreflang 自指＋雙向＋恆帶地區（殺：矩陣按頁客製或退回裸碼）
+#   SEO2 hreflang 自指＋雙向＋語言碼（D80：殺：加回地區碼 en-HK／矩陣按頁客製）
 #   SEO3 三處價格同源（殺：JSON-LD 從 money 字串逆向 parse——第二價格來源）
 #   SEO4 UNLISTED noindex＋逐面排除（殺：只擋 sitemap 漏 hreflang/jsonld——noindex 失效）
 #   SEO6 sitemap 只列 discoverable（殺：用 purchasable——UNLISTED 直接進索引）
@@ -42,32 +42,33 @@ RSpec.describe "Storefront SEO", type: :request do
   end
 
   it "SEO1 canonical：絕對、自引、去 variant 參數；分頁 page 參數保留（62 §B.1）" do
-    get "/en-hk/products/rose?variant=#{variant.id}&utm_source=x"
+    get "/products/rose?variant=#{variant.id}&utm_source=x"
     expect(response.body)
-      .to include(%(<link rel="canonical" href="https://seo-shop.lvh.me/en-hk/products/rose">))
+      .to include(%(<link rel="canonical" href="https://seo-shop.lvh.me/products/rose">))
 
-    get "/en-hk/collections/nope" # 404 頁不出 canonical（不是內容頁）
+    get "/collections/nope" # 404 頁不出 canonical（不是內容頁）
     expect(response.body).not_to include("rel=\"canonical\"")
   end
 
-  it "SEO2 🔴 hreflang：自指＋雙向（兩語言頁同一集合）＋恆帶地區＋x-default 指預設前綴" do
-    get "/en-hk/products/rose"
+  it "SEO2 🔴 hreflang：自指＋雙向（兩語言頁同一集合）＋語言碼無地區＋x-default 指預設語言的無前綴 URL（D80 本尊形）" do
+    get "/products/rose"
     en_links = response.body.scan(/<link rel="alternate" hreflang="[^"]+" href="[^"]+">/)
     expect(en_links).to include(
-      %(<link rel="alternate" hreflang="en-HK" href="https://seo-shop.lvh.me/en-hk/products/rose">),
-      %(<link rel="alternate" hreflang="zh-Hant-HK" href="https://seo-shop.lvh.me/zh-hant-hk/products/rose">),
-      %(<link rel="alternate" hreflang="x-default" href="https://seo-shop.lvh.me/en-hk/products/rose">)
+      %(<link rel="alternate" hreflang="en" href="https://seo-shop.lvh.me/products/rose">),
+      %(<link rel="alternate" hreflang="zh-Hant" href="https://seo-shop.lvh.me/zh-hant/products/rose">),
+      %(<link rel="alternate" hreflang="x-default" href="https://seo-shop.lvh.me/products/rose">)
     )
-    expect(response.body).not_to match(/hreflang="(en|zh-Hant)"/) # 裸語言碼＝紅燈（62 §I.2）
+    expect(en_links.size).to eq(3)
+    expect(response.body).not_to match(/hreflang="[a-zA-Z-]+-[A-Z]{2}"/) # 共用網域零地區碼（本尊 hoko.vip §G23）
     expect(response.body).not_to include("zh-Hans") # 未發布語言不進矩陣（62 §I.1 open_locales）
 
-    get "/zh-hant-hk/products/rose"
+    get "/zh-hant/products/rose"
     zh_links = response.body.scan(/<link rel="alternate" hreflang="[^"]+" href="[^"]+">/)
     expect(zh_links).to eq(en_links) # 同一函式同一集合＝天然雙向（62 §I.1 不變量 2）
   end
 
   it "SEO3 🔴 JSON-LD：price 由 cents 直出（兩位小數字串）、priceCurrency=presentment；與可見價同源" do
-    get "/en-hk/products/rose"
+    get "/products/rose"
     json = response.body[%r{<script type="application/ld\+json">(.*?)</script>}m, 1]
     data = JSON.parse(json)
     offer = data["offers"].first
@@ -80,7 +81,7 @@ RSpec.describe "Storefront SEO", type: :request do
 
   it "SEO4 🔴 UNLISTED：直連 200＋meta noindex；無 hreflang、無 JSON-LD offer（逐面排除）" do
     ActsAsTenant.with_tenant(shop) { variant.product.update!(status: "unlisted") }
-    get "/en-hk/products/rose"
+    get "/products/rose"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include(%(<meta name="robots" content="noindex,nofollow">))
     expect(response.body).not_to include("hreflang=")
@@ -94,7 +95,7 @@ RSpec.describe "Storefront SEO", type: :request do
       .and include("Disallow: /account").and include("Disallow: /search")
       .and include("Sitemap: https://seo-shop.lvh.me/sitemap.xml")
 
-    get "/en-hk/products/rose"
+    get "/products/rose"
     expect(response.headers["X-Robots-Tag"]).to be_nil
   end
 
@@ -110,9 +111,10 @@ RSpec.describe "Storefront SEO", type: :request do
     expect(response.body).to include("https://seo-shop.lvh.me/sitemap_products_1.xml")
 
     get "/sitemap_products_1.xml"
-    expect(response.body).to include("<loc>https://seo-shop.lvh.me/en-hk/products/rose</loc>")
-    expect(response.body).to include("<loc>https://seo-shop.lvh.me/zh-hant-hk/products/rose</loc>")
-    expect(response.body).to include(%(hreflang="zh-Hant-HK"))
+    expect(response.body).to include("<loc>https://seo-shop.lvh.me/products/rose</loc>")
+    expect(response.body).to include("<loc>https://seo-shop.lvh.me/zh-hant/products/rose</loc>")
+    expect(response.body).to include(%(hreflang="zh-Hant"))
+    expect(response.body).not_to include(%(hreflang="zh-Hant-HK"))
     expect(response.body).not_to include("hidden")
     expect(response.body).not_to include("draftp")
   end
@@ -134,7 +136,7 @@ RSpec.describe "Storefront SEO", type: :request do
       variant.inventory_item.inventory_levels.update_all(available: 0)
       variant.update!(inventory_policy: "continue")
     end
-    get "/en-hk/products/rose"
+    get "/products/rose"
     json = response.body[%r{<script type="application/ld\+json">(.*?)</script>}m, 1]
     expect(JSON.parse(json)["offers"].first["availability"]).to eq("https://schema.org/BackOrder")
   end

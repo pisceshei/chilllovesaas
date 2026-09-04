@@ -18,7 +18,7 @@ module ThemeEngine
     end
 
     def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil,
-                   cart_json: nil, asset_base: nil, locale: nil, web_presence: nil)
+                   cart_json: nil, asset_base: nil, locale: nil, web_presence: nil, market: nil, country_code: nil)
       @theme, @shop, @publication = theme, shop, publication
       @url_prefix, @design_mode, @host = url_prefix, design_mode, host
       @source = source
@@ -26,6 +26,9 @@ module ThemeEngine
       @asset_base = asset_base
       @locale = locale
       @web_presence = web_presence
+      # D80：生效市場／買家選定國家（cookie 覆寫後；nil ⇒ presence 的市場／其第一個 region）。
+      @market = market || web_presence&.market
+      @country_code = country_code || @market&.region_country_codes&.first
     end
 
     # @param path [String] 前綴已剝除的站內路徑（如 "/products/rose-serum"）
@@ -64,6 +67,7 @@ module ThemeEngine
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
                             asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
+                            market: @market, country_code: @country_code,
                             publication: @publication, params: @params,
                             draft_settings: @draft_settings, draft_sections: @draft_sections)
       template_key = template_key_for(runtime, page_type, record)
@@ -104,7 +108,7 @@ module ThemeEngine
           shop: @shop, theme: @theme, locale: ThemeEngine::LocaleTags.shopify_code(@locale),
           currency: @shop.store_currency, root: root_prefix_path,
           design_mode: @design_mode,
-          country: @web_presence&.market&.region_country_codes&.first,
+          country: @country_code, # D80：買家選國 cookie 覆寫後的國碼（本尊 GET / 帶 localization=US ⇒ Shopify.country = "US"）
           schema_name: runtime.theme_info["theme_name"], schema_version: runtime.theme_info["theme_version"],
           host: @host) + "</head>"
       end
@@ -330,6 +334,7 @@ module ThemeEngine
                             design_mode: @design_mode, page_type: page_type,
                             path: nil, host: @host, source: @source, cart_json: @cart_json,
                             asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
+                            market: @market, country_code: @country_code,
                             publication: @publication, params: @params)
       assigns.each { |k, v| runtime.assign(k, v) }
       @extra_assigns&.each { |k, v| runtime.assign(k, v) }

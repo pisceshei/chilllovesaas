@@ -3,17 +3,17 @@
 module Storefront
   # 公開店面頁面（包 33 後半；六步方案步 2）。
   #
-  # ①路由紀律（67 §F.1(b)(c)；limits `i18n.locale_prefix.*`）：
-  #   - 根路徑與無前綴路徑 ⇒ **302** 到預設 (market, locale) 前綴、保留路徑與 query
-  #     （root_redirect_status: 302——不是 301，預設市場會變）。
-  #   - 第一段長得像前綴（FORMAT）⇒ 查 `Markets::PrefixIndex`；未命中 ⇒ 🔴 404
-  #     （unknown_prefix_status／unopened_prefix_status——§A.5(c) 情形 1/3/4 全走這裡）。
+  # ①路由紀律（67 §F.1(b)(c)；limits `i18n.locale_prefix.*`；🔴 2026-09-04 D80 方案 1 使用者裁定＝本尊形）：
+  #   - 根路徑與無前綴路徑 ⇒ **直接**以店預設 (market, locale) 渲染（本尊 `/` 200、`lang="zh-CN"`；不再 302）。
+  #   - 第一段長得像前綴（SEGMENT 粗篩）⇒ 查 `Markets::PrefixIndex`；命中 ⇒ 剝前綴、以該 (market, locale) 渲染；
+  #     未命中 ⇒ 整條路徑當無前綴路徑（本尊 `/zh-hans/` 404＝沒有這個頁面，`/fr-hk/` 同理；不是「前綴查無」的特別碼）。
+  #   - 共用主網域上的市場再由買家選國 cookie 覆寫（BaseController ③）；頁快取 key 含 market ⇒ 不同市場不互汙。
   # ②頁級快取（63 §D.3）＝`Storefront::PageCache`；🔴 渲染快取頁不帶 cart_json
   #   （14 §F1-4 個人化不進頁快取——買家 cart 態由 /cart.js 端點取）。
   # ③🔴 B13：robots 全站 Disallow ＋ 頁面 X-Robots-Tag noindex——SEO 面（hreflang／
   #   sitemap／開放索引）是步 4（包 35）的射程，開放時兩者一起摘除。
   class PagesController < BaseController
-    before_action :require_published_theme!, except: %i[robots root] # root 只重導，不需主題
+    before_action :require_published_theme!, except: %i[robots]
 
     # query 白名單（進快取 key 的維度；未列參數不參與 key＝同一快取頁）。
     # view＝?view= 替代模板（步 12）——不進 key 會讓替代模板頁污染預設頁快取。
@@ -33,22 +33,33 @@ module Storefront
       render plain: lines.join("\n") + "\n", content_type: "text/plain"
     end
 
-    # GET /（＝無前綴根路徑）
+    # GET /（＝無前綴根路徑；D80 起直接渲染首頁，不重導）
     def root
-      redirect_to_default_prefix("/")
+      hit = default_hit
+      return head :not_found if hit.nil?
+
+      serve(hit, "/")
     end
 
     # GET /*path
     def show
       first, rest = split_path
-      unless first.match?(prefix_shape)
-        return redirect_to_default_prefix(request.path)
+      hit = first.match?(prefix_shape) ? locale_hit(first) : nil
+      if hit
+        path = rest
+      else
+        hit = default_hit
+        return head :not_found if hit.nil?
+
+        path = request.path.chomp("/").presence || "/"
       end
+      serve(hit, path)
+    end
 
-      hit = Markets::PrefixIndex.resolve(shop: current_shop, domain: current_domain,
-                                         first_segment: first)
-      return head :not_found if hit.nil?
+    private
 
+    # 以 (market, presence, locale) 渲染前綴已剝的站內路徑。
+    def serve(hit, rest)
       # G6 打磨包：/cart 是個人化頁——**繞過頁快取**、以買家 cookie 的真車渲染
       # （14 §F1-4「個人化不進頁快取」＝不快取本頁，而不是快取一台空車）。
       # E12：Section Rendering API 在**任何頁面**（官方 ajax/section-rendering，取證 2026-09-04："Sections rendered in response to
@@ -87,7 +98,7 @@ module Storefront
       end
 
       # 301 引擎（包 36）：掛在 404 之前、活頁面先贏（渲染 200 就不查表）。
-      # 查表用無前綴正規路徑，命中後**保留前綴** 301（/en-hk/products/舊 ⇒ /en-hk/products/新）。
+      # 查表用無前綴正規路徑，命中後**保留前綴** 301（/zh-hant/products/舊 ⇒ /zh-hant/products/新；預設語言無前綴）。
       if payload["status"] == 404
         redirect = ActsAsTenant.with_tenant(current_shop) do
           RedirectResolver.resolve(shop: current_shop, path: rest)
@@ -112,10 +123,8 @@ module Storefront
       render html: payload["html"].html_safe, status: payload["status"], layout: false
     end
 
-    private
-
-    # 前綴形＝Markets::UrlPrefix::SEGMENT（同一來源，不抄第二份）。
-    # 長得像前綴但查無 ⇒ 404（上面 show）；不像前綴（products 等一般路徑）⇒ 302 補預設前綴。
+    # 前綴形＝Markets::UrlPrefix::SEGMENT（同一來源，不抄第二份）——只是省一次查表的粗篩：
+    # 像前綴就查 PrefixIndex，查無或不像 ⇒ 整條路徑當無前綴路徑（D80）。
     def prefix_shape
       /\A#{Markets::UrlPrefix::SEGMENT.source}\z/
     end
@@ -123,25 +132,6 @@ module Storefront
     def split_path
       segments = request.path.delete_prefix("/").split("/", 2)
       [ segments[0].to_s.downcase, "/#{segments[1]}".chomp("/").presence || "/" ]
-    end
-
-    def redirect_to_default_prefix(path)
-      prefix = default_prefix
-      return head :not_found if prefix.nil?
-
-      target = path == "/" ? "#{prefix}/" : "#{prefix}#{path}"
-      target += "?#{request.query_string}" if request.query_string.present?
-      redirect_to target, status: Limits.fetch(:i18n, :locale_prefix, :root_redirect_status),
-                          allow_other_host: false
-    end
-
-    # 預設落點＝primary market 的 presence × 其預設 locale（67 §F.1(b) 根路徑處置）；E13 起單一真相在
-    # `Markets::PrefixIndex.default_hit`（編輯器預覽與無前綴 SRA 端點同一落點）。
-    def default_prefix
-      hit = Markets::PrefixIndex.default_hit(shop: current_shop) or return nil
-      Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag)
-    rescue Markets::UrlPrefix::Error
-      nil
     end
 
     def cache_params
@@ -180,6 +170,7 @@ module Storefront
         url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
         host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
         web_presence: hit.web_presence, # localization 真值（切換器只列開放∧已發布——67 §F.2）
+        market: hit.market, country_code: hit.effective_country_code, # D80：買家選國覆寫後的市場／國家
         cart_json: # 🔴 個人化不進頁快取（14 §F1-4）——只有繞過快取的 /cart 會傳非 nil
       ).render(rest, params: cache_params.merge(extra))
     end

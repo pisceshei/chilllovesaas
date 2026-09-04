@@ -39,7 +39,7 @@ RSpec.describe "Storefront theme preview pinning", type: :request do
   end
 
   it "TP1 🔴 帶 preview_theme_id ⇒ 渲染草稿主題＋預覽列＋no-store/noindex；之後不帶參數仍 sticky" do
-    get "/en-hk/?preview_theme_id=#{draft_theme.id}"
+    get "/?preview_theme_id=#{draft_theme.id}"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("PREVIEW-MINI-LAYOUT")      # 🔴 渲染的是草稿主題
     expect(response.body).to include("cl-preview-bar")           # 預覽列
@@ -47,20 +47,20 @@ RSpec.describe "Storefront theme preview pinning", type: :request do
     expect(response.headers["Cache-Control"]).to include("no-store")
     expect(response.headers["X-Robots-Tag"]).to include("noindex")
 
-    get "/en-hk/" # 🔴 sticky：不帶參數照樣預覽（83 §12.3）
+    get "/" # 🔴 sticky：不帶參數照樣預覽（83 §12.3）
     expect(response.body).to include("PREVIEW-MINI-LAYOUT")
     expect(response.body).to include("cl-preview-bar")
   end
 
   it "TP2 🔴 復位法：帶正式主題 id ⇒ 解除釘選；之後回正式主題、無預覽列" do
-    get "/en-hk/?preview_theme_id=#{draft_theme.id}"
+    get "/?preview_theme_id=#{draft_theme.id}"
     expect(response.body).to include("PREVIEW-MINI-LAYOUT")
 
-    get "/en-hk/?preview_theme_id=#{live_theme.id}" # 復位
+    get "/?preview_theme_id=#{live_theme.id}" # 復位
     expect(response.body).not_to include("PREVIEW-MINI-LAYOUT")
     expect(response.body).not_to include("cl-preview-bar")
 
-    get "/en-hk/" # 解除後不 sticky
+    get "/" # 解除後不 sticky
     expect(response.body).not_to include("PREVIEW-MINI-LAYOUT")
   end
 
@@ -71,10 +71,10 @@ RSpec.describe "Storefront theme preview pinning", type: :request do
                     role: "draft", source: "first_party", license_attested: true)
     end
 
-    get "/en-hk/?preview_theme_id=999999999"
+    get "/?preview_theme_id=999999999"
     expect(response.body).not_to include("cl-preview-bar")
 
-    get "/en-hk/?preview_theme_id=#{other_theme.id}" # 跨租戶 ⇒ with_tenant 查無
+    get "/?preview_theme_id=#{other_theme.id}" # 跨租戶 ⇒ with_tenant 查無
     expect(response.body).not_to include("PREVIEW-MINI-LAYOUT")
     expect(response.body).not_to include("cl-preview-bar")
   end
@@ -84,22 +84,22 @@ RSpec.describe "Storefront theme preview pinning", type: :request do
     expect(response.body).not_to include("PREVIEW-MINI-CSS")
     expect(response.headers["Cache-Control"]).to include("max-age=300")
 
-    get "/en-hk/?preview_theme_id=#{draft_theme.id}" # 釘上（cookie）
+    get "/?preview_theme_id=#{draft_theme.id}" # 釘上（cookie）
     get "/theme-assets/site.css"
     expect(response.body).to include("PREVIEW-MINI-CSS")         # 🔴 草稿主題的資產
     expect(response.headers["Cache-Control"]).to include("no-store")
   end
 
   it "TP5 🔴 預覽不進頁快取：預覽期間不寫入；解除後正式頁不含預覽痕跡" do
-    get "/en-hk/" # 正式頁進快取
+    get "/" # 正式頁進快取
     expect(response.body).not_to include("cl-preview-bar")
 
-    get "/en-hk/?preview_theme_id=#{draft_theme.id}"
-    get "/en-hk/" # sticky 預覽——若命中正式頁快取＝假象
+    get "/?preview_theme_id=#{draft_theme.id}"
+    get "/" # sticky 預覽——若命中正式頁快取＝假象
     expect(response.body).to include("PREVIEW-MINI-LAYOUT")
 
-    get "/en-hk/?preview_theme_id=#{live_theme.id}" # 復位
-    get "/en-hk/"
+    get "/?preview_theme_id=#{live_theme.id}" # 復位
+    get "/"
     expect(response.body).not_to include("PREVIEW-MINI-LAYOUT")  # 快取未被預覽寫髒
     expect(response.body).not_to include("cl-preview-bar")
   end

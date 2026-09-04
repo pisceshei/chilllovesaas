@@ -3316,29 +3316,30 @@ seo:
     #    **不得**借用 zh-TW 表示繁體（那是地區碼不是字體）；TW 若啟用是 zh-Hant-TW，由 market 推導。
     #    本鍵是**格式範例**不是市場清單——SEO 層不得出現任何寫死的國別清單。
     script_subtag_example: zh-Hant
-    # 🔴 碼粒度（2026-08-13 裁定，62 §I.2／§I.2-1 明知偏離登記）：**恆帶 ISO 3166-1 地區**，
-    #    多國市場**逐國展開**成 N 個碼、全部指向同一 URL；全站輸出不得出現裸語言碼（x-default 除外，
-    #    驗證＝62 §O REG-4 的 CI 紅燈掃描）。
-    # 依 62 §L 處方修正（2026-08-13，71-R0-V1 結案）：原鍵
-    #   `region_qualified_when_single_country_market: true`（註釋「單國市場 ⇒ 語言-國家；多國市場 ⇒ 語言碼」）
-    # ＝裁定前語義——鍵名把「單國市場」寫進去，留著會讓人以為多國市場還有另一種行為。
-    # 比照 D-2：改名不留別名。原出處（help/dev 的 Shopify 行為）降為被偏離對象，見 §I.2-1。
-    always_region_qualified: true
-    multi_country_market_expands_per_country: true
-    # 裸碼出現在我方輸出 ⇒ CI 紅燈（62 §O REG-4 掃描 <head> 與 sitemap；x-default 除外）。
-    bare_language_code_forbidden: true
+    # 🔴 碼粒度（D80 方案 1，2026-09-04 使用者裁定；推翻 2026-08-13「恆帶地區」）：
+    #    共用網域 presence ⇒ 一語言一碼（zh-Hans／zh-Hant／en／fr／ja），市場不進 hreflang——本尊 hoko.vip 五語言
+    #    五市場每頁只出六條（含 x-default），零地區碼（external-facts §G23）；
+    #    子資料夾 presence ⇒ 逐國展開 {lang[-Script]-REGION}（本尊形未取得，V，91 §3.84）。
+    # 沿革：2026-08-13 依 62 §L 處方改名 `always_region_qualified: true`＋`bare_language_code_forbidden: true`
+    #   （原鍵 `region_qualified_when_single_country_market`）；D80 再改為下列三鍵，比照 D-2 改名不留別名。
+    always_region_qualified: false
+    shared_domain_code: language_only          # zh-Hant／en（language[-Script]，locale 自帶 region 不進碼）
+    subfolder_presence_expands_per_country: true
+    # 裸語言碼是共用網域的正常輸出（62 §O REG-4 的紅燈掃描已隨 D80 撤除）。
+    bare_language_code_forbidden: false
     # 殘留衝突（同一市場多 presence 掛同碼）解析：先自身 presence、再祖先（62 §I.3(c) 步驟 2——
     # 原 specificity_stack 比市場，恆帶地區後衝突兩邊是同一市場 ⇒ 比不出東西，換這把尺）。
     multi_presence_resolution: nearest_own_then_ancestor
     # 丟棄決定必須逐頁相同，否則 hreflang 雙向性破裂（62 §O REG-2b）。
     dedupe_must_be_page_independent: true
-    # 逐國展開超上限時：部分標註＋blocking lint。🔴 不得退回裸碼（裸碼已被禁）。
+    # 子資料夾 presence 逐國展開超上限時：部分標註＋blocking lint（不自動退回語言碼——形態由 presence 決定，不由數量）。
     over_limit_action: emit_partial_and_lint
     # 🔴 認得 ≠ 允許輸出：驗證器巡檢外部標註要能認裸碼（報 seo_lint_findings）；
     #    我方自己產生裸碼是 CI 紅燈。兩個檢查點、兩種嚴重度，不得合併成一個布林（62 §I.4）。
     validator_accepts_bare_code_for_audit_only: true
-    # x-default 指「預設 (market, locale) 的帶前綴 URL」——根路徑已非內容頁（67 §F.1(b)），不得指 /。
-    x_default_target: default_market_locale_prefixed_url
+    # x-default 指「主網域 primary market 預設語言的 URL」——D80 後預設語言無前綴 ⇒ 就是無前綴同路徑（本尊每頁
+    # x-default 指無前綴路徑，§G23）。
+    x_default_target: default_market_locale_url
     # x-default 恰一個，指主網域上 primary market 預設語言的對應 URL。（help）
     x_default_required: true
     # 碼衝突（兩個多國市場同語言）的解析：先展開為逐國碼，超過此上限則依 market.specificity_stack 取捨。
@@ -4023,22 +4024,30 @@ i18n:
   # 🔴 裁定若改：本組、seo.hreflang.always_region_qualified／bare_language_code_forbidden、
   #    67 §F.1 必須連帶重審——單獨改任何一個都是半套（62 §I.2-1「裁定若改」欄）。
   locale_prefix:
-    always_region_qualified: true
-    bare_language_prefix_forbidden: true      # /en 這種裸語言前綴一律不存在
-    format: "/{lang(2-3)}[-{script(4)}]-{region(2)}"   # 正則 ^/[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}$
+    # 🔴 D80 方案 1（2026-09-04 使用者裁定；docs/DECISIONS.md D80、docs/dev/external-facts.md §G23）：改回本尊形。
+    #   2026-08-13「恆帶地區、恆有前綴」裁定被推翻——原鍵 always_region_qualified／bare_language_prefix_forbidden／
+    #   root_path_behavior: redirect_to_default_prefix／root_redirect_status／multi_country_region_source 隨之刪除
+    #   （比照 D-2：改名不留別名；沿革見 67 §F.1(b)）。
+    always_region_qualified: false
+    default_locale_unprefixed: true            # 共用網域的預設語言無前綴（本尊 / 200 lang=zh-CN；/zh-hans/ 404）
+    # 正則 ^(|/[a-z]{2,3}(-[a-z]{4})?(-[a-z]{2})?)$：共用網域 /{lang[-script]}；子資料夾市場 /{lang[-script]}-{suffix}
+    format: "|/{lang(2-3)}[-{script(4)}][-{region(2)}]"
     case: lowercase                            # 🔴 與 hreflang 碼大小寫不同、不得互相借用（62 §I.2）
-    # 根路徑不是內容頁：302 到預設 (market, locale) 前綴（不是 301——預設市場會變）。
-    # 🔴 爬蟲不豁免此重導（它與 62 §K.2 地區重導是兩件事）。⚠ V-221（我方推導，非裁定明文）。
-    root_path_behavior: redirect_to_default_prefix
-    root_redirect_status: 302
-    # 🔴 前綴 ≡ (market, locale) 身分（67 §F.1(c)）：路由＝剝第一段查表，未命中一律 404。
+    # 根路徑與無前綴路徑直接以店預設 (market, locale) 服務（本尊 `/` 200；不 302）。
+    root_path_behavior: serve_default_market_locale
+    # 🔴 前綴 ≡ (market, locale) 身分（67 §F.1(c)）：路由＝剝第一段查表；未命中 ⇒ 整條路徑當無前綴路徑
+    #    （本尊 /zh-hans/、/fr-hk/ 404＝沒有這個頁面，不是特別的「前綴查無」狀態碼）。
     prefix_is_market_locale_identity: true
-    market_determined_by: url_only             # 🔴 不得從 GeoIP／cookie 推市場（同一 URL 恆同一市場）
-    unknown_prefix_status: 404
+    unknown_prefix_behavior: treat_as_unprefixed_path
+    # 市場來源兩層：URL 前綴命中的 presence；共用主網域上沒有自己 presence 的市場由買家選國 cookie 覆寫
+    # （本尊 POST /localization country_code=US ⇒ Set-Cookie: localization=US ⇒ 同 URL Shopify.country = "US"）。
+    # 🔴 語言仍只由 URL 決定；GeoIP 不參與（62 §K.2 的一次性重導建議另計）。
+    market_determined_by: url_then_buyer_selection
+    buyer_selection_cookie: localization       # 值＝ISO 3166-1 alpha-2；path＝所選語言的根路徑（本尊 path=/ja）
     # 🔴 前綴輸出永遠不得被當成 hreflang 值（兩者驗證器無交集，67 §F.1(a)；SF-9 型別分離）。
     never_reused_as_hreflang_code: true
-    # 多國市場的 region 段來源＝presence 的 subfolder_suffix（暫案 C）。⚠ V-225 待裁定。
-    multi_country_region_source: web_presence_subfolder_suffix
+    # 子資料夾市場的 region 段＝presence 的 subfolder_suffix 本身（本尊 subfolder 是商家設定的識別字；官方例 example.com/fr-ca）。
+    subfolder_region_source: web_presence_subfolder_suffix
 
   # --- per-market 語言白名單（67 §A.5／§C.8；2026-08-13 使用者裁定）--------------
   market_locales:

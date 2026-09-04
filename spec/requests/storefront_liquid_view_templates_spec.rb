@@ -29,7 +29,7 @@ RSpec.describe "Storefront liquid view templates", type: :request do
   end
 
   it "LV1 🔴 ?view= 的 .liquid 模板＋{% layout none %} ⇒ 片段直出（無 theme.liquid 包裹）" do
-    get "/en-hk/cart?view=ajax_side_cart"
+    get "/cart?view=ajax_side_cart"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include(%(id="side-cart"))
     expect(response.body).to include("item_count=0") # cart 全域照常供給
@@ -39,23 +39,23 @@ RSpec.describe "Storefront liquid view templates", type: :request do
   end
 
   it "LV2 {% layout 'bare' %} ⇒ 指名 layout 包裹；預設 cart 頁不受影響" do
-    get "/en-hk/cart?view=slim"
+    get "/cart?view=slim"
     expect(response.body).to include(%(id="bare-layout"))
     expect(response.body).to include(%(id="slim-cart"))
     expect(response.body).not_to include("群組頁首") # bare layout 無群組帶
 
-    get "/en-hk/cart"
+    get "/cart"
     expect(response.body).to include("shopify-section-template--cart__main") # 預設 JSON 模板照舊
     expect(response.body).not_to include("side-cart")
   end
 
   it "LV3 🔴 view 片段與整頁互不污染（頁快取鍵含 view——既有 CACHE_PARAMS 面）" do
-    get "/en-hk/cart" # cart 本就 no-store；用 collection 驗快取面不適用——
+    get "/cart" # cart 本就 no-store；用 collection 驗快取面不適用——
     # cart no-store ⇒ 本格改驗兩請求形態彼此正確（回歸護欄）
     expect(response.body).to include("shopify-section-template--cart__main")
-    get "/en-hk/cart?view=ajax_side_cart"
+    get "/cart?view=ajax_side_cart"
     expect(response.body).to include(%(id="side-cart"))
-    get "/en-hk/cart"
+    get "/cart"
     expect(response.body).to include("shopify-section-template--cart__main")
   end
 end

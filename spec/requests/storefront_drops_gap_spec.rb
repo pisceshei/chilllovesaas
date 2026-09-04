@@ -61,18 +61,18 @@ RSpec.describe "Storefront drops gap (collection/blog/page/article/product)", ty
   def publication = ActsAsTenant.with_tenant(shop) { Publication.online_store! }
 
   it "G1 🔴 /collections/vendors?q=／types?q=：title＝q、只列該 vendor／type 的商品；無 q ⇒ 全商品" do
-    get "/en-hk/collections/vendors?q=Acme"
+    get "/collections/vendors?q=Acme"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<h1 id="ctitle">Acme</h1>')
     expect(response.body).to include('data-h="acme-tee"')
     expect(response.body).not_to include('data-h="bolt-mug"')
 
-    get "/en-hk/collections/types?q=Mug"
+    get "/collections/types?q=Mug"
     expect(response.body).to include('<h1 id="ctitle">Mug</h1>')
     expect(response.body).to include('data-h="bolt-mug"')
     expect(response.body).not_to include('data-h="acme-tee"')
 
-    get "/en-hk/collections/vendors"
+    get "/collections/vendors"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<h1 id="ctitle">Products</h1>').and include('data-h="acme-tee"').and include('data-h="bolt-mug"')
   end
@@ -107,12 +107,12 @@ RSpec.describe "Storefront drops gap (collection/blog/page/article/product)", ty
       end
     end
 
-    get "/en-hk/blogs/news/mid"
+    get "/blogs/news/mid"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<span id="anext">news/old</span><span id="aprev">news/new</span>')
-    get "/en-hk/blogs/news/old"
+    get "/blogs/news/old"
     expect(response.body).to include('<span id="anext"></span><span id="aprev">news/mid</span>')
-    get "/en-hk/blogs/news/new"
+    get "/blogs/news/new"
     expect(response.body).to include('<span id="anext">news/mid</span><span id="aprev"></span>')
 
     blog = ActsAsTenant.with_tenant(shop) { Blog.find_by!(handle: "news") }

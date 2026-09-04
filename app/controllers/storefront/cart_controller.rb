@@ -201,7 +201,8 @@ module Storefront
         theme:, shop: Current.shop, publication: Publication.online_store!,
         host: request.host, cart_json: CartSerializer.cart_json(current_cart.reload),
         url_prefix: hit ? Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag) : "",
-        locale: hit&.locale_tag, web_presence: hit&.web_presence
+        locale: hit&.locale_tag, web_presence: hit&.web_presence,
+        market: hit&.market, country_code: hit&.effective_country_code
       )
       result = renderer.render(strip_locale_prefix(sections_url),
                                params: { "sections" => ids.join(",") })
@@ -210,11 +211,11 @@ module Storefront
       {}
     end
 
-    # sections_url 來自主題 JS 的 location.pathname ⇒ 帶前綴（/en-hk/products/x）；
-    # PageRenderer 收前綴已剝的站內路徑（包 34）。同 SEGMENT 單一來源。
+    # sections_url 來自主題 JS 的 location.pathname ⇒ 可能帶前綴（/zh-hant/products/x；預設語言無前綴）；
+    # PageRenderer 收前綴已剝的站內路徑（包 34）。D80：只剝**真的命中**的前綴（locale_hit），不剝「像前綴」的段。
     def strip_locale_prefix(path)
       segments = path.to_s.delete_prefix("/").split("/", 2)
-      return path unless segments[0].to_s.match?(/\A#{Markets::UrlPrefix::SEGMENT.source}\z/)
+      return path if segments[0].blank? || locale_hit(segments[0]).nil?
 
       rest = segments[1].to_s
       rest.empty? ? "/" : "/#{rest}"

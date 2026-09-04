@@ -274,7 +274,7 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response.body).not_to include("cl:highlight")
     expect(response.body).not_to include("data-shopify-editor-section")
 
-    get "/en-hk/" # 公開店面（design_mode 恆 false）
+    get "/" # 公開店面（design_mode 恆 false）
     expect(response.body).not_to include("cl:highlight")
   end
 
@@ -284,7 +284,7 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response.body).to include("cl:op")
     expect(response.body).to include(%(data-cl-op))
 
-    get "/en-hk/"
+    get "/"
     expect(response.body).not_to include("cl-ov-bar")
   end
 
@@ -293,7 +293,7 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response.body).to include("cl:navigate")
     expect(response.body).to include("preventDefault")
 
-    get "/en-hk/" # 公開店面不帶橋（既有 E3 語義的延伸面）
+    get "/" # 公開店面不帶橋（既有 E3 語義的延伸面）
     expect(response.body).not_to include("cl:navigate")
   end
 

@@ -190,12 +190,12 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     expect(html).not_to match(/<cb>A[A-Za-z0-9]{17}__html_NRR4gL/)
   end
 
-  it "PP20 🔴 link.current 不受市場前綴影響：http 連結 /pages/contact 在 /zh-hans-tw/pages/contact 為 true（首頁項 false）" do
+  it "PP20 🔴 link.current 不受語言前綴影響：http 連結 /pages/contact 在 /zh-hant/pages/contact 為 true（首頁項 false）" do
     ActsAsTenant.with_tenant(shop) do
       Page.create!(shop_id: shop.id, title: "Contact", handle: "contact", body_html: "", published_at: 1.day.ago)
       MenuItem.create!(shop_id: shop.id, menu: Menu.find_by!(handle: "main-menu"), title: "聯絡我們", item_type: "http", url: "/pages/contact", position: 1)
     end
-    pre = ThemeEngine::PageRenderer.new(theme: theme, shop: shop, publication: online_store, source: source, url_prefix: "/zh-hans-tw")
+    pre = ThemeEngine::PageRenderer.new(theme: theme, shop: shop, publication: online_store, source: source, url_prefix: "/zh-hant")
                                    .render("/pages/contact").html
     expect(pre).to include("<lk>首頁=false</lk><lk>聯絡我們=true</lk>")
     expect(render("/pages/contact").html).to include("<lk>首頁=false</lk><lk>聯絡我們=true</lk>")

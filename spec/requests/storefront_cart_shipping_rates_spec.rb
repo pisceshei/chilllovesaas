@@ -61,7 +61,7 @@ RSpec.describe "Storefront cart shipping rates（第三包）", type: :request d
     expect(response.parsed_body["shipping_rates"].map { |r| r["price"] }).to eq(%w[20.00 50.50])
     get "/cart/async_shipping_rates.json", params: { shipping_address: { country: "HK" } }
     expect(response.parsed_body["shipping_rates"].size).to eq(2)
-    get "/en-hk/cart/shipping_rates.json", params: { shipping_address: { country: "HK" } }
+    get "/cart/shipping_rates.json", params: { shipping_address: { country: "HK" } }
     expect(response.parsed_body["shipping_rates"].size).to eq(2)
   end
 

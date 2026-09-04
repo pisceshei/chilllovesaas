@@ -43,7 +43,7 @@ RSpec.describe "Storefront collection tag paths", type: :request do
   def handles = response.body.scan(/data-h="([^"]+)"/).flatten
 
   it "CT1 🔴 單 tag：只列帶 tag 的商品；current_tags／計數／all_tags 各歸各" do
-    get "/en-hk/collections/picks/red"
+    get "/collections/picks/red"
     expect(response).to have_http_status(:ok)
     expect(handles).to match_array(%w[red-tee duo])
     expect(response.body).to include('<span id="ctags">red</span>')
@@ -55,25 +55,25 @@ RSpec.describe "Storefront collection tag paths", type: :request do
   end
 
   it "CT2 🔴 多 tag `+`＝AND" do
-    get "/en-hk/collections/picks/red+blue"
+    get "/collections/picks/red+blue"
     expect(handles).to eq(%w[duo])
     expect(response.body).to include('<span id="ctags">red+blue</span>')
   end
 
   it "CT3 🔴 tag 段是 handle 形：extra-potent ⇔ \"Extra Potent\"" do
-    get "/en-hk/collections/picks/extra-potent"
+    get "/collections/picks/extra-potent"
     expect(handles).to eq(%w[red-tee])
   end
 
   it "CT4 🔴 無此 tag 仍 200、零商品（官方：路徑仍有效）" do
-    get "/en-hk/collections/picks/zzz-none"
+    get "/collections/picks/zzz-none"
     expect(response).to have_http_status(:ok)
     expect(handles).to eq([])
     expect(response.body).to include('<span id="ccount">0</span>')
   end
 
   it "CT5 🔴 /collections/all/{tag}：虛擬全商品＋tag；page_title en＝Products、zh＝产品" do
-    get "/en-hk/collections/all/blue"
+    get "/collections/all/blue"
     expect(response).to have_http_status(:ok)
     expect(handles).to match_array(%w[blue-mug duo])
     expect(response.body).to include("<title>Products</title>")
@@ -88,7 +88,7 @@ RSpec.describe "Storefront collection tag paths", type: :request do
   end
 
   it "CT6 🔴 /collections/{handle}/products/{p}＝商品頁" do
-    get "/en-hk/collections/picks/products/red-tee"
+    get "/collections/picks/products/red-tee"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("<title>Red Tee</title>")
   end
@@ -102,8 +102,8 @@ RSpec.describe "Storefront collection tag paths", type: :request do
     expect(out).to include('<span id="ctags">red</span>')
     tpl = Liquid::Template.parse("{{ 'blue' | link_to_add_tag: 'blue' }}|{{ 'red' | link_to_remove_tag: 'red' }}",
                                  environment: ThemeEngine::Runtime::ENVIRONMENT)
-    links = tpl.render({ "current_tags" => [ "red" ] }, registers: { request_path: "/en-hk/collections/picks/red" })
-    expect(links).to eq('<a href="/en-hk/collections/picks/red+blue" title="Narrow selection to products matching tag blue">blue</a>|' \
-                        '<a href="/en-hk/collections/picks" title="Remove tag red">red</a>')
+    links = tpl.render({ "current_tags" => [ "red" ] }, registers: { request_path: "/collections/picks/red" })
+    expect(links).to eq('<a href="/collections/picks/red+blue" title="Narrow selection to products matching tag blue">blue</a>|' \
+                        '<a href="/collections/picks" title="Remove tag red">red</a>')
   end
 end

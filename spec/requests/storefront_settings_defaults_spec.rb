@@ -31,7 +31,7 @@ RSpec.describe "Storefront settings default semantics", type: :request do
     allow(ThemeEngine::Sources).to receive(:resolve).and_return(
       ThemeEngine::FileSource.new(Rails.root.join("spec/fixtures/theme_engine/minimal-1.0"))
     )
-    get "/en-hk/"
+    get "/"
     expect(response).to have_http_status(:ok)
   end
 

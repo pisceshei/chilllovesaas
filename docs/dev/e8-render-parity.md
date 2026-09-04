@@ -119,8 +119,8 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 | 類 | 內容 | 落點 |
 |---|---|---|
 | 平台身分 | 主機／永久網域（`Shopify.shop`、canonical、JSON-LD url、`window.shopUrl`）、CDN 路徑（`/cdn/shop/t/2/assets` vs `/theme-assets`）、字型雜湊、`sections--{數字}`、theme 數字 id、block 實例前綴**值**（演算法不可觀測） | Normalizer |
-| 裁定差異 | 我方路由前綴恆帶地區（67 §F.1(b)，2026-08-13）：本尊主市場預設語言**無前綴**（`href="/collections/all"`） | `CAND_PREFIX` 抹掉；**待裁定**（§4） |
-| 裁定差異（E15） | 五市場後 `__head__` 的 hreflang：我方 `Markets::HreflangCodes` 逐國展開＝161 條（五語言 × 31 國＋x-default）、語言切換器 `root_url` 帶地區（`/zh-hant-tw`）；本尊 6 條語言碼、`/zh-hant`（§G21） | 報告保留（`__head__` 本就非全同段）；**D80 裁定後回收**（§4） |
+| ~~裁定差異~~（已收口） | 我方路由前綴恆帶地區（67 §F.1(b)，2026-08-13）：本尊主市場預設語言**無前綴**（`href="/collections/all"`） | **D80 方案 1（2026-09-04）改回本尊形**：mirror 店根路徑＝預設語言、`/zh-hant` 等裸語言段；`CAND_PREFIX` 不再需要（Normalizer 的 `url_prefix:` 保留為工具能力）。`docs/dev/d80-url-structure.md` |
+| ~~裁定差異（E15）~~（已收口） | 五市場後 `__head__` 的 hreflang：我方逐國展開＝161 條、切換器 `root_url` 帶地區（`/zh-hant-tw`）；本尊 6 條語言碼、`/zh-hant`（§G21） | D80 後 `Markets::HreflangCodes.for_presence` 共用網域一語言一碼（mirror 店首頁六條與本尊逐條同形，MR4）；`root_url` 預設 `/`、其他 `/zh-hant` |
 | 平台功能 | 本尊新版顧客帳戶登入連結 `/customer_authentication/redirect?locale=…`／`https://shopify.com/{id}/account`；我方 `/account/login`／`/account/register` | 報告保留 |
 | 版權 | placeholder 插圖本體（本尊版權圖 vs 我方自繪；外框屬性已對齊） | Normalizer `[placeholder]` |
 | 平台注入 | `content_for_header` 內容（本尊 perf-kit／trekkie／shop-js／digital-wallet／preloads；我方 canonical＋hreflang＋JSON-LD） | head 資產集合差列出、不擋 |
@@ -129,8 +129,8 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 
 ## §4 使用者裁定（2026-09-03 已裁定，實作待開包）
 
-1. **路由前綴**：D80——跟隨本尊市場／語言設定（主市場預設語言無前綴、額外語言 `/{lang}`、子資料夾市場 `/{lang}-{country}`）；
-   67 §F.1(b)「恆有前綴」作廢。實作前 `CAND_PREFIX` 抹除只是過渡。
+1. ~~**路由前綴**：D80——跟隨本尊市場／語言設定~~ **已於 2026-09-04 D80 方案 1 落地**（`docs/dev/d80-url-structure.md`）：主市場預設語言無前綴、
+   額外語言 `/{lang}`、子資料夾市場 `/{lang}-{suffix}`、市場由 `localization` cookie 決定；`CAND_PREFIX` 過渡辦法退場。
 2. **貨幣顯示格式**：D81——店級 `money_format`／`money_with_currency_format` 跟隨本尊；鐵律 10 `HK$` 只是範例。
    **已落地**（2026-09-03，`docs/dev/d81-shop-money-format.md`）：hoko 快照帶兩鍵、鏡像店對齊後商品卡／購物車抽屜／頁首三段收斂。
 

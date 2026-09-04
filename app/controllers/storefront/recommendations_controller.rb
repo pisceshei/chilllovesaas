@@ -148,12 +148,8 @@ module Storefront
 
     def url_prefix
       @url_prefix ||= begin
-        prefix = params[:locale_prefix].to_s
-        if prefix.present?
-          "/#{prefix}"
-        else
-          default_hit ? Markets::UrlPrefix.for(default_hit.web_presence, default_hit.locale_tag) : "" # E13：單一真相 default_hit
-        end
+        hit = effective_hit # E13：單一真相（前綴命中 > 店預設）；D80：預設語言前綴＝""
+        hit ? Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag) : ""
       rescue Markets::UrlPrefix::Error
         ""
       end
@@ -163,7 +159,8 @@ module Storefront
       ThemeEngine::PageRenderer.new(
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix:, host: request.host, asset_base: "/theme-assets",
-        locale: effective_hit&.locale_tag, web_presence: effective_hit&.web_presence # E12：語言跟 URL 前綴（先前 nil ⇒ 英文）；E13：無前綴退回店預設
+        locale: effective_hit&.locale_tag, web_presence: effective_hit&.web_presence, # E12：語言跟 URL 前綴（先前 nil ⇒ 英文）；E13：無前綴退回店預設
+        market: effective_hit&.market, country_code: effective_hit&.effective_country_code # D80：買家選國覆寫
       )
     end
   end
