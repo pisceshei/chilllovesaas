@@ -69,7 +69,8 @@ module Storefront
       # recently-viewed JS 拿到整頁 HTML 而顯示警告區塊（hoko 該段 display:none）。繞過頁快取（cart drawer 段含個人化）。
       if section_rendering_request?
         response.headers["Cache-Control"] = "no-store"
-        payload = render_page(hit, rest, cart_json: buyer_cart_json, extra: section_rendering_params)
+        payload = render_page(hit, rest, cart_json: buyer_cart_json, extra: section_rendering_params,
+                                         query_string: request.query_string)
         return head :not_found if payload["status"] == 404
         return head :bad_request if payload["status"] == 400
         return render(json: payload["html"], status: payload["status"]) if payload["content_type"] == :json
@@ -79,22 +80,26 @@ module Storefront
 
       if rest == "/cart"
         response.headers["Cache-Control"] = "no-store"
-        payload = render_page(hit, rest, cart_json: buyer_cart_json)
+        payload = render_page(hit, rest, cart_json: buyer_cart_json, query_string: request.query_string)
       elsif preview_theme_active?
         # PR-12：🔴 預覽不進頁快取（不讀不寫）——快取鍵含 theme 擋得住互汙，
         # 但預覽的意義是看未儲存中的主題現狀，命中舊 entry 即假象。
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
-        payload = render_page(hit, rest, cart_json: rest == "/cart" ? buyer_cart_json : nil)
+        payload = render_page(hit, rest, cart_json: rest == "/cart" ? buyer_cart_json : nil,
+                                         query_string: request.query_string)
       elsif rest == "/search"
         # 步 12b：搜尋頁**不進頁快取**——q 鍵空間無界（S6b 同型防灌爆），
         # 且結果隨庫存/發布即時變。robots 已 Disallow /search（既有）。
-        payload = render_page(hit, rest)
+        payload = render_page(hit, rest, query_string: request.query_string)
       else
+        # E16：進頁快取的整頁只餵**快取鍵會看的** query 對（CACHE_PARAMS ∪ filter.*，原順序原編碼）——
+        # 整頁 HTML 必須是快取鍵的純函數，否則 `?utm_…` 這類不進鍵的參數會經 `return_to` 洩進別的請求的快取命中
+        # （Ella 整頁不渲染 localization 表單、只在 section fetch 出現 ⇒ 真店不可觀測此形，91 §3.85）。
         payload = PageCache.fetch(
           shop: current_shop, theme: published_theme, market: hit.market,
           locale_tag: hit.locale_tag, path: rest, params: cache_params
-        ) { render_page(hit, rest) }
+        ) { render_page(hit, rest, query_string: cache_relevant_query_string) }
       end
 
       # 301 引擎（包 36）：掛在 404 之前、活頁面先贏（渲染 200 就不查表）。
@@ -134,6 +139,15 @@ module Storefront
       [ segments[0].to_s.downcase, "/#{segments[1]}".chomp("/").presence || "/" ]
     end
 
+    # 原始 query string 中**進快取鍵**的鍵值對（CACHE_PARAMS 與 facets 鍵），保留請求的順序與編碼；無 ⇒ nil。
+    def cache_relevant_query_string
+      pairs = request.query_string.to_s.split("&").reject(&:empty?).select do |pair|
+        key = Rack::Utils.unescape(pair.split("=", 2)[0].to_s)
+        CACHE_PARAMS.include?(key) || key.start_with?("filter.")
+      end
+      pairs.empty? ? nil : pairs.join("&")
+    end
+
     def cache_params
       base = params.permit(*CACHE_PARAMS).to_h
       qs = facets_query_string
@@ -164,13 +178,15 @@ module Storefront
       { "section_id" => params[:section_id].to_s, "sections" => sections }.reject { |_, v| v.blank? }
     end
 
-    def render_page(hit, rest, cart_json: nil, extra: {})
+    # @param query_string [String, nil] 餵 `{% form %}` return_to 預設值的原始 query（E16）；快取分支只給進鍵的對
+    def render_page(hit, rest, cart_json: nil, extra: {}, query_string: nil)
       ThemeEngine::PageRenderer.new(
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
         host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
         web_presence: hit.web_presence, # localization 真值（切換器只列開放∧已發布——67 §F.2）
         market: hit.market, country_code: hit.effective_country_code, # D80：買家選國覆寫後的市場／國家
+        query_string: query_string.presence,
         cart_json: # 🔴 個人化不進頁快取（14 §F1-4）——只有繞過快取的 /cart 會傳非 nil
       ).render(rest, params: cache_params.merge(extra))
     end

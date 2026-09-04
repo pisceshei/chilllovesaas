@@ -236,4 +236,53 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body["items"].sole["variant_id"]).to eq(variant.id)
   end
+
+  # E16（external-facts §G24，hoko.vip 2026-09-04）：本尊 /localization 只取 return_to 的路徑＋query——絕對 URL（Ella JS 送
+  # `window.location.href`）保留路徑與 query、外站 host 丟掉只剩路徑、`back` 不展開 ⇒ `/back`；換語言時對絕對 URL 同樣剝命中前綴。
+  # 殺：先前「非 / 開頭一律回根」（真店表單每次切語言都落回首頁）。
+  it "L2b 🔴 return_to 絕對 URL：同站保留路徑＋query；外站只剩路徑；back ⇒ /back；絕對 URL 的前綴也剝" do
+    post "/localization", params: { country_code: "HK", return_to: "https://i18n-shop.lvh.me/products/rose?page=2&sort_by=x" }
+    uri = URI.parse(response.headers["Location"])
+    expect([ uri.path, uri.query ]).to eq([ "/products/rose", "page=2&sort_by=x" ])
+
+    post "/localization", params: { country_code: "HK", return_to: "https://evil.example/x?y=1" }
+    uri = URI.parse(response.headers["Location"])
+    expect(uri.host.to_s).to satisfy { |h| h.empty? || h == "i18n-shop.lvh.me" }
+    expect([ uri.path, uri.query ]).to eq([ "/x", "y=1" ])
+
+    post "/localization", params: { country_code: "HK", return_to: "back" }
+    expect(URI.parse(response.headers["Location"]).path).to eq("/back")
+
+    post "/localization", params: { language_code: "en", country_code: "HK",
+                                    return_to: "https://i18n-shop.lvh.me/zh-hant/products/rose?page=2" }
+    uri = URI.parse(response.headers["Location"])
+    expect([ uri.path, uri.query ]).to eq([ "/products/rose", "page=2" ]) # en＝預設 ⇒ 無前綴
+  end
+
+  # E16：`{% form 'localization' %}` 本尊形自帶 `_method=put` ⇒ Rack::MethodOverride 改寫成 PUT；只收 POST 的路由回 404
+  # （bt3 mirror 店 2026-09-04 實測：Ella 真表單提交 404）。本尊 `PUT /localization` 直打 302（hoko.vip 2026-09-04，§G24）。
+  it "L5 🔴 /localization 收 PUT：主題表單的 _method=put（裸與帶前綴兩形）與直打 PUT 都 302" do
+    post "/localization", params: { _method: "put", form_type: "localization", utf8: "✓",
+                                    country_code: "HK", return_to: "/products/rose" }
+    expect(response).to have_http_status(:found)
+    expect(URI.parse(response.headers["Location"]).path).to eq("/products/rose")
+
+    post "/zh-hant/localization", params: { _method: "put", language_code: "zh-TW", country_code: "HK",
+                                            return_to: "/zh-hant/products/rose" }
+    expect(response).to have_http_status(:found)
+    expect(URI.parse(response.headers["Location"]).path).to eq("/zh-hant/products/rose")
+
+    put "/localization", params: { language_code: "zh-TW", country_code: "HK", return_to: "/products/rose" }
+    expect(response).to have_http_status(:found)
+    expect(URI.parse(response.headers["Location"]).path).to eq("/zh-hant/products/rose")
+  end
+
+  # E16：本尊前綴根的 return_to 不帶尾斜線（hoko.vip `/en/?section_id=…`／`/en?section_id=…` 皆出 `/en?section_id=…`，§G24）。
+  it "SR8 🔴 帶前綴的 section 形：return_to＝`/zh-hant?section_id=…`（前綴根去尾斜線）、頁面路徑帶前綴" do
+    get "/zh-hant/?section_id=sra-probe"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include('<input type="hidden" name="return_to" value="/zh-hant?section_id=sra-probe" />')
+    get "/zh-hant/products/rose?section_id=sra-probe&variant=1"
+    expect(response.body).to include('<input type="hidden" name="return_to" value="/zh-hant/products/rose?section_id=sra-probe&variant=1" />')
+  end
 end

@@ -1562,3 +1562,36 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
 - 證據檔（倉庫外 scratchpad `d80/`：root.html／zh-hant.html／en.html／en-collections-all.html／en-products-acme-tee.html／zh-hant-pages-contact.html／
   zh-hans.html／root-us.html／loc-country.headers／loc-lang.headers／loc-both.headers／sitemap.xml／sitemap-products.xml）；重取：
   `curl -s https://hoko.vip/zh-hant/ | grep -o '<link rel="alternate" hreflang="[^"]*" href="[^"]*">'`。
+
+### G24. 頁首區段 fetch 內容的 Section Rendering 脈絡、`return_to` 預設值與 `/localization` 的 PUT（E16 依據，取證 2026-09-04 curl hoko.vip）
+
+- **官方 `{% form %}`（<https://shopify.dev/docs/api/liquid/tags/form>，2026-09-04）**：`localization` 型輸出的隱藏欄＝`form_type`／`utf8`／`_method`（put）／
+  `return_to`；`return_to` 參數逐字 "Accepts `back`, relative paths, or routes attributes"，例 `{% form 'customer_login', return_to: routes.root_url %}` 輸出
+  `<input type="hidden" name="return_to" value="/" />`。**未給 `return_to` 時的預設值官方頁未載明（未取得；下列為實測）**。
+- **Section Rendering 脈絡（Ella 頁首經 `section-fetcher` 打 `?section_id=sections--19763396837479__header_default`）**：
+  - `/?section_id=…` 200（70153 B）⇒ 兩個 `/localization` 表單的 `return_to` 皆 `value="/?section_id=sections--19763396837479__header_default"`；
+    `/zh-hant/collections/all?section_id=…` ⇒ `/zh-hant/collections/all?section_id=…`；`/en/search?q=bag&section_id=…` ⇒ `/en/search?q=bag&section_id=…`；
+    `/collections/all?sort_by=price-ascending&section_id=…&page=2` ⇒ **原順序原編碼逐字** `value="/collections/all?sort_by=price-ascending&section_id=…&page=2"`
+    （屬性值內 `&` **不轉義**）；`/en/?section_id=…` 與 `/en?section_id=…` 皆 ⇒ `value="/en?section_id=…"`（前綴根**不帶尾斜線**）。
+  - `/?section_id=…&q=a%22b%3Cc` ⇒ `value="/?section_id=…"`（含 `"`／`<` 的參數整個不出現；規則＝未取得，只記此一觀測）。
+  - 整頁 `/` 與 `/collections/all?sort_by=price-ascending&page=1` 的 HTML **零個** `return_to`（Ella 只在 fetch 回來的頁首段渲染 localization 表單）。
+  - 主選單 current 跟請求頁：`/collections/all?section_id=…header_default` 的「目錄」`<a … aria-current="page"> <span class="text header__active-menu-item">`、
+    「首頁」無；`/?section_id=…` 反之（本尊 section 形的 context＝請求頁，同官方 ajax/section-rendering "render a section in the context of any page"）。
+- **`/localization` 的 method 與 return_to 處置**：
+  - `POST /localization` 帶 `form_type=localization&utf8=✓&_method=put&return_to=/?section_id=…&country_code=US` ⇒ 302
+    `location: https://hoko.vip/?section_id=sections--19763396837479__header_default`＋`set-cookie: localization=US; path=/; expires=（一年）; SameSite=Lax`
+    （return_to 的 query **原樣保留**，本尊不剝）。
+  - `language_code=en&return_to=/collections/all?sort_by=price-ascending&page=2` ⇒ 302 `https://hoko.vip/en/collections/all?sort_by=price-ascending&page=2`＋
+    `localization=TW; path=/en`。
+  - 直打 `PUT /localization`（`country_code=US&return_to=/`）⇒ 302 `https://hoko.vip/`＋同款 cookie（本尊收 PUT）。
+  - **絕對 URL／外站／`back`**（`_method=put`＋`country_code=US`）：`return_to=https://hoko.vip/collections/all?sort_by=price-ascending` ⇒ 302
+    `https://hoko.vip/collections/all?sort_by=price-ascending`；`https://hoko.vip/en/collections/all` ⇒ `https://hoko.vip/en/collections/all`；
+    `https://evil.example/x` ⇒ `https://hoko.vip/x`；`//evil.example/x` ⇒ `https://hoko.vip/x`；`back` ⇒ `https://hoko.vip/back`（localization 型不展開 back）；
+    `language_code=en&country_code=TW&return_to=https://hoko.vip/zh-hant/collections/all?page=2` ⇒ `https://hoko.vip/en/collections/all?page=2`
+    （只取路徑＋query、剝命中前綴）。Ella `assets/localization-form.js:170` 提交前 `returnInput.value = window.location.href`（絕對 URL）。
+- **bt3 mirror 店（head `a9c6852`，2026-09-04 同日）**：`POST /localization` 帶 `_method=put` ⇒ **404**（`x-runtime: 0.000931`＝路由層，非 controller）；
+  不帶 `_method` ⇒ 302 `…/?section_id=x`；`POST /en/localization` 302。⇒ Ella 真表單（自帶 `_method=put`）在 mirror 店提交必 404——E16 修法（routes 收 PUT）。
+- **證據檔**（倉庫外 scratchpad `hdr/`：`hoko_header_sra.html`、`hoko_header_sra_collections.html`、`hoko_header_sra_collections_query.html`、
+  `hoko_header_sra_en_root.html`、`mirror_header_sra.html`、`mirror_header_sra_collections.html`、`loc-post-method-put-sra.headers`、`loc-put-direct.headers`、
+  `mirror-loc-post-method-put.headers`、`loc-rt-*.headers`、`loc-rt-abs-lang.headers`、E8 報告 `report-header-sra.md`／`report-header-sra-collections.md`）。重取：
+  `curl -s 'https://hoko.vip/collections/all?sort_by=price-ascending&section_id=sections--19763396837479__header_default&page=2' | grep -o 'name="return_to" value="[^"]*"'`。

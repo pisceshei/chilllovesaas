@@ -107,6 +107,25 @@ RSpec.describe "ThemeEngine {% form %}（型別化）" do
     expect(guest).to include('<input type="hidden" name="guest" value="true" />')
   end
 
+  # E16（external-facts §G24，hoko.vip 2026-09-04 逐字）：預設 return_to＝路徑＋原始 query；前綴根 `/en/` ⇒ `/en`；
+  # `&` 不轉義；`"` 轉 &quot;（本尊處置未取得）；主題明給的 return_to 照舊 h()（`&amp;`）。
+  it "F6b 🔴 return_to 預設帶原始 query string（& 原樣、順序照請求）；前綴根去尾斜線；空 query 不加問號" do
+    loc = render("{% form 'localization' %}x{% endform %}", {},
+                 { request_path: "/collections/all", request_query: "sort_by=price-ascending&section_id=sections--1__header&page=2" })
+    expect(loc).to include('<input type="hidden" name="return_to" value="/collections/all?sort_by=price-ascending&section_id=sections--1__header&page=2" />')
+
+    root = render("{% form 'localization' %}x{% endform %}", {}, { request_path: "/en/", request_query: "section_id=x" })
+    expect(root).to include('<input type="hidden" name="return_to" value="/en?section_id=x" />')
+    bare_root = render("{% form 'localization' %}x{% endform %}", {}, { request_path: "/", request_query: nil })
+    expect(bare_root).to include('<input type="hidden" name="return_to" value="/" />')
+
+    quoted = render("{% form 'localization' %}x{% endform %}", {}, { request_path: "/", request_query: 'q=a"b<c' })
+    expect(quoted).to include('<input type="hidden" name="return_to" value="/?q=a&quot;b&lt;c" />')
+
+    explicit = render("{% form 'localization', return_to: '/a?b=1&c=2' %}x{% endform %}", {}, { request_query: "zzz=1" })
+    expect(explicit).to include('<input type="hidden" name="return_to" value="/a?b=1&amp;c=2" />')
+  end
+
   it "F7 帶連字號的 key、變數值與 nil 參數" do
     out = render("{% form 'customer_login', novalidate: 'novalidate', id: form_id, style: form_styles, " \
                  "data-gift-card-recipient: 'true' %}x{% endform %}",

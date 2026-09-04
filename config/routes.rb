@@ -91,7 +91,10 @@ Rails.application.routes.draw do
     get "llms.txt" => "storefront/agents#show", format: false
     get "llms-full.txt" => "storefront/agents#show", format: false
     # localization 表單（包 34；67 §F.2 country+language 兩欄位）：裸與帶前綴兩形。
-    post "localization" => "storefront/localization#create", format: false, as: :storefront_localization
+    # 🔴 E16：POST **與 PUT** 都收——`{% form 'localization' %}` 本尊形自帶隱藏欄 `_method=put`（官方 tags/form 輸出；
+    #   我方 FormTag 同形），Rack::MethodOverride 把該 POST 改寫成 PUT ⇒ 只收 POST 的路由回 404（bt3 mirror 店 2026-09-04
+    #   實測：帶 `_method=put` 404、不帶 302）。本尊 `PUT /localization` 直打亦 302（hoko.vip 2026-09-04；external-facts §G24）。
+    match "localization" => "storefront/localization#create", via: %i[post put], format: false, as: :storefront_localization
     # 結帳線第一包：cart→checkout 建立＋token URL（15 F3；one-page UI 隨後續包）。
     post "checkout" => "storefront/checkouts#create", format: false, as: :storefront_checkout
     # G6 步 7：挽回連結入口（302 回活結帳頁；快照還原＝checkout 本就落庫）。
@@ -165,7 +168,7 @@ Rails.application.routes.draw do
       post "cart/update"    => "storefront/cart#update"
       post "cart/clear.js"  => "storefront/cart#clear"
       post "cart/clear"     => "storefront/cart#clear"
-      post "localization"   => "storefront/localization#create"
+      match "localization"  => "storefront/localization#create", via: %i[post put] # E16：`_method=put`（同上）
       post "checkout"       => "storefront/checkouts#create"
       # 86 §6：官方端點形自帶 {locale} 前綴段——帶前綴形必須收。
       get  "cart/shipping_rates.json" => "storefront/cart#shipping_rates"
