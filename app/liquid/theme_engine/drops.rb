@@ -1965,10 +1965,12 @@ module ThemeEngine
   end
 
   # 🔴 反例①已修：語言資料由呼叫端供給（shop_locales；包 34 接真值鏈）。
+  # 官方 objects/localization（external-facts §G22）。available_countries 由 `Storefront::LocalizationContext` 供給
+  # （同網域 active 市場 regions 聯集，E15）；未給時退回「只有當前國」（Runtime 的無 presence 退路——預覽面／無市場店）。
   class LocalizationDrop < BaseDrop
-    def initialize(language:, available_languages:, country: nil, market: nil)
+    def initialize(language:, available_languages:, country: nil, market: nil, available_countries: nil)
       super({ "language" => language, "country" => country, "market" => market,
-              "available_countries" => [ country ].compact,
+              "available_countries" => available_countries || [ country ].compact,
               "available_languages" => available_languages })
     end
   end

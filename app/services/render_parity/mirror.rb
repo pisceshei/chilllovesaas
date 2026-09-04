@@ -7,11 +7,16 @@ module RenderParity
   # ①這是什麼：`spec/fixtures/render_parity/{name}.json` 描述本尊店快照（hoko.vip 2026-09-03：products.json／
   #   collections.json／首頁選單／`Shopify.locale`／`Shopify.country`），本服務**冪等**地把它建到 `subdomain` 那間店。
   # ②怎麼做：只建缺的、不刪商家資料（商品／集合／頁面／選單存在即跳過）；語言與市場是「對齊」而非新增——來源語言
-  #   改成快照語言（本尊簡體店 ⇒ 我方 `zh-Hans`，輸出碼由 `ThemeEngine::LocaleTags` 轉 `zh-CN`）、主市場國別改成快照
-  #   `Shopify.country`。主題：匯入主題給 `THEME_CHECKSUM`（storage/themes/{checksum}，內容定址可共用）；否則用名稱鍵
-  #   `{fixture_name}-{version}`——`themes/` 第一方目錄（bt3 demo 的 Ella 即此形）或非 production 的 `test/fixtures/themes/`。
+  #   改成快照語言（本尊簡體店 ⇒ 我方 `zh-Hans`，輸出碼由 `ThemeEngine::LocaleTags` 轉 `zh-CN`）、已發布語言集＝快照
+  #   `shop.languages`（順序＝position；集合外的語言取消發布）、主市場國別改成快照 `Shopify.country`；E15（2026-09-04）：
+  #   快照 `markets[]` 的非主市場逐一建立／對齊（region 型、active、regions 加缺刪多、一個 subfolder presence、語言白名單
+  #   ＝同一語言集、預設同店預設）——本尊五市場共用 hoko.vip 與五語言（external-facts §G21），我方 67 §F.1(b) 恆帶地區
+  #   ⇒ 每個市場一組 `/{lang}-{region}` 前綴（多國市場的 region＝`suffix`，V-225 暫案 C）。主題：匯入主題給
+  #   `THEME_CHECKSUM`（storage/themes/{checksum}，內容定址可共用）；否則用名稱鍵 `{fixture_name}-{version}`——`themes/`
+  #   第一方目錄（bt3 demo 的 Ella 即此形）或非 production 的 `test/fixtures/themes/`。
   # ③跨功能：`lib/tasks/render_parity.rake`（`render_parity:mirror[subdomain,spec]`）、`RenderParity::Report`（對表）、
-  #   `docs/dev/e8-render-parity.md`。
+  #   `docs/dev/e8-render-parity.md`；語言集直接決定 `Storefront::LocalizationContext` 的 `available_languages`（Ella 頁首
+  #   語言鈕只在 size > 1 時渲染）與 `Seo::HreflangMatrix` 的展開集（多市場逐國展開＝D80 裁定前的登記差異）。
   class Mirror
     Result = Struct.new(:shop, :log, keyword_init: true)
 
@@ -31,7 +36,7 @@ module RenderParity
       shop = ensure_shop
       ActsAsTenant.with_tenant(shop) do
         align_locales(shop)
-        align_market(shop)
+        align_markets(shop)
         ensure_theme(shop)
         ensure_products(shop)
         ensure_collections(shop)
@@ -47,6 +52,16 @@ module RenderParity
 
     def shop_spec = @spec.fetch("shop")
     def locale_tag = shop_spec.fetch("locale")
+
+    # 已發布語言集（有序）；缺鍵＝只有來源語言（E8 舊快照形）。來源語言必在集合內（它不可取消發布）。
+    def languages
+      @languages ||= begin
+        list = Array(shop_spec["languages"]).map { |t| Locales::Tag.normalize(t.to_s) }.presence || [ locale_tag ]
+        raise ArgumentError, "shop.languages 必須含來源語言 #{locale_tag}（SOURCE_LOCALE_IMMUTABLE）" unless list.include?(locale_tag)
+
+        list
+      end
+    end
 
     def ensure_shop
       created = false
@@ -71,39 +86,85 @@ module RenderParity
       shop
     end
 
-    # 來源語言 ⇒ 快照語言、其餘語言全部取消發布（本尊店只有一個已發布語言）。
-    # 順序受 ShopLocale 驗證約束：先撤舊來源（single_source_per_shop），再立新來源（來源必 published＋enabled）。
+    # 來源語言 ⇒ 快照語言；已發布集 ⇒ 快照 `languages`（順序＝position）；集合外的語言取消發布（不刪列、譯文保留）。
+    # 順序受 ShopLocale 驗證約束：先建缺列（未發布），撤舊來源（single_source_per_shop），立新來源（來源必 published＋enabled），
+    # 再逐列對齊 published／enabled／position。
     def align_locales(shop)
       locales = ShopLocale.where(shop_id: shop.id)
-      target = locales.find_by(locale_tag: locale_tag) ||
-               ShopLocale.create!(shop_id: shop.id, locale_tag: locale_tag, enabled: true, published: false,
-                                  is_source: false, position: locales.count)
+      languages.each_with_index do |tag, index|
+        next if locales.exists?(locale_tag: tag)
+
+        ShopLocale.create!(shop_id: shop.id, locale_tag: tag, enabled: true, published: false, is_source: false, position: index)
+      end
+      target = locales.find_by!(locale_tag: locale_tag)
       old_source = locales.where(is_source: true).where.not(id: target.id).first
       old_source&.update!(is_source: false)
       target.update!(is_source: true, published: true, enabled: true)
-      locales.where.not(id: target.id).find_each { |row| row.update!(published: false) }
-      note("locale source=#{locale_tag} (was #{old_source&.locale_tag || locale_tag})")
+      languages.each_with_index do |tag, index|
+        row = locales.find_by!(locale_tag: tag)
+        wanted = { published: true, enabled: true, position: index }
+        row.update!(wanted) if wanted.any? { |attribute, value| row.public_send(attribute) != value }
+      end
+      locales.where.not(locale_tag: languages).where(published: true).find_each { |row| row.update!(published: false) }
+      note("locales published=#{languages.join(',')} source=#{locale_tag} (was #{old_source&.locale_tag || locale_tag})")
     end
 
-    # 主市場國別 ⇒ 快照 `Shopify.country`；presence 預設語言與開放語言 ⇒ 只剩快照語言。
-    # 順序受 MarketWebPresenceLocale 驗證約束：先改 presence.default_shop_locale，再撤舊預設列，最後立新預設列。
-    def align_market(shop)
+    # 主市場：國別 ⇒ 快照 `Shopify.country`、名稱／handle 跟隨；presence 語言白名單 ⇒ `languages`。
+    # 非主市場（快照 `markets[]`）：find-or-create（region 型、active）、regions 加缺刪多、恰一個 subfolder presence
+    # （`suffix`；本尊市場共用主網域、無自身前綴，我方 67 §F.1(b) 需要 region 識別字才能組前綴）、白名單同主市場。
+    # 🔴 不刪快照外的既有市場（不刪商家資料原則；鏡像店由本服務獨占，實務上不會出現）。
+    def align_markets(shop)
       country = shop_spec.fetch("country")
       market = Market.find_by!(is_primary: true)
       region = market.market_regions.first
-      if region && region.country_code != country
-        region.update!(country_code: country)
-        market.update!(name: shop_spec.fetch("market_name", country), handle: country.downcase)
+      region.update!(country_code: country) if region && region.country_code != country
+      name = shop_spec.fetch("market_name", country)
+      market.update!(name:, handle: country.downcase) if market.name != name || market.handle != country.downcase
+      presence = market.market_web_presences.order(:id).first or raise "primary market 無 web presence（shop #{shop.id}）"
+      align_presence_locales(shop, presence)
+      note("market #{market.handle} country=#{country} presence default=#{locale_tag} " \
+           "prefixes=#{languages.map { |tag| Markets::UrlPrefix.for(presence, tag) }.join(',')}")
+
+      Array(@spec["markets"]).each do |m|
+        handle = m.fetch("handle")
+        extra = Market.find_by(handle:)
+        if extra
+          extra.update!(name: m.fetch("name")) if extra.name != m.fetch("name")
+        else
+          extra = Market.create!(name: m.fetch("name"), handle:, status: "active", market_type: "region", is_primary: false)
+        end
+        wanted = m.fetch("countries").map { |code| code.to_s.strip.upcase }
+        existing = extra.market_regions.pluck(:country_code)
+        (wanted - existing).each { |code| extra.market_regions.create!(shop_id: shop.id, country_code: code) }
+        extra.market_regions.where.not(country_code: wanted).delete_all if (existing - wanted).any?
+        extra_presence = extra.market_web_presences.order(:id).first ||
+                         extra.market_web_presences.create!(shop_id: shop.id, subfolder_suffix: m.fetch("suffix"),
+                                                            default_shop_locale: locale_tag)
+        if extra_presence.domain_id.nil? && extra_presence.subfolder_suffix != m.fetch("suffix")
+          extra_presence.update!(subfolder_suffix: m.fetch("suffix"))
+        end
+        align_presence_locales(shop, extra_presence)
+        note("market #{extra.handle} regions=#{wanted.size} suffix=#{extra_presence.subfolder_suffix} " \
+             "prefixes=#{languages.map { |tag| Markets::UrlPrefix.for(extra_presence, tag) }.join(',')}")
       end
-      presence = market.market_web_presences.first or raise "primary market 無 web presence（shop #{shop.id}）"
-      presence.update!(default_shop_locale: locale_tag) if presence.default_shop_locale != locale_tag
+    end
+
+    # presence 白名單 ⇒ `languages`（position＝集合序、全部開放、預設＝來源語言）；集合外的列刪除（該 presence 未曾對買家
+    # 開放過那些語言，不涉 67 §C.8 的關閉語義）。順序受 MarketWebPresenceLocale 驗證約束：先撤舊預設旗、改 presence
+    # default_shop_locale，再建／對齊各列（uq_mwpl_single_default 只容一列 default）。
+    def align_presence_locales(shop, presence)
       rows = presence.market_web_presence_locales
-      rows.where.not(locale_tag: locale_tag).find_each { |row| row.update!(is_market_default: false) }
-      row = rows.find_by(locale_tag: locale_tag) ||
-            rows.create!(shop_id: shop.id, locale_tag: locale_tag, position: 0, is_market_default: true, open_to_buyers: true)
-      row.update!(is_market_default: true, open_to_buyers: true, closed_at: nil, position: 0)
-      rows.where.not(id: row.id).delete_all
-      note("market #{market.handle} country=#{country} presence default=#{locale_tag} prefix=#{Markets::UrlPrefix.for(presence, locale_tag)}")
+      if presence.default_shop_locale != locale_tag
+        rows.where(is_market_default: true).find_each { |row| row.update!(is_market_default: false) }
+        presence.update!(default_shop_locale: locale_tag)
+      end
+      rows.where(is_market_default: true).where.not(locale_tag: locale_tag).find_each { |row| row.update!(is_market_default: false) }
+      languages.each_with_index do |tag, index|
+        wanted = { position: index, open_to_buyers: true, closed_at: nil, is_market_default: tag == locale_tag }
+        row = rows.find_by(locale_tag: tag) || rows.create!(shop_id: shop.id, locale_tag: tag, **wanted)
+        row.update!(wanted) if wanted.any? { |attribute, value| row.public_send(attribute) != value }
+      end
+      rows.where.not(locale_tag: languages).delete_all
     end
 
     def ensure_theme(shop)

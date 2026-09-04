@@ -74,6 +74,23 @@ module ThemeEngine
       entry["labels"].fetch(key)
     end
 
+    # 國碼 ⇒ 字典列（大寫比對；字典外 ⇒ nil）。E15：`localization.available_countries` 的在地名與順序同源於此。
+    def entry_for(code)
+      @by_code ||= entries.index_by { |e| e["code"] }
+      @by_code[code.to_s.strip.upcase]
+    end
+
+    # 國碼 ⇒ `key` 語言的在地名；字典外的碼回原碼（不猜名）。
+    def label_for(code, key)
+      entry = entry_for(code)
+      entry ? label(entry, key) : code.to_s.strip.upcase
+    end
+
+    # 國碼 ⇒ `key` 語言的本尊觀察序（排序鍵）；字典外的碼排最後。
+    def sort_key(code, key)
+      entry_for(code)&.dig("sort", key) || Float::INFINITY
+    end
+
     def provinces_json(entry, key)
       JSON.generate(entry["provinces"].map { |p| [ p["name"], p["labels"].fetch(key) ] })
     end
