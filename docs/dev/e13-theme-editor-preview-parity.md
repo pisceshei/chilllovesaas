@@ -27,6 +27,10 @@
 - 修法 2／3 的單一真相：`Markets::PrefixIndex.default_hit(shop:)`；`Storefront::PagesController#default_prefix`（根路徑 302）改用它，
   三個消費者（根路徑重導／編輯器預覽／無前綴 SRA）不再各抄一份。
 
+| # | 現象（A′ 對表，E14 追加） | 根因 | 修法 | 規格 |
+|---|---|---|---|---|
+| 4 | cart_drawer 368 vs 130 元素：本尊多 238 個 `<option>`（Ella `snippets/cart-shipping-calculator.liquid` L28 `{{ all_country_option_tags }}`）；我方 select 空 | 我方全域 `all_country_option_tags` 做成「market ∩ 有費率 zone」的國碼 option——那是 `country_option_tags` 的語義（官方兩物件頁逐字見 external-facts §G20），格式也不是本尊形；店面對表看不到（非設計模式的 cart drawer 內容互動時才取） | 新 `ThemeEngine::CountryOptionTags`＋平台字典 `config/country_option_tags.json`（本尊 zh-CN 渲染輸出整理：237 國、1128 子區域；ISO 3166 對不上本尊集合）；`all`＝`---`＋全部（依在地名碼位排序）、`only`＝運送區域內國家同形；cart `estimate_rates` 收國名或國碼 | W4／W4b／R5 |
+
 ## §2 結果（本機 dev server，Chrome 152 headless，1280×900；首頁另 768×1024／390×844；全部 `--open-details 1`）
 
 | 頁 | 寬 | ref | 段落全同 | 非全同段 |
@@ -42,6 +46,9 @@
 | /cart | 1280 | 本機店面 | 8/15 | 同上＋`cart-section`（cart countdown 文字寬 47.5 vs 46.5，時間性） |
 | /cart | 1280 | hoko.vip live | 9/15 | 同上 |
 | /nope（404） | 1280 | 本機店面／hoko | 6/12 各 | 同上 |
+
+| / | 1280／768／390 | **本尊編輯器設計模式渲染 A′**（E14） | 20/21 各 | `__root__`（我方橋 13 元素；本尊兩個 JS 建立的 video popup 抽屜；`#Drawer-Search` 內容 auto margin 報告值 920 vs 0 而幾何同）——五個 popup-group 段與 A′ **全同** |
+| /products/acme-tee | 1280 | A′（E14） | 8/15 | recommendations／product_tabs／footer 為被擋執行期的 fetch 副作用（§4 量測限制）；`main`＝countdown＋本尊 payment button |
 
 - 讀法：每頁「非全同段」恰＝五個 popup-group 段＋`__root__`（＋時間性 countdown）；**其餘所有段——模板段、header、footer、
   announcement bar——編輯器預覽與店面／本尊逐屬性全同**。修法前的首頁是 0/21（缺口 1）、修法 1 後 15/21 但 skip link 與語言錯（缺口 2）、
@@ -70,18 +77,23 @@
    （`.cl-ov-box`／`.cl-ov-chip`／`.cl-ov-insert`×2／`.cl-ov-bar`＋3 鈕＋svg，全部 `display:none` 初始）；45 個＝第 2 項的 header_mobile
    側抽屜內容；`body>side-drawer:6` z-index 19→99 與 grid 列數＝第 1 項的連帶。本尊編輯器對預覽 iframe 注入什麼**未取得**（§4）。
    複驗：`grep -c "(missing) |"` 報告的 `__root__` 段＝58，其中含 `header-mobile-tabs` 者 45。
+   E14（A′ 取得後）：本尊設計模式頁的 popup-group 五段、before_you_leave 直出、header_mobile 抽屜內容與我方**逐屬性全同**（三寬 20/21）；
+   本尊編輯器對 iframe 的注入＝`storefront-modules`／`visual-preview-modules` 執行期（量測時擋掉，其覆疊層因此未量到，V），
+   `__root__` 餘差見 §2 A′ 列與 91 §3.81。
 
-## §4 未取得：本尊編輯器預覽的 computed 擷取（A′）
+## §4 本尊編輯器預覽的 computed 擷取（A′）——2026-09-04 取得（E14）；原「未取得」段落的更正
 
-- 本尊編輯器＝admin 頁內的嵌入 app iframe `https://online-store-web.shopifyapps.com/themes/{id}/editor?hmac&host&id_token&locale&session&shop&timestamp&_signed_params`
-  （只記參數名），預覽 iframe 再巢狀於其中（跨域 ⇒ 頂層 JS 讀不到 src）。2026-09-04 實測：使用者 Chrome 的編輯器分頁與新開分頁皆
-  `document.visibilityState === "hidden"`／`hasFocus() === false`（視窗最小化或被遮蔽），app iframe 不載入預覽——`read_network_requests`
-  對 hoko.vip 零請求（重載後亦同）。⇒ **需要使用者把 Chrome 視窗帶到前景**才能取得預覽文件 URL 與擷取。
-- 取得後的做法：先用 `read_network_requests`（pattern `hoko.vip`）取預覽文件 URL；能整條取得則
-  `node scripts/computed-parity.mjs capture "<該 URL>" a.json --open-details 1 --wait 3000`（本尊預覽 URL 是否需 cookie／簽名參數是否短效＝未取得），
-  再與 `local-editor-home-1280-open.json` diff；期望＝§3 第 1／2 項同形、`__root__` 只差雙方覆疊層。
-- 在此之前，「編輯器預覽＝本尊」的證據鏈＝(a) 預覽 vs 店面：非 popup 段全同（§2）；(b) 店面 vs 本尊：E12（買家前台三寬只剩登記類）；
-  (c) popup 段差異由主題 CSS／官方 `section.index` 語義決定，兩邊同一輸入。缺的是本尊覆疊層與可能的編輯器注入 CSS。
+- 取得法：本尊編輯器＝admin 頁內的嵌入 app iframe `online-store-web.shopifyapps.com/themes/{id}/editor`，預覽 iframe 再巢狀於其中（跨域）；
+  分頁層 network 工具、無障礙樹、`chrome://`、預覽內右鍵（編輯器自己的選單）都到不了它——**由使用者在編輯器分頁 DevTools › Network 篩 Doc 貼出**。
+  預覽文件＝`https://pnrjnw-sy.myshopify.com/?oseid=<編輯器工作階段 id>`（不是 hoko.vip；`?preview_theme_id=…&_ab=0&_fd=0&_sc=1` 只是一般店面，
+  無設計模式）；`&source=visualPreviewInitialLoad` 那份是零 section 的殼（編輯器再串流填入），不帶 source 的那份是完整設計模式渲染。
+- 量法：headless 載入完整版時 Shopify 的 `storefront-modules` 執行期（`OnlineStoreEditorData`／`oseid` LocationBehavior，external-facts §G20）
+  會把導航改寫到一般店面（live 主題 143469576295、無設計模式）⇒ 工具加 `--block "visual-preview-modules,storefront-modules"`
+  （CDP `Network.setBlockedURLs`）後 `designMode true`、theme 143506604135、20 段、`data-shopify-editor-*`。live 店面本來不載這兩支，擋掉只移除
+  編輯器管線；代價＝依賴其 XHR 攔截器補 `oseid` 的 fetch（recommendations／recently-viewed）會 abort ⇒ 商品頁 A′ 的該段是骨架（量測限制，V）。
+- 結果：首頁三寬 A′ vs 我方編輯器預覽 20/21（§2）；A′ vs hoko live＝五個 popup-group 段＋`__root__` 差——證實 §3 的「主題自定義設計模式差異，
+  本尊同形」。缺口 #4（§1）由此抓到並修。
+- 憑證：`oseid`／app frame 的 `id_token`／`session` 是短效票證，只存 scratchpad、不入倉不進 PR；重跑要重新從 DevTools 取。
 
 ## §5 重跑
 
@@ -93,6 +105,9 @@ node scripts/computed-parity.mjs capture "http://mirror.lvh.me:3000/admin/store/
 node scripts/computed-parity.mjs capture "http://mirror.lvh.me:3000/zh-hans-tw/" s.json --wait 3000 --open-details 1
 node scripts/computed-parity.mjs diff s.json e.json --out report.md
 node scripts/computed-parity.mjs inspect "http://mirror.lvh.me:3000/admin/store/preview/2/?editor=1" '[id$="__cart_drawer_PFLQy3"]' --props position,z-index --cookie "$(cat <file>)"
+# 4) A′（E14）：oseid 由使用者從編輯器 DevTools 取；擋掉本尊編輯器執行期
+node scripts/computed-parity.mjs capture "https://pnrjnw-sy.myshopify.com/?oseid=<id>" a.json --wait 3000 --open-details 1 --block "visual-preview-modules,storefront-modules"
+node scripts/computed-parity.mjs diff a.json e.json --out report.md
 ```
 
 ## 跨功能／跨頁／前端影響（鐵律 12.4 ④）

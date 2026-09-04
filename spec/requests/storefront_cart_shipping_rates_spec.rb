@@ -49,6 +49,13 @@ RSpec.describe "Storefront cart shipping rates（第三包）", type: :request d
     expect(response.parsed_body).to eq("shipping_rates" => [])
   end
 
+  it "R5 🔴 shipping_address[country] 收本尊 value 形（英文國名）與國碼同義（Ella 試算表單 POST 的是 all_country_option_tags 的 value）" do
+    get "/cart/shipping_rates.json", params: { shipping_address: { country: "Hong Kong" } }
+    expect(response.parsed_body.fetch("shipping_rates").map { |r| r["price"] }).to eq([ "20.00", "50.50" ])
+    get "/cart/shipping_rates.json", params: { shipping_address: { country: "United States" } }
+    expect(response.parsed_body).to eq("shipping_rates" => []) # 不在 market ⇒ 空（同 R2）
+  end
+
   it "R3 prepare／async 兩支（官方三支現值——同步引擎恆已完成）＋帶前綴形" do
     post "/cart/prepare_shipping_rates.json", params: { shipping_address: { country: "HK" } }
     expect(response.parsed_body["shipping_rates"].map { |r| r["price"] }).to eq(%w[20.00 50.50])

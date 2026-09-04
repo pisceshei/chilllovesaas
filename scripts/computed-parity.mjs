@@ -7,6 +7,8 @@
 //   node scripts/computed-parity.mjs capture <url> <out.json> [--width 1280] [--height 900] [--chrome <path>] [--wait 1500]
 //        [--open-details 1] [--cookie "name=value; name2=value2"]   ← cookie 設在目標 URL（登入牆後的端點，例：主題編輯器預覽
 //        `/admin/store/preview/{theme}/…?editor=1` 需 staff session cookie；值不落 JSON，只記 name）
+//        [--block "pat1,pat2"]   ← 導航前 CDP Network.setBlockedURLs（萬用字元 *pat*）；E14：本尊編輯器預覽文件（myshopify.com/?oseid=…）
+//        在非嵌入情境會被 visual-preview 執行期改寫導航到一般店面，擋掉該 script 才量得到設計模式的完整渲染（JSON 記 blocked 清單）
 //   node scripts/computed-parity.mjs diff <ref.json> <cand.json> [--out report.md] [--limit 60]
 //   node scripts/computed-parity.mjs selftest
 //
@@ -95,6 +97,15 @@ function parseCookies(spec) {
   });
 }
 
+// --block "a,b"：Network.setBlockedURLs（每個 pattern 前後補 * 成子字串比對）。回傳實際 pattern 清單（記進 capture JSON）。
+async function applyBlocks(cdp, opt) {
+  const pats = String(opt.block || "").split(",").map((x) => x.trim()).filter(Boolean).map((x) => `*${x}*`);
+  if (!pats.length) return [];
+  await cdp.send("Network.enable");
+  await cdp.send("Network.setBlockedURLs", { urls: pats });
+  return pats;
+}
+
 async function applyCookies(cdp, opt, url) {
   const cookies = parseCookies(opt.cookie);
   if (!cookies.length) return [];
@@ -179,6 +190,7 @@ async function capture(pos, opt) {
     await cdp.send("Network.enable");
     await cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 768 });
     const cookieNames = await applyCookies(cdp, opt, url);
+    const blocked = await applyBlocks(cdp, opt);
     await cdp.send("Page.navigate", { url });
     await cdp.waitEvent("Page.loadEventFired", 60000);
     await cdp.send("Runtime.evaluate", { expression: "document.fonts.ready.then(() => true)", awaitPromise: true });
@@ -205,7 +217,7 @@ async function capture(pos, opt) {
         diagnostics.http.push(`${e.params.response.status} ${e.params.response.url.slice(0, 160)}`);
       }
     }
-    const data = { capturedAt: new Date().toISOString(), requestedWidth: width, requestedHeight: height, cookies: cookieNames, ...r.result.value, diagnostics };
+    const data = { capturedAt: new Date().toISOString(), requestedWidth: width, requestedHeight: height, cookies: cookieNames, blocked, ...r.result.value, diagnostics };
     writeFileSync(out, JSON.stringify(data));
     console.log(`captured ${data.count} elements @${data.width}x${data.height} ${url} => ${out}`);
     console.log(`diagnostics: exceptions=${diagnostics.exceptions.length} console=${diagnostics.console.length} failed=${diagnostics.failed.length} http>=400=${diagnostics.http.length}`);
@@ -229,6 +241,7 @@ async function inspect(pos, opt) {
     await cdp.send("Page.enable"); await cdp.send("Runtime.enable"); await cdp.send("DOM.enable"); await cdp.send("CSS.enable");
     await cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 768 });
     await applyCookies(cdp, opt, url);
+    await applyBlocks(cdp, opt);
     await cdp.send("Page.navigate", { url });
     await cdp.waitEvent("Page.loadEventFired", 60000);
     await sleep(Number(opt.wait || 1500));
@@ -267,6 +280,7 @@ async function evaljs(pos, opt) {
     await cdp.send("Page.enable"); await cdp.send("Runtime.enable");
     await cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 768 });
     await applyCookies(cdp, opt, url);
+    await applyBlocks(cdp, opt);
     await cdp.send("Page.navigate", { url });
     await cdp.waitEvent("Page.loadEventFired", 60000);
     await sleep(Number(opt.wait || 1500));
