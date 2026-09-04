@@ -99,6 +99,20 @@ module Storefront
       @locale_hits[seg] ||= Markets::PrefixIndex.resolve(shop: current_shop, domain: current_domain, first_segment: seg)
     end
 
+    # E13（2026-09-04）：無前綴的 SRA 請求（編輯器預覽內主題 JS 打 `Shopify.routes.root + "recommendations/products"` 這類
+    # URL；本尊主市場預設語言無前綴故同語言）退回店的預設 (market, locale)——與根路徑 302 目標同一真相
+    # （Markets::PrefixIndex.default_hit）。不是 GeoIP／cookie 推市場（③ 仍成立）；帶前綴者仍只由前綴決定。
+    def default_hit
+      return @default_hit if defined?(@default_hit)
+
+      @default_hit = Markets::PrefixIndex.default_hit(shop: current_shop)
+    end
+
+    # 前綴命中優先；無前綴 ⇒ 店預設（E13）。
+    def effective_hit
+      locale_hit || default_hit
+    end
+
     def current_domain
       @current_domain ||= ActsAsTenant.with_tenant(current_shop) do
         Domain.find_by(host: request.host.to_s.downcase) || Domain.primary.first

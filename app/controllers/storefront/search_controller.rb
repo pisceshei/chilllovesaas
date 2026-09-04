@@ -247,11 +247,7 @@ module Storefront
         if prefix.present?
           "/#{prefix}"
         else
-          ActsAsTenant.with_tenant(current_shop) do
-            market = Market.find_by(is_primary: true)
-            presence = market&.market_web_presences&.first
-            presence ? Markets::UrlPrefix.for(presence, presence.default_shop_locale) : ""
-          end
+          default_hit ? Markets::UrlPrefix.for(default_hit.web_presence, default_hit.locale_tag) : "" # E13：單一真相 default_hit
         end
       rescue Markets::UrlPrefix::Error
         ""
@@ -264,7 +260,7 @@ module Storefront
       ThemeEngine::PageRenderer.new(
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix:, host: request.host, asset_base: "/theme-assets",
-        locale: locale_hit&.locale_tag, web_presence: locale_hit&.web_presence # E12：語言跟 URL 前綴（先前 nil ⇒ 英文）
+        locale: effective_hit&.locale_tag, web_presence: effective_hit&.web_presence # E12：語言跟 URL 前綴（先前 nil ⇒ 英文）；E13：無前綴退回店預設
       )
     end
   end

@@ -16,6 +16,14 @@ module Admin
   #   FileSource 防線擋——spec E7）。
   class StorefrontPreviewController < BaseController
     include ThemeCsp # 編輯器 iframe 的主題預覽同樣要主題面 CSP
+    # 🔴 E13（2026-09-04 編輯器預覽 computed 對表實錘）：`asset` 必須跳過 CSRF——Rails 的 cross-origin JavaScript 防護
+    #   （`verify_same_origin_request`：GET、回應 media type 為 text/javascript、非 XHR ⇒ raise ⇒ 422；actionpack 8.1.3.1
+    #   request_forgery_protection.rb `verify_same_origin_request`／`non_xhr_javascript_response?`）把編輯器預覽 iframe 的
+    #   每個 `<script src>` 打成 422 ⇒ Ella 的 21 支主題 JS 一支都不載（dev log 逐字 "Security warning: an embedded <script>
+    #   tag on another site requested protected JavaScript."），預覽只剩無 JS 的形（marquee／header-mobile／cart-drawer 全走樣）。
+    #   與 Storefront::AssetsController 同紀律：純讀端點無狀態變更，CSRF 語義不適用；staff 閘（authorize）照舊。
+    #   test 環境 forgery 預設關 ⇒ 規格 PV1 顯式開再打（同 storefront S10）。
+    skip_forgery_protection only: :asset
 
     # GET /admin/store/preview/:theme_id/assets/*file
     def asset
@@ -43,9 +51,11 @@ module Admin
       entry = params[:entry].respond_to?(:to_unsafe_h) ? params[:entry].to_unsafe_h : params[:entry]
       return head :unprocessable_entity if sid.blank? || !entry.is_a?(Hash)
 
+      hit = default_locale_hit
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: Publication.online_store!,
-        design_mode: true, host: request.host
+        design_mode: true, host: request.host,
+        locale: hit&.locale_tag, web_presence: hit&.web_presence # E13：與 show 同一語言真相
       ).render(params[:path].presence || "/", params: { "section_id" => sid },
                draft_sections: { sid => entry })
 
@@ -87,9 +97,11 @@ module Admin
       end
       design_mode = params[:editor] == "1"
       draft = design_mode ? draft_payload(theme, params[:draft]) : nil # E9：只在編輯器 iframe 套草稿
+      hit = default_locale_hit
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: publication,
         design_mode: design_mode, host: request.host, # 步 16a：編輯器 iframe 開 design_mode
+        locale: hit&.locale_tag, web_presence: hit&.web_presence, # E13：預覽以店的預設市場語言渲染（default_locale_hit）
         cart_json: cart && Storefront::CartSerializer.cart_json(cart)
       ).render("/#{params[:path]}", params: request.query_parameters.except("draft"),
                draft_sections: draft&.fetch("sections", nil), draft_settings: draft&.fetch("settings", nil))
@@ -108,6 +120,16 @@ module Admin
     end
 
     private
+
+    # E13（2026-09-04）：預覽頁以店的預設 (market, locale) 渲染——本尊編輯器的市場選擇器預設 "Store default"
+    # （docs/research/100 §中 2）。原本 renderer 不帶 locale／web_presence ⇒ `<html lang="">`、`Shopify.locale = ""`、
+    # `Shopify.country = ""`、平台字串走英文回退（computed 對表：skip link `body>a` 寬 134 vs 219），與公開店面
+    # （Storefront::PagesController#render_page 帶 locale_hit）不一致，違反鐵律 22.1「兩者皆是」。單一真相＝
+    # `Markets::PrefixIndex.default_hit`（根路徑 302 目標與無前綴 SRA 端點同一落點）。url_prefix 仍為空：預覽路徑在
+    # /admin/store/preview/ 之下，前綴由橋的 cl:navigate 導航語義承接（D80 前綴裁定未定，不在本包）。
+    def default_locale_hit
+      Markets::PrefixIndex.default_hit(shop: Current.shop)
+    end
 
     # 草稿鍵：租戶＋主題＋token——另一主題／另一店的 token 找不到就是找不到（fail-closed 為「不套草稿」）。
     def draft_cache_key(theme, token)

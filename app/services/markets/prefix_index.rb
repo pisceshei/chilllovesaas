@@ -46,6 +46,26 @@ module Markets
       nil
     end
 
+    # 預設 (market, locale) 命中＝primary market 的第一個 presence × 其預設語言（67 §F.1(b) 根路徑處置的同一落點；
+    # 取序同 Storefront::LocalizationController#target_presence）。E13（2026-09-04）抽成單一真相：
+    # ①PagesController 根路徑／無前綴 302 的目標前綴；②主題編輯器預覽（/admin/store/preview）以它渲染——本尊編輯器
+    # 市場選擇器預設 "Store default"（docs/research/100 §中 2）；③無前綴的 SRA 端點（recommendations／search suggest／
+    # cart sections）以它渲染——編輯器預覽內主題 JS 打的是 `Shopify.routes.root + "recommendations/products"` 這種
+    # 無前綴 URL（Ella data-url="/recommendations/products?limit=5"），本尊主市場預設語言無前綴故同語言；我方原本
+    # locale nil ⇒ 英文回退（E13 computed 對表：預覽內 recommendations 卡片按鈕 74／99px vs 店面 32／80px）。
+    # 🔴 這不是 GeoIP／cookie 推市場（BaseController ③ 仍成立）：它是店自己設定的預設，與根路徑 302 的目標同一個。
+    # 尚未 provision 市場／presence／語言 ⇒ nil（fail-closed：呼叫端維持舊行為）。
+    # @param shop [Shop]
+    # @return [Hit, nil]
+    def default_hit(shop:)
+      ActsAsTenant.with_tenant(shop) do
+        market = Market.find_by(is_primary: true) or return nil
+        presence = market.market_web_presences.order(:id).first or return nil
+        locale_tag = presence.default_shop_locale.presence or return nil
+        Hit.new(market:, web_presence: presence, locale_tag:)
+      end
+    end
+
     # subfolder presence（domain_id NULL）落在 primary domain 上（29 §1.2）。
     def effective_domain_id(presence)
       presence.domain_id || Domain.primary.where(shop_id: presence.shop_id).pick(:id)

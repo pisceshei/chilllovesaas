@@ -9,7 +9,8 @@
   `--headless=new --disable-extensions --user-data-dir=<暫存乾淨 profile>` 啟動，經 CDP 操作。乾淨 profile ⇒ 沒有使用者擴充功能的
   `font-weight:500 !important` 注入（memory `measurement-env-contamination`；鐵律 22.4 量測環境消融）。
 - 子命令：
-  - `capture <url> <out.json> [--width 1280] [--height 900] [--wait 1500] [--open-details 1]`：`Page.navigate` → `loadEventFired` →
+  - `capture <url> <out.json> [--width 1280] [--height 900] [--wait 1500] [--open-details 1] [--cookie "n=v; n2=v2"]`：（E13：`--cookie` 導航前以
+    `Network.setCookie` 設到目標 URL，量登入牆後的編輯器預覽；JSON 只記 cookie name）`Page.navigate` → `loadEventFired` →
     `document.fonts.ready` → settle → 逐元素收集（見 §1）；另記診斷（頁內例外、console error／warn、載入失敗、4xx／5xx）。
   - `diff <ref.json> <cand.json> [--out report.md] [--limit 60]`：逐段（section wrapper）→ 逐元素（鍵）→ 逐屬性；輸出段落表＋差異明細。
   - `inspect <url> <selector> [--props a,b] [--all 1]`：`CSS.getMatchedStylesForNode` 列命中規則（來源樣式表、selector、宣告）。
@@ -86,3 +87,5 @@
 - 關閉 `<details>` 子樹的報告值差根因；Shopify CDN 的 CSS 處理管線（壓縮／autoprefixer／nesting 攤平的確切規則）。
 - 768／390 兩寬（鐵律 13 三裝置）：首頁三寬皆 20/21；其餘七頁只跑 1280，兩寬待補。
 - recommendations 補位規則、關閉 details 子樹報告值差、CDN CSS 管線、countdown 時間性內容：見 91 §3.79。
+- 編輯器預覽這一半（鐵律 22.1「兩者皆是」）：E13 已做——`docs/dev/e13-theme-editor-preview-parity.md`（`--cookie` 量法、三項預覽缺口、
+  主題自定義的設計模式差異、本尊編輯器擷取未取得 91 §3.80）。

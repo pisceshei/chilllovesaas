@@ -4119,3 +4119,18 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **V 文章圖片模型**：我方 Article 無精選圖片欄位／關聯 ⇒ `article.image` 恆 nil；`image_url` 自 E12 起對 nil 印「invalid url input」（本尊對無圖文章同形），Minimog 一致性探針對 article 模板白名單此錯誤。功能本身待做。
 - **⚪ 商品頁 countdown 數字寬**：`product-countdown` 的秒數文字隨擷取時刻不同（47px vs 41px），屬時間性內容，不登記為形差。
 - **登記 768／390 兩寬**：首頁 390 open-details＝20/21（同 1280）；768 結果與其餘頁面兩寬待補（§2）。
+
+### 3.80 E13 主題編輯器預覽 computed 對表（2026-09-04）的未取得與範圍外
+
+- **未取得 本尊編輯器預覽的 computed 擷取（A′）**：本尊編輯器＝嵌入 app iframe（online-store-web）內再巢狀預覽 iframe（跨域）；使用者 Chrome
+  視窗 hidden／無焦點時 app 不載入預覽、對 hoko.vip 零請求（含新開分頁）。需使用者把 Chrome 帶到前景後取預覽文件 URL 再擷取（e13 doc §4）。
+  目前「編輯器預覽＝本尊」的證據鏈＝預覽 vs 店面非 popup 段全同 ＋ 店面 vs 本尊（E12）＋ popup 段差異由主題 CSS／官方 `section.index` 語義決定。
+- **V 本尊編輯器對預覽 iframe 的注入**：我方橋注入 13 個覆疊元素（`__root__`；另 45 個是 header_mobile 側抽屜在設計模式直出的內容，
+  主題自定義）；本尊注入什麼（覆疊層、CSS、script）未取得，A′ 取得後對比。
+- **⚪ 預覽的 url_prefix 為空**：預覽在 `/admin/store/preview/{id}/` 之下、連結無前綴（`/collections/all`、`/account/login`），由橋的 `cl:navigate`
+  承接；D80（主市場預設語言無前綴）未裁前不動。
+- **V 本尊預覽列 vs 我方預覽列**：本尊 `?preview_theme_id=` 底部固定 68px 列（`body>div:3`），我方 `#cl-preview-bar`（PagesController#preview_bar_html）
+  尺寸與樣式未對比（本包只做編輯器預覽，不含店面預覽列）。
+- **⚪ 時間性 countdown**：商品頁 `main` 與購物車頁 `cart-section` 的倒數文字寬隨擷取時刻不同（同 §3.79）。
+- **登記 本機 staff cookie 產生法為倉庫外腳本**：`issue_local_session.rb`（建指派＋`Session.issue!`＋加密 cookie＋`Rack::Utils.escape`）產物是憑證，
+  不入倉；重跑法寫在 e13 doc §0／§5。若日後要在 bt3 量生產預覽，需另裁定（在生產建 session 列＝管理者操作）。
