@@ -99,7 +99,23 @@
 - 與 §2 基線逐頁逐寬相同；頁首 `header_default` 段在五語言五市場下三寬全同（語言鈕＋section-fetcher 形，e8 §2c #66）。
 - **promotion_popup／multitasking_bar 為擷取時序項**：Ella `<promotion-popup data-delay="10000">` 自 connectedCallback 起 10 秒開啟並給 `body.overflow-hidden`；
   本機 dev server 資產慢送使 `loadEventFired` 晚於 10 秒，擷取點落在開啟後（diff＝`visibility hidden→visible`、`body overflow-y visible→clip`、
-  multitasking bar x 位移 1px）；同頁另一寬度資產已暖即全同；bt3（nginx）在 §2 同頁無此差。部署後 bt3 重跑結果見 E15 handoff／後續追加。
+  multitasking bar x 位移 1px）；同頁另一寬度資產已暖即全同；bt3（nginx）在 §2 同頁無此差。部署後 bt3 重跑結果見下表。
+
+#### E15 部署後（bt3 head `a879b13`，2026-09-04 10:2x–10:32 UTC；ref＝hoko.vip live；cand＝`https://mirror.chilling.com.hk/zh-hans-tw`）
+
+| 頁面 | 1280 | 768 | 390 | 非全同段 |
+|---|---|---|---|---|
+| / | 20/21 | 20/21 | 20/21 | `__root__` |
+| /collections/all | 14/15 | 14/15 | 14/15 | `__root__` |
+| /collections/frontpage | 14/15（首抓 10/15，重抓 14/15） | 14/15 | 14/15 | `__root__`；首抓的 4 段差＝捲動觸發動畫中間態（`opacity 0.04`／`translateY(20px)`、header `position sticky`／`top -1px`）＝擷取瞬態，同寬重抓即基線 |
+| /products/acme-tee | 13/15 | 13/15 | 13/15 | `__root__`、`template--T__main`（countdown＋payment button） |
+| /pages/contact | 15/16 | 15/16 | 15/16 | `__root__` |
+| /search | 11/12 | 11/12 | 11/12 | `__root__` |
+| /cart | 14/15 | 14/15 | 14/15 | `__root__` |
+| /nope（404） | 11/12 | 11/12 | 11/12 | `__root__` |
+
+- 與 §2 基線逐頁逐寬相同；本機出現的 promotion_popup 時序項在 bt3 全部消失（證實為本機 dev 慢送）。
+- bt3 mirror 店實測（`rails runner`，2026-09-04）：五語言（zh-Hans 來源）、五市場各一 presence／白名單 5、`available_countries`＝31（首三 DK 丹麦／BG 保加利亚／HR 克罗地亚、當前 台湾）。
 
 ## §3 未取得／範圍外（登記 91 §3.79）
 
