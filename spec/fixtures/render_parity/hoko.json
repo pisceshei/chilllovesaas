@@ -1,12 +1,15 @@
 {
-  "_source": "hoko.vip（Shopify 真店 pnrjnw-sy，Ella 7.2.0 原版主題）2026-09-03 快照：/products.json、/collections.json、/collections/frontpage/products.json、首頁 HTML（<html lang>、Shopify.locale／currency／country、header 選單、標題）",
+  "_source": "hoko.vip（Shopify 真店 pnrjnw-sy，Ella 7.2.0 原版主題）2026-09-03 快照：/products.json、/collections.json、/collections/frontpage/products.json、首頁 HTML（<html lang>、Shopify.locale／currency／country、header 選單、標題）；2026-09-04 追加語言與市場（external-facts §G21）",
   "shop": {
     "name": "我的商店 3",
     "currency": "HKD",
     "locale": "zh-Hans",
     "_locale": "本尊 Shopify.locale = \"zh-CN\"；我方 tag 依 limits i18n.script_subtag_required_for 為 zh-Hans，輸出碼由 ThemeEngine::LocaleTags 轉回 zh-CN",
+    "languages": ["zh-Hans", "zh-Hant", "en", "fr", "ja"],
+    "_languages": "本尊 Settings › Languages（2026-09-04 使用者 Chrome 實測，external-facts §G21）：Chinese (Simplified)（Default）／Chinese (Traditional)／English／French／Japanese 全部已發布並指派 hoko.vip；首頁 hreflang 序 zh-Hans／zh-Hant／en／fr／ja（2026-09-04 curl）。我方 tag 依 platform_locales 字典（zh-Hant／zh-Hans／en／fr／ja），輸出碼 zh-CN／zh-TW 由 LocaleTags 轉；順序＝本尊 hreflang 序（Settings › Languages 的列表序未逐列抄錄，V）",
     "country": "TW",
-    "market_name": "Taiwan",
+    "market_name": "台灣",
+    "_market_name": "本尊 Markets 頁（2026-09-04）：預設市場「台灣」（Taiwan）；先前快照寫英文 Taiwan（本尊 primary market 以商家自訂名顯示，此處照本尊中文名）",
     "customer_accounts_enabled": true,
     "taxes_included": true,
     "_taxes_included": "本尊購物車抽屜稅注為「已含税。优惠和运费将在结账时一起计算。」（cart.taxes_included=true 分支）",
@@ -15,6 +18,16 @@
     "_money_format": "本尊 admin Settings › General › Change currency formatting（2026-09-03 實讀）：HTML without currency ${{amount}}、HTML with currency HK${{amount}} HKD、Email 兩欄同值；首頁 window.money_format 同值、購物車抽屜總額 HK$0.00 HKD",
     "_timezone": "本尊時區未取得（首頁未渲染時間）；沿用建店預設"
   },
+  "markets": [
+    { "name": "美國", "handle": "us", "suffix": "us", "countries": ["US"], "_id": "30683103335" },
+    { "name": "香港", "handle": "hk", "suffix": "hk", "countries": ["HK"], "_id": "30683136103" },
+    { "name": "日本", "handle": "jp", "suffix": "jp", "countries": ["JP"], "_id": "30683168871" },
+    { "name": "欧盟", "handle": "eu", "suffix": "eu",
+      "countries": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"],
+      "_id": "30683201639",
+      "_countries": "本尊 Markets 頁只顯示「27 regions」（2026-09-04），逐國清單未逐列讀取（V）；此處採 EU 27 成員國（europa.eu 官方清單，2026-09-04 取證，見 external-facts §G22）；成員以外的地區（如 Åland、Réunion）本尊是否納入未取得" }
+  ],
+  "_markets": "本尊 Markets（2026-09-04 使用者授權建立，external-facts §G21）：台灣（預設）／美國／香港／日本／欧盟，全部共用 hoko.vip • 5 languages、幣別繼承 HKD、預設語言同店預設 zh-CN；本尊市場不產生 URL 前綴（/en-us、/zh-hant-hk 皆 404）。我方依 67 §F.1(b) 恆帶地區 ⇒ 每個非主市場一個 subfolder presence（suffix＝多國市場的 region 識別字，V-225 暫案 C；單國市場前綴仍取國碼），語言白名單與預設同主市場。前綴形差屬 D80 裁定前的登記差異（e8 doc §3）",
   "theme": {
     "name": "ella-7-2-0-theme-source",
     "fixture_name": "ella",

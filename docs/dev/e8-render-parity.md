@@ -19,7 +19,7 @@
 | 正規化 | `app/services/render_parity/normalizer.rb` | 抹掉**只可能是身分**的差異：主機（含埠）、CDN 主題資產路徑與 `?v=`、字型雜湊、`sections--{數字}__`／`template--{數字}__` ⇒ `G`／`T`、block 實例前綴 `A{17}__` ⇒ `B__`、CSRF／reqid、placeholder 插圖本體 ⇒ `[placeholder]`、`Shopify.shop`／theme id／cdnHost；另可抹我方路由前綴（`url_prefix:`，§3 裁定差異）。切段：`shopify-section-*` wrapper 為界，另補 `__head__` 段。 |
 | 報告 | `app/services/render_parity/report.rb` | 逐段 token 多重集合 Jaccard 相似度＋首個差異片段（左 40／右 120 字）＋尾端片段＋head 資產集合差，輸出 Markdown。**不做任何「可接受」判斷**。 |
 | rake | `lib/tasks/render_parity.rake` | `bin/rails "render_parity:diff[REF,CAND,OUT]"`（URL 或本地檔；`REF_HOST`／`CAND_HOST`／`CAND_PREFIX`，前綴可不帶斜線——Git Bash 會把 `/xxx` 轉成 Windows 路徑）；`render_parity:mirror[SUBDOMAIN,SPEC]` 建鏡像店。 |
-| 鏡像店 | `app/services/render_parity/mirror.rb`＋`spec/fixtures/render_parity/hoko.json` | 冪等對齊店名／幣別／來源語言（zh-Hans⇔本尊 zh-CN）／主市場國別（TW）／登入連結旗標／含稅旗標／3 商品／集合 frontpage／聯絡頁／主選單（首頁·目錄·聯絡我們）／主題（名稱鍵 `ella-7.2.0`：`themes/` 第一方目錄（bt3 demo 即此形）或非 production 的 `test/fixtures/themes/`；匯入主題改給 `THEME_CHECKSUM`）。 |
+| 鏡像店 | `app/services/render_parity/mirror.rb`＋`spec/fixtures/render_parity/hoko.json` | 冪等對齊店名／幣別／來源語言（zh-Hans⇔本尊 zh-CN）／**已發布語言集（E15：zh-Hans／zh-Hant／en／fr／ja，序＝position，集合外撤發布）**／主市場國別（TW）與名稱（台灣）／**非主市場（E15：美國 US、香港 HK、日本 JP、欧盟 27 國；各一個 subfolder presence，suffix＝市場 handle，白名單同五語言、預設 zh-Hans）**／登入連結旗標／含稅旗標／3 商品／集合 frontpage／聯絡頁／主選單（首頁·目錄·聯絡我們）／主題（名稱鍵 `ella-7.2.0`：`themes/` 第一方目錄（bt3 demo 即此形）或非 production 的 `test/fixtures/themes/`；匯入主題改給 `THEME_CHECKSUM`）。對齊收斂（MR3）：快照外的已發布語言撤發布（不刪列）、多出的 region 刪、被改的預設語言與關閉的白名單復原。 |
 | 規格 | `spec/services/render_parity/render_parity_spec.rb`（RP1–RP6）、`spec/liquid/render_parity_forms_spec.rb`（RF1–RF21） | 工具本身與每個引擎形差各一格；突變輪 `mutate_e8.py`（M55–M90）。 |
 
 跑法（本機）：
@@ -108,12 +108,19 @@ REF_HOST=hoko.vip CAND_HOST=mirror.localhost CAND_PREFIX=zh-hans-tw bin/rails "r
 | 64 | 商品頁殘餘 id（對表工具） | `ShareMessage-{product.id}`、`data-subtotal-variants` 的 `"id":7`（一位數） | Normalizer：`ShareMessage-`、`"id":\d+` | RP7 |
 | 65 | `link.current` 與市場前綴 | hoko /pages/contact 主選單該項 `aria-current="page"`＋`header__active-menu-item`；我方 http 連結 `/pages/contact` 對 `/zh-hans-tw/pages/contact` 判 false | `LinkDrop#current` 兩邊先去 `url_prefix` 再比 | PP20 |
 
+### §2c 第三批（E15，2026-09-04；真店改為五語言五市場後）
+
+| # | 形差 | 本尊（external-facts §G21／§G22） | 我方修法 | 規格 |
+|---|---|---|---|---|
+| 66 | 頁首語言／地區選擇器的初始形 | 五語言五市場後首頁只出 `dropdown-localization__button`＋`section-fetcher …-CountryLocalizationList`（Ella `language-country-localization.liquid` 的「show_country ∧ show_language」分支；`/localization` 表單零個）；區段 fetch 回應才有 31 國清單（zh-CN 碼位序、在地名、`($HKD)`、當前 TW）與五語言清單 | 鏡像店同步五語言（MR1）後我方仍只有 1 國 ⇒ 走「只有語言」分支（內嵌整個語言表單、無 section-fetcher）。`Storefront::LocalizationContext#available_countries`＝與當前 presence 同 effective domain 的 active region 市場 regions 聯集，在地名／順序讀 `ThemeEngine::CountryOptionTags` 字典（同 `all_country_option_tags` 來源），`currency`＝店幣別（`Currencies`），`popular?` 恆 false（V）；`localization.country` 同形；`LocalizationDrop` 收 `available_countries:` | LC1–LC4、MR4 |
+
 ## §3 已登記差異（正規化抹掉或報告中保留、不算引擎缺口）
 
 | 類 | 內容 | 落點 |
 |---|---|---|
 | 平台身分 | 主機／永久網域（`Shopify.shop`、canonical、JSON-LD url、`window.shopUrl`）、CDN 路徑（`/cdn/shop/t/2/assets` vs `/theme-assets`）、字型雜湊、`sections--{數字}`、theme 數字 id、block 實例前綴**值**（演算法不可觀測） | Normalizer |
 | 裁定差異 | 我方路由前綴恆帶地區（67 §F.1(b)，2026-08-13）：本尊主市場預設語言**無前綴**（`href="/collections/all"`） | `CAND_PREFIX` 抹掉；**待裁定**（§4） |
+| 裁定差異（E15） | 五市場後 `__head__` 的 hreflang：我方 `Markets::HreflangCodes` 逐國展開＝161 條（五語言 × 31 國＋x-default）、語言切換器 `root_url` 帶地區（`/zh-hant-tw`）；本尊 6 條語言碼、`/zh-hant`（§G21） | 報告保留（`__head__` 本就非全同段）；**D80 裁定後回收**（§4） |
 | 平台功能 | 本尊新版顧客帳戶登入連結 `/customer_authentication/redirect?locale=…`／`https://shopify.com/{id}/account`；我方 `/account/login`／`/account/register` | 報告保留 |
 | 版權 | placeholder 插圖本體（本尊版權圖 vs 我方自繪；外框屬性已對齊） | Normalizer `[placeholder]` |
 | 平台注入 | `content_for_header` 內容（本尊 perf-kit／trekkie／shop-js／digital-wallet／preloads；我方 canonical＋hreflang＋JSON-LD） | head 資產集合差列出、不擋 |

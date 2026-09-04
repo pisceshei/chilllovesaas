@@ -1502,3 +1502,33 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   shopify.com/pricing 各方案共同列 "Localized selling with Shopify Markets"、"Translate your storefront"、"Assign local domains"（無數字）。
   建市場後 curl：`hoko.vip/en-us/`／`/en-US/`／`/zh-hans-us/`／`/zh-hant-us/`／`/us/`／`/en-hk/`／`/zh-hant-hk/`／`/ja-jp/`／`/hk/`／`/en-de/` 皆 404；
   首頁 hreflang 仍為 x-default／zh-Hans／zh-Hant／en／fr／ja 六條（無地區）；`Shopify.country = "TW"`；首頁無 `name="country_code"` 選擇器。
+
+### G22. `localization` 物件、`country` 物件與真店五市場的地區選擇器（E15 依據，取證 2026-09-04）
+
+- **官方 `localization`（<https://shopify.dev/docs/api/liquid/objects/localization>，2026-09-04）**逐字："Information about the countries and languages
+  that are available on a store."；`available_countries`："The countries that are available on the store."；`available_languages`："The languages that are
+  available on the store."；`country`："The currently selected country on the storefront."；`language`："The currently selected language on the storefront."；
+  `market`："The currently selected market on the storefront."。頁面未說明集合是否受市場／web presence／發布狀態限定（未取得）。
+- **官方 `country`（<https://shopify.dev/docs/api/liquid/objects/country>，2026-09-04）**逐字："A country supported by the store's localization options."；
+  `available_languages`："The languages that have been added to the market that this country belongs to."；`continent`："The continent that the country is in."
+  （值域 Africa／Asia／Central America／Europe／North America／Oceania／South America）；`currency`："The currency used in the country."；`iso_code`："The ISO
+  code of the country in ISO 3166-1 (alpha 2) format."；`market`："The market that includes this country."；`name`："The name of the country."；`popular?`：
+  "Returns `true` if the country is popular for this shop. Otherwise, returns `false`."（「popular」的判準官方未逐字）；`unit_system`："The unit system of the
+  country."（值域 imperial／metric；逐國對映未取得）。
+- **本尊 header 區段（Section Rendering `https://hoko.vip/?section_id=sections--19763396837479__header_default`，curl 2026-09-04，200、10,846 B）**：兩個
+  `action="/localization"` 表單——①`id="HeaderCountryForm" class="localization-form"`：`country-filter__input` 搜尋框（Ella：>9 國才出）、
+  `<ul id="CountryLocalizationList">` **31 個** `<li class="disclosure__item">`，每項 `data-value`＝國碼、`<span class="country">在地名</span>`、
+  `<span class="country-code">($HKD)</span>`（全市場繼承店幣別 HKD、符號 `$`）、當前國 `aria-current="true"`＝TW、hidden `country_code` value=`TW`；
+  前五 DK 丹麦／BG 保加利亚／HR 克罗地亚／HU 匈牙利／LU 卢森堡，末三 ES 西班牙／HK 香港特别行政区／MT 马耳他（＝zh-CN 在地名碼位序，與
+  `all_country_option_tags` 同序）；TW 台湾／US 美国／HK 香港特别行政区／JP 日本／FR 法国；`popular-countries` 零命中、
+  `country-selector__list--with-multiple-currencies` 零命中。②`class="localization-form localization-form--language"`：`<summary>` 簡体中文，
+  五項 `data-value`／`lang`＝zh-CN 简体中文／zh-TW 繁體中文／en English／fr Français／ja 日本語（`hreflang` 屬性同碼）。
+- **本尊首頁初始 HTML（curl 2026-09-04，1,008,128 B）**：`/localization` 表單零個；頁首只有 `dropdown-localization__button` ×1（`aria-label="地区和语言 Button"`）
+  ＋`<section-fetcher data-section-id="sections--19763396837479__header_default" data-target-id="Selector-Content-…-CountryLocalizationList" data-activate="interaction">`
+  ——即 Ella `snippets/language-country-localization.liquid` L275–L334 的「show_country ∧ show_language、section_fetch=false」分支；L72–L146 是
+  「只有語言」分支（內嵌整個語言表單，無 section-fetcher）；L42–L45 `section.index == nil ⇒ section_fetch = true`（SRA／編輯器直出清單）。
+  `sections/header.liquid` L160–L167：`available_languages.size <= 1 ⇒ show_language = false`、`available_countries.size <= 1 ⇒ show_country = false`。
+- **EU 成員國（<https://european-union.europa.eu/principles-countries-history/eu-countries_en>，2026-09-04，兩頁「Showing results 1 to 20」／
+  「Showing results 20 to 27」）**：Austria／Belgium／Bulgaria／Croatia／Cyprus／Czechia／Denmark／Estonia／Finland／France／Germany／Greece／Hungary／
+  Ireland／Italy／Latvia／Lithuania／Luxembourg／Malta／Netherlands／Poland／Portugal／Romania／Slovakia／Slovenia／Spain／Sweden（27）。本尊「欧盟」市場
+  顯示 27 regions（§G21）但逐國未讀，鏡像店以此 27 國代位（V，91 §3.83）。

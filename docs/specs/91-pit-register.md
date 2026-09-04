@@ -4162,3 +4162,18 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **⚪ 真店狀態**：五語言已發布且指派 hoko.vip（買家可見語言切換）；Translate & Adapt 已安裝；使用者裁定保留作測試。
 - **D80 輸入**：本尊語言 URL＝預設無前綴、其他 `/{小寫語言碼}`（`/zh-hant`／`/en`），hreflang script 碼不帶地區（單一市場）——見 external-facts §G21；
   D80 仍待裁定，我方 `/zh-hant-hk` 恆帶地區形未改。
+
+### 3.83 E15 鏡像店五語言五市場與 `localization.available_countries`（2026-09-04）的未取得與範圍外
+
+- **V 欧盟市場逐國清單**：本尊 Markets 頁只顯示「27 regions」，逐國未逐列讀取；鏡像店以 europa.eu 的 27 成員國代位（external-facts §G22）。
+  成員以外的地區（Åland、Réunion 等）本尊是否納入未取得——只影響 `available_countries` 的集合與 hreflang 展開，不影響首頁初始 HTML。
+- **V `country.popular?`**：官方只說 "popular for this shop"；hoko（零訂單）header 區段無 `popular-countries` 清單 ⇒ 我方恆 false；判準未取得。
+- **V `country.continent`／`unit_system`**：官方值域已取得（§G22），逐國對映未取得 ⇒ 我方不給值（主題讀到 nil；Ella 未使用）。
+- **V `available_countries` 的市場範圍**：我方＝與當前 presence 同一 effective domain 的 active region 市場；本尊對「有自己網域的市場」是否列入未取得
+  （hoko 全市場共用 hoko.vip，測不到）。draft 市場不列（LC3）與本尊未對照（hoko 無 draft 市場）。
+- **V 市場幣別**：我方市場無獨立幣別欄，`country.currency` 恆店幣別；hoko 五市場全部繼承 HKD（`($HKD)`）故同形，有獨立幣別的市場未測。
+- **⚪ hreflang 展開差**：五市場後我方首頁 hreflang 161 條（五語言 × 31 國 ＋ x-default），本尊 6 條（語言碼、無地區）——`Markets::HreflangCodes`
+  逐國展開屬 2026-08-13 裁定、D80 待裁定後回收；只在 `__head__` 段，computed 對表不量。
+- **⚪ 頁首互動內容（區段 fetch）尚未逐字對表**：本包只對齊初始 HTML 分支（section-fetcher＋按鈕）；`?section_id=…__header_default` 回應裡的
+  國家清單（31 列、在地名、`($HKD)`）與語言清單已由 LC1／LC2 以資料面對齊，HTML 段 diff 待下一包用 SRA 端點跑。
+- **登記 五語言在地名以外**：字典只有 zh-CN／zh-TW／en／fr／ja，其他語言退 en（同 §3.82）。

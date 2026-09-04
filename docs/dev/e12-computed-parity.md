@@ -83,6 +83,24 @@
 
 （2026-09-05 部署 83e85398 後追加：上表後半。）
 
+### §2b E15（2026-09-04；真店改為五語言五市場後，鏡像店同步＋`localization.available_countries`；本機 dev `mirror.lvh.me:3000` vs hoko live）
+
+| 頁面 | 1280 | 768 | 390 | 非全同段 |
+|---|---|---|---|---|
+| / | 20/21 | 20/21 | 19/21 | `__root__`；390 promotion_popup（擷取時序，見下） |
+| /collections/all | 12/15 | 14/15 | 14/15 | `__root__`；1280 promotion_popup＋multitasking_bar（時序） |
+| /collections/frontpage | 14/15 | 14/15 | 14/15 | `__root__` |
+| /products/acme-tee | 11/15 | 13/15 | 12/15 | `__root__`、`template--T__main`（countdown＋payment button）；1280／390 promotion_popup（時序） |
+| /pages/contact | 15/16 | 15/16 | 15/16 | `__root__` |
+| /search | 11/12 | 11/12 | 11/12 | `__root__` |
+| /cart | 14/15 | 13/15 | 14/15 | `__root__`；768 promotion_popup（時序） |
+| /nope（404） | 11/12 | 11/12 | 11/12 | `__root__` |
+
+- 與 §2 基線逐頁逐寬相同；頁首 `header_default` 段在五語言五市場下三寬全同（語言鈕＋section-fetcher 形，e8 §2c #66）。
+- **promotion_popup／multitasking_bar 為擷取時序項**：Ella `<promotion-popup data-delay="10000">` 自 connectedCallback 起 10 秒開啟並給 `body.overflow-hidden`；
+  本機 dev server 資產慢送使 `loadEventFired` 晚於 10 秒，擷取點落在開啟後（diff＝`visibility hidden→visible`、`body overflow-y visible→clip`、
+  multitasking bar x 位移 1px）；同頁另一寬度資產已暖即全同；bt3（nginx）在 §2 同頁無此差。部署後 bt3 重跑結果見 E15 handoff／後續追加。
+
 ## §3 未取得／範圍外（登記 91 §3.79）
 
 - 關閉 `<details>` 子樹的報告值差根因；Shopify CDN 的 CSS 處理管線（壓縮／autoprefixer／nesting 攤平的確切規則）。
