@@ -52,6 +52,13 @@ RSpec.describe "Storefront /variants/{id} route (T15)", type: :request do
     expect(response.body).not_to include("<html") # 只回 section，不是整頁
   end
 
+  it "VR5 🔴 section 語境綁裸 `product_variant`（三套主題的取貨 section 讀它；Kalles 另有 unless 回退）" do
+    get "/variants/#{variant.id}/?section_id=variant-probe"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("[pv:#{variant.id}]")     # product_variant 綁到該變體
+    expect(response.body).to include("[sel:#{variant.id}]")    # 同時 product.selected_variant 也是它
+  end
+
   it "VR3 語言前綴保留" do
     get "/zh-hant/variants/#{variant.id}"
     expect(response).to have_http_status(:found)

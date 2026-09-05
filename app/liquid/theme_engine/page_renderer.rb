@@ -184,11 +184,21 @@ module ThemeEngine
                                                  { media: :stored_file } ],
                              product_options: :option_values, media: :stored_file).first
         end
-        product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix,
-                                                              selected_variant_id: variant_id,
-                                                              publication: @publication,
-                                                              translations: translations_for(product)) },
-                   200, product ] : not_found
+        if product
+          drop = ProductDrop.new(product, url_prefix: @url_prefix, selected_variant_id: variant_id,
+                                 publication: @publication, translations: translations_for(product))
+          # T15b：這條路由的語境另綁裸 `product_variant`——三套主題的取貨 section 讀的就是它：
+          #   Ella `sections/pickup-availability.liquid` L2 與 Minimog 同檔 L3 皆
+          #   `{%- assign pick_up_availabilities = product_variant.store_availabilities | where: 'pick_up_enabled', true -%}`，
+          #   且兩檔開頭都寫 `{% comment %}theme-check-disable UndefinedObject{% endcomment %}`（＝作者知道它只在特定語境存在）；
+          #   Kalles `blocks/_product-pickup.liquid` L8–9 更寫了 `unless product_variant / assign product_variant =
+          #   product.selected_or_first_available_variant` 的回退（＝inline 渲染時沒有、section 形時有）。
+          # 🔴 本尊未直接觀測（hoko 無啟用取貨的地點 ⇒ 該 section 回空 div）；依據＝上述三套主題的匯聚用法（91 §3.92）。
+          [ "product", { "product" => drop, "product_variant" => drop.variants.find { |v| v.id == variant_id } },
+            200, product ]
+        else
+          not_found
+        end
 
       # 引擎缺口 PR-9：`/collections/{handle}/products/{p}`（`within` filter 官方例的系列語境商品 URL）
       # 同商品頁（系列語境 v1 不入 assigns——登記）。
