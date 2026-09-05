@@ -21,7 +21,7 @@
   theme block 實例前綴 `A{17}__`⇒`B__`；同 `RenderParity::Normalizer` 的身分規則）＋自 section 根起的 `tag[:nth-of-type]` 路徑。
 - 比對屬性：89 個 computed 屬性（盒模型／定位／字型／顏色／背景／flex／grid／transform／陰影等，清單在檔內 `PROPS`）＋
   `getBoundingClientRect` 四值。px 值容差 0.5（次像素文字量測噪音；rect 同）；其餘字串精確比對。
-- 值正規化只抹身分差：主機、`/cdn/shop/t/{n}/assets/`⇒`/theme-assets/`、`?v=`、`data:` 內容。
+- 值正規化只抹身分差：主機、`/cdn/shop/t/{n}/assets/`⇒`/theme-assets/`（T12 起我方輸出亦為本尊形，規則對兩形皆收斂）、`?v=`、`data:` 內容。
 - score＝段內「逐屬性全同的元素數 ／ max(ref 元素數, cand 元素數)」；段落「全同」＝零差異（含元素集合相同）。
 
 ## §1 量測方法與已知例外

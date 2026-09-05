@@ -54,7 +54,7 @@ module Admin
       hit = default_locale_hit
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: Publication.online_store!,
-        design_mode: true, host: request.host,
+        design_mode: true, host: request.host, asset_host: request.host_with_port,
         locale: hit&.locale_tag, web_presence: hit&.web_presence # E13：與 show 同一語言真相
       ).render(params[:path].presence || "/", params: { "section_id" => sid },
                draft_sections: { sid => entry })
@@ -100,7 +100,7 @@ module Admin
       hit = default_locale_hit
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: publication,
-        design_mode: design_mode, host: request.host, # 步 16a：編輯器 iframe 開 design_mode
+        design_mode: design_mode, host: request.host, asset_host: request.host_with_port, # 步 16a：編輯器 iframe 開 design_mode
         locale: hit&.locale_tag, web_presence: hit&.web_presence, # E13：預覽以店的預設市場語言渲染（default_locale_hit）
         cart_json: cart && Storefront::CartSerializer.cart_json(cart)
       ).render("/#{params[:path]}", params: request.query_parameters.except("draft"),

@@ -113,6 +113,15 @@ Rails.application.routes.draw do
     get "checkouts/internal/preloads.js" => "storefront/platform_assets#preloads", format: false
     get "cdn/shop/t/:theme_id/compiled_assets/:file" => "storefront/platform_assets#compiled", format: false,
         constraints: { theme_id: /\d+/, file: /(?:scripts|snippet-scripts)\.js/ }
+    # T12：主題資產 URL 本尊形（`asset_url` ⇒ `//host/cdn/shop/t/{id}/assets/x?v=…`；docs/dev/t12-theme-asset-urls.md）——任一主題以 id 供給
+    # （本尊未發布主題亦可由 id 取得：hoko.vip `/cdn/shop/t/1/assets/base.css` 200，2026-09-05）；字型 `/cdn/fonts/{family}/{handle}.{sha1}.woff2`；
+    # Files 頁檔 `/cdn/shop/files/{name}`；themes_support／global 只定路徑形（本體未提供 ⇒ 404，91 §3.89 V）。舊 `/theme-assets/*` 留作相容。
+    get "cdn/shop/t/:theme_id/assets/*file" => "storefront/assets#cdn", format: false, constraints: { theme_id: /\d+/ }, as: :storefront_cdn_asset
+    get "cdn/fonts/:family/:file" => "storefront/assets#font", format: false,
+        constraints: { family: /[a-z0-9_-]+/, file: /[a-z0-9_-]+\.[0-9a-f]{40}\.woff2?/ }, as: :storefront_cdn_font
+    get "cdn/shop/files/:filename" => "storefront/media#by_filename", format: false, constraints: { filename: /[^\/]+/ }, as: :storefront_cdn_file
+    get "cdn/shopifycloud/storefront/assets/themes_support/*file" => "storefront/assets#themes_support", format: false
+    get "cdn/s/global/*file" => "storefront/assets#global_asset", format: false
     get "sf_private_access_tokens" => "storefront/platform_assets#private_access_tokens", format: false
     post "api/collect" => "storefront/platform_assets#collect", format: false
     get ":shop_id/digital_wallets/dialog" => "storefront/platform_assets#digital_wallets_dialog", format: false, constraints: { shop_id: /\d+/ }

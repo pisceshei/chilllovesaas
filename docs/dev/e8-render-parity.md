@@ -153,7 +153,7 @@ bt3 部署（`d9b28b12`，2026-09-05）後對公開 mirror 重跑：結果逐對
 
 | 類 | 內容 | 落點 |
 |---|---|---|
-| 平台身分 | 主機／永久網域（`Shopify.shop`、canonical、JSON-LD url、`window.shopUrl`）、CDN 路徑（`/cdn/shop/t/2/assets` vs `/theme-assets`）、字型雜湊、`sections--{數字}`、theme 數字 id、block 實例前綴**值**（演算法不可觀測） | Normalizer |
+| 平台身分 | 主機／永久網域（`Shopify.shop`、canonical、JSON-LD url、`window.shopUrl`）、CDN 路徑（本尊 `/cdn/shop/t/2/assets`；我方 T12 起同形 `/cdn/shop/t/{id}/assets`、T12 前 `/theme-assets`——規則兩形都收）、字型雜湊、`sections--{數字}`、theme 數字 id、block 實例前綴**值**（演算法不可觀測） | Normalizer |
 | ~~裁定差異~~（已收口） | 我方路由前綴恆帶地區（67 §F.1(b)，2026-08-13）：本尊主市場預設語言**無前綴**（`href="/collections/all"`） | **D80 方案 1（2026-09-04）改回本尊形**：mirror 店根路徑＝預設語言、`/zh-hant` 等裸語言段；`CAND_PREFIX` 不再需要（Normalizer 的 `url_prefix:` 保留為工具能力）。`docs/dev/d80-url-structure.md` |
 | ~~裁定差異（E15）~~（已收口） | 五市場後 `__head__` 的 hreflang：我方逐國展開＝161 條、切換器 `root_url` 帶地區（`/zh-hant-tw`）；本尊 6 條語言碼、`/zh-hant`（§G21） | D80 後 `Markets::HreflangCodes.for_presence` 共用網域一語言一碼（mirror 店首頁六條與本尊逐條同形，MR4）；`root_url` 預設 `/`、其他 `/zh-hant` |
 | 平台功能 | 本尊新版顧客帳戶登入連結 `/customer_authentication/redirect?locale=…`／`https://shopify.com/{id}/account`；我方 `/account/login`／`/account/register` | 報告保留 |

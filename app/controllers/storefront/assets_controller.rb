@@ -15,10 +15,13 @@ module Storefront
     # 對應殺手格（S10）顯式開 forgery 再打。純讀端點無狀態變更，CSRF 語義不適用。
     skip_forgery_protection
 
-    before_action :require_published_theme!, except: %i[no_image flag portable_wallets accelerated_checkout_css]
+    before_action :require_published_theme!, except: %i[no_image flag portable_wallets accelerated_checkout_css cdn font themes_support global_asset]
 
     # E17：`img_url` 對 nil 的平台「無圖」佔位——路徑形照本尊 `/cdn/shopifycloud/storefront/assets/no-image-2048-a2addb12_{size}.gif`
     # （hoko.vip 2026-09-05），圖片本體＝我方自繪 1×1 淺灰 gif（鐵律 9：不用本尊圖片；佔位插圖自繪例外）。
+    # T12：hoko.vip 主題資產回應 `cache-control: public, max-age=31557600`（＝365.25 天；Rails `1.year`＝31556952 不同值）
+    THEME_ASSET_MAX_AGE = 31_557_600.seconds
+
     NO_IMAGE_GIF = [ "47494638396101000100800000f2f2f2ffffff21f90401000000002c00000000010001000002024401003b" ].pack("H*").freeze
 
     def no_image
@@ -65,6 +68,51 @@ module Storefront
     def lang_code_to_shopify(code)
       lang, region = code.to_s.split("-", 2)
       region ? "#{lang.downcase}-#{region.upcase}" : lang.to_s.downcase
+    end
+
+    # T12：GET /cdn/shop/t/:theme_id/assets/*file（本尊形；ThemeEngine::AssetUrls）。任一主題以 id 供給（租戶內；本尊未發布主題亦可由 id 取得）。
+    # `?v=` 只作快取鍵（本尊錯 v／無 v 皆 200——hoko.vip 2026-09-05）；`_{size}` 尺寸形 ⇒ 回原檔（我方不縮放主題資產，91 V）。
+    # 回應標頭照 hoko 實測：`cache-control: public, max-age=31557600`、`access-control-allow-origin: *`；缺檔 404 `public, max-age=60`。
+    def cdn
+      rel = params[:file].to_s
+      return not_found_asset if rel.blank? || rel.include?("..") || rel.include?("\\")
+
+      theme = ActsAsTenant.with_tenant(current_shop) { Theme.find_by(shop_id: current_shop.id, id: params[:theme_id]) }
+      source = theme && ThemeEngine::Sources.resolve(theme)
+      return not_found_asset if source.nil?
+
+      body = source.read(File.join("assets", rel))
+      if body.nil?
+        base, size = ThemeEngine::AssetUrls.split_size(rel)
+        body = source.read(File.join("assets", base)) if size
+      end
+      return not_found_asset if body.nil?
+
+      expires_in THEME_ASSET_MAX_AGE, public: true # hoko `public, max-age=31557600`；Rails 出 `max-age=…, public`（指令順序差登記 91）
+      response.headers["Access-Control-Allow-Origin"] = "*"
+      send_data body, type: Marcel::MimeType.for(name: rel), disposition: "inline"
+    end
+
+    # T12：GET /cdn/fonts/:family/:file（`{handle}.{sha1}.woff2`；雜湊不符或 .woff ⇒ 404）。標頭照 hoko：`public, max-age=31536000, immutable`＋CORS *。
+    def font
+      m = params[:file].to_s.match(/\A([a-z0-9_-]+)\.([0-9a-f]{40})\.(woff2?)\z/) or return not_found_asset
+      handle, sha, ext = m[1], m[2], m[3]
+      family = params[:family].to_s
+      return not_found_asset unless ext == "woff2" && ThemeEngine::FontFiles.sha1(family, handle) == sha
+
+      expires_in 365.days, public: true # ＝31536000（hoko `public, max-age=31536000, immutable`）
+      response.cache_control[:extras] = [ "immutable" ]
+      response.headers["Access-Control-Allow-Origin"] = "*"
+      send_data ThemeEngine::FontFiles.body(family, handle), type: "font/woff2", disposition: "inline"
+    end
+
+    # T12：themes_support（option_selection／currencies／vendor/qrcode／gift-card 圖）與 global 資產——本尊本體不可抄（鐵律 9），我方尚未自寫 ⇒ 404（91 V）
+    def themes_support = not_found_asset
+    def global_asset = not_found_asset
+
+    def not_found_asset
+      expires_in 60.seconds, public: true # hoko 缺檔 `public, max-age=60`
+      head :not_found
     end
 
     # GET /theme-assets/*file

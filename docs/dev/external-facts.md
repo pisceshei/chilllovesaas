@@ -1796,3 +1796,35 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   hoko 74 頁皆無 `compiled_assets/styles`（Ella 的 4 個 `{% stylesheet %}` 檔未被渲染或另形，V）。
 - **證據檔**：scratchpad `t10/cfh_{page}.html`（74 頁 cfh 原文）、`cfh_tags.json`、`nodes_product.txt`（38 節點全文）、`after_cfh_product_nodes.txt`（尾段 10 節點全文）、
   `compiled_scripts.js`／`compiled_snippet_scripts.js`、`acme-tee.oembed.json`、`collections-all.atom`、`preloads.js`、`digital_wallets_dialog.html`、`audit/storefront/*.headseq.txt`。
+
+### G28. 主題資產 URL 濾鏡的本尊形：官方逐字、hoko.vip 實測與供給端標頭（T12 依據，取證 2026-09-05）
+
+- **官方逐字**（shopify.dev/docs/api/liquid/filters/*，2026-09-05）：
+  - `asset_url`："Returns the CDN URL for a file in the assets directory of a theme." 例 `{{ 'cart.js' | asset_url }}` ⇒
+    `//polinas-potent-potions.myshopify.com/cdn/shop/t/4/assets/cart.js?v=83971781268232213281663872410`（29 位；後 10 位 `1663872410`＝2022-09 unix 秒）。
+  - `asset_img_url`："CDN URL for an image in the `assets` directory of a theme"；size 預設 small（100×100）；例 `…/t/4/assets/red-and-black-bramble-berries_small.jpg?v=337`、`'large'` ⇒ `_large`。
+  - `file_url`："Returns the CDN URL for a file from the Files page of the Shopify admin." 例 `//…/cdn/shop/files/disclaimer.pdf?v=9043651738044769859`（19 位）。
+  - `file_img_url`："Returns the CDN URL for an image from the Files page of the Shopify admin." 例 `//…/cdn/shop/files/potions-header_small.png?v=4246568442683817558`。
+  - `shopify_asset_url`："Returns the CDN URL for a globally accessible Shopify asset." 例 `//…/cdn/shopifycloud/storefront/assets/themes_support/option_selection-b017cd28.js`；
+    可用資產＝option_selection.js／api.jquery.js／shopify_common.js／customer_area.js／currencies.js／customer.css。
+  - `global_asset_url`："Returns the CDN URL for a global asset. Global assets are kept in a directory on Shopify's server." 例 `//…/cdn/s/global/lightbox.js`。
+  - `font_url`："Returns the CDN URL for the provided font in `woff2` format."／"By default, the `font_url` filter returns the CDN URL for the font in `woff2` format."
+    例 `//…/cdn/fonts/assistant/assistant_n4.9120912a469cad1cc292572851508ca49d12e768.woff2`；`font_url: 'woff'` ⇒ `…assistant_n4.6e9875ce64e0fefcd3f4446b7ec9036b3ddd2985.woff`（另一雜湊）。
+  - `img_url`（deprecated）："The `img_url` filter has been replaced by `image_url`."；尺寸表 pico 16×16／icon 32／thumb 50／small 100／compact 160／medium 240／large 480／
+    grande 600／original＝master 1024；例 `//…/cdn/shop/files/science-beakers-blue-light-new_large.jpg?v=1683744744`。
+- **hoko.vip 商品頁快照**（scratchpad `audit/storefront/products-acme-tee-hoko.html`）：`//hoko.vip/cdn/shop/t/2/assets/X?v=N` 89 個、`//hoko.vip/cdn/fonts/X` 33 個、
+  `?v=` 位數 28／29／30 各 2／39／48；樣本 `vendor.css?v=125514756949995026771788313528`、`base.css?v=154899163682928891721788313528`、
+  `section.css?v=172299611464518051501788313528`、`component-slider.css?v=96588152810197400751788313528`——後 10 位同為 `1788313528`（2026-09-01 unix 秒），
+  前段 18–20 位（≤ 2^64）；`compiled_assets/scripts.js?v=18586094861343648081788313593`、`snippet-scripts.js?v=98651919634664577141788313594`（另兩個時間戳）。
+  字型 `//hoko.vip/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2`／`…791c46290e672b3f85c3d1c651ef2efa3819eadd.woff`（woff2／woff 雜湊不同）。
+  同頁無 `cdn/shop/files/`（hoko 無上傳檔）、無 `shopify_asset_url` 輸出（Ella 只在 global-script／gift_card 用）。
+- **供給端標頭**（`curl -sI`，2026-09-05）：
+  - `https://hoko.vip/cdn/shop/t/2/assets/base.css?v=154899163682928891721788313528` ⇒ 200 `Content-Type: text/css`、`access-control-allow-origin: *`、
+    `access-control-expose-headers: *`、`cache-control: public, max-age=31557600`、`last-modified`、`vary: Accept-Encoding`、`x-content-type-options: nosniff`；
+    無 `?v=` ⇒ 200 同標頭；`?v=1` ⇒ 200；`nope.css` ⇒ 404 `cache-control: public, max-age=60`；**`/cdn/shop/t/1/assets/base.css` ⇒ 200**（非發布主題以 id 可取）。
+  - 字型 woff2 ⇒ 200 `Content-Type: font/woff2`、`cache-control: public, max-age=31536000, immutable`、CORS *。
+  - `compiled_assets/scripts.js` ⇒ 200 `text/javascript`、`public, max-age=31557600`。
+  - `/cdn/s/global/lightbox.js` ⇒ 200 `text/javascript`、`public, max-age=31536000`；`…/themes_support/option_selection-b017cd28.js` ⇒ 200 同標頭。
+- **未取得**：`?v=` 前段的摘要演算法；`asset_url` 對缺檔的輸出形；`file_url` 的 `?v=` 語義；`shopify_asset_url` 8 位雜湊的來源。
+- **我方本機對照**（mirror.lvh.me:3000，Ella 7.2.0，同日）：89 個 asset URL、`?v=` 28／29／30 各 2／47／40、fonts 21（settings 差）、`.woff` 404、
+  `cache-control: max-age=31557600, public`（Rails 重排指令順序）。

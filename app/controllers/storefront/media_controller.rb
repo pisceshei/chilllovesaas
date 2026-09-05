@@ -17,7 +17,33 @@ module Storefront
       file = StoredFile.find_by(shop_id: current_shop.id, id: params[:id])
       return head :not_found if file.nil? || file.status == "failed"
 
-      entry = pick_variant(file, params[:width].to_i, params[:height].to_i)
+      serve(file, params[:width].to_i, params[:height].to_i)
+    end
+
+    # T12：GET /cdn/shop/files/:filename（`file_url`／`file_img_url` 本尊形）——先以完整檔名查，再拆 `_{size}` 尺寸形
+    # （官方 img_url 表 pico…master ⇒ width；`{w}x{h}` 取 w）；同名多筆取最新。
+    def by_filename
+      raw = params[:filename].to_s
+      file = stored_file(raw)
+      width = 0
+      if file.nil?
+        base, size = ThemeEngine::AssetUrls.split_size(raw)
+        file = size && stored_file(base)
+        width = size ? (ThemeEngine::AssetUrls::NAMED_SIZE_PX[size] || size.split("x").first.to_i) : 0
+      end
+      return head :not_found if file.nil?
+
+      serve(file, width, 0)
+    end
+
+    private
+
+    def stored_file(name)
+      StoredFile.where(shop_id: current_shop.id, filename: name).where.not(status: "failed").order(id: :desc).first
+    end
+
+    def serve(file, req_w, req_h)
+      entry = pick_variant(file, req_w, req_h)
       expires_in 1.day, public: true
       if entry
         begin
@@ -33,8 +59,6 @@ module Storefront
     rescue Errno::ENOENT, Storage::LocalDisk::InvalidKey
       head :not_found
     end
-
-    private
 
     def pick_variant(file, req_w, req_h)
       return nil if req_w.zero? && req_h.zero?

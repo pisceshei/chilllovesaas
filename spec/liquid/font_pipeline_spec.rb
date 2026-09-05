@@ -26,8 +26,10 @@ RSpec.describe "Theme engine font pipeline" do
     expect(css).to include("font-style: normal;")
     expect(css).not_to include("font-display") # 未傳參數不輸出該行（97 §4-1）
     # E8（2026-09-03，hoko.vip 原始位元組）：src 兩行＝woff2 之後接 woff 備援（我方 woff 檔未提供，形對位、登記）
-    expect(css).to include(%(src: url("/fonts/jost/jost_n4.woff2") format("woff2"),
-       url("/fonts/jost/jost_n4.woff") format("woff");))
+    # T12：路徑改本尊形 `/cdn/fonts/{family}/{handle}.{sha1}.woff2`（無 context ⇒ 主機相對；雜湊＝public/fonts 檔 SHA-1）
+    sha = Digest::SHA1.file(Rails.root.join("public/fonts/jost/jost_n4.woff2")).hexdigest
+    expect(css).to include(%(src: url("/cdn/fonts/jost/jost_n4.#{sha}.woff2") format("woff2"),
+       url("/cdn/fonts/jost/jost_n4.#{sha}.woff") format("woff");))
 
     with_display = harness.font_face(jost4, "font_display" => "swap")
     expect(with_display).to include("font-display: swap;")
@@ -44,8 +46,9 @@ RSpec.describe "Theme engine font pipeline" do
     expect(harness.font_face(harness.font_modify(jost4, "style", "italic"))).to eq("")
   end
 
-  it "F3 font_url 回自 host woff2 路徑；variants＝同家族 4 變體" do
-    expect(harness.font_url(jost4)).to eq("/fonts/jost/jost_n4.woff2")
+  it "F3 font_url 回自 host woff2 的本尊形路徑（T12）；variants＝同家族 4 變體" do
+    sha = Digest::SHA1.file(Rails.root.join("public/fonts/jost/jost_n4.woff2")).hexdigest
+    expect(harness.font_url(jost4)).to eq("/cdn/fonts/jost/jost_n4.#{sha}.woff2")
     expect(jost4.variants.map(&:weight)).to match_array([ 400, 500, 600, 700 ])
     # 對應實體檔存在（自 host 最小集不是紙面聲明）
     expect(Rails.root.join("public/fonts/jost/jost_n4.woff2")).to exist
