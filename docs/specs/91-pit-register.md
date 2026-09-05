@@ -4343,3 +4343,12 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **⚪ Minimog 的 18 頁 `image_url` nil 錯誤**：`snippets/social-sharing` 對無圖商品呼叫 `image_url` ⇒ 官方同樣 raise "invalid url input"（E12 已登記同型）。
 - **登記：工廠全域序號造成的測試順序依賴**：`factory :product_variant` 的 `sequence(:position)` 是全域的，單跑與整套跑的值不同 ⇒
   `variants.first` 會換人（PU1 在套件內失敗過）。多變體規格一律顯式給 `position:`。
+
+### 3.92 T15 `/variants/{id}` 路由（2026-09-05）的未取得與範圍外
+
+- **V 未發布／草稿商品的變體**：我方以 `Storefront::Lookup.product_by_handle` 過濾發布狀態 ⇒ 未發布回 404；本尊形未取得。
+- **V 變體 id 不屬於任何商品／跨店 id**：我方 404（租戶查詢天然落空）；本尊形未取得。
+- **V `sections=`（複數形）在 `/variants/{id}` 上**：只實測了 `section_id=`；複數形我方走既有的 section-rendering 分支（回 JSON），本尊未驗。
+- **V 302 的快取語義**：本尊 302 是否帶 `cache-control` 未記錄（我方不特別設）。
+- **登記：路由缺失會讓上游功能「看起來沒做」**：T14 的 `store_availabilities` 在 bt3 上完全正確，但主題拿不到 ⇒
+  驗收前台功能時，要先 grep 主題 JS 的 fetch URL，再照那條 URL 打一次，而不是只看整頁 HTML 有沒有那段文字。

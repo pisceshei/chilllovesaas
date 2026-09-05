@@ -1899,3 +1899,21 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   之後 `{% if form[name] %}` ⇒ 以字串當屬性名查 form。探針（`scratchpad/t14/probe_name.rb`）：我方渲染 `<input value="">`、
   未定義變數形也走 `elsif`——與本尊同（form 無該屬性 ⇒ nil）。屬主題怪癖，非引擎缺口。
 - **證據檔**：scratchpad `t8/kalles-5.4.2.json`／`minimog-6.0.0.json`（本包前）、`t14/*-after2.json`（本包後）、`t14/probe_name.rb`。
+
+### G31. `/variants/{id}` 路由的兩種形態（T15 依據，取證 2026-09-05 hoko.vip 實測＋官方 section rendering）
+
+- **hoko.vip 實測**（`curl -s -o /dev/null -D -`，2026-09-05）：
+  - `https://hoko.vip/variants/44547877830759` ⇒ **HTTP 302**，`location: https://hoko.vip/products/acme-tee?variant=44547877830759`，
+    `content-type: text/html; charset=utf-8`，body 0 位元組。
+  - `https://hoko.vip/variants/44547877830759/?section_id=pickup-availability` ⇒ **HTTP 200**，`content-type: text/html; charset=utf-8`，
+    body 77 位元組，逐字 `<div id="shopify-section-pickup-availability" class="shopify-section"></div>`
+    （內容空＝該店沒有啟用取貨的地點；section 外框仍然渲染）。
+- **官方 ajax/section-rendering**（同日）："Sections rendered in response to the `section_id` query parameter are returned directly as
+  HTML and, like `sections`, this parameter can be used to render a section in the context of any page."；
+  `sections` 參數回 JSON（section id → HTML 的對），`section_id` 直接回 HTML。
+- **主題消費者（為什麼需要這條路由）**：Ella 7.2.0 `assets/pickup-availability.js` 逐字
+  `const variantSectionUrl = \`${rootUrl}variants/${variantId}/?section_id=pickup-availability\`;` → `fetch(variantSectionUrl)`；
+  變體切換時再呼叫 `fetchAvailability(variant.id)`。Dawn 與 Kalles／Minimog 的取貨區塊同一形態。
+  ⇒ **沒有這條路由時，`variant.store_availabilities`（T14）做得再對，主題也永遠停在「無法載入自提資訊」的 fallback**——
+  這是「功能完成」與「主題真的拿得到」的差別，部署後要照主題的實際 fetch URL 驗一次。
+- **未取得**：未發布商品的變體、變體 id 不屬於該商品、`sections=`（複數形）在這條路由上的行為（91 §3.92）。

@@ -67,6 +67,19 @@ module Storefront
       # section in the context of any page."；"If the requested section ID doesn't exist on the theme, then the server responds
       # with a 404 status."）。先前只有 search/suggest、recommendations、cart POST 走這條，`/search?section_id=` 回整頁 ⇒ Ella 的
       # recently-viewed JS 拿到整頁 HTML 而顯示警告區塊（hoko 該段 display:none）。繞過頁快取（cart drawer 段含個人化）。
+      # T15：`/variants/{id}` 裸形 ⇒ 302 到商品頁帶 `?variant=`（本尊實測：hoko `/variants/44547877830759` ⇒ 302
+      # `https://hoko.vip/products/acme-tee?variant=44547877830759`）。帶 section_id／sections 的形走下面的 section rendering
+      # （由 PageRenderer 以「該變體被選取的商品頁」為語境渲染）。查無變體 ⇒ 落到一般流程的 404。
+      if (m = rest.match(%r{\A/variants/(\d+)\z})) && !section_rendering_request?
+        handle = ActsAsTenant.with_tenant(current_shop) do
+          ProductVariant.find_by(shop_id: current_shop.id, id: m[1].to_i)&.product&.handle
+        end
+        if handle
+          prefix = Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag)
+          return redirect_to "#{prefix}/products/#{handle}?variant=#{m[1]}", status: :found, allow_other_host: false
+        end
+      end
+
       if section_rendering_request?
         response.headers["Cache-Control"] = "no-store"
         payload = render_page(hit, rest, cart_json: buyer_cart_json, extra: section_rendering_params,
