@@ -119,6 +119,7 @@ module RenderParity
       s.gsub!(/(default_configuration_id=)\d+/, '\1ID')
       s.gsub!(%r{(content=")/\d+(/digital_wallets/dialog")}, '\1/ID\2')
       s.gsub!(/(data-(?:shop-id|theme-instance-id)=")\d+"/, '\1ID"')
+      s.gsub!(%r{(/cdn/shop/t/)\d+(/compiled_assets/)}, '\1ID\2') # 編譯資產路徑的主題 id（身分值：hoko 主題 2、bt3 mirror 主題 7；本機恰為 2 才碰巧全同）
       s.gsub!(/(data-render-region=")[^"]*"/, '\1REGION"')
       s.gsub!(/(data-theme-name=")[^"]*"/, '\1NAME"')
       s.gsub!(/(name="shopify-[ys]" content=")[^"]*(" data-expiration=")\d+"/, '\1UUID\2T"')
