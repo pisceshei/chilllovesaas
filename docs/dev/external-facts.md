@@ -1673,3 +1673,71 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
 - **證據檔**（scratchpad `e17/`：`hoko_*.html|json`、`local_*`、`bt3 前 mirror_*`、`reports*/report-*.md`、`summary.txt`、`hoko_sortnames.txt`、
   `hoko_417_*.txt(.headers)`、`hoko_ms_*.html`、`hoko_rv_*.html`、`hoko_acme-tee.js.json`、`hoko_acme-tee.json.json`、`hoko_soldout_zhcn.json`）。
   重取：`python e17_fetch.py`（bt3）／`e17_fetch_local.py`（本機 3001）＋ `rails runner e17_diff.rb pairs.json reports`。
+
+### G26. 動態結帳按鈕（本尊 portable-wallets）的骨架、升級後光 DOM、head bootstrap、按下流程與文案（E18 依據，取證 2026-09-05 headless Chrome＋curl hoko.vip）
+
+- **骨架（`{{ form | payment_button }}` 輸出，HTML 原文）**：`<div data-shopify="payment-button" class="shopify-payment-button"> <shopify-accelerated-checkout
+  recommended="null" fallback="{&quot;supports_subs&quot;:true,&quot;supports_def_opts&quot;:true,&quot;name&quot;:&quot;buy_it_now&quot;,&quot;wallet_params&quot;:{}}"
+  access-token="4b93ca42cf1c603811a75df17e412e8f" buyer-country="TW" buyer-locale="zh-CN" buyer-currency="HKD"
+  variant-params="[{&quot;id&quot;:44547877830759,&quot;requiresShipping&quot;:true}]" shop-id="68893507687" enabled-flags="[&quot;a1d1f9a1&quot;]" disabled >
+  <div class="shopify-payment-button__button" role="button" disabled aria-hidden="true" style="background-color: transparent; border: none">
+  <div class="shopify-payment-button__skeleton">&nbsp;</div> </div> </shopify-accelerated-checkout> </div>`（`/products/acme-tee`；
+  `/en/`／`/fr/`／`/ja/`／`/zh-hant/` 頁相同、只有 `buyer-locale` 隨頁語言）。骨架內**沒有** `#shopify-buyer-consent`（該 id 只出現在 head 的
+  script／style 文字裡）。官方 payment_button 濾鏡文檔（shopify.dev/docs/api/liquid/filters/payment_button，取證 2026-09-05）："generates an HTML
+  container to host accelerated checkout buttons for a product"、"must be used on the `form` object within a product form"。
+- **JS 升級後的光 DOM**（headless Chrome `evaljs`，`/products/acme-tee`，root font-size 10px）：
+  `<div data-shopify="payment-button" class="shopify-payment-button disabled"> <shopify-accelerated-checkout recommended="null" fallback="…"
+  access-token="…" buyer-country="TW" buyer-locale="zh-CN" buyer-currency="HKD" variant-params="…" shop-id="…" enabled-flags="…" requires-shipping="">
+  <shopify-buy-it-now-button access-token="…" buyer-country="TW" buyer-currency="HKD" wallet-params="{}" page-type="product" slot="button"
+  requires-shipping="" call-to-action=""><button type="button" class="shopify-payment-button__button shopify-payment-button__button--unbranded">立即购买</button>
+  </shopify-buy-it-now-button></shopify-accelerated-checkout> </div>`。⇒ 升級後：`shopify-accelerated-checkout` **拆 `disabled`、加 `requires-shipping=""`**、
+  骨架子節點移除、只剩一個 `shopify-buy-it-now-button` 子節點；兩個自訂元素 `shadowRoot === null`（closed；官方句 "hide their HTML in a custom element
+  with a closed shadow DOM"）；按鈕在光 DOM。外層 `.disabled` class 是 **Ella `product-form.js`** 加的（agree-condition 未勾 ⇒
+  `this.buyItNowButton.classList.add('disabled')`），勾選後 class 只剩 `shopify-payment-button`；`.product-form__submit` 未 disabled。
+- **computed（1280，agree 未勾）**：wrapper `display block; opacity 0.5; height 50px; width 350px; cursor not-allowed`；`shopify-accelerated-checkout`／
+  `shopify-buy-it-now-button` 皆 `display inline`；button `display inline-grid; height 50px; min-height 50px; width 350px（100%）; padding 12px 32px;
+  border 1px solid rgb(0,0,0); background transparent; color rgb(0,0,0); font Poppins 500 16px/22.4px; letter-spacing 1px; text-transform uppercase;
+  text-align center; cursor not-allowed; grid-template-columns 284px`。來源：Ella `base.css`（`button.shopify-payment-button__button--unbranded` 併入
+  `.button` 規則、`.accelerated-checkout-block.checkout--button-secondary button.shopify-payment-button__button--unbranded` 透明底＋1px 框、
+  `.disabled { opacity: var(--opacity-50); cursor: not-allowed; button { cursor: not-allowed } }`）＋平台光 DOM 樣式表（下）＋注入的全域樣式。
+- **平台光 DOM 樣式表**：head 的 `<link id="shopify-accelerated-checkout-styles" rel="stylesheet" media="screen"
+  href="https://hoko.vip/cdn/shopifycloud/portable-wallets/latest/accelerated-checkout-backwards-compat.css" crossorigin="anonymous">`（13,728 bytes；
+  規則集節錄：`.shopify-payment-button__button{height:clamp(25px, var(--shopify-accelerated-checkout-button-block-size,44px), 55px);min-height:同;
+  border-radius:var(--shopify-accelerated-checkout-button-border-radius,0px);color:#fff;cursor:pointer;text-align:center;border:none;width:100%;
+  font-size:1em;font-weight:500;line-height:1;transition:background .2s ease-in-out;display:block;box-shadow:0 0 #0000}`、
+  `.shopify-payment-button__button--unbranded{background-color:#1990c6;padding:1em 2em}`、skeleton／`.wallet-cart-*` 格線／`#shopify-buyer-consent`；
+  全文存 scratchpad `e18/pw/accelerated-checkout-backwards-compat.css`）。
+- **注入的全域樣式**：模組執行後 head 多一個 `<style id="global-shopify-accelerated-checkout-styles">shopify-accelerated-checkout {\n
+  --shopify-accelerated-checkout-button-block-size: 5rem;\n  --shopify-accelerated-checkout-button-box-shadow: none;\n}</style>`（`document.head.appendChild`）。
+  來源＝bundle 的「style backwards compatibility」：走訪同源／`crossorigin=anonymous` 樣式表，挑選擇器命中
+  `.shopify-payment-button__button`（不含 `--unbranded`）／`.shopify-payment-button… [role=button]`／`.dynamic-checkout-buttons .shopify-payment-button__button`
+  的規則，反序後依特異度（id／class+attr+pseudo／element）穩定排序，取 height／min-height／border-radius／margin-top（`!important` 優先），
+  `height`／`min-height` 含 `var(--shopify-accelerated-checkout-button-block-size` 或 `auto` 者排除、兩者皆有取 `max()`；box-shadow 取
+  `.product-form__buttons .button` 的 `::before` computed；元素上已有值的 `--shopify-accelerated-checkout-*` 跳過。Ella：`section-main-product.css`
+  `.shopify-payment-button__button { min-height: 5rem }` ⇒ `5rem`；`::before` box-shadow computed `none` ⇒ `none`；border-radius 因 Ella `base.css`
+  已在 `shopify-accelerated-checkout` 上宣告 `--…-button-border-radius` 而跳過。（bundle `portable-wallets.en.js` 386,135 bytes，函式 Io／xa／La／Oa／ip／op／ko。）
+- **head bootstrap（content_for_header 內，每頁都有：商品／集合／購物車／文章頁）**，依序：`<script data-source-attribution="shopify.dynamic_checkout.dynamic.init">`
+  （`Shopify.PaymentButton={isStorefrontPortableWallets:!0,init(){… t.src="https://hoko.vip/cdn/shopifycloud/portable-wallets/latest/portable-wallets.en.js",t.type="module",document.head.appendChild(t)}}`）
+  → `<script data-source-attribution="shopify.dynamic_checkout.buyer_consent">`（`portableWalletsHideBuyerConsent`／`Show…` 掛到 `Shopify.PaymentButton`）
+  → `<script>`（`portableWalletsCleanup(e)`：console.error＋移除 `shopify-accelerated-checkout .shopify-payment-button__skeleton, shopify-accelerated-checkout-cart .wallet-cart-button__skeleton`
+  與 `#shopify-buyer-consent`；`portableWalletsNotLoadedAsModule`）→ `<script type="module" src="https://hoko.vip/cdn/shopifycloud/portable-wallets/latest/portable-wallets.en.js" onError="portableWalletsCleanup(this)" crossorigin="anonymous"></script>`
+  → `<script nomodule>document.addEventListener("DOMContentLoaded", portableWalletsCleanup);</script>` → `<script id='scb4127' … privacy-banner/storefront-banner.js>`
+  → `<link id="shopify-accelerated-checkout-styles" …>` → `<style id="shopify-accelerated-checkout-cart">`（`#shopify-buyer-consent{margin-top:1em;display:inline-block;width:100%}`
+  `#shopify-buyer-consent.hidden{display:none}` `#shopify-subscription-policy-button{background:none;border:none;padding:0;text-decoration:underline;font-size:inherit;cursor:pointer}`
+  `…::before{box-shadow:none}`）。bundle 檔名隨 `<html lang>`：`en`／`zh-cn`／`zh-tw`／`fr`／`ja`（五語言頁各自取證）。無 lazy chunk（resource entries 只有
+  bundle＋css）。整段 head 注入的其餘節點（`shopify-features`、`__st`、`preloads.js`、trekkie…）＝91 ⚪ `__head__`，另包。
+- **按下「立即購買」（agree 勾選後，售罄變體）**：`POST https://hoko.vip/api/unstable/graphql.json?operation_name=cartCreate`，標頭
+  `Content-Type: application/json`／`Accept: application/json`／`X-Shopify-Storefront-Access-Token: 4b93ca42cf1c603811a75df17e412e8f`／
+  `X-SDK-Variant: portable-wallets`／`X-Wallet-Name: BuyItNow`／`X-Start-Wallet-Checkout: true`；body `{"query":"mutation cartCreate($input:CartInput!$country:CountryCode$language:LanguageCode)@inContext(country:$country language:$language){result:cartCreate(input:$input){cart{...CartParts}errors:userErrors{...on CartUserError{message field code}}warnings:warnings{...on CartWarning{code}}}}fragment CartParts on Cart{id checkoutUrl deliveryGroups(first:10){…}cost{subtotalAmount{amount currencyCode}totalAmount{…}totalTaxAmount{…}totalDutyAmount{…}}discountAllocations{…}discountCodes{code applicable}lines(first:10){edges{node{…quantity cost{…}discountAllocations{…}merchandise{...on ProductVariant{requiresShipping title product{title}}}sellingPlanAllocation{…}}}}}","variables":{"input":{"lines":[{"merchandiseId":"gid://shopify/ProductVariant/44547877830759","quantity":1,"attributes":[]}],"discountCodes":[]},"country":"TW","language":"ZH_CN"}}`；
+  回應 200：`{"data":{"result":{"cart":{"id":"gid://shopify/Cart/hWNGSsir0p0uVtdW12Hzp5Bk?key=9491cba5403f3e29f0169a3e78dce8a8","checkoutUrl":"https://hoko.vip/cart/c/hWNGSsir0p0uVtdW12Hzp5Bk?key=AwE28R6E…-Q%3D%3D","deliveryGroups":{"edges":[]},"cost":{"subtotalAmount":{"amount":"188.0","currencyCode":"HKD"},"totalAmount":{"amount":"188.0","currencyCode":"HKD"},"totalTaxAmount":null,"totalDutyAmount":null},"discountAllocations":[],"discountCodes":[],"lines":{"edges":[{"node":{"parentRelationship":null,"quantity":1,"cost":{"subtotalAmount":{"amount":"188.0","currencyCode":"HKD"},"totalAmount":{"amount":"188.0","currencyCode":"HKD"}},"discountAllocations":[],"merchandise":{"requiresShipping":true,"title":"Default Title","product":{"title":"Acme Tee"}},"sellingPlanAllocation":null}}]}},"errors":[],"warnings":[]}},"extensions":{"context":{"country":"TW","language":"ZH_CN"},"cart_changelog":"eyJpdGVtc19hZGRlZCI6W3sicHJvZHVjdF9pZCI6Nzc3MTc5Njg5Nzg5NSwi\ndmFyaWFudF9pZCI6NDQ1NDc4Nzc4MzA3NTksImlkIjoiNGQwNjFhYTUtZmMy\n…"}}`
+  （售罄變體照樣建 cart、`errors` 空；`cart_changelog` 解碼＝`{"items_added":[{"product_id":7771796897895,"variant_id":44547877830759,"id":"4d061aa5-…","image":nul…`，
+  後段截斷）。之後 bundle 直接 `location` 導到 `checkoutUrl`（URL 攔截實測，未加參數）。`GET checkoutUrl` ⇒ **302 Found**
+  `location: https://hoko.vip/checkouts/cn/hWNGSsir0p0uVtdW12Hzp5Bk/zh-hans?_r=…`、`cache-control: no-cache, no-store`。
+  官方（help.shopify.com/en/manual/online-store/dynamic-checkout，取證 2026-09-05）："When a customer clicks an unbranded button, they skip the cart and go
+  to the Shopify Checkout."、"Customers can purchase only single variants of a product."、"You can customize the color and fonts of your unbranded
+  accelerated checkout buttons"；compatibility 頁："The unbranded accelerated checkout button displays Buy it now text."。
+- **文案（各語言 bundle `instruments_copy.checkout.buy_now` 逐字，curl CDN 2026-09-05）**：en `Buy it now`、zh-cn `立即购买`、zh-tw `立即購買`、
+  fr `Acheter maintenant`、ja `今すぐ購入`。
+- **證據檔**（scratchpad `e18/`）：`hoko_payment_button_probe.json`（升級後 DOM／computed／規則）、`probe_click2.js`＋輸出（cartCreate 抓包）、`probe_nav.js`
+  輸出（導頁 URL）、`probe_style.js` 輸出（全域樣式／shadow root）、`pw/portable-wallets.{en,zh-cn,zh-tw,fr,ja}.js`、`pw/accelerated-checkout-backwards-compat.css`、
+  `hoko_capture_payment_css.json`（E12 capture 的四元素 92 屬性）。

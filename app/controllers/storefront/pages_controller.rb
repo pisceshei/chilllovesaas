@@ -184,6 +184,7 @@ module Storefront
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
         host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
+        origin: "#{request.protocol}#{request.host_with_port}", # E18：平台 head 注入的絕對 URL（本機 http 埠形也要能載模組）
         web_presence: hit.web_presence, # localization 真值（切換器只列開放∧已發布——67 §F.2）
         market: hit.market, country_code: hit.effective_country_code, # D80：買家選國覆寫後的市場／國家
         query_string: query_string.presence,

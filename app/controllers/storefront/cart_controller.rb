@@ -26,6 +26,23 @@ module Storefront
       render json: e.as_json_body, status: e.status
     end
 
+    # GET /cart/c/:token?key=…（E18）：Storefront API cart 的 `checkoutUrl` 落地——本尊 302 到結帳頁
+    # （hoko.vip 2026-09-05：`/cart/c/{token}?key=…` ⇒ `302 Found` → `/checkouts/cn/{token}/zh-hans?_r=…`；
+    # 我方結帳 URL 形＝`/checkouts/{token}`（X1 包再對齊）。🔴 這張 cart 獨立於 `_cl_buyer` 的 Ajax 車：
+    # 不改 cookie（本尊「立即購買」不動買家購物車——help.shopify.com dynamic-checkout："they skip the cart"）。
+    # key 錯／缺 ⇒ 404（持有證明，`Storefront::CartKeys`）；空車 ⇒ 302 /cart。
+    def checkout_link
+      cart = ActsAsTenant.with_tenant(current_shop) do
+        Cart.includes(cart_line_items: { product_variant: :product }).find_by(shop_id: current_shop.id, token: params[:token].to_s)
+      end
+      return head :not_found if cart.nil? || !CartKeys.checkout_key_valid?(cart.token, params[:key])
+
+      checkout = ActsAsTenant.with_tenant(current_shop) { Checkouts::CreateFromCart.call(cart:) }
+      redirect_to "/checkouts/#{checkout.token}", status: :found, allow_other_host: false
+    rescue Checkouts::CreateFromCart::Error
+      redirect_to "/cart", status: :found, allow_other_host: false
+    end
+
     # GET /cart.js
     def show
       render json: CartSerializer.cart_json(current_cart)

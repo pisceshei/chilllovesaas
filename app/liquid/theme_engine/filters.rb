@@ -504,7 +504,32 @@ module ThemeEngine
       %(<svg class="payment-icon placeholder-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#e8ded2"/><title>#{CGI.escapeHTML(input.to_s)}</title></svg>)
     end
     def payment_type_img_url(_input) = ""
-    def payment_button(_input, _o = {}) = ""
+    # E18（T4）：`{{ form | payment_button }}`（動態結帳按鈕）本尊逐字（hoko.vip 2026-09-05 商品頁 main，external-facts §G26）：
+    #   <div data-shopify="payment-button" class="shopify-payment-button"> <shopify-accelerated-checkout recommended="null"
+    #   fallback="{&quot;supports_subs&quot;:true,&quot;supports_def_opts&quot;:true,&quot;name&quot;:&quot;buy_it_now&quot;,&quot;wallet_params&quot;:{}}"
+    #   access-token="{32 hex}" buyer-country="TW" buyer-locale="zh-CN" buyer-currency="HKD" variant-params="[{&quot;id&quot;:…,&quot;requiresShipping&quot;:true}]"
+    #   shop-id="68893507687" enabled-flags="[&quot;a1d1f9a1&quot;]" disabled > <div class="shopify-payment-button__button" role="button" disabled
+    #   aria-hidden="true" style="background-color: transparent; border: none"> <div class="shopify-payment-button__skeleton">&nbsp;</div> </div>
+    #   </shopify-accelerated-checkout> </div>
+    # 我方無錢包服務 ⇒ 出同形 disabled 骨架（本尊在無可用錢包時同樣停在骨架；E12 computed 對表 main 段無差）。access-token（本尊 storefront token）
+    # 與 shop-id 是身分值：我方以店 id 導出穩定 32 hex／店 id，Normalizer 抹之；`enabled-flags` 本尊值照抄（語義未取得，91 §3.87 V）。
+    # 無 product 脈絡（非商品表單）⇒ 空字串（既有）。
+    def payment_button(_input, _o = {})
+      product = @context["product"]
+      variant = product.respond_to?(:selected_or_first_available_variant) ? product.selected_or_first_available_variant : nil
+      return "" if variant.nil?
+
+      r = @context.registers
+      token = Storefront::AccessToken.for(r[:shop_id])
+      fallback = CGI.escapeHTML(%({"supports_subs":true,"supports_def_opts":true,"name":"buy_it_now","wallet_params":{}}))
+      vparams = CGI.escapeHTML(%([{"id":#{variant.id},"requiresShipping":#{variant.requires_shipping ? 'true' : 'false'}}]))
+      flags = CGI.escapeHTML(%(["a1d1f9a1"]))
+      %(<div data-shopify="payment-button" class="shopify-payment-button"> <shopify-accelerated-checkout recommended="null" fallback="#{fallback}" ) +
+        %(access-token="#{token}" buyer-country="#{r[:buyer_country]}" buyer-locale="#{r[:buyer_locale]}" buyer-currency="#{r[:currency]}" ) +
+        %(variant-params="#{vparams}" shop-id="#{r[:shop_id]}" enabled-flags="#{flags}" disabled > ) +
+        %(<div class="shopify-payment-button__button" role="button" disabled aria-hidden="true" style="background-color: transparent; border: none"> ) +
+        %(<div class="shopify-payment-button__skeleton">&nbsp;</div> </div> </shopify-accelerated-checkout> </div>)
+    end
     def payment_terms(_input) = ""
     def login_button(_input, _o = {}) = ""
     def avatar(_input) = ""

@@ -4240,3 +4240,26 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   ThemeEngine::Runtime::ClosestDrop`）——改 drops.rb 後**必須重啟** dev server（既有登記 §3.75，再犯一次）。
 - **登記：hoko 本尊拿到的 header_mobile 區段中「My Account」項**（`https://new-ella-demo-07.myshopify.com/account/login`）與我方同無 `href`
   （兩邊該 block 的 link 皆空）；fixture `header-group.json` 內該值非空 ⇒ mirror 店 section 設定另有 DB 覆寫層（未追）。
+
+### 3.87 E18 動態結帳按鈕（portable-wallets 對位）（2026-09-05）的未取得與範圍外
+
+- **V `enabled-flags="[&quot;a1d1f9a1&quot;]"` 語義**：本尊值照抄（bundle 內為功能旗標查表；旗標意義未取得）。
+- **V 錯誤 token 的本尊回應形**：`X-Shopify-Storefront-Access-Token` 錯／缺時 Storefront API 的 HTTP 狀態與 body 未觀測（我方 401＋top-level errors）。
+- **V `cartCreate` 的 `discountCodes` 非空、`buyerIdentity`、多行、selling plan**：抓包只有單行、空 discountCodes；我方對 discountCodes 回 `[]` 不套碼。
+- **V `cart_changelog` 全文**：只見前四鍵（product_id／variant_id／id(uuid)／image:null），後段截斷；我方只出這四鍵。
+- **V `MoneyV2.amount` 對 zero-decimal 幣別**：只實測 HKD（`"188.0"`，去尾零、至少一位小數）；JPY／TWD 形未取得（我方 `BigDecimal#to_s("F")`）。
+- **V `checkoutUrl` 的 key 長度**：本尊約 120 字元 base64url（`%3D%3D` 收尾）；我方 HMAC-SHA512 ⇒ 88 字元。cart id 的 32 hex key 形同。
+- **V `/cart/c/{token}` 302 目標**：本尊 `/checkouts/cn/{token}/{lang}?_r=…`；我方 `/checkouts/{token}`（結帳 URL 形歸 X1）。是否改寫 `cart` cookie 未觀測（我方不動）。
+- **V 非 200 頁（404／password）的 head 是否帶 dynamic checkout bootstrap**：未觀測；我方只在 200 頁注入。
+- **V bundle 對 cartCreate 失敗（userErrors 非空／網路錯）的 UI**（`error_dialogs.checkout.*` 文案）：未觸發；我方 console.error。
+- **V `shopify-accelerated-checkout-cart`（購物車面 `content_for_additional_checkout_buttons`）**：hoko 無第三方錢包 ⇒ 元素不出現；我方只定義元素並拆骨架。
+- **V 全域樣式的 media 規則分支**（`@media (min|max)-(width|height): Npx` 內的舊選擇器）：Ella 無此類規則，輸出分支未實測。
+- **V 樣式回溯的選擇器正則對 `.dynamic-checkout-buttons .shopify-payment-button__button`**：本尊正則無跳脫的 `.`（`/.dynamic-checkout-buttons …/`），照抄。
+- **⚪ `__head__` 其餘平台注入**（`shopify-features`、`__st`、`preloads.js`、`sections-script`／`snippets-script`、trekkie、perf-kit、`shopify-digital-wallet` meta、
+  oembed link、hreflang 順序 x-default 首、我方多出的重複 canonical 與 JSON-LD）：hoko 商品頁 head 100 個 tag vs 我方 61，逐 tag 序列存 scratchpad
+  `audit/storefront/*.headseq.txt`／`e18/head_injection_hoko.txt`；下一包（路線圖 T10）。
+- **V 庫存狀態模型（新發現）**：hoko `acme-tee` 變體 Liquid `variant.inventory_quantity`＝99、`inventory_policy: deny`（sticky 鈕 data 屬性），同時
+  `/products/acme-tee.js` 與 Liquid `available`＝false ⇒ Ella 判 `can_add_to_cart` true（不出 `hidden`／`disabled`）而按鈕實際不可買。本尊的
+  available（地點可履行量／不可用量）與 inventory_quantity（總量）是兩個數；我方 mirror 店只有 0／false 一種態，兩者未分離建模。歸 T5 資料集＋庫存包。
+- **登記：自訂元素在 MutationObserver 回呼裡對自己 set/remove 屬性 ⇒ 無窮迴圈、頁面 load 事件永不觸發**（headless capture `Page.loadEventFired`
+  逾時 60 s）。固定處理：回呼過濾自己子樹的 record＋屬性只在狀態改變時才寫。

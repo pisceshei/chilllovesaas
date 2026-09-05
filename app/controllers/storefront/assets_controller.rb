@@ -15,7 +15,7 @@ module Storefront
     # 對應殺手格（S10）顯式開 forgery 再打。純讀端點無狀態變更，CSRF 語義不適用。
     skip_forgery_protection
 
-    before_action :require_published_theme!, except: %i[no_image flag]
+    before_action :require_published_theme!, except: %i[no_image flag portable_wallets accelerated_checkout_css]
 
     # E17：`img_url` 對 nil 的平台「無圖」佔位——路徑形照本尊 `/cdn/shopifycloud/storefront/assets/no-image-2048-a2addb12_{size}.gif`
     # （hoko.vip 2026-09-05），圖片本體＝我方自繪 1×1 淺灰 gif（鐵律 9：不用本尊圖片；佔位插圖自繪例外）。
@@ -39,6 +39,32 @@ module Storefront
 
       expires_in 1.year, public: true
       send_data svg, type: "image/svg+xml", disposition: "inline"
+    end
+
+    # E18：動態結帳模組（本尊 `portable-wallets.{lang}.js`，語言隨頁 `<html lang>`——hoko.vip 五語言頁各載 en／zh-cn／zh-tw／fr／ja；
+    # 「立即購買」文案＝各語言 bundle 的 `instruments_copy.checkout.buy_now` 逐字，external-facts §G26）。本體我方自寫
+    # （鐵律 9：不抄本尊 JS），只有 tag／屬性／id／class 這些主題會依賴的介面同形。檔案啟動時讀成常量（Brakeman：不以參數組路徑）。
+    PORTABLE_WALLETS_JS = File.read(Rails.root.join("app/assets/storefront/portable-wallets.js")).freeze
+    ACCELERATED_CHECKOUT_CSS = File.read(Rails.root.join("app/assets/storefront/accelerated-checkout-backwards-compat.css")).freeze
+
+    def portable_wallets
+      tag = ThemeEngine::LocaleTags.platform_tag(lang_code_to_shopify(params[:lang]))
+      label = PlatformStrings.dict(tag).dig("_platform", "accelerated_checkout", "buy_now") ||
+              PlatformStrings.dict("en").dig("_platform", "accelerated_checkout", "buy_now")
+      body = PORTABLE_WALLETS_JS.sub("__BUY_NOW_LABEL__") { label.to_json }
+      expires_in 5.minutes, public: true
+      send_data body, type: "text/javascript; charset=utf-8", disposition: "inline"
+    end
+
+    def accelerated_checkout_css
+      expires_in 5.minutes, public: true
+      send_data ACCELERATED_CHECKOUT_CSS, type: "text/css; charset=utf-8", disposition: "inline"
+    end
+
+    # `zh-cn` ⇒ `zh-CN`（本尊 bundle 檔名＝語言碼小寫；LocaleTags 只認本尊大小寫形）
+    def lang_code_to_shopify(code)
+      lang, region = code.to_s.split("-", 2)
+      region ? "#{lang.downcase}-#{region.upcase}" : lang.to_s.downcase
     end
 
     # GET /theme-assets/*file
