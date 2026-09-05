@@ -95,4 +95,7 @@ button, they skip the cart and go to the Shopify Checkout."）。本尊分四層
 `hidden`＋`disabled`。本尊「available ≠ inventory_quantity > 0」（地點可履行／不可用量）尚未建模——91 §3.87、路線圖 T5。其餘段的差（header 語言選單、
 promotion popup、multitasking bar）＝本機 dev 資料／時序，與本包無關；bt3 部署後以 mirror.chilling.com.hk 複驗（worklog Pending）。
 
+bt3（main `fc72f17d`，公開 mirror.chilling.com.hk）：五語言模組／CSS／head bootstrap／伺服器端 cartCreate → `/cart/c` 302 → 結帳頁 200；headless 升級後 DOM 與
+`global-shopify-accelerated-checkout-styles` 逐字同（差仍只有資料態 `disabled`／opacity）；點擊全鏈路（模擬有貨態）cartCreate 請求／回應同形並導頁——全表見 worklog「bt3 複驗」。
+
 閘門／突變：worklog「閘門」段。
