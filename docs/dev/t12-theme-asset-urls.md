@@ -64,4 +64,6 @@ rspec：`spec/requests/storefront_theme_asset_urls_spec.rb` TA1–TA10 綠；`fo
 本機 mirror（Ella 7.2.0，`mirror.lvh.me:3000`，`Rails.cache.clear` 後 `/products/acme-tee`）：89 個 `//mirror.lvh.me:3000/cdn/shop/t/2/assets/…?v=`（hoko 同頁 89）、
 `?v=` 28／29／30 位各 2／47／40（hoko 2／39／48；摘要值分布差＝演算法不同，V）、`/theme-assets/` 0 處；抽查資產／字型 woff2／compiled 皆 200，回應標頭
 `cache-control: max-age=31557600, public`＋`access-control-allow-origin: *`（Rails 指令順序與 hoko 相反，語義同；91 記）；`.woff` 404（⚪ 97 §1.3）。
-bt3 部署後複驗＝收尾 PR。
+bt3 複驗（收尾 PR；main `c4babdd0`，`scratchpad/t12/bt3_deploy_t12.sh`）：mirror 商品頁 89 個 `//mirror.chilling.com.hk/cdn/shop/t/7/assets/…?v=`、`?v=` 28／29／30 位各 2／47／40、
+`/theme-assets/` 0 處；資產／字型／compiled 抽查（loopback＋公開路徑）200，標頭 `max-age=31557600, public`＋CORS *，缺檔 404 `max-age=60, public`；`__head__` 11 頁型仍全同。
+摘要前段與本機一致（同內容同摘要）、後 10 位＝各自主題 `updated_at`。
