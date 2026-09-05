@@ -160,7 +160,7 @@ module Storefront
     def renderer
       ThemeEngine::PageRenderer.new(
         theme: current_theme, shop: current_shop, publication: Publication.online_store!,
-        url_prefix:, host: request.host, asset_base: "/theme-assets",
+        url_prefix:, host: request.host, asset_host: request.host_with_port, asset_base: "/theme-assets",
         locale: effective_hit&.locale_tag, web_presence: effective_hit&.web_presence, # E12：語言跟 URL 前綴（先前 nil ⇒ 英文）；E13：無前綴退回店預設
         market: effective_hit&.market, country_code: effective_hit&.effective_country_code # D80：買家選國覆寫
       )

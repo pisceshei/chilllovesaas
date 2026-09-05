@@ -203,8 +203,9 @@ RSpec.describe "Storefront content_for_header (E19)", type: :request do
 
   it "C7 🔴 編譯資產：sections-script／snippets-script 只列本頁渲染到的檔；scripts.js 門控函式含 section＋schema block 的 JS；snippet-scripts.js 同形" do
     get "/products/acme-tee?view=e19"
-    expect(response.body).to include(%(<script id="sections-script" data-sections="js-probe" defer="defer" src="//e19-shop.lvh.me/cdn/shop/t/#{theme.id}/compiled_assets/scripts.js?v=#{theme.updated_at.to_i}"></script>))
-    expect(response.body).to include(%(<script id="snippets-script" data-snippets="js-snippet" defer="defer" src="//e19-shop.lvh.me/cdn/shop/t/#{theme.id}/compiled_assets/snippet-scripts.js?v=#{theme.updated_at.to_i}"></script>))
+    # T12：`?v=`＝每檔摘要（≤20 位）＋主題版本秒（hoko 29 位形）
+    expect(response.body).to match(%r{<script id="sections-script" data-sections="js-probe" defer="defer" src="//e19-shop\.lvh\.me/cdn/shop/t/#{theme.id}/compiled_assets/scripts\.js\?v=\d{1,20}#{theme.updated_at.to_i}"></script>})
+    expect(response.body).to match(%r{<script id="snippets-script" data-snippets="js-snippet" defer="defer" src="//e19-shop\.lvh\.me/cdn/shop/t/#{theme.id}/compiled_assets/snippet-scripts\.js\?v=\d{1,20}#{theme.updated_at.to_i}"></script>})
     get "/products/acme-tee?view=e18" # 無 {% javascript %} 的頁 ⇒ 兩個節點都不出
     expect(response.body).not_to include('id="sections-script"')
     expect(response.body).not_to include('id="snippets-script"')

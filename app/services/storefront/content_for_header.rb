@@ -44,12 +44,13 @@ module Storefront
 
     # rubocop:disable Metrics/ParameterLists
     def initialize(shop:, theme:, presence:, locale_tag:, country_code:, url_prefix:, path:, query_string:, params:, page_type:,
-                   record:, status:, origin:, host:, design_mode:, runtime:, assigns:)
+                   record:, status:, origin:, host:, design_mode:, runtime:, assigns:, asset_host: nil)
       @shop, @theme, @presence = shop, theme, presence
       @locale_tag, @country_code, @url_prefix = locale_tag.to_s, country_code.to_s, url_prefix.to_s
       @path, @query_string, @params = path.to_s, query_string.to_s, params || {}
       @page_type, @record, @status = page_type.to_s, record, status
       @origin, @host, @design_mode, @runtime, @assigns = origin, host, design_mode, runtime, assigns || {}
+      @asset_host = asset_host || host # T12：資產 URL 主機（含埠）
     end
     # rubocop:enable Metrics/ParameterLists
 
@@ -288,19 +289,28 @@ module Storefront
       Storefront::DynamicCheckoutHead.styles(origin: @origin)
     end
 
+    # T12：`?v=`＝每檔摘要＋主題版本秒（hoko 29 位形；compiled 的時間戳與 assets 的不同＝各自產生時刻）。以主題版本鍵快取，避免每頁重編。
+    def compiled_version(name)
+      stamp = @theme.updated_at.to_i
+      Rails.cache.fetch([ "compiled_v", @theme.id, stamp, name ], expires_in: 1.day) do
+        source = ThemeEngine::Sources.resolve(@theme)
+        body = name == "scripts.js" ? CompiledAssets.scripts(source) : CompiledAssets.snippet_scripts(source)
+        "#{ThemeEngine::AssetUrls.digest64(body)}#{stamp}"
+      end
+    end
+
     # `{% javascript %}` 編譯資產：只列本頁渲染到的 section／snippet 檔（本尊 data-sections／data-snippets）
     def section_scripts
       return [] unless @runtime.respond_to?(:rendered_asset_files)
 
       files = @runtime.rendered_asset_files
-      version = @theme.updated_at.to_i
-      base = "//#{@host}/cdn/shop/t/#{@theme.id}/compiled_assets"
+      base = "//#{@asset_host}/cdn/shop/t/#{@theme.id}/compiled_assets"
       out = []
       if files[:sections].any?
-        out << %(<script id="sections-script" data-sections="#{files[:sections].to_a.join(',')}" defer="defer" src="#{base}/scripts.js?v=#{version}"></script>)
+        out << %(<script id="sections-script" data-sections="#{files[:sections].to_a.join(',')}" defer="defer" src="#{base}/scripts.js?v=#{compiled_version('scripts.js')}"></script>)
       end
       if files[:snippets].any?
-        out << %(<script id="snippets-script" data-snippets="#{files[:snippets].to_a.join(',')}" defer="defer" src="#{base}/snippet-scripts.js?v=#{version}"></script>)
+        out << %(<script id="snippets-script" data-snippets="#{files[:snippets].to_a.join(',')}" defer="defer" src="#{base}/snippet-scripts.js?v=#{compiled_version('snippet-scripts.js')}"></script>)
       end
       out
     end

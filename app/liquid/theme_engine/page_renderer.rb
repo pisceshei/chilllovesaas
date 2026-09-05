@@ -18,7 +18,7 @@ module ThemeEngine
     end
 
     def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil,
-                   cart_json: nil, asset_base: nil, locale: nil, web_presence: nil, market: nil, country_code: nil,
+                   cart_json: nil, asset_base: nil, asset_host: nil, locale: nil, web_presence: nil, market: nil, country_code: nil,
                    query_string: nil, origin: nil)
       @theme, @shop, @publication = theme, shop, publication
       @url_prefix, @design_mode, @host = url_prefix, design_mode, host
@@ -31,6 +31,7 @@ module ThemeEngine
       # external-facts §G24）。nil ⇒ 只出路徑（search／recommendations／cart 的 section 形沿用）。
       @query_string = query_string
       @asset_base = asset_base
+      @asset_host = asset_host # T12：資產 URL 主機（含埠）
       @locale = locale
       @web_presence = web_presence
       # D80：生效市場／買家選定國家（cookie 覆寫後；nil ⇒ presence 的市場／其第一個 region）。
@@ -73,7 +74,7 @@ module ThemeEngine
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
-                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
+                            asset_base: @asset_base, asset_host: @asset_host, locale: @locale, web_presence: @web_presence,
                             market: @market, country_code: @country_code, query_string: @query_string,
                             publication: @publication, params: @params,
                             draft_settings: @draft_settings, draft_sections: @draft_sections)
@@ -94,7 +95,7 @@ module ThemeEngine
       runtime.assign("content_for_header", Storefront::ContentForHeader::Lazy.new(Storefront::ContentForHeader.new(
         shop: @shop, theme: @theme, presence: @web_presence, locale_tag: @locale.to_s, country_code: @country_code, url_prefix: @url_prefix,
         path: path, query_string: @query_string, params: @params, page_type: page_type, record: record, status: status,
-        origin: @origin, host: @host, design_mode: @design_mode, runtime: runtime, assigns: assigns
+        origin: @origin, host: @host, asset_host: @asset_host || @host, design_mode: @design_mode, runtime: runtime, assigns: assigns
       )))
 
       if liquid_template?(runtime, template_key)
@@ -336,7 +337,7 @@ module ThemeEngine
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
-                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
+                            asset_base: @asset_base, asset_host: @asset_host, locale: @locale, web_presence: @web_presence,
                             market: @market, country_code: @country_code, query_string: @query_string,
                             publication: @publication, params: @params)
       assigns.each { |k, v| runtime.assign(k, v) }

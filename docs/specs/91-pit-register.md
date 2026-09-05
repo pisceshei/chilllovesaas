@@ -4289,5 +4289,21 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **V Atom `updated`／entry 排序**：集合 feed `updated`＝最新 entry published（一筆樣本）；entry 序＝新到舊（三商品樣本）。
 - **V `Shopify.designMode` 在編輯器內的位置**（沿 E3 舊 V）。
 - **⚪ 主題資產 URL 形**：本尊 `//host/cdn/shop/t/{id}/assets/x.css?v=…` vs 我方 `/theme-assets/x.css`（Normalizer 對映）；`asset_url` 本尊形＝路線圖 T12。
+  ——2026-09-05 更正：T12 已把七個資產濾鏡改成本尊形（`docs/dev/t12-theme-asset-urls.md`），本條收；殘餘 V 見 §3.89。
 - **⚪ `_shopify_essential`／`_shopify_analytics`／`_shopify_marketing` cookie**（HttpOnly；顧客隱私同意包）；`localization` cookie 既有。
 - **登記：長 heredoc 內含引號的 Bash 命令會整段解析失敗**（`unexpected EOF while looking for matching '`）——一律把補丁寫成檔案再 `python file.py`。
+
+### 3.89 T12 主題資產 URL 本尊形（2026-09-05）的未取得與範圍外
+
+- **V `?v=` 前段摘要演算法**：本尊 18–20 位十進位（≤2^64）、後 10 位＝主題版本 unix 秒；演算法未公開。我方＝MD5 前 8 位元組的無號 64 位整數＋`theme.updated_at`
+  （形同、值不同；Normalizer 抹 `?v=\d+`）。`file_url` 的 19 位 `?v=`（官方例）語義未取得——我方＝id＋checksum 的 64 位摘要。
+- **V `asset_img_url` 縮放**：本尊 CDN 依 `_{size}` 產縮圖；我方供給端回原檔。`file_img_url` 走官方 `img_url` 尺寸表選 width（既有 derivatives 變體）。
+- **V 缺檔形**：`asset_url` 對主題內不存在的檔、`file_url` 對 Files 頁不存在的檔，本尊輸出形未取得（我方出 URL、無 `?v=`）。
+- **V `shopify_asset_url`／`global_asset_url` 本體**：option_selection.js／currencies.js／shopify_common.js／customer_area.js／api.jquery.js／customer.css、
+  `vendor/qrcode.js`、gift-card SVG、`cdn/s/global/*`——本尊本體不可抄（鐵律 9），我方尚未自寫 ⇒ 路徑形照官方、供給端 404。Ella 只在 `snippets/global-script`
+  （`currencies.js`）與 `templates/gift_card`（`vendor/qrcode.js`、兩個 SVG）引用；前者今 404 與本包前（`/theme-assets/currencies.js` 404）同態。8 位雜湊來源未取得（我方＝路徑 SHA-1 前 8 位）。
+- **V Cache-Control 指令順序**：hoko `public, max-age=31557600`；Rails `expires_in` 出 `max-age=31557600, public`（語義同）。compiled 的 content-type 我方帶 `; charset=utf-8`、hoko 無。
+- **⚪ woff 備援檔**：`font_url: 'woff'`／`font_face` 第二行 src 的 `.woff`，我方未 host（供給端 404；瀏覽器優先 woff2）——97 §1.3 既有。
+- **V 平台 host 上的預覽**：storefront `cdn/*` 路由只在租戶 host（TenantResolver）；若平台管理後台在平台 host 預覽商店主題，資產 URL 會指向平台 host ⇒ 404（未觀測，P0 盤點）。
+- **V 字型 URL 數**：hoko 商品頁 33 個 `cdn/fonts/` vs 我方 21——settings（字型選擇／預載）差，T5 資料集對表時收。
+- **登記**：Rails `1.year`＝31556952 秒 ≠ hoko 的 31557600（365.25 天）——`THEME_ASSET_MAX_AGE` 顯式常量。

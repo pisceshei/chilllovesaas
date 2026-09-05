@@ -41,7 +41,7 @@ content_for_header object because the contents are subject to change"。Ella `la
 - **平台 stub 資產**（`Storefront::PlatformAssets`，`app/assets/storefront/platform/*.js`）：檔名雜湊＝我方本體 SHA-256 前 8 hex（trekkie＝SHA-1 40 hex）、`integrity`＝我方 SRI；
   路徑形照本尊（`/cdn/shopifycloud/storefront/assets/storefront/load_feature-{h}.js`…）；雜湊不符 404。載入器 `load_feature.js` 給 shopify-xr／model-viewer-ui／
   video-ui／consent-tracking-api 最小實作，其餘 `callback(null)`。
-- **編譯資產**（`Storefront::CompiledAssets`）：`/cdn/shop/t/{theme_id}/compiled_assets/scripts.js|snippet-scripts.js?v={theme.updated_at}`；本尊格式（IIFE、`__sections__`／`__snippets__`
+- **編譯資產**（`Storefront::CompiledAssets`）：`/cdn/shop/t/{theme_id}/compiled_assets/scripts.js|snippet-scripts.js?v={摘要}{theme.updated_at}`（T12 起 29 位本尊形；E19a 原只出 10 位時間戳）；本尊格式（IIFE、`__sections__`／`__snippets__`
   門控、`Shopify.designMode` 全開、try/catch）；block JS 併入 section 門控（依 schema `blocks` 遞迴，`@theme`＝全部公開 block）。`data-sections`／`data-snippets` 只列本頁
   渲染到的檔（`SectionAssetTag` 記錄：snippet 由 `context.template_name`，section 由 `registers[:section_drop].type`）。
 - **端點**：`/products/{handle}.oembed`（抓包形逐鍵；`price` 數值；`\/` 跳脫）、`/collections/{handle}.atom`／`/blogs/{handle}.atom`（本尊 XML 形；summary 表格標籤五語言

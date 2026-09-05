@@ -67,7 +67,7 @@ module ThemeEngine
     # template_suffix ⇒ `?view=` 替代模板的 template.suffix（96 §6）。
     def initialize(theme:, shop:, source: nil, url_prefix: "", locale: nil,
                    design_mode: false, page_type: "index", path: "/", host: nil,
-                   cart_json: nil, asset_base: nil, web_presence: nil, market: nil, country_code: nil,
+                   cart_json: nil, asset_base: nil, asset_host: nil, web_presence: nil, market: nil, country_code: nil,
                    publication: nil, params: {}, template_suffix: nil,
                    draft_settings: nil, draft_sections: nil, query_string: nil)
       @theme, @shop = theme, shop
@@ -84,6 +84,7 @@ module ThemeEngine
       @query_string = query_string
       # 公開店面傳 "/theme-assets"（包 33 後半）；預設維持登入預覽路徑（包 30 行為不變）。
       @asset_base = asset_base
+      @asset_host = asset_host # T12：資產 URL 主機（含埠）；nil ⇒ host
       # 揮發旗標集（63 §D.5）：drop 讀到 volatile 欄位（inventory_quantity 等）時註冊，
       # 頁級快取據此把該頁 TTL 壓到 volatile_section_ttl_seconds——價格類走 key、數量類走 TTL 兜底。
       @render_flags = Set.new
@@ -716,7 +717,9 @@ module ThemeEngine
         host: @host, time_zone: @shop.timezone,
         # E18：`payment_button` 骨架的買家脈絡（本尊 buyer-country／buyer-locale／shop-id）
         shop_id: @shop.id, buyer_country: @country_code, buyer_locale: LocaleTags.shopify_code(@locale_tag),
-        asset_base: @asset_base || "/admin/store/preview/#{@theme.id}/assets" }
+        asset_base: @asset_base || "/admin/store/preview/#{@theme.id}/assets",
+        # T12：主題資產 URL 本尊形（AssetUrls）所需——asset_host 含埠（本機 :3000；正式＝host）、theme、source
+        asset_host: @asset_host || @host, theme: @theme, source: @source }
     end
 
     def collect_errors(label, tpl)

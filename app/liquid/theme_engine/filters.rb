@@ -30,15 +30,34 @@ module ThemeEngine
     end
 
     # ---- assets / URLs -----------------------------------------------------
+    # T12：主題資產 URL 本尊形（ThemeEngine::AssetUrls；external-facts §G28）。registers 缺 theme／主機（裸 harness）⇒ 舊 `/theme-assets/` 形。
     def asset_url(input)
-      base = @context.registers[:asset_base] || "/theme-assets"
-      "#{base}/#{input}"
+      theme, host = @context.registers[:theme], asset_host
+      return "#{@context.registers[:asset_base] || '/theme-assets'}/#{input}" if theme.nil? || host.nil?
+
+      ThemeEngine::AssetUrls.theme_asset(host:, theme:, source: @context.registers[:source], file: input.to_s)
     end
-    def asset_img_url(input, _size = nil) = asset_url(input)
-    def file_url(input) = asset_url(input)
-    def file_img_url(input, _s = nil) = asset_url(input)
-    def shopify_asset_url(input) = asset_url(input)
-    def global_asset_url(input) = asset_url(input)
+
+    # 官方預設 size＝small（`…/assets/{stem}_small.jpg?v=…`）；我方不縮放主題資產（供給端回原檔，91 §3.89 V）
+    def asset_img_url(input, size = nil)
+      theme, host = @context.registers[:theme], asset_host
+      return "#{@context.registers[:asset_base] || '/theme-assets'}/#{input}" if theme.nil? || host.nil?
+
+      ThemeEngine::AssetUrls.theme_asset_img(host:, theme:, source: @context.registers[:source], file: input.to_s,
+                                             size: size.to_s.strip.presence || "small")
+    end
+
+    # Files 頁上傳檔（StoredFile 以 filename 查；找不到仍出 URL、無 `?v=`——本尊缺檔形未取得，91 V）
+    def file_url(input) = ThemeEngine::AssetUrls.shop_file(host: asset_host, stored_file: stored_file_named(input), name: input.to_s)
+
+    def file_img_url(input, size = nil)
+      ThemeEngine::AssetUrls.shop_file(host: asset_host, stored_file: stored_file_named(input), name: input.to_s,
+                                       size: size.to_s.strip.presence || "small")
+    end
+
+    # themes_support／global 兩類：路徑形照官方，本體我方未提供（供給端 404；91 V）
+    def shopify_asset_url(input) = ThemeEngine::AssetUrls.shopify_asset(host: asset_host, file: input.to_s)
+    def global_asset_url(input) = ThemeEngine::AssetUrls.global_asset(host: asset_host, file: input.to_s)
 
     # 官方逐字（filters/stylesheet_tag，取證 2026-09-03）：`<link href="…" rel="stylesheet" type="text/css" media="all" />`
     # ——rel／href 由 filter 管、media 預設 all、可加其他屬性；渲染 1:1 對表：舊實作 `<link rel="stylesheet" href="…">` 與
@@ -393,14 +412,16 @@ module ThemeEngine
       lines << "  font-display: #{display};" if display
       # 本尊 src 兩行（hoko.vip 2026-09-03 原始位元組）：woff2 之後接 `,\n       url("….woff") format("woff")`；
       # 我方 woff 檔未提供（現代瀏覽器優先 woff2 不會請求 woff；登記）。
-      woff = input.file.to_s.sub(/\.woff2\z/, ".woff")
-      lines << %(  src: url("#{input.file}") format("woff2"),\n       url("#{woff}") format("woff");)
+      lines << %(  src: url("#{font_url(input)}") format("woff2"),\n       url("#{font_url(input, 'woff')}") format("woff");)
       "@font-face {\n#{lines.join("\n")}\n}"
     end
 
-    # 官方預設 woff2；我方只 host woff2 ⇒ 'woff' 請求同回 woff2 URL（⚪ 97 §1.3）。
-    def font_url(input, _format = "woff2")
-      input.is_a?(ThemeEngine::FontDrop) ? input.file.to_s : ""
+    # T12：本尊形 `//host/cdn/fonts/{family}/{handle}.{sha1}.woff2`（官方逐字例；hoko.vip 同形）；`'woff'` ⇒ 同雜湊的 `.woff`
+    # （本尊的 woff 另有雜湊；我方未 host woff 檔 ⇒ 供給端 404，瀏覽器優先 woff2 不會請求——⚪ 97 §1.3）。
+    def font_url(input, format = "woff2")
+      return "" unless input.is_a?(ThemeEngine::FontDrop) && input.file
+
+      ThemeEngine::AssetUrls.font(host: asset_host, drop: input, format: format.to_s == "woff" ? "woff" : "woff2")
     end
 
     # 官方值域（97 §1.1）：style＝normal/italic/oblique；weight＝100..900/normal/
@@ -671,6 +692,22 @@ module ThemeEngine
         when 400..500 then 700
         else 900
         end
+      end
+    end
+
+    # T12：資產 URL 的主機（含埠：本機 `mirror.lvh.me:3000`；正式＝host）與 Files 頁檔案查找（租戶隔離憑 registers[:shop_id]）
+    def asset_host
+      regs = @context&.registers or return nil
+      regs[:asset_host] || regs[:host]
+    end
+
+    def stored_file_named(input)
+      sid = @context.registers[:shop_id] or return nil
+      name = input.to_s
+      return nil if name.empty?
+
+      ActsAsTenant.without_tenant do
+        StoredFile.where(shop_id: sid, filename: name).where.not(status: "failed").order(id: :desc).first
       end
     end
   end

@@ -217,7 +217,7 @@ module Storefront
       hit = locale_hit(sections_url.to_s.delete_prefix("/").split("/", 2)[0]) || default_hit # E12：段的語言跟 sections_url 前綴；E13：無前綴退回店預設
       renderer = ThemeEngine::PageRenderer.new(
         theme:, shop: Current.shop, publication: Publication.online_store!,
-        host: request.host, cart_json: CartSerializer.cart_json(current_cart.reload),
+        host: request.host, asset_host: request.host_with_port, cart_json: CartSerializer.cart_json(current_cart.reload),
         url_prefix: hit ? Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag) : "",
         locale: hit&.locale_tag, web_presence: hit&.web_presence,
         market: hit&.market, country_code: hit&.effective_country_code
