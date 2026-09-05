@@ -1,0 +1,27 @@
+/* 政策頁（/policies/{kind}）的平台樣式表（T13，docs/dev/t13-policy-pages.md）。
+ * ①這是什麼：本尊在政策頁的 content_for_header 第一個節點注入 `policy-{8hex}.css`（hoko.vip 2026-09-05，
+ *   `<link rel="stylesheet" media="all" integrity="sha256-…" crossorigin="anonymous" href="//host/cdn/shopifycloud/storefront/assets/storefront/policy-{8hex}.css">`），
+ *   給平台自產的 `.shopify-policy__container`／`__title`／`__body` 容器基本版面（主題 CSS 可覆蓋）。
+ * ②取證：hoko 該檔 294 位元組、四條規則（external-facts §G29）：容器 max-width 560px→65ch、置中、左右 20px；標題置中；
+ *   remote-policy 標題包裝置中＋h1 下 20px；remote-policy 本體下 20px。本檔為我方依同一規則集自寫（鐵律 9），選擇器＝主題依賴的介面。
+ * ③跨功能：`Storefront::PlatformAssets`（檔名雜湊＋SRI）、`Storefront::ContentForHeader#policy_stylesheet`（政策頁首節點）、
+ *   `ThemeEngine::PageRenderer#policy_markup`（容器）。 */
+.shopify-policy__container {
+  max-width: 560px;
+  max-width: 65ch;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.shopify-policy__title {
+  text-align: center;
+}
+.shopify-policy__remote-policy-heading-wrapper {
+  text-align: center;
+}
+.shopify-policy__remote-policy-heading-wrapper h1 {
+  margin-bottom: 20px;
+}
+.shopify-policy__remote-policy-body {
+  margin-bottom: 20px;
+}

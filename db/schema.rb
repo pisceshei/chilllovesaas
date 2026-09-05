@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_04_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_05_120000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1410,6 +1410,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_04_030000) do
     t.string "webhook_secret_fingerprint", limit: 16, comment: "同上"
     t.index ["shop_id", "id"], name: "uq_shop_payment_providers_tenant_id", unique: true
     t.index ["shop_id", "provider"], name: "uq_shop_payment_providers_provider", unique: true
+  end
+
+  create_table "shop_policies", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "商店政策（Settings › Policies；前台 /policies/{kind}）", force: :cascade do |t|
+    t.text "body", size: :medium, comment: "HTML；NULL／空＝未設定 ⇒ 前台 404、shop.*_policy 為 nil"
+    t.datetime "created_at", null: false
+    t.string "kind", limit: 32, null: false, comment: "privacy-policy / refund-policy / terms-of-service / shipping-policy / subscription-policy / legal-notice / contact-information（＝URL handle）"
+    t.bigint "shop_id", null: false
+    t.string "title", null: false, comment: "平台依語言給定的政策名稱（本尊不可改名）"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "kind"], name: "uq_shop_policies_kind", unique: true
   end
 
   create_table "shops", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "租戶根；依規格明確豁免 shop_id", force: :cascade do |t|

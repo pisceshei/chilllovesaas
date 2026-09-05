@@ -86,6 +86,8 @@ RSpec.describe RenderParity::Mirror do
       expect(Page.find_by!(handle: "contact").title).to eq("聯絡我們")
       expect(Page.find_by!(handle: "contact").published_at).to be_present # E8b：本尊頁面已發布（先前草稿 ⇒ 前台 404）
       expect(Page.find_by!(handle: "contact").template_suffix).to eq("contact") # E8b：本尊 /pages/contact 用 page.contact 模板
+      expect(ShopPolicy.find_by!(kind: "privacy-policy").title).to eq("隐私政策") # T13：本尊只有 privacy-policy 有內容（其餘 404）
+      expect(ShopPolicy.where(kind: "refund-policy")).to be_empty
       # E8b：庫存跟隨快照（本尊 products.json：只有 cosy-lamp available）
       lamp = Product.find_by!(handle: "cosy-lamp").product_variants.first
       expect(InventoryLevel.joins(:inventory_item).where(inventory_items: { product_variant_id: lamp.id }).sum(:available)).to eq(10)

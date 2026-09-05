@@ -134,9 +134,10 @@ RSpec.describe "Storefront content_for_header (E19)", type: :request do
     get "/zh-hant/products/acme-tee?view=e19"
     body = response.body
     token = Storefront::AccessToken.for(shop.id)
-    expect(body).to include(%(<script id="shopify-features" type="application/json">\n{"accessToken":"#{token}","betas":["rich-media-storefront-analytics"],"domain":"e19-shop.lvh.me","predictiveSearch":false,"shopId":#{shop.id},"locale":"zh-tw"}\n</script>))
+    # T13 更正：本尊 JSON 緊貼標籤、無換行（空白骨架對表，external-facts §G29）
+    expect(body).to include(%(<script id="shopify-features" type="application/json">{"accessToken":"#{token}","betas":["rich-media-storefront-analytics"],"domain":"e19-shop.lvh.me","predictiveSearch":false,"shopId":#{shop.id},"locale":"zh-tw"}</script>))
     expect(body).to include(%(<script>var Shopify = Shopify || {};\nShopify.shop = "e19-shop.lvh.me";\nShopify.locale = "zh-TW";\nShopify.currency = {"active":"HKD","rate":"1.0"};\nShopify.country = "HK";\nShopify.theme = {"name":"Minimal","id":#{theme.id},))
-    expect(body).to include(%(Shopify.cdnHost = "e19-shop.lvh.me/cdn";\nShopify.routes = Shopify.routes || {};\nShopify.routes.root = "/zh-hant/";\nShopify.shopJsCdnBaseUrl = "https://e19-shop.lvh.me/cdn/shopifycloud/shop-js";\nShopify.SignInWithShop = Shopify.SignInWithShop || {};\nShopify.SignInWithShop.User = Shopify.SignInWithShop.User || {};\nShopify.SignInWithShop.User.recognized = false;\n</script>))
+    expect(body).to include(%(Shopify.cdnHost = "e19-shop.lvh.me/cdn";\nShopify.routes = Shopify.routes || {};\nShopify.routes.root = "/zh-hant/";\nShopify.shopJsCdnBaseUrl = "https://e19-shop.lvh.me/cdn/shopifycloud/shop-js";\nShopify.SignInWithShop = Shopify.SignInWithShop || {};\nShopify.SignInWithShop.User = Shopify.SignInWithShop.User || {};\nShopify.SignInWithShop.User.recognized = false;</script>)) # T13 更正：本尊 `false;</script>` 無換行
     expect(body).not_to include("Shopify.formatMoney") # 主題自定義，平台不出
     st = st_of(body)
     expect(st.keys).to eq(%w[a offset reqid pageurl u p rtyp rid])
@@ -146,7 +147,9 @@ RSpec.describe "Storefront content_for_header (E19)", type: :request do
     vpublic = variant.title == "Default Title" ? "null" : variant.title.to_json
     expect(body).to include(%(var meta = {"product":{"id":#{product.id},"gid":"gid:\\/\\/chilllove\\/Product\\/#{product.id}","vendor":"Acme","type":"Tee","handle":"acme-tee","variants":[{"id":#{variant.id},"price":18800,"name":"#{vname}","public_title":#{vpublic},"sku":null}],"remote":false},"page":{"pageType":"product","resourceType":"product","resourceId":#{product.id},"requestId":"))
     expect(body).to include(%(window.ShopifyAnalytics.lib.track("Viewed Product",{"currency":"HKD","variantId":#{variant.id},"productId":#{product.id},"productGid":"gid:\\/\\/chilllove\\/Product\\/#{product.id}","name":"Acme Tee","price":"188.00","sku":null,"brand":"Acme","variant":#{vpublic},"category":"Tee","nonInteraction":true,"remote":false,"available":#{ActsAsTenant.with_tenant(shop) { Storefront::CartWriter.sellable?(variant) }}},undefined,undefined,{"shopifyEmitted":true});))
-    expect(body).to include(%(data-application="storefront-renderer" data-shop-id="#{shop.id}" data-render-region="chilllove-hk-1" data-page-type="product" data-theme-instance-id="#{theme.id}"))
+    # T13 更正：本尊 perf-kit 標籤逐行屬性（兩空白縮排、`\n></script>` 收尾）
+    expect(body).to include(%(<script\n  defer\n  src="https://e19-shop.lvh.me/cdn/shopifycloud/perf-kit/shopify-perf-kit-3.8.9.min.js"\n  data-application="storefront-renderer"\n  data-shop-id="#{shop.id}"\n  data-render-region="chilllove-hk-1"\n  data-page-type="product"\n  data-theme-instance-id="#{theme.id}"\n))
+    expect(body).to include(%(  data-shs-beacon-endpoint="https://e19-shop.lvh.me/api/collect"\n></script>))
     expect(body).to include(%(<script id="shop-js-analytics" type="application/json">{"pageType":"product"}</script>))
     expect(body).to include(%(loader.init-shop-cart-sync.zh-TW.esm.js))
     expect(body).to include(%(<meta id="shopify-digital-wallet" name="shopify-digital-wallet" content="/#{shop.id}/digital_wallets/dialog">))

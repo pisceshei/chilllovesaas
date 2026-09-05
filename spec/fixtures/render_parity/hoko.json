@@ -5,7 +5,13 @@
     "currency": "HKD",
     "locale": "zh-Hans",
     "_locale": "本尊 Shopify.locale = \"zh-CN\"；我方 tag 依 limits i18n.script_subtag_required_for 為 zh-Hans，輸出碼由 ThemeEngine::LocaleTags 轉回 zh-CN",
-    "languages": ["zh-Hans", "zh-Hant", "en", "fr", "ja"],
+    "languages": [
+      "zh-Hans",
+      "zh-Hant",
+      "en",
+      "fr",
+      "ja"
+    ],
     "_languages": "本尊 Settings › Languages（2026-09-04 使用者 Chrome 實測，external-facts §G21）：Chinese (Simplified)（Default）／Chinese (Traditional)／English／French／Japanese 全部已發布並指派 hoko.vip；首頁 hreflang 序 zh-Hans／zh-Hant／en／fr／ja（2026-09-04 curl）。我方 tag 依 platform_locales 字典（zh-Hant／zh-Hans／en／fr／ja），輸出碼 zh-CN／zh-TW 由 LocaleTags 轉；順序＝本尊 hreflang 序（Settings › Languages 的列表序未逐列抄錄，V）",
     "country": "TW",
     "market_name": "台灣",
@@ -19,13 +25,65 @@
     "_timezone": "本尊時區偏移＝+08:00（E17：hoko.vip /products/acme-tee.js 2026-09-05 時戳 +08:00；23:40 UTC 取樣 priceValidUntil 落在 +8 的次日）；時區名未取得，沿用建店預設 Asia/Hong_Kong（同為 +08:00）"
   },
   "markets": [
-    { "name": "美國", "handle": "us", "countries": ["US"], "_id": "30683103335" },
-    { "name": "香港", "handle": "hk", "countries": ["HK"], "_id": "30683136103" },
-    { "name": "日本", "handle": "jp", "countries": ["JP"], "_id": "30683168871" },
-    { "name": "欧盟", "handle": "eu",
-      "countries": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"],
+    {
+      "name": "美國",
+      "handle": "us",
+      "countries": [
+        "US"
+      ],
+      "_id": "30683103335"
+    },
+    {
+      "name": "香港",
+      "handle": "hk",
+      "countries": [
+        "HK"
+      ],
+      "_id": "30683136103"
+    },
+    {
+      "name": "日本",
+      "handle": "jp",
+      "countries": [
+        "JP"
+      ],
+      "_id": "30683168871"
+    },
+    {
+      "name": "欧盟",
+      "handle": "eu",
+      "countries": [
+        "AT",
+        "BE",
+        "BG",
+        "HR",
+        "CY",
+        "CZ",
+        "DK",
+        "EE",
+        "FI",
+        "FR",
+        "DE",
+        "GR",
+        "HU",
+        "IE",
+        "IT",
+        "LV",
+        "LT",
+        "LU",
+        "MT",
+        "NL",
+        "PL",
+        "PT",
+        "RO",
+        "SK",
+        "SI",
+        "ES",
+        "SE"
+      ],
       "_id": "30683201639",
-      "_countries": "本尊 Markets 頁只顯示「27 regions」（2026-09-04），逐國清單未逐列讀取（V）；此處採 EU 27 成員國（europa.eu 官方清單，2026-09-04 取證，見 external-facts §G22）；成員以外的地區（如 Åland、Réunion）本尊是否納入未取得" }
+      "_countries": "本尊 Markets 頁只顯示「27 regions」（2026-09-04），逐國清單未逐列讀取（V）；此處採 EU 27 成員國（europa.eu 官方清單，2026-09-04 取證，見 external-facts §G22）；成員以外的地區（如 Åland、Réunion）本尊是否納入未取得"
+    }
   ],
   "_markets": "本尊 Markets（2026-09-04 使用者授權建立，external-facts §G21）：台灣（預設）／美國／香港／日本／欧盟，全部共用 hoko.vip • 5 languages、幣別繼承 HKD、預設語言同店預設 zh-CN；本尊市場不產生 URL 前綴（/en-us、/zh-hant-hk 皆 404），市場由買家在 localization 表單選國（cookie localization=US）決定。D80 方案 1（2026-09-04 使用者裁定）後我方同形：非主市場不建 presence（無 suffix 鍵；Mirror 會拆掉 E15 期建的 subfolder presence），前綴只有語言段（/zh-hant、/en、/fr、/ja；預設 zh-Hans 無前綴）",
   "theme": {
@@ -34,24 +92,87 @@
     "version": "7.2.0"
   },
   "products": [
-    { "title": "Acme Tee", "handle": "acme-tee", "vendor": "Acme", "product_type": "Tee", "price": "188.00", "tags": [], "body_html": "", "inventory_quantity": 0 },
-    { "title": "Bolt Mug", "handle": "bolt-mug", "vendor": "Bolt", "product_type": "Mug", "price": "68.00", "tags": [], "body_html": "", "inventory_quantity": 0 },
-    { "title": "Cosy Lamp", "handle": "cosy-lamp", "vendor": "Acme", "product_type": "Lamp", "price": "320.00", "tags": [], "body_html": "", "inventory_quantity": 10 }
+    {
+      "title": "Acme Tee",
+      "handle": "acme-tee",
+      "vendor": "Acme",
+      "product_type": "Tee",
+      "price": "188.00",
+      "tags": [],
+      "body_html": "",
+      "inventory_quantity": 0
+    },
+    {
+      "title": "Bolt Mug",
+      "handle": "bolt-mug",
+      "vendor": "Bolt",
+      "product_type": "Mug",
+      "price": "68.00",
+      "tags": [],
+      "body_html": "",
+      "inventory_quantity": 0
+    },
+    {
+      "title": "Cosy Lamp",
+      "handle": "cosy-lamp",
+      "vendor": "Acme",
+      "product_type": "Lamp",
+      "price": "320.00",
+      "tags": [],
+      "body_html": "",
+      "inventory_quantity": 10
+    }
   ],
   "_inventory_quantity": "本尊 /products.json（2026-09-04）variants[].available：cosy-lamp true、acme-tee／bolt-mug false（供貨情況 现货 1／缺货 2）；實際數量未取得 ⇒ 10（V）",
   "collections": [
-    { "title": "首頁", "handle": "frontpage", "products": ["acme-tee"],
+    {
+      "title": "首頁",
+      "handle": "frontpage",
+      "products": [
+        "acme-tee"
+      ],
       "sort_order": "most_relevant",
       "_sort_order": "本尊 admin（pnrjnw-sy）首頁系列＝自動系列（Add condition），Default sort＝Most relevant（2026-09-04 實測）⇒ 前台 select 選中 most-relevant；我方鏡像以手動系列＋同商品代位，只對齊 sort_order"
     }
   ],
   "pages": [
-    { "title": "聯絡我們", "handle": "contact", "body_html": "",
+    {
+      "title": "聯絡我們",
+      "handle": "contact",
+      "body_html": "",
       "template_suffix": "contact",
       "_template_suffix": "本尊 /pages/contact 渲染的 section_ApznVq／section_8XtMhn／section_mr4YF8 只存在於 Ella templates/page.contact.json ⇒ 頁面模板＝page.contact（快照 2026-09-03）"
     }
   ],
   "menus": [
-    { "handle": "main-menu", "title": "主選單", "items": [["首頁", "frontpage", null], ["目錄", "catalog", null], ["聯絡我們", "http", "/pages/contact"]] }
+    {
+      "handle": "main-menu",
+      "title": "主選單",
+      "items": [
+        [
+          "首頁",
+          "frontpage",
+          null
+        ],
+        [
+          "目錄",
+          "catalog",
+          null
+        ],
+        [
+          "聯絡我們",
+          "http",
+          "/pages/contact"
+        ]
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "kind": "privacy-policy",
+      "title": "隐私政策",
+      "body": "<div>\n  <p>最后更新时间：2026年9月4日</p>\n  <p>（鏡像店政策內文：倉內只放短文；對表時由 hoko 快照全文代入——見 docs/dev/t13-policy-pages.md §5）</p>\n</div>",
+      "_evidence": "hoko.vip /policies/privacy-policy 200（template-policy、shopify-policy__container；zh-CN 範本全文、最后更新时间 2026年9月4日）；refund／terms-of-service／shipping／contact-information 404（快照 2026-09-05，external-facts §G29）"
+    }
   ]
 }

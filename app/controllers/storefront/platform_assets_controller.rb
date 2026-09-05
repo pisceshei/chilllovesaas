@@ -73,7 +73,7 @@ module Storefront
       return head :not_found if entry.nil?
 
       expires_in 5.minutes, public: true
-      send_data entry[:body], type: JS, disposition: "inline"
+      send_data entry[:body], type: entry[:name].end_with?(".css") ? "text/css; charset=utf-8" : JS, disposition: "inline"
     end
   end
 end

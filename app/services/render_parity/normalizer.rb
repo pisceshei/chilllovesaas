@@ -115,6 +115,7 @@ module RenderParity
       s.gsub!(/("pageurl":")[^"\\]+/, '\1HOST') # `__st.pageurl` 的主機段（無 scheme，主機規則抓不到）
       s.gsub!(/((?:load_feature|origin_trials|autosizes|shop_events_listener)-)[0-9a-f]{8}(\.js)/, '\1HASH\2')
       s.gsub!(/(trekkie\.storefront\.)[0-9a-f]{40}(\.min\.js)/, '\1HASH\2')
+      s.gsub!(/(policy-)[0-9a-f]{8}(\.css)/, '\1HASH\2') # T13：政策頁樣式表雜湊
       s.gsub!(/integrity="sha256-[^"]*"/, 'integrity="SRI"')
       s.gsub!(/(default_configuration_id=)\d+/, '\1ID')
       s.gsub!(%r{(content=")/\d+(/digital_wallets/dialog")}, '\1/ID\2')

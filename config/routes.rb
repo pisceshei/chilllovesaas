@@ -101,7 +101,7 @@ Rails.application.routes.draw do
         constraints: { token: /[A-Za-z0-9_-]+/ }, as: :storefront_cart_checkout_link
     # E19：content_for_header 引用的平台端點（路徑形照本尊；本體我方自寫——docs/dev/e19-content-for-header.md）
     get "cdn/shopifycloud/storefront/assets/storefront/:file" => "storefront/platform_assets#storefront_asset", format: false,
-        constraints: { file: /(?:load_feature|origin_trials|autosizes)-[0-9a-f]{8}\.js/ }
+        constraints: { file: /(?:load_feature|origin_trials|autosizes)-[0-9a-f]{8}\.js|policy-[0-9a-f]{8}\.css/ } # T13：policy-{hash}.css
     get "cdn/shopifycloud/storefront/assets/:file" => "storefront/platform_assets#storefront_asset", format: false,
         constraints: { file: /shop_events_listener-[0-9a-f]{8}\.js/ }
     get "cdn/s/:file" => "storefront/platform_assets#trekkie", format: false, constraints: { file: /trekkie\.storefront\.[0-9a-f]{40}\.min\.js/ }

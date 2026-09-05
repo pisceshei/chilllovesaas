@@ -1,0 +1,4 @@
+<div id="t13"><span data-t13-privacy-url>{{ shop.privacy_policy.url }}</span><span data-t13-privacy-title>{{ shop.privacy_policy.title }}</span><span data-t13-shipping-blank>{% if shop.shipping_policy.body != blank %}set{% else %}blank{% endif %}</span><span data-t13-count>{{ shop.policies.size }}</span><span data-t13-kinds>{% for p in shop.policies %}{{ p.url }};{% endfor %}</span></div>
+{% schema %}
+{ "name": "t13-policy-probe", "settings": [] }
+{% endschema %}

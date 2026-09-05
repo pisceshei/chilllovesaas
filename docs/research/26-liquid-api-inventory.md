@@ -80,7 +80,7 @@
 | user | 文章作者（staff） | name:string, first_name/last_name:string, email:string, bio:string, homepage:string, image:image, account_owner:boolean | article.user | T1 |
 | page | 自訂頁面 | id:number, title:string, handle:string, content:string, author:string, url:string, published_at:string, template_suffix:string, metafields | template `page`；pages[handle] | T1 |
 | pages | 全店頁面集合（by handle） | （iterable + `pages['about']`） | 全域 | T1 |
-| policy | 商店政策（退款/隱私/條款…） | id:string, title:string, body:string, url:string | shop.policies / shop.refund_policy 等 | T1 |
+| policy | 商店政策（退款/隱私/條款…） | id:string, title:string, body:string, url:string | shop.policies / shop.refund_policy 等 | T1（2026-09-05 T13 已做：`PolicyDrop`＋`/policies/{kind}` 頁型，`docs/dev/t13-policy-pages.md`） |
 
 ### 1.5 導覽與連結
 

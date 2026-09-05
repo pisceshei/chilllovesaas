@@ -28,7 +28,12 @@ module Storefront
       lang = ThemeEngine::LocaleTags.shopify_code(locale_tag.presence || "en").downcase
       module_src = "#{origin}/cdn/shopifycloud/portable-wallets/latest/portable-wallets.#{lang}.js"
       parts = [ init_script(module_src), buyer_consent_script ]
-      parts.concat(variant == :module ? module_scripts(module_src) : [ cart_bootstrap_script ])
+      if variant == :module
+        cleanup, tag, nomodule = module_scripts(module_src)
+        parts.concat([ cleanup, "\n" + tag, nomodule ]) # hoko 位元組：module 標籤前空一行（T13 空白骨架對表）
+      else
+        parts << cart_bootstrap_script
+      end
       parts.join("\n")
     end
 

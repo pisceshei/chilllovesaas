@@ -41,6 +41,7 @@ module RenderParity
         ensure_products(shop)
         ensure_collections(shop)
         ensure_pages(shop)
+        ensure_policies(shop)
         ensure_menus(shop)
       end
       Result.new(shop:, log: @log)
@@ -278,6 +279,21 @@ module RenderParity
           Page.create!(shop_id: shop.id, title: pg.fetch("title"), handle: pg.fetch("handle"), body_html: pg.fetch("body_html", ""),
                        published_at: Time.current, template_suffix: pg["template_suffix"])
           note("page created: #{pg['handle']}")
+        end
+      end
+    end
+
+    # T13：政策（快照 `policies[]` 逐筆 upsert；hoko 只有 privacy-policy 有內容——倉內快照放短文，本尊全文部署時由快照代入）
+    def ensure_policies(shop)
+      @spec.fetch("policies", []).each do |po|
+        attrs = { title: po.fetch("title"), body: po.fetch("body", "") }
+        row = ShopPolicy.find_by(shop_id: shop.id, kind: po.fetch("kind"))
+        if row
+          row.update!(attrs) if row.title != attrs[:title] || row.body.to_s != attrs[:body].to_s
+          note("policy exists: #{po['kind']}")
+        else
+          ShopPolicy.create!(shop_id: shop.id, kind: po.fetch("kind"), **attrs)
+          note("policy created: #{po['kind']}")
         end
       end
     end
