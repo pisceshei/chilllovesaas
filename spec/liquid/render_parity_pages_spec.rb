@@ -232,10 +232,11 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8b 頁面批）" do
     expect(render("/pages/about").html).to include("<pg>default</pg>")
   end
 
-  it "PP12 🔴 date 吃時間戳（整數與純數字字串）；cart.currency 帶 symbol／name；無選項變體 option1＝Default Title；無圖變體 featured_media 空" do
+  it "PP12 🔴 date 吃時間戳（整數與純數字字串；E17：店時區 Asia/Hong_Kong ⇒ 1700000000＝2023-11-15）；cart.currency 帶 symbol／name；無選項變體 option1＝Default Title；無圖變體 featured_media 空" do
     html = render("/products/p1").html
-    year = Time.zone.now.year + 1
-    expect(html).to include("<m>[2023-11-14][2023][#{year}][$|HKD|Hong Kong Dollar][Default Title][]</m>")
+    year = Time.now.in_time_zone("Asia/Hong_Kong").year + 1
+    # 1700000000＝2023-11-14T22:13:20Z＝+08:00 的 2023-11-15（E17：`date` 用店時區；hoko.vip priceValidUntil 取證）
+    expect(html).to include("<m>[2023-11-15][2023][#{year}][$|HKD|Hong Kong Dollar][Default Title][]</m>")
   end
 
   it "PP6 🔴 全商品集合標題 zh＝「产品」（hoko.vip title／h1／JSON-LD）" do

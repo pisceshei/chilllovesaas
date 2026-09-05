@@ -14,3 +14,20 @@ cart:
 products:
   sold_out: "Sold out"
   unavailable: "Unavailable"
+
+# E17：`_platform.*`＝Shopify 平台 UI 字串（非主題 locale 鍵）——hoko.vip 五語言區段 fetch 逐字（2026-09-05；external-facts §G25）。
+_platform:
+  sort_options:
+    manual: "Featured"
+    most-relevant: "Most relevant"
+    best-selling: "Best selling"
+    title-ascending: "Alphabetically, A-Z"
+    title-descending: "Alphabetically, Z-A"
+    price-ascending: "Price, low to high"
+    price-descending: "Price, high to low"
+    created-ascending: "Date, old to new"
+    created-descending: "Date, new to old"
+  search_sort_options:
+    relevance: "Relevance"
+    price-ascending: "Price, low to high"
+    price-descending: "Price, high to low"

@@ -29,7 +29,7 @@ module Storefront
         psid += 1
         drop_json(rec, ref: product, seq: psid)
       end
-      render json: { "products" => payload, "intent" => intent }
+      render json: Storefront::AjaxJson.dump({ "products" => payload, "intent" => intent }) # E17：`\/` 跳脫形
     rescue ParamError => e
       render json: { "message" => e.message }, status: e.status
     end
@@ -137,9 +137,11 @@ module Storefront
       end
     end
 
+    # E17：商品形改走 `.js` 端點形（url 在 options 後、無 content、時戳店時區、變體 22 鍵）——`Storefront::ProductAjaxJson`。
     def drop_json(rec, ref:, seq:)
       drop = ThemeEngine::ProductDrop.new(rec, url_prefix:, publication: Publication.online_store!)
-      json = drop.as_storefront_json
+      zone = ActiveSupport::TimeZone[current_shop.timezone.to_s] || Time.zone
+      json = Storefront::ProductAjaxJson.js_form(drop, product: rec, zone:)
       json["url"] = "#{url_prefix}/products/#{rec.handle}" \
                     "?pr_prod_strat=collection_fallback&pr_rec_pid=#{rec.id}" \
                     "&pr_ref_pid=#{ref.id}&pr_seq=#{seq}"

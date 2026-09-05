@@ -47,6 +47,9 @@ module Storefront
       country_code ||= market.region_country_codes.first
       country = countries.find { |c| c["iso_code"] == country_code } ||
                 (country_code && country_hash(country_code, market, languages, shop, locale_tag))
+      # E17：country 物件用 CountryDrop（`{{ country }}` ⇒ 國名）；available_countries 逐項同形
+      country = ThemeEngine::CountryDrop.new(country) if country.is_a?(Hash)
+      countries = countries.map { |c| ThemeEngine::CountryDrop.new(c) }
 
       ThemeEngine::LocalizationDrop.new(
         language: current, available_languages: languages, country: country, available_countries: countries,

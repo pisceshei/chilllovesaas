@@ -255,6 +255,8 @@ module ThemeEngine
 
     # 真引擎 variant json＝21 鍵（83 §12.2：🔴 **無 quantity_price_breaks**，
     # 與 drop 面回 [] 不同——序列化面刻意排除該鍵）。
+    # E17 複驗（hoko.vip 2026-09-05 集合頁商品卡 `data-json-product='{{ … | json }}'`）：Liquid `variant | json` 仍是這 21 鍵、此序；
+    # `/products/{handle}.js` 端點的變體是**另一形**（22 鍵、含 quantity_price_breaks、序不同）⇒ `Storefront::ProductAjaxJson`。
     def as_storefront_json
       {
         "id" => id, "title" => title, "option1" => option1, "option2" => option2,
@@ -498,14 +500,16 @@ module ThemeEngine
     # @param translations [Hash] 內容翻譯 overlay（包 34；67 §F.3(c) 走 drops 不走 t）：
     #   field_key => 譯文，由 PageRenderer 以 Translations::Resolve **一次批載**。
     #   空 hash＝來源語言／無譯文 ⇒ 直讀 base row。handle 不在值域（不可翻，§D.3）。
+    # url_params：搜尋結果脈絡的歸因參數（E17；`?_pos=…&_sid=…&_ss=r`），只有 SearchResultsDrop 傳。
     def initialize(product, url_prefix: "", selected_variant_id: nil, publication: nil,
-                   translations: {})
+                   translations: {}, url_params: "")
       @selected_variant_id = selected_variant_id
       @publication = publication
       super()
       @p = product
       @url_prefix = url_prefix
       @tx = translations || {}
+      @url_params = url_params.to_s
     end
 
     def id = @p.id
@@ -518,7 +522,7 @@ module ThemeEngine
     def tags = @p.tags.to_a
     def description = @tx["body_html"] || @p.description_html
     def content = description
-    def url = "#{@url_prefix}/products/#{@p.handle}"
+    def url = "#{@url_prefix}/products/#{@p.handle}#{@url_params}"
 
     # Liquid 契約：variants 依 position 排序（association 預設是 id 序——
     # E10 抓到的真缺口；GraphQL 面的 keyset 同樣以 position 為第一鍵）。
@@ -591,8 +595,10 @@ module ThemeEngine
       @collections ||= if @publication.nil?
         []
       else
-        ids = CollectionMembership.where(shop_id: @p.shop_id, product_id: @p.id)
-                                  .select(:collection_id)
+        # E17：手動系列的成員只在 `collection_products`（模型檔頭：物化表只收智慧系列）⇒ 兩表聯集，否則手動系列的商品
+        # `product.collections` 恆空（hoko.vip `?view=ajax_product_card_compare` 的系列欄出「首頁」，我方空）。
+        ids = CollectionMembership.where(shop_id: @p.shop_id, product_id: @p.id).pluck(:collection_id) |
+              CollectionProduct.where(shop_id: @p.shop_id, product_id: @p.id).pluck(:collection_id)
         rows = Collection.published_on(@publication).where(id: ids).order(:id).to_a
         published = collection_published_at_map(rows)
         rows.map do |c|
@@ -647,6 +653,8 @@ module ThemeEngine
     # featured_image 無圖 ⇒ null（不代入佔位圖）。
     def as_storefront_json
       image_jsons = images.map { |i| JsonSerializer.coerce(i.as_storefront_json) }
+      # E17：這是 Liquid `product | json` 形（83 §12.2：含 content、無 url）；`/products/{handle}.js` 與 recommendations JSON 的
+      # 端點形（url 在 options 後、無 content、時戳店時區、變體 22 鍵）由 `Storefront::ProductAjaxJson.js_form` 轉出，不改此處。
       {
         "id" => id, "title" => title, "handle" => handle, "description" => description,
         "published_at" => JsonSerializer.coerce(published_at),
@@ -806,16 +814,11 @@ module ThemeEngine
       [ "Price, low to high", "price-ascending" ], [ "Price, high to low", "price-descending" ],
       [ "Date, old to new", "created-ascending" ], [ "Date, new to old", "created-descending" ]
     ].freeze
-    # E8b：平台翻譯（hoko.vip zh-CN /collections/all 排序下拉九項逐字，2026-09-03 快照）；其他語系未取得 ⇒ 英文（V）。
-    SORT_OPTION_NAMES = {
-      "zh" => { "manual" => "特色", "most-relevant" => "最相关", "best-selling" => "畅销",
-                "title-ascending" => "按字母顺序排序，A-Z", "title-descending" => "按字母顺序排序，Z-A",
-                "price-ascending" => "价格，从低到高", "price-descending" => "价格，从高到低",
-                "created-ascending" => "日期，从旧到新", "created-descending" => "日期，从新到旧" }
-    }.freeze
-
+    # E17：平台翻譯改讀 `config/storefront_locales/{locale}.yml` 的 `_platform.sort_options`（hoko.vip 五語言
+    # `/collections/all?section_id=…product-grid` 逐字，2026-09-05；external-facts §G25）；字典缺鍵 ⇒ 官方英文名。
+    # 先前只有 "zh" 一組簡體名且 zh-Hant 也命中它（繁體店面出簡體）。
     def sort_options
-      names = SORT_OPTION_NAMES[@locale.to_s.split(/[-_]/).first.to_s.downcase] || {}
+      names = Storefront::PlatformStrings.dict(@locale.to_s).dig("_platform", "sort_options") || {}
       SORT_OPTIONS.map { |name, value| BaseDrop.new({ "name" => names.fetch(value, name), "value" => value }) }
     end
 
@@ -1185,6 +1188,11 @@ module ThemeEngine
       @products_total ||= @types.include?("product") ? product_relation.count : 0
     end
 
+    # 每次回應一個 9 hex 搜尋 session id（本尊 `_sid=25ef0946b`；值隨機＝身分，Normalizer 抹 `_sid=SID`）
+    def search_sid
+      @search_sid ||= SecureRandom.hex(5)[0, 9]
+    end
+
     def pages_total
       @pages_total ||= @types.include?("page") ? page_relation.count : 0
     end
@@ -1213,6 +1221,10 @@ module ThemeEngine
         offset = (@page - 1) * per
         items = []
         if @types.include?("product") && offset < products_total
+          # E17：`id:{n} OR id:{n}` 查詢的結果序＝relevance（hoko.vip 2026-09-05 main-search 三組查詢皆 cosy(_pos=1)、bolt(2)、acme(3)
+          # ＝created_at DESC，與 query 內順序無關；Ella recently-viewed 段自行反序顯示——**不是**引擎排序）。
+          # `product.url` 帶搜尋歸因參數 `?_pos={結果序}&_sid={每次回應 9 hex}&_ss=r`（hoko `/search?q=tee&section_id=…main-search` 逐字
+          # `href="/products/acme-tee?_pos=1&_sid=d601cf1ac&_ss=r"`；recently-viewed 段的 `data-product-url` 同形）。頁面／文章結果的參數形＝V。
           products = product_relation.order(Arel.sql(PRODUCT_ORDER_SQL.fetch(@sort_key)))
                                      .offset(offset).limit(per)
                                      .includes(product_variants: [ :product_variant_option_values,
@@ -1221,9 +1233,10 @@ module ThemeEngine
                                                product_options: :option_values,
                                                media: :stored_file).to_a
           overlay = DropTranslations.overlay_by_id(records: products, locale: @locale)
-          items.concat(products.map do |product|
+          items.concat(products.each_with_index.map do |product, i|
             ProductDrop.new(product, url_prefix: @url_prefix, publication: @publication,
-                            translations: overlay[product.id] || {})
+                            translations: overlay[product.id] || {},
+                            url_params: "?_pos=#{offset + i + 1}&_sid=#{search_sid}&_ss=r")
           end)
         end
         if @types.include?("page") && items.size < per
@@ -1265,8 +1278,16 @@ module ThemeEngine
       SORT_VALUES.include?(value) ? value : default_sort_by
     end
 
+    # E17：name＝平台翻譯（hoko.vip 五語言 `/search?q=tee&section_id=…main-search` 逐字，2026-09-05；§G25）；先前 name＝value
+    # ⇒ 搜尋頁排序下拉出 `relevance`／`price-ascending` 字面。字典缺鍵 ⇒ 官方英文（en 店面實測）。
+    SEARCH_SORT_NAMES_EN = { "relevance" => "Relevance", "price-ascending" => "Price, low to high",
+                             "price-descending" => "Price, high to low" }.freeze
+
     def sort_options
-      SORT_VALUES.map { |value| BaseDrop.new({ "value" => value, "name" => value }) }
+      names = Storefront::PlatformStrings.dict(@locale.to_s).dig("_platform", "search_sort_options") || {}
+      SORT_VALUES.map do |value|
+        BaseDrop.new({ "value" => value, "name" => names.fetch(value, SEARCH_SORT_NAMES_EN.fetch(value)) })
+      end
     end
 
     # 官方："The types are determined by the `type` query parameter."（CSV；預設全部）
@@ -1281,13 +1302,20 @@ module ThemeEngine
       facets ? facets.filters : []
     end
 
+    # E17：**零結果 ⇒ filters 為空**（hoko.vip 2026-09-05 `/search?q=zzzzqq&section_id=…main-search`：Ella
+    # `{% if search.results_count == 0 and search.filters == empty %}` 命中 ⇒ 只出 `<p role="status">未找到与“zzzzqq”…</p>`、
+    # 無 facets 區塊；我方先前對空結果仍建 availability／price 過濾器 ⇒ 多出整個 facets-block-wrapper、狀態句消失）。
     def facets
+      return @facets if defined?(@facets)
+
+      @facets = nil
       return nil unless performed && @publication && @params.key?("_facets_qs")
 
-      @facets ||= ThemeEngine::Facets.new(
-        base_relation: Storefront::SearchQuery.products(
-          shop: @shop, publication: @publication, query: terms),
-        query_string: @params["_facets_qs"].to_s,
+      base = Storefront::SearchQuery.products(shop: @shop, publication: @publication, query: terms)
+      return nil unless base.exists?
+
+      @facets = ThemeEngine::Facets.new(
+        base_relation: base, query_string: @params["_facets_qs"].to_s,
         path: "#{@url_prefix}/search", locale: @locale, enabled: ThemeEngine::Facets.enabled_for(@shop))
     end
 
@@ -1967,6 +1995,13 @@ module ThemeEngine
   # 🔴 反例①已修：語言資料由呼叫端供給（shop_locales；包 34 接真值鏈）。
   # 官方 objects/localization（external-facts §G22）。available_countries 由 `Storefront::LocalizationContext` 供給
   # （同網域 active 市場 regions 聯集，E15）；未給時退回「只有當前國」（Runtime 的無 presence 退路——預覽面／無市場店）。
+  # E17：官方 `country` 物件的字串化＝國名（hoko.vip 2026-09-05 header_mobile 區段 fetch：Ella
+  # `language-country-localization.liquid` `icon-flag--{{ localization.country }}` ⇒ `icon-flag--台湾`；我方先前是裸 Hash ⇒
+  # 輸出 Hash#inspect）。其餘屬性同 LocalizationContext#country_hash（§G22）。
+  class CountryDrop < BaseDrop
+    def to_s = self["name"].to_s
+  end
+
   class LocalizationDrop < BaseDrop
     def initialize(language:, available_languages:, country: nil, market: nil, available_countries: nil)
       super({ "language" => language, "country" => country, "market" => market,
@@ -2269,6 +2304,22 @@ module ThemeEngine
   end
 
   # settings（schema 型別感知強轉；25 坑 #6——color 必須是 color 物件）。
+  # E17：`url` 型 setting 的值物件。本尊（hoko.vip 2026-09-05 header_mobile 區段 fetch）：Ella `blocks/_menu-tab-item.liquid`
+  # `assign link = bl_stts.link` ⇒ `{% if link != blank %}href="{{ link.url }}"` 對 `"#"` 出 `href="#"`、對
+  # `https://1.envato.market/dokaB2` 出該 URL ⇒ 值同時是字串（`{{ link }}`）也回應 `.url`（官方 input-settings 只說
+  # "data is returned as a string"；`.url` 可用＝實測）。空值 ⇒ nil（`!= blank` 為假 ⇒ 本尊同段輸出 `role="link" aria-disabled="true"`）。
+  # 我方先前回裸字串 ⇒ `.url` 為 nil ⇒ `href=""`（外部連結整個失效）。
+  class UrlSettingDrop < Liquid::Drop
+    def initialize(value)
+      super()
+      @value = value.to_s
+    end
+
+    def url = @value
+    def to_s = @value
+    def to_str = @value
+  end
+
   class SettingsDrop < Liquid::Drop
     # schemes：色階群組 drop（步 13b）——`color_scheme` 型 setting 解引用用；
     #   nil＝無群組語境（值原樣回 id 字串，to_s 語義相同）。
@@ -2350,6 +2401,8 @@ module ThemeEngine
         return nil if val.nil? || val == ""
 
         @context&.[]("linklists")&.liquid_method_missing(val.to_s)
+      when "url"
+        val.nil? || val.to_s == "" ? nil : UrlSettingDrop.new(val) # E17
       when "video_url"
         # 官方：空 ⇒ nil；非空 ⇒ URL 字串＋id/type（PR-16；解析不出 host 的
         # 值一樣回 nil——不可播的 URL 對主題等同未填）

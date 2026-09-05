@@ -1595,3 +1595,81 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   `hoko_header_sra_en_root.html`、`mirror_header_sra.html`、`mirror_header_sra_collections.html`、`loc-post-method-put-sra.headers`、`loc-put-direct.headers`、
   `mirror-loc-post-method-put.headers`、`loc-rt-*.headers`、`loc-rt-abs-lang.headers`、E8 報告 `report-header-sra.md`／`report-header-sra-collections.md`）。重取：
   `curl -s 'https://hoko.vip/collections/all?sort_by=price-ascending&section_id=sections--19763396837479__header_default&page=2' | grep -o 'name="return_to" value="[^"]*"'`。
+
+### G25. Ella 全部 fetch／Ajax 端點的本尊形（E17 依據，取證 2026-09-05 curl hoko.vip；cart Ajax 端點受 Cloudflare 挑戰擋，見末段）
+
+- **端點清單來源**（Ella 7.2.0 原始碼）：`<section-fetcher data-section-id data-target-id data-activate>`（`assets/global.js` `SectionFetcher`：
+  `new URL(location.href)` + `section_id=`）——header_default／header_mobile／cart_drawer／before_you_leave／mega menu；`recently-viewed-products`
+  （`data-url="/search?section_id=…&type=product&q="`＋`id:{n}` 以 `%20OR%20` 串接、`data-limit`、去掉當前商品）；`predictive-search.js`
+  （`/search/suggest?q&resources[limit_scope]=each&section_id=predictive-search`＋空態 `?section_id=predictive-search-empty`）；
+  `product-recommendations.js`（`/recommendations/products?limit=5&product_id&section_id`）；`product-info.js`（`?section_id&option_values=`／
+  `?variant=&section_id=`）；`facets.js`（`{pathname}?section_id={grid}&{params}`）；`cart.js`（`/cart/add|change|update.js` 帶 `sections`、
+  `sections_url`；`getSectionHTML(section_id)`）；`pickup-availability.js`（`variants/{id}/?section_id=pickup-availability`，hoko 頁面無
+  `<pickup-availability>` 元素 ⇒ 不觸發）；view 模板 `?view=quick_add`／`ajax_product_card_compare`／`block_wishlist_card`／`ajax_edit_cart`／
+  `cart?view=ajax_side_cart`。八頁 wrapper／fetcher／recommendations／recently-viewed 的 id 對照（hoko 數字群組／模板 id ⇔ 我方名稱）
+  在 scratchpad `e17/enum_fetch.py` 輸出。
+- **section 形逐字全同（正規化後 1.000）**：before_you_leave／multitasking_bar／promotion_popup／toolbar_mobile／announcement_bar／color_swatches／
+  footer（首頁與商品頁脈絡）、recently-viewed 空態（drawer 與模板段）、`predictive-search-empty`、product_tabs、facets（sort／availability／price／
+  frontpage）、breadcrumb、search 零結果段（修法後）。
+- **Section Rendering 的 `return_to`／header**：見 §G24（E16）。
+- **header_mobile 區段**（`?section_id=…__header_mobile_MqfLk9`）：Ella `blocks/_menu-tab-item.liquid` `assign link = bl_stts.link`（`url` 型 setting）
+  ⇒ `{% if link != blank %}href="{{ link.url }}"` 對值 `#` 出 `href="#"`、對 `https://1.envato.market/dokaB2` 出該 URL、空值出
+  `role="link" aria-disabled="true"`；`snippets/language-country-localization.liquid` 第 301／354 行 `icon-flag--{{ localization.country }}`
+  ⇒ `icon-flag--台湾`（country 物件字串化＝國名）。
+- **cart_drawer 區段**（`?section_id=…__cart_drawer_PFLQy3`，空車）：`all_country_option_tags` 原始位元組 `…>---</option>\n<option value="Bhutan"…`、
+  末項 `</option></select>`（option 之間換行、末尾無換行）；登入連結＝新版顧客帳戶（91 §3.83 ⚪）。
+- **recently-viewed（`/search?section_id=…&type=product&q=id:A%20OR%20id:B`）**：只回這些 id；main-search 段三組查詢
+  （`id:bolt OR id:cosy`／`id:cosy OR id:bolt`／`id:cosy OR id:acme OR id:bolt`）結果序皆 cosy(`_pos=1`)、bolt(2)、acme(3)＝created_at DESC，
+  **與 query 內順序無關**；Ella recently-viewed 段的顯示序與此相反（主題自行反序）。結果卡的 `product.url`＝
+  `/products/bolt-mug?_pos=2&_sid=25ef0946b&_ss=r`（`_pos`＝結果序、`_sid`＝每次回應不同的 9 hex、`_ss=r`）；`/search?q=tee&section_id=…main-search`
+  同形 `href="/products/acme-tee?_pos=1&_sid=d601cf1ac&_ss=r"`。
+- **predictive search**：zh-CN（預設）／zh-TW／ja ⇒ **417** `Expectation Failed`：section 形 `Content-Type: text/html; charset=utf-8`、body 逐字
+  `Expectation failed: Unsupported buyer locale`（44 B）；JSON 形 `application/json` `{"status":417,"message":"Expectation Failed","description":"Unsupported buyer locale"}`；
+  en／fr 200。官方支援語言清單（<https://shopify.dev/docs/api/ajax/reference/predictive-search>，2026-09-05）逐字 44 種：Afrikaans, Albanian, Armenian,
+  Bosnian, Bulgarian, Catalan, Croatian, Czech, Danish, Dutch, English, Estonian, Faroese, Finnish, French, Gaelic, German, Greek, Hungarian, Icelandic,
+  Indonesian, Italian, Latin, Latvian, Lithuanian, Macedonian, Moldovan, Norwegian, Norwegian (Bokmål), Norwegian Nynorsk, Polish, Portuguese (Brazil),
+  Portuguese (Portugal), Romanian, Russian, Serbian, Serbo-Croatian, Slovak, Slovenian, Spanish, Swedish, Turkish, Ukrainian, Vietnamese, Welsh；
+  "If your theme isn't using one of the supported languages, then the API returns" 417 "Unsupported buyer locale"。
+  `/en/search/suggest.json?q=tee&resources[type]=product,collection,page,article&resources[limit]=4` 商品條目逐字：`"compare_at_price_max":"0.00"`、
+  `"compare_at_price_min":"0.00"`（無 compare 價）、`"featured_image":{"alt":null,"aspect_ratio":null,"height":null,"url":null,"width":null}`（無圖）、
+  `"url":"\/en\/products\/acme-tee?_pos=1\u0026_psq=tee\u0026_psid=7498e9c8d\u0026_ss=e"`（斜線跳脫 `\/`、`&` ⇒ `\u0026`）。
+- **recommendations**：section 形（`/recommendations/products?limit=5&product_id&section_id`）出兩張卡（Ella 對 `recommendations.performed ∧
+  products_count == 0` 以 `collections.all.products | reject` 補位）；JSON 形 `/recommendations/products.json?product_id=…&limit=5` 對三個商品皆
+  `{"products":[],"intent":"related"}`（演算法不可觀測；91 §3.86 ⚪）。
+- **product-info**：`/products/acme-tee?section_id=…__main` 與 `?variant=…&section_id=` 同一輸出；`main` 段唯一差＝`{{ form | payment_button }}`：
+  `<div data-shopify="payment-button" class="shopify-payment-button"> <shopify-accelerated-checkout recommended="null" fallback="{…}" … disabled>
+  <div class="shopify-payment-button__button" role="button" disabled aria-hidden="true" style="background-color: transparent; border: none">
+  <div class="shopify-payment-button__skeleton">&nbsp;</div> </div> </shopify-accelerated-checkout> </div>`（我方無輸出；平台加速結帳，91 §3.86 ⚪）。
+  JSON-LD `"priceValidUntil"`＝`'now' | date` 在**店時區**：23:40 UTC（9/4）取樣出 `2027-09-05`、`/products/acme-tee.js` 時戳 `2026-09-03T02:27:08+08:00`
+  ⇒ hoko 店時區 +08:00（時區名未取得）。
+- **search 頁**：`search.sort_options` 三項與 `collection.sort_options` 九項的 name 五語言逐字（`/{lang}search?q=tee&section_id=…main-search`、
+  `/{lang}collections/all?section_id=…product-grid`）：zh-CN 相关性／价格，从低到高／价格，从高到低 ＋ 特色／最相关／畅销／按字母顺序排序，A-Z／…Z-A／
+  价格，从低到高／价格，从高到低／日期，从旧到新／日期，从新到旧；zh-TW 關聯性／價格 (從低到高)／價格 (從高到低) ＋ 精選／最相關／暢銷度／
+  依字母順序 (由 A 到 Z)／…(由 Z 到 A)／價格 (從低到高)／價格 (從高到低)／日期 (從舊到新)／日期 (從新到舊)；en Relevance／Price, low to high／
+  Price, high to low ＋ Featured／Most relevant／Best selling／Alphabetically, A-Z／Alphabetically, Z-A／Price, low to high／Price, high to low／
+  Date, old to new／Date, new to old；fr Pertinence／`Prix : faible à élevé`／`Prix : élevé à faible`（搜尋形帶空格冒號）＋ En vedette／
+  Le plus pertinent／Meilleures ventes／Alphabétique, de A à Z／Alphabétique, de Z à A／`Prix: faible à élevé`／`Prix: élevé à faible`／
+  Date, de la plus ancienne à la plus récente／Date, de la plus récente à la plus ancienne；ja 関連性／価格の安い順／価格の高い順 ＋ オススメ／
+  関連性が最も高い／ベストセラー／アルファベット順, A-Z／アルファベット順, Z-A／価格の安い順／価格の高い順／古い商品順／新着順。
+  零結果（`q=zzzzqq`）：`<p role="status">未找到与“zzzzqq”相关的内容，请检查拼写或更换关键词。</p>` 後直接 `collection-wrapper`，**無** facets 區塊
+  （Ella `search.results_count == 0 and search.filters == empty` ⇒ `search.filters` 為空）。
+- **view 模板**：`?view=ajax_edit_cart` 對無圖商品 `{{ image | img_url: '270x' }}`（image nil）逐字
+  `srcset="//hoko.vip/cdn/shopifycloud/storefront/assets/no-image-2048-a2addb12_270x.gif"`（`img_url` 對 nil＝平台無圖佔位，非 Liquid error）；
+  `?view=ajax_product_card_compare` 系列欄 `<span class="compareTable-collection inline-block">首頁</span>`（`product.collections` 含手動系列）。
+- **商品 JSON 端點**：`/products/acme-tee.js` 200 逐字（鍵序）`id,title,handle,description,published_at,created_at,vendor,type,tags,price,price_min,
+  price_max,available,price_varies,compare_at_price,compare_at_price_min,compare_at_price_max,compare_at_price_varies,variants,images,featured_image,
+  options,url,requires_selling_plan,selling_plan_groups`；變體 22 鍵 `…inventory_management,barcode,quantity_rule,quantity_price_breaks,
+  requires_selling_plan,selling_plan_allocations`；`"options":[{"name":"Title","position":1,"values":["Default Title"]}]`（只有預設變體）；
+  `"url":"\/products\/acme-tee"`；時戳 `+08:00`。`/products/acme-tee.json` 200 `{"product":{id,title,body_html,vendor,product_type,created_at,handle,
+  updated_at,published_at,template_suffix,published_scope,tags,variants[{id,product_id,title,price:"188.00",sku:null,position,compare_at_price:"",
+  fulfillment_service:"manual",inventory_management:"shopify",option1..3,created_at,updated_at,taxable,barcode:null,grams:0,image_id:null,weight:0.0,
+  weight_unit:"kg",requires_shipping,quantity_rule,price_currency:"HKD",compare_at_price_currency:"",quantity_price_breaks:[]}],options[{id,product_id,
+  name,position,values}],images:[],image:null}}`。同日複驗：Ella 商品卡 `data-json-product='{{ … | json }}'` 的 Liquid `variant | json` 仍是 21 鍵、
+  序 `…barcode,requires_selling_plan,selling_plan_allocations,quantity_rule`（83 §12.2 形）⇒ **`.js` 端點與 Liquid `json` 濾鏡是兩種序列化**。
+- **cart Ajax**：`POST /cart/add.js`（售罄變體）zh-CN 逐字 `{"status":422,"message":"产品“Acme Tee”已售罄。","description":"产品“Acme Tee”已售罄。"}`；
+  三商品皆售罄（`available:false`）⇒ 有貨流程無法觀測。連續 curl 打 cart 端點後 hoko 回 **429**＋Cloudflare「Verifying your connection...」
+  managed challenge（`/cdn-cgi/challenge-platform/…`，約 6 分鐘後解除）——cart 端點與 recommendations `.json` 皆受此擋 ⇒ 其他語言的售罄文案、
+  cart JSON 的 `\/` 形、`sections` 回應、`/cart/change.js` 錯誤形皆未取得（91 §3.86），需以真瀏覽器（headless Chrome 頁內 fetch）取證。
+- **證據檔**（scratchpad `e17/`：`hoko_*.html|json`、`local_*`、`bt3 前 mirror_*`、`reports*/report-*.md`、`summary.txt`、`hoko_sortnames.txt`、
+  `hoko_417_*.txt(.headers)`、`hoko_ms_*.html`、`hoko_rv_*.html`、`hoko_acme-tee.js.json`、`hoko_acme-tee.json.json`、`hoko_soldout_zhcn.json`）。
+  重取：`python e17_fetch.py`（bt3）／`e17_fetch_local.py`（本機 3001）＋ `rails runner e17_diff.rb pairs.json reports`。

@@ -16,7 +16,7 @@
     "money_format": "${{amount}}",
     "money_with_currency_format": "HK${{amount}} HKD",
     "_money_format": "本尊 admin Settings › General › Change currency formatting（2026-09-03 實讀）：HTML without currency ${{amount}}、HTML with currency HK${{amount}} HKD、Email 兩欄同值；首頁 window.money_format 同值、購物車抽屜總額 HK$0.00 HKD",
-    "_timezone": "本尊時區未取得（首頁未渲染時間）；沿用建店預設"
+    "_timezone": "本尊時區偏移＝+08:00（E17：hoko.vip /products/acme-tee.js 2026-09-05 時戳 +08:00；23:40 UTC 取樣 priceValidUntil 落在 +8 的次日）；時區名未取得，沿用建店預設 Asia/Hong_Kong（同為 +08:00）"
   },
   "markets": [
     { "name": "美國", "handle": "us", "countries": ["US"], "_id": "30683103335" },

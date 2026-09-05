@@ -67,8 +67,14 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(response.body).to include('<span id="rhello">你好買家</span>')
     get "/recommendations/products", params: { product_id: product.id, section_id: "related-products" }
     expect(response.body).to include('<span id="rhello">Hello shopper</span>')
+    # E17：predictive search 對中文／日文買家語言回 417（官方支援語言清單不含；hoko.vip zh-TW 2026-09-05 實測）——語言跟前綴的
+    # 事實由 417 本身證明（en 無前綴 200）。
     get "/zh-hant/search/suggest", params: { q: "rose", section_id: "related-products" }
-    expect(response.body).to include('<span id="rhello">你好買家</span>')
+    expect(response).to have_http_status(:expectation_failed)
+    expect(response.body).to eq("Expectation failed: Unsupported buyer locale")
+    get "/search/suggest", params: { q: "rose", section_id: "related-products" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include('<span id="rhello">Hello shopper</span>')
     variant_id = ActsAsTenant.with_tenant(shop) { product.product_variants.first.id }
     post "/zh-hant/cart/add", params: { id: variant_id, quantity: 1, sections: "related-products", sections_url: "/zh-hant/" }
     expect(response).to have_http_status(:ok)
@@ -81,7 +87,7 @@ RSpec.describe "Storefront i18n", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<span id="rhello">你好買家</span>')
     get "/search/suggest", params: { q: "rose", section_id: "related-products" }
-    expect(response.body).to include('<span id="rhello">你好買家</span>')
+    expect(response).to have_http_status(:expectation_failed) # E17：店預設 zh-Hant ⇒ 無前綴 predictive 也是 417（語言跟店預設）
     variant_id = ActsAsTenant.with_tenant(shop) { product.product_variants.first.id }
     post "/cart/add", params: { id: variant_id, quantity: 1, sections: "related-products", sections_url: "/" }
     expect(response).to have_http_status(:ok)

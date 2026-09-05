@@ -13,14 +13,18 @@ module RenderParity
   class Normalizer
     # 本尊 `sections--{group 數字 id}__{key}`／`template--{模板數字 id}__{key}`；我方 `sections--{group 名}__{key}`／`template--{模板名}__{key}`
     GROUP_ID_RE = /sections--(?:\d+|[a-z0-9-]+)__/
-    TEMPLATE_ID_RE = /template--(?:\d+|[a-z0-9.\-]+)__/
+    # E17：替代模板的我方 id 帶單底線（`template--product-quick_add__main`／`product-block_wishlist_card__main`）
+    TEMPLATE_ID_RE = /template--(?:\d+|[a-z0-9.\-]+(?:_[a-z0-9.\-]+)*)__/
     # 本尊 theme block 實例 id：`{18 碼 base64-ish}__{key}`（hoko.vip 實測 `AWlFwNUZ5UVVuRmp6e__group_announcement_bar_PeTpTw`）
     BLOCK_SCOPE_RE = /\bA[A-Za-z0-9]{17}__/
     # 本尊主題資產：`//host/cdn/shop/t/{n}/assets/x.css?v=123`（主機可能已被上一步抹掉）；我方：`/theme-assets/x.css`
     CDN_ASSET_RE = %r{(?:(?:https?:)?//[^/"'\s]+)?/cdn/shop/t/\d+/assets/}
     ASSET_VERSION_RE = /\?v=\d+/
     # 本尊字型：`/cdn/fonts/{family}/{handle}.{hash}.woff2`；我方：`/fonts/{family}/{handle}.woff2`
-    CDN_FONT_RE = %r{(?:(?:https?:)?//[^/"'\s]+)?/cdn/fonts/([\w-]+)/([\w-]+)\.[0-9a-f]{40}\.woff2}
+    # E17：`.woff` 備援形（`@font-face` 的第二個 `url(…jost_n4.{hash}.woff)`）同樣抹雜湊
+    CDN_FONT_RE = %r{(?:(?:https?:)?//[^/"'\s]+)?/cdn/fonts/([\w-]+)/([\w-]+)\.[0-9a-f]{40}\.(woff2?)}
+    # E17：JSON 跳脫形的主題資產路徑（Ella `window.photoswipeUrls = { css: "\/\/hoko.vip\/cdn\/shop\/t\/2\/assets\/lib-photoswipe.css" }`）
+    CDN_ASSET_JSON_RE = %r{(?:https?:)?\\/\\/[^\\"'\s]+\\/cdn\\/shop\\/t\\/\d+\\/assets\\/}
     # 切段終點：下一個 wrapper、`</main>` 或 `</body>`（最先出現者）——否則最後一段會把頁尾／平台注入一併算進去
     SECTION_STOP_RE = %r{</main>|</body>|<!-- END sections:}
     # placeholder 插圖本體＝本尊版權圖 vs 我方自繪（鐵律 9，已登記差異）⇒ 只比外框屬性，內容以替身取代
@@ -53,7 +57,8 @@ module RenderParity
         s.gsub!(/#{Regexp.escape(@url_prefix.gsub('/', '\\/'))}(?=\\\/)/, "") # JSON 跳脫形 `\/zh-hans-tw\/products`
       end
       s.gsub!(CDN_ASSET_RE, "/theme-assets/")
-      s.gsub!(CDN_FONT_RE, "/fonts/\\1/\\2.woff2")
+      s.gsub!(CDN_ASSET_JSON_RE, "\\\\/theme-assets\\\\/")
+      s.gsub!(CDN_FONT_RE, "/fonts/\\1/\\2.\\3")
       s.gsub!(ASSET_VERSION_RE, "")
       s.gsub!(GROUP_ID_RE, "sections--G__")
       s.gsub!(TEMPLATE_ID_RE, "template--T__")
@@ -85,6 +90,22 @@ module RenderParity
       s.gsub!(/(ShareMessage-)\d+/, '\1ID') # Ella share-button `id="ShareMessage-{product.id}"`
       s.gsub!(/(&quot;id&quot;:)\d+/, '\1ID')
       s.gsub!(/((?:NoMediaLink|StandardBadge)--)\d+/, '\1ID') # `StandardCardNoMediaLink--`／`NoMediaStandardBadge--`
+      # E17（hoko.vip 2026-09-05 區段 fetch／view 模板）：商品卡／比較表／編輯車的商品 id 屬性、推薦卡 grid item
+      # `…_ecaxGU-7771802992743-1`、以商品 id 開頭的 block scope `…ecaxGU7771802992743AbjNlRGcvbVR4aWtTS__`——形同值異
+      s.gsub!(/(data-(?:product-card|product-compare|cart-edit)-id=")\d+"/, '\1ID"')
+      s.gsub!(/(id="product-edit-)\d+"/, '\1ID"')
+      s.gsub!(/(_[A-Za-z0-9]{6}-)\d{1,13}(-\d+")/, '\1ID\2')
+      s.gsub!(/\d+A[A-Za-z0-9]{17}__/, "IDB__")
+      # E17：搜尋歸因的 session id（`_sid=25ef0946b`／predictive `_psid=…`：每次回應隨機）；比較表／編輯車的商品 id
+      # （`data-compare-item="777…"`、`data-section="777…"`、`edit-quantity-777…`、`product-form-edit-777…`、`product-edit-options-777…`）；
+      # 以 wrapper key 開頭、`-{商品 id}"` 結尾的元素 id（`template--T__main-search-777…"`、`…_ecaxGU-777…"` 售罄鈕）
+      s.gsub!(/([?&]_p?sid=)[0-9a-f]{9}/, '\1SID')
+      s.gsub!(%r{//cdn\.shopify\.com/static/images/flags/}, "/cdn/static/images/flags/") # E17：國旗平台 CDN 主機（我方＝店主機同路徑，先前已抹）
+      s.gsub!(/(data-(?:compare-item|section)=")\d+"/, '\1ID"')
+      s.gsub!(/((?:edit-quantity-|product-form-edit-|product-edit-options-))\d+/, '\1ID')
+      # 段：`-` 後以字母／底線開頭（且不是已抹出的 `ID` 替身）才算 key 的一段——`-7771802992743-1"` 的 `-1` 是索引、由上一條處理，
+      # 索引值不抹（slide 序差異要留給 diff 看見）
+      s.gsub!(/(template--T__[A-Za-z0-9_]+(?:-(?!ID\b)[A-Za-z_][A-Za-z0-9_]*)*-)\d+(?=")/, '\1ID')
       s.gsub!(/\s+/, " ")
       s
     end

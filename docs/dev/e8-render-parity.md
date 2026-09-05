@@ -126,6 +126,28 @@ current 反了）。修法部署 bt3（`4de1457e`）後兩脈絡皆 0.993、只�
 | 68 | `{% form 'localization' %}` 預設 `return_to` | 路徑＋**原始 query**（順序、編碼、`&` 不轉義逐字）；前綴根 `/en?…` 不帶尾斜線 | `Runtime` 新 `query_string:` ⇒ registers `request_query`；`FormTag#default_return_to`＝`request_path`（去尾斜線）＋`?`＋query，`&` 不轉義只轉 `"<>`；整頁快取分支只餵進鍵的對 | F6b、SR6–SR8 |
 | 69 | `/localization` 收 PUT | 表單自帶 `_method=put`（官方 form 輸出）⇒ 瀏覽器 POST 經 method override 為 PUT；本尊 PUT 直打 302 | routes 裸與帶前綴兩形 `via: %i[post put]`（先前只 POST ⇒ bt3 mirror 真表單提交 404） | L5 |
 
+### §2e 第五批（E17，2026-09-05；Ella 全部 fetch／Ajax 端點；`docs/dev/e17-fetch-endpoints-parity.md`）
+
+53 對端點（scratchpad `e17/`）：初始 30 對全同；修法後非全同只剩 ⚪ 四類（登入連結、付款鈕骨架、`__head__` 平台注入、recs JSON 演算法）。
+
+| # | 形差 | 本尊（external-facts §G25） | 我方修法 | 規格 |
+|---|---|---|---|---|
+| 70 | `url` 型 setting 的 `.url` | `href="{{ link.url }}"` 對 `#` 出 `#`、外部 URL 原樣 | `UrlSettingDrop` | U1 |
+| 71 | `{{ localization.country }}`／`country \| image_url` | 國名／國旗 SVG URL（`//cdn.shopify.com/static/images/flags/tw.svg?width=32`） | `CountryDrop#to_s`；`image_url` 出 `/cdn/static/images/flags/{cc}.svg`（flag-icons MIT） | U10、F9 |
+| 72 | `all_country_option_tags` 分隔 | option 之間換行 | `join("\n")` | U8 |
+| 73 | `sort_options.name` | 五語言平台翻譯（collection 九項、search 三項） | `_platform.sort_options`／`search_sort_options` | U4 |
+| 74 | 搜尋零結果 | `search.filters == empty` | `SearchDrop#facets` 空結果 nil | F4 |
+| 75 | `q=id:… OR id:…` | 只回這些 id；relevance 序 | `SearchQuery.id_terms` | F5 |
+| 76 | 搜尋結果 `product.url` | `?_pos=…&_sid=…&_ss=r` | `url_params:` | F8 |
+| 77 | `product.collections` | 含手動系列 | memberships ∪ collection_products | U11 |
+| 78 | predictive 不支援語言 | 417 兩形逐字 | `SUPPORTED_LANGUAGES` | F3 |
+| 79 | predictive JSON 條目 | `"0.00"`、null 物件、`\/` 跳脫 | `product_suggestion_json`＋`AjaxJson` | F7、U5 |
+| 80 | `img_url` 對 nil | 無圖佔位 gif URL | `Filters#img_url`＋`no_image` 路由 | U2、F6 |
+| 81 | `date` 濾鏡時區 | 店時區 | `registers[:time_zone]` | U3、PP12 |
+| 82 | `/products/{handle}.js`／`.json` | 本尊兩形逐字 | `ProductsController`＋`ProductAjaxJson` | F1、F2、U9 |
+| 83 | cart 售罄 422 訊息 | zh-CN 逐字 | `_platform.cart_errors.sold_out` | U7 |
+| 84 | Normalizer 身分規則 | 替代模板 id／`_sid`／商品 id 屬性族／`.woff`／JSON 跳脫資產路徑／國旗 CDN 主機 | `RenderParity::Normalizer` | U6 |
+
 ## §3 已登記差異（正規化抹掉或報告中保留、不算引擎缺口）
 
 | 類 | 內容 | 落點 |

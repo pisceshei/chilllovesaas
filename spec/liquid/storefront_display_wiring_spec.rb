@@ -54,7 +54,7 @@ RSpec.describe "Storefront 顯示對接（Liquid 面）" do
     expect(all).to include('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;Hong Kong Island&quot;],[&quot;Kowloon&quot;,&quot;Kowloon&quot;],[&quot;New Territories&quot;,&quot;New Territories&quot;]]">Hong Kong SAR</option>')
     expect(all).to include(%(<option value="Côte d'Ivoire" data-provinces="[]">Côte d’Ivoire</option>)) # value 保留 '；en 文字是本尊的彎引號
     # locale nil ⇒ 退 en：文字＝本尊英文店面的在地名（可與 value 不同）、順序＝本尊 en 觀察序（Åland 排在 Afghanistan 之後，非碼位）
-    expect(all).to start_with('<option value="---" data-provinces="[]">---</option><option value="Afghanistan" data-provinces="[]">Afghanistan</option><option value="Aland Islands" data-provinces="[]">Åland Islands</option>')
+    expect(all).to start_with('<option value="---" data-provinces="[]">---</option>' + "\n" + '<option value="Afghanistan" data-provinces="[]">Afghanistan</option>' + "\n" + '<option value="Aland Islands" data-provinces="[]">Åland Islands</option>')
     # 觀察序≠value 序的判別格：本尊 en 把「British Virgin Islands」（value "Virgin Islands, British"）排在 B 段（Brunei 之前），依 value 排會落到 V 段
     expect(all.index('value="Virgin Islands, British"')).to be < all.index('value="Brunei"')
     # country_option_tags：建店 provision＝HK market＋HK zone＋費率 ⇒ 恰一個 option（本尊形）
@@ -75,7 +75,7 @@ RSpec.describe "Storefront 顯示對接（Liquid 面）" do
   it "W4b 🔴 在地名：locale zh-Hans ⇒ 文字與 data-provinces 第二欄用 zh-CN 名、順序＝本尊 zh-CN 觀察序（首國「不丹」）；字典沒有的語言退 en" do
     zh = ActsAsTenant.with_tenant(shop) { ThemeEngine::Runtime.new(theme:, shop:, source:, locale: "zh-Hans") }
     out = Liquid::Template.parse("{{ all_country_option_tags }}").render(zh.global_assigns)
-    expect(out).to start_with('<option value="---" data-provinces="[]">---</option><option value="Bhutan" data-provinces="[]">不丹</option>')
+    expect(out).to start_with('<option value="---" data-provinces="[]">---</option>' + "\n" + '<option value="Bhutan" data-provinces="[]">不丹</option>')
     expect(out).to include('<option value="Hong Kong" data-provinces="[[&quot;Hong Kong Island&quot;,&quot;香港岛&quot;],[&quot;Kowloon&quot;,&quot;九龙&quot;],[&quot;New Territories&quot;,&quot;新界&quot;]]">香港特别行政区</option>')
     de = ActsAsTenant.with_tenant(shop) { ThemeEngine::Runtime.new(theme:, shop:, source:, locale: "de") }
     de_out = Liquid::Template.parse("{{ all_country_option_tags }}").render(de.global_assigns)
@@ -93,7 +93,7 @@ RSpec.describe "Storefront 顯示對接（Liquid 面）" do
     expect(fr.scan(/<option value="([^"]*)"/).flatten.first(4)).to eq([ "---", "Afghanistan", "South Africa", "Albania" ]) # 本尊 fr 觀察序（Afrique du Sud 排 A）
     expect(fr).to include('<option value="South Africa" data-provinces="[[&quot;Eastern Cape&quot;,&quot;Cap oriental&quot;]') # 子區域第二欄＝本尊 fr 名
     ja = render.call("ja")
-    expect(ja).to start_with('<option value="---" data-provinces="[]">---</option><option value="Iceland" data-provinces="[]">アイスランド</option>') # 本尊 ja 依讀音序，非碼位
+    expect(ja).to start_with('<option value="---" data-provinces="[]">---</option>' + "\n" + '<option value="Iceland" data-provinces="[]">アイスランド</option>') # 本尊 ja 依讀音序，非碼位
     expect(ja).to include('>中華人民共和国香港特別行政区</option>')
   end
 end

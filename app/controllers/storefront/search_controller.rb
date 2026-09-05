@@ -22,9 +22,11 @@ module Storefront
 
     # GET /search/suggest.json
     def suggest_json
+      return render(json: Storefront::AjaxJson.dump(UNSUPPORTED_LOCALE_JSON), status: :expectation_failed) if unsupported_locale?
+
       types, limit, limit_scope, fields = validate_params!
       results = build_results(types:, limit:, limit_scope:, fields:)
-      render json: { "resources" => { "results" => results } }
+      render json: Storefront::AjaxJson.dump({ "resources" => { "results" => results } })
     rescue ParamError => e
       render json: { "status" => 422, "message" => "Invalid parameter error",
                      "description" => e.message }, status: :unprocessable_content
@@ -32,6 +34,8 @@ module Storefront
 
     # GET /search/suggest（section 形）
     def suggest_section
+      return render(html: UNSUPPORTED_LOCALE_TEXT, status: :expectation_failed) if unsupported_locale?
+
       sid = params[:section_id].to_s
       if sid.blank? || current_theme.nil?
         return render plain: "", status: :not_found
@@ -54,6 +58,23 @@ module Storefront
     private
 
     class ParamError < StandardError; end
+
+    # E17：官方 predictive search 支援語言（<https://shopify.dev/docs/api/ajax/reference/predictive-search>，2026-09-05 逐字 44 種：
+    # Afrikaans…Welsh；不含中文／日文／韓文）；非清單語言 ⇒ 417。本尊 hoko.vip（zh-CN 預設、zh-TW、ja）2026-09-05：section 形
+    # `417 text/html; charset=utf-8` 逐字 `Expectation failed: Unsupported buyer locale`；JSON 形
+    # `{"status":417,"message":"Expectation Failed","description":"Unsupported buyer locale"}`；en／fr 200。
+    # 語言名 ⇒ 碼：Gaelic⇒gd、Moldovan⇒ro（ro-MD）、Serbo-Croatian⇒sh、Norwegian⇒no（V：官方只列語言名）。
+    SUPPORTED_LANGUAGES = %w[af sq hy bs bg ca hr cs da nl en et fo fi fr gd de el hu is id it la lv lt mk
+                             ro nb nn no pl pt ru sr sh sk sl es sv tr uk vi cy].freeze
+    UNSUPPORTED_LOCALE_TEXT = "Expectation failed: Unsupported buyer locale"
+    UNSUPPORTED_LOCALE_JSON = { "status" => 417, "message" => "Expectation Failed",
+                                "description" => "Unsupported buyer locale" }.freeze
+
+    def unsupported_locale?
+      tag = effective_hit&.locale_tag || "en"
+      lang = ThemeEngine::LocaleTags.shopify_code(tag).to_s.split("-").first.to_s.downcase
+      !SUPPORTED_LANGUAGES.include?(lang)
+    end
 
     def query_param = params[:q].to_s
 
@@ -186,8 +207,9 @@ module Storefront
       {
         "available" => available,
         "body" => product.description_html,
-        "compare_at_price_max" => compares.max ? decimal_string(compares.max) : nil,
-        "compare_at_price_min" => compares.min ? decimal_string(compares.min) : nil,
+        # E17（hoko.vip `/en/search/suggest.json?q=tee` 2026-09-05 逐字）：無 compare_at_price ⇒ `"0.00"`（非 null）
+        "compare_at_price_max" => decimal_string(compares.max || 0),
+        "compare_at_price_min" => decimal_string(compares.min || 0),
         "handle" => product.handle,
         "id" => product.id,
         "image" => image_url,
@@ -201,9 +223,10 @@ module Storefront
                  "?_pos=#{position}&_psq=#{ERB::Util.url_encode(query_param)}&_psid=#{psid}&_ss=e",
         "variants" => [],
         "vendor" => product.vendor,
-        "featured_image" => image && {
-          "alt" => image.alt_text, "aspect_ratio" => image_aspect(image),
-          "height" => image.height, "url" => image_url, "width" => image.width
+        # E17（同上逐字）：無圖 ⇒ 五鍵皆 null 的物件 `{"alt":null,"aspect_ratio":null,"height":null,"url":null,"width":null}`（非 null）
+        "featured_image" => {
+          "alt" => image&.alt_text, "aspect_ratio" => image && image_aspect(image),
+          "height" => image&.height, "url" => image_url, "width" => image&.width
         }
       }
     end

@@ -15,7 +15,31 @@ module Storefront
     # 對應殺手格（S10）顯式開 forgery 再打。純讀端點無狀態變更，CSRF 語義不適用。
     skip_forgery_protection
 
-    before_action :require_published_theme!
+    before_action :require_published_theme!, except: %i[no_image flag]
+
+    # E17：`img_url` 對 nil 的平台「無圖」佔位——路徑形照本尊 `/cdn/shopifycloud/storefront/assets/no-image-2048-a2addb12_{size}.gif`
+    # （hoko.vip 2026-09-05），圖片本體＝我方自繪 1×1 淺灰 gif（鐵律 9：不用本尊圖片；佔位插圖自繪例外）。
+    NO_IMAGE_GIF = [ "47494638396101000100800000f2f2f2ffffff21f90401000000002c00000000010001000002024401003b" ].pack("H*").freeze
+
+    def no_image
+      expires_in 1.year, public: true
+      send_data NO_IMAGE_GIF, type: "image/gif", disposition: "inline"
+    end
+
+    # E17：`country | image_url` 的國旗（路徑形照本尊 `/cdn/static/images/flags/{cc}.svg`）；圖檔＝MIT `flag-icons` 4x3
+    # （`node_modules/flag-icons/flags/4x3/{cc}.svg`，LICENSE 隨套件；本尊 SVG 亦為 640×480）。查無國碼 ⇒ 404。
+    # 🔴 Brakeman「Parameter value used in file name」：不以參數組檔案路徑——啟動時把整個 4x3 目錄讀成 `{code => svg}` 常量
+    # （271 檔、約 1 MB），以 send_data 供給；目錄不存在（未 pnpm install）⇒ 空表 ⇒ 全 404（F9 會抓到）。
+    FLAG_SVGS = Dir.glob(Rails.root.join("node_modules/flag-icons/flags/4x3/*.svg").to_s)
+                   .to_h { |path| [ File.basename(path, ".svg"), File.binread(path).freeze ] }.freeze
+
+    def flag
+      svg = FLAG_SVGS[params[:cc].to_s.downcase]
+      return head :not_found if svg.nil?
+
+      expires_in 1.year, public: true
+      send_data svg, type: "image/svg+xml", disposition: "inline"
+    end
 
     # GET /theme-assets/*file
     def show

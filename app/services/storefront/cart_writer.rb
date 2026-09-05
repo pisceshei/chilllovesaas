@@ -19,13 +19,14 @@ module Storefront
     # @param properties [Hash]
     # @return [CartLineItem] 被加入／合併後的行
     # @raise [CartError] 422：查無變體／售罄／超出行上限
-    def add(cart:, variant_id:, quantity: 1, properties: {})
+    # @param locale [String, nil] 買家語言（訊息在地化，E17）；nil ⇒ 既有繁體文案
+    def add(cart:, variant_id:, quantity: 1, properties: {}, locale: nil)
       quantity = Integer(quantity, exception: false) || 0
       raise CartError, "數量必須為正整數。" unless quantity.positive?
 
       variant = ProductVariant.find_by(shop_id: cart.shop_id, id: variant_id)
       raise CartError.new("找不到此商品變體。", status: 422) if variant.nil?
-      raise CartError, "商品『#{line_name(variant)}』已售罄。" unless sellable?(variant)
+      raise CartError, sold_out_message(variant, locale) unless sellable?(variant)
 
       per_line_cap = Limits.fetch(:cart, :max_quantity_per_line)
       raise CartError, "單行數量不可超過 #{per_line_cap}。" if quantity > per_line_cap
@@ -131,6 +132,13 @@ module Storefront
       return true if variant.inventory_policy == "continue"
 
       item.inventory_levels.sum(:available).positive?
+    end
+
+    # E17：售罄訊息＝平台字串（`_platform.cart_errors.sold_out`）；本尊 hoko.vip zh-CN 2026-09-05 逐字
+    # `产品“Acme Tee”已售罄。`（其他語言的本尊文案未取得——cart 端點受 bot 防護，91 §3.86；缺鍵 ⇒ 既有文案）。
+    def sold_out_message(variant, locale)
+      template = locale && Storefront::PlatformStrings.dict(locale.to_s).dig("_platform", "cart_errors", "sold_out")
+      template ? template.sub("%{name}", line_name(variant)) : "商品『#{line_name(variant)}』已售罄。"
     end
 
     def line_name(variant)
