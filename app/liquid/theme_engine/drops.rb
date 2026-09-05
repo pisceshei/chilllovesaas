@@ -2472,6 +2472,9 @@ module ThemeEngine
       @location = location
     end
 
+    # E19：section 檔名（`sections/{type}.liquid`）——content_for_header 的 sections-script data-sections 記錄用
+    def type = @data["type"]
+
     def settings = @settings
     def blocks = @blocks
     # 官方逐字（2026-09-03）："The 1-based index of the current section within its location." ／

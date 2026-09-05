@@ -82,8 +82,22 @@ module ThemeEngine
 
       def render(context)
         content = super.to_s
-        context.registers[:runtime]&.collect_section_asset(@kind, content)
+        runtime = context.registers[:runtime]
+        runtime&.collect_section_asset(@kind, content)
+        record_file(runtime, context) if @kind == :js && runtime.respond_to?(:record_asset_file)
         ""
+      end
+
+      # E19：記錄本檔身分給 content_for_header（snippet：`context.template_name`＝`snippets/x`；block：併入所屬 section；section：section type）
+      def record_file(runtime, context)
+        name = context.template_name.to_s
+        if name.start_with?("snippets/")
+          runtime.record_asset_file(:snippets, name.delete_prefix("snippets/"))
+        else
+          sdrop = context.registers[:section_drop]
+          type = sdrop.respond_to?(:type) ? sdrop.type : nil
+          runtime.record_asset_file(:sections, type) if type.present?
+        end
       end
     end
 

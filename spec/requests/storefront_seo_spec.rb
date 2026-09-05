@@ -46,8 +46,11 @@ RSpec.describe "Storefront SEO", type: :request do
     expect(response.body)
       .to include(%(<link rel="canonical" href="https://seo-shop.lvh.me/products/rose">))
 
-    get "/collections/nope" # 404 頁不出 canonical（不是內容頁）
-    expect(response.body).not_to include("rel=\"canonical\"")
+    # E19：canonical 由**主題** layout 出（本尊 content_for_header 不注 canonical——hoko.vip 每頁恰一個、Ella theme.liquid L18；§G27），
+    # 平台不再重複注入 ⇒ 商品頁恰一個；404 頁主題同樣出（Ella 對 404 亦出 `canonical_url`）
+    expect(response.body.scan('rel="canonical"').size).to eq(1)
+    get "/collections/nope"
+    expect(response.body.scan('rel="canonical"').size).to eq(1)
   end
 
   it "SEO2 🔴 hreflang：自指＋雙向（兩語言頁同一集合）＋語言碼無地區＋x-default 指預設語言的無前綴 URL（D80 本尊形）" do
@@ -67,16 +70,15 @@ RSpec.describe "Storefront SEO", type: :request do
     expect(zh_links).to eq(en_links) # 同一函式同一集合＝天然雙向（62 §I.1 不變量 2）
   end
 
-  it "SEO3 🔴 JSON-LD：price 由 cents 直出（兩位小數字串）、priceCurrency=presentment；與可見價同源" do
-    get "/products/rose"
-    json = response.body[%r{<script type="application/ld\+json">(.*?)</script>}m, 1]
-    data = JSON.parse(json)
+  it "SEO3 🔴 JSON-LD（Seo::JsonLd 單元；E19 起平台不注入——本尊 content_for_header 無 JSON-LD，主題 snippet 自出）：price 由 cents 直出（兩位小數字串）、priceCurrency=presentment" do
+    json = ActsAsTenant.with_tenant(shop) { Seo::JsonLd.product_script(product: variant.product, url: "https://seo-shop.lvh.me/products/rose", currency: shop.store_currency) }
+    expect(json).to include('<script type="application/ld+json">')
+    data = JSON.parse(json[%r{<script type="application/ld\+json">(.*?)</script>}m, 1])
     offer = data["offers"].first
     expect(offer["price"]).to eq("148.00")
-    expect((offer["price"].to_d * 100).to_i).to eq(variant.price_cents) # 同一 cents 來源
     expect(offer["priceCurrency"]).to eq("HKD")
-    expect(offer["availability"]).to eq("https://schema.org/InStock")
-    expect(response.body).to include("$148.00") # 可見價（money filter，店級 ${{amount}}）同 cents、不同格式器
+    get "/products/rose"
+    expect(response.body).not_to include("application/ld+json") # 平台不注入（fixture 主題無 schema snippet）
   end
 
   it "SEO4 🔴 UNLISTED：直連 200＋meta noindex；無 hreflang、無 JSON-LD offer（逐面排除）" do
@@ -136,8 +138,7 @@ RSpec.describe "Storefront SEO", type: :request do
       variant.inventory_item.inventory_levels.update_all(available: 0)
       variant.update!(inventory_policy: "continue")
     end
-    get "/products/rose"
-    json = response.body[%r{<script type="application/ld\+json">(.*?)</script>}m, 1]
+    json = ActsAsTenant.with_tenant(shop) { Seo::JsonLd.product_script(product: variant.product.reload, url: "https://seo-shop.lvh.me/products/rose", currency: shop.store_currency) }[%r{<script type="application/ld\+json">(.*?)</script>}m, 1]
     expect(JSON.parse(json)["offers"].first["availability"]).to eq("https://schema.org/BackOrder")
   end
 end

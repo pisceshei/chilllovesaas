@@ -1,0 +1,1 @@
+{ "sections": { "main": { "type": "main-product-form", "settings": {} }, "probe": { "type": "js-probe", "settings": {} } }, "order": ["main", "probe"] }

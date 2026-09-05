@@ -67,6 +67,7 @@ module RenderParity
       # window.Shopify 的平台身分值（永久網域、主題數字 id、CDN 主機）：形同、值必然不同
       s.gsub!(/Shopify\.shop = "[^"]*"/, 'Shopify.shop = "SHOP"')
       s.gsub!(/"id":\d+,"schema_name"/, '"id":N,"schema_name"')
+      s.gsub!(/(Shopify\.theme = \{"name":")[^"]*"/, '\1NAME"') # E19：主題名（本尊＝上傳 zip 名 `ella-7-2-0-theme-source`）
       s.gsub!(/Shopify\.cdnHost = "[^"]*"/, 'Shopify.cdnHost = "CDN"')
       s.gsub!(/name="authenticity_token" value="[^"]*"/, 'name="authenticity_token" value="TOKEN"')
       s.gsub!(/"reqid":"[^"]*"/, '"reqid":"REQ"')
@@ -108,6 +109,44 @@ module RenderParity
       s.gsub!(%r{(<script data-source-attribution="shopify\.dynamic_checkout\.[a-z_.]+">).*?(</script>)}m, '\1[platform]\2')
       s.gsub!(%r{(<script>)\s*function portableWalletsCleanup.*?(</script>)}m, '\1[platform]\2')
       s.gsub!(/(portable-wallets\.)[a-z-]+(\.js)/, '\1LANG\2') # 語言別 bundle 檔名（頁語言決定；同頁必同）
+      # E19：content_for_header 完整本尊形（external-facts §G27）——平台 CDN 主機、資產雜湊／SRI、每請求值、身分值、我方自寫本體的內嵌 script
+      s.gsub!(%r{https?://cdn\.shopify\.com/}, "/cdn/") # 本尊平台 CDN `cdn.shopify.com/{path}` ≡ 店主機 `/cdn/{path}`（hoko 兩形並存）
+      s.gsub!(%r{//cdn\.shopify\.com/}, "/cdn/")
+      s.gsub!(/("pageurl":")[^"\\]+/, '\1HOST') # `__st.pageurl` 的主機段（無 scheme，主機規則抓不到）
+      s.gsub!(/((?:load_feature|origin_trials|autosizes|shop_events_listener)-)[0-9a-f]{8}(\.js)/, '\1HASH\2')
+      s.gsub!(/(trekkie\.storefront\.)[0-9a-f]{40}(\.min\.js)/, '\1HASH\2')
+      s.gsub!(/integrity="sha256-[^"]*"/, 'integrity="SRI"')
+      s.gsub!(/(default_configuration_id=)\d+/, '\1ID')
+      s.gsub!(%r{(content=")/\d+(/digital_wallets/dialog")}, '\1/ID\2')
+      s.gsub!(/(data-(?:shop-id|theme-instance-id)=")\d+"/, '\1ID"')
+      s.gsub!(/(data-render-region=")[^"]*"/, '\1REGION"')
+      s.gsub!(/(data-theme-name=")[^"]*"/, '\1NAME"')
+      s.gsub!(/(name="shopify-[ys]" content=")[^"]*(" data-expiration=")\d+"/, '\1UUID\2T"')
+      s.gsub!(/"u":"[0-9a-f]{12}"/, '"u":"U"')
+      s.gsub!(/("(?:a|rid|shopId|resourceId|productId|variantId)":)\d+/, '\1ID')
+      s.gsub!(/("s":")(pages|blogs|articles)-\d+"/, '\1\2-ID"')
+      s.gsub!(/"accessToken":"[0-9a-f]{32}"/, '"accessToken":"TOKEN"')
+      s.gsub!(/("domain":")[^"]*"/, '\1DOMAIN"')
+      s.gsub!(/("requestId":")[^"]*"/, '\1REQ"')
+      s.gsub!(%r{("(?:gid|productGid)":"gid:\\/\\/)[a-z]+(\\/Product\\/)\d+"}, '\1P\2ID"')
+      s.gsub!(/(themeId":)\d+/, '\1ID')
+      s.gsub!(/("themeCityHash":")\d+"/, '\1H"')
+      s.gsub!(/("eventMetadataId":")[^"]*"/, '\1UUID"')
+      s.gsub!(/("apiClientId":)\d+/, '\1ID')
+      s.gsub!(/(shop_id:)\d+/, '\1ID')
+      s.gsub!(/(Shopify\.MCP\.shop = ")[^"]*"/, '\1SHOP"')
+      s.gsub!(/(Shopify\.MCP\.mcpEndpoint = ")[^"]*"/, '\1EP"')
+      s.gsub!(/(Shopify\.MCP\.tools = )\[.*?\];/m, '\1[tools];') # 工具描述文字我方自寫
+      s.gsub!(/(Shopify\.shopJsCdnBaseUrl = ")[^"]*"/, '\1CDN"')
+      s.gsub!(/(<link href=")[^"]*(" rel="dns-prefetch">)/, '\1H\2')
+      # 我方自寫本體的內嵌 script（只比 tag／屬性；依簽章辨識）
+      s.gsub!(%r{(<script id="captcha-bootstrap">).*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(%r{(<script class="analytics">).*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(%r{(<script>)(?:\s*\(function\s*\(\)\s*\{\s*var\s+(?:userAgent|ua)\s*=\s*navigator\.userAgent).*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(%r{(<script>)(?:\s*!function\(o\)\{function n\(\)|\s*\(function\(w\)\{function q\(\)).*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(%r{(<script>)(?:\s*\(\(\)=>\{var d="shopify:webmcp_adapter_loaded"|\s*\(function\(\)\{var d="shopify:webmcp_adapter_loaded").*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(%r{(<script>)\(function\(\)\{if\s*\("sendBeacon" in navigator.*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(%r{(<script>)\(function\(\)\{var (?:wpmLoader|cfg)=.*?(</script>)}m, '\1[platform]\2')
       s.gsub!(%r{//cdn\.shopify\.com/static/images/flags/}, "/cdn/static/images/flags/") # E17：國旗平台 CDN 主機（我方＝店主機同路徑，先前已抹）
       s.gsub!(/(data-(?:compare-item|section)=")\d+"/, '\1ID"')
       s.gsub!(/((?:edit-quantity-|product-form-edit-|product-edit-options-))\d+/, '\1ID')

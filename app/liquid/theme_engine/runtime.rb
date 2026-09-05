@@ -263,6 +263,19 @@ module ThemeEngine
       (@section_assets ||= { js: Set.new, css: Set.new })[kind] << content
     end
 
+    # E19：content_for_header 的頁內記錄——本頁是否渲染了 `payment_button`（模組形／cart.bootstrap 形）、
+    # 渲染到的帶 `{% javascript %}` 的 section／snippet 檔（`sections-script` data-sections／`snippets-script` data-snippets）
+    def payment_button_rendered! = @payment_button_rendered = true
+    def payment_button_rendered? = @payment_button_rendered == true
+
+    def record_asset_file(kind, name)
+      return if name.blank?
+
+      (@rendered_asset_files ||= { sections: Set.new, snippets: Set.new })[kind] << name.to_s
+    end
+
+    def rendered_asset_files = @rendered_asset_files || { sections: Set.new, snippets: Set.new }
+
     def aggregated_section_assets
       return "" if @section_assets.nil?
 

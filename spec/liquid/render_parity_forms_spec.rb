@@ -39,7 +39,7 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8）" do
     dir = Dir.mktmpdir("cl-parity")
     files = {
       "layout/theme.liquid" => crlf(<<~L),
-        <html lang="{{ request.locale.iso_code }}"><head></head><body>
+        <html lang="{{ request.locale.iso_code }}"><head>{{ content_for_header }}</head><body>
         {% sections 'header-group' %}
         {% sections 'nope-group' %}
         <main>{{ content_for_layout }}</main>
@@ -275,6 +275,6 @@ RSpec.describe "ThemeEngine 渲染 1:1 形（E8）" do
     html = render.html
     expect(html).to include(%(<script>var Shopify = Shopify || {};\nShopify.shop = "#{shop.subdomain}.))
     expect(html).to include(%(Shopify.currency = {"active":"HKD","rate":"1.0"};\nShopify.country = "";\n))
-    expect(html).to match(%r{Shopify\.theme = \{"name":"CRLF Probe","id":\d+,"schema_name":null,"schema_version":null,"theme_store_id":null,"role":"main"\};\nShopify\.theme\.handle = "null";\nShopify\.theme\.style = \{"id":null,"handle":null\};\nShopify\.cdnHost = "[^"]*/theme-assets";\nShopify\.routes = Shopify\.routes \|\| \{\};\nShopify\.routes\.root = "/";\n})
+    expect(html).to match(%r{Shopify\.theme = \{"name":"CRLF Probe","id":\d+,"schema_name":null,"schema_version":null,"theme_store_id":null,"role":"main"\};\nShopify\.theme\.handle = "null";\nShopify\.theme\.style = \{"id":null,"handle":null\};\nShopify\.cdnHost = "[^"]*/cdn";\nShopify\.routes = Shopify\.routes \|\| \{\};\nShopify\.routes\.root = "/";\n})
   end
 end
