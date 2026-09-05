@@ -169,6 +169,27 @@ module ThemeEngine
         # （cart_json 由 pages controller 對本路徑**繞過頁快取**注入；14 §F1-4
         # 個人化不進快取的紀律不變——是「不快取」，不是「快取空車」）。
         [ "cart", {}, 200 ]
+      # T15 本尊實測（2026-09-05 hoko.vip）：`/variants/{id}` 裸形 302 到 `/products/{handle}?variant={id}`（302 由 controller 出）；
+      # 帶 `?section_id=` 則 200 回該 section 的 HTML（`<div id="shopify-section-pickup-availability" class="shopify-section"></div>`，
+      # 內容空是因為該店沒有啟用取貨的地點）。Ella／Dawn 的 `assets/pickup-availability.js` 逐字用這條
+      # （`${rootUrl}variants/${variantId}/?section_id=pickup-availability`）⇒ 沒有這條路由，取貨區塊永遠停在「無法載入」的 fallback。
+      # 這裡只負責 section 形（渲染語境＝該變體被選取的商品頁）；查無變體 ⇒ 404。
+      when %r{\A/variants/(\d+)\z}
+        variant_id = Regexp.last_match(1).to_i
+        product = ActsAsTenant.with_tenant(@shop) do
+          v = ProductVariant.find_by(shop_id: @shop.id, id: variant_id)
+          v && Storefront::Lookup.product_by_handle(publication: @publication, handle: v.product.handle, at: at) &&
+            Product.where(shop_id: @shop.id, id: v.product_id)
+                   .includes(product_variants: [ :product_variant_option_values, { inventory_item: :inventory_levels },
+                                                 { media: :stored_file } ],
+                             product_options: :option_values, media: :stored_file).first
+        end
+        product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix,
+                                                              selected_variant_id: variant_id,
+                                                              publication: @publication,
+                                                              translations: translations_for(product)) },
+                   200, product ] : not_found
+
       # 引擎缺口 PR-9：`/collections/{handle}/products/{p}`（`within` filter 官方例的系列語境商品 URL）
       # 同商品頁（系列語境 v1 不入 assigns——登記）。
       when %r{\A(?:/collections/([^/]+))?/products/([^/]+)\z}
