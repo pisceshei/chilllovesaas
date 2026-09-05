@@ -79,4 +79,6 @@ rspec：PL1–PL6 綠；C1–C9／H1–H6／SG1／JS2／P1–P3／RP1–RP8／TA
 本機（dev server，mirror 店 seed hoko 快照 body 15,567 位元組）：`/policies/privacy-policy` 200、`/policies/refund-policy` 404、`/zh-hant/policies/privacy-policy` 200；
 `__head__` 節點對表 42/42（hoko 政策頁快照）；空白骨架 41/42（MCP 描述文字除外）；商品頁空白骨架 47/48；`render_parity:diff`（hoko 政策頁 vs 本機）：11 段中 8 段 1.000，
 `header_default` 0.984／`cart_drawer` 0.988＝顧客帳戶連結（新版帳戶託管 URL vs `/account/login`，T3）、`__head__` 0.987＝字型設定差（T5）＋本包前的樣式表節點（已補）。
-bt3 部署後複驗＝收尾 PR。
+bt3 複驗（收尾 PR；main `a045a6e5`，`scratchpad/t13/bt3_deploy_t13.sh`＋`verify_bt3_t13.sh`）：公開 mirror `/policies/privacy-policy` 200（`zh-hant` 前綴同）、
+refund／terms／shipping／contact-information 404（同 hoko）、`policy-f07e94e9.css` 200 `text/css`、`__head__` 節點 42/42、空白骨架 41/42、商品頁 48/48／47/48；
+整頁 `render_parity:diff` 11 段中 8 段 1.000（其餘＝顧客帳戶連結 T3／字型設定 T5 的既有差）。
