@@ -4214,3 +4214,29 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **登記：`/localization` 的 PUT**：本尊表單自帶 `_method=put`，我方 routes 只收 POST ⇒ bt3 mirror 店真表單提交 404（D80 部署後即存在，D80 實測用的是不帶
   `_method` 的 curl）；E16 修為 `via: %i[post put]`（裸與帶前綴）。同型檢查：其他自帶 `_method` 的官方表單型（`customer_address` 編輯形 `_method=put`／
   刪除 `_method=delete`）我方 FormTag 未輸出 `_method`（TYPES 只有 localization 帶）⇒ 不受影響；帳戶地址表單本尊形另包。
+
+### 3.86 E17 全部 fetch／Ajax 端點逐字對表（2026-09-05）的未取得與範圍外
+
+- **⚪ 動態結帳按鈕（`{{ form | payment_button }}`）**：本尊商品頁 `main` 段唯一殘差＝`<div data-shopify="payment-button">` 內的
+  `<shopify-accelerated-checkout …>` 骨架（Shop Pay／錢包，平台功能）；我方無輸出。computed 對表（E12）已證骨架不影響版面。要不要出同形
+  disabled 骨架＝待裁定。
+- **⚪ recommendations JSON 演算法**：本尊 `/recommendations/products.json` 對三商品皆 `products: []`，section 形靠 Ella 補位；我方 JSON 回同系列
+  ／其他可見商品（R4 規則）。演算法不可觀測，JSON 形差異登記；section 形輸出已同形。
+- **⚪ 新版顧客帳戶連結**（§3.83）：cart_drawer／side cart／quick_add 的登入連結。
+- **⚪ `__head__` 平台注入**（e8 §3）。
+- **V cart Ajax 全流程**：hoko 三商品皆售罄且 cart 端點連打即被 Cloudflare 挑戰（429）⇒ `/cart/add|change|update|clear.js` 帶 `sections` 的回應、
+  `/cart?section_id=` 有項目時的 cart-section／cart_drawer、售罄文案（zh-TW／en／fr／ja）、`/cart/change.js` 對不存在 line 的錯誤形、cart JSON 的
+  `\/` 跳脫形皆未取得。需要：①真店補庫存（使用者 2026-09-04 授權真店全權，屬資料變更）②headless Chrome 頁內 fetch 取證。下一包。
+- **V `return_to`／`img_url` 無尺寸形**：`img_url` 對 nil 且無尺寸參數的本尊 URL 未取得（我方 `no-image-2048-a2addb12.gif`）。
+- **V Liquid `product.options_with_values` 對只有預設變體的商品**：`.js` 本尊出 `[{"name":"Title",…}]`；Liquid 面是否同樣合成未觀測（Ella 不輸出）。
+  我方只在 `.js`／`.json` 端點合成。
+- **V `.json` REST 形的 images 元素、option id**：hoko 例為無圖商品（`images: []`）、option 有 Shopify 側 id；我方有圖時依 storefront image json
+  推形（id/product_id/position/created_at/updated_at/alt/width/height/src/variant_ids）、無 option 列時 `"id":null`。
+- **V 搜尋結果頁面／文章的 `_pos`／`_sid`**：只觀測到商品 URL；頁面／文章結果的參數形未取得（我方不加）。
+- **V `predictive search` 語言名 ⇒ 碼**：官方只列語言名；Gaelic⇒gd、Moldovan⇒ro、Serbo-Croatian⇒sh、Norwegian⇒no 為映射假設。
+- **V Shopify 對 `id:` 以外搜尋語法**（`title:`／`NOT`／`-`／`AND`）：未實作、未取證。
+- **V `date` 濾鏡對非 epoch 字串輸入**：店時區換算已套用；本尊對帶時區字串（`2026-09-04T10:00:00-05:00`）的處理未觀測。
+- **登記：dev server 對 `drops.rb` 不 reload**（initializers/theme_engine 排除 autoload）：本包本機對表第二輪全部 500（`uninitialized constant
+  ThemeEngine::Runtime::ClosestDrop`）——改 drops.rb 後**必須重啟** dev server（既有登記 §3.75，再犯一次）。
+- **登記：hoko 本尊拿到的 header_mobile 區段中「My Account」項**（`https://new-ella-demo-07.myshopify.com/account/login`）與我方同無 `href`
+  （兩邊該 block 的 link 皆空）；fixture `header-group.json` 內該值非空 ⇒ mirror 店 section 設定另有 DB 覆寫層（未追）。

@@ -79,6 +79,12 @@ module ThemeEngine
           sized_media_url(base, width: w, height: h), source_drop: input,
           requested_width: w.positive? ? w : nil, requested_height: h.positive? ? h : nil)
       when ThemeEngine::PlaceholderImageDrop then input.url
+      # E17：`country | image_url: width: 32` ⇒ 國旗（本尊 hoko.vip 2026-09-05 header_mobile 區段逐字
+      # `url(//cdn.shopify.com/static/images/flags/tw.svg?width=32)`，SVG viewBox 640×480＝4:3）。我方路徑形照本尊、主機＝店主機、
+      # 圖檔＝MIT flag-icons 4x3（鐵律 9：不用本尊 CDN 圖）；Normalizer 把 `//cdn.shopify.com/static/images/flags/` 抹成同路徑。
+      when ThemeEngine::CountryDrop
+        code = input["iso_code"].to_s.downcase
+        "//#{@context.registers[:host]}/cdn/static/images/flags/#{code}.svg#{w.positive? ? "?width=#{w}" : ''}"
       when ThemeEngine::ExternalPreviewImageDrop then input.url # E12：供應商縮圖 URL 不加 width／height 參數
       # E12（更正 E8b #52）：nil ⇒ raise「invalid url input」——hoko.vip 商品頁 `blocks/_sticky-add-to-cart` 逐字
       # `<div class="sticky-atc__media">Liquid error (blocks/_sticky-add-to-cart line 96): invalid url input</div>`
@@ -96,7 +102,21 @@ module ThemeEngine
         end
       end
     end
-    alias_method :img_url, :image_url
+
+    # E17：舊版 `img_url`（deprecated）對 nil 輸入**不是**錯誤而是平台「無圖」佔位 URL——hoko.vip 2026-09-05
+    # `/products/acme-tee?view=ajax_edit_cart`（Ella `snippets/resource-card-edit-cart` `{{ image | img_url: '270x' }}`，image nil）逐字
+    # `srcset="//hoko.vip/cdn/shopifycloud/storefront/assets/no-image-2048-a2addb12_270x.gif"`；`image_url` 對 nil 仍是
+    # 「invalid url input」（E12）。尺寸段＝`_{size}`；無尺寸形本尊未取得（91 §3.86）。圖片本體＝我方自繪（鐵律 9），路徑形照本尊。
+    def img_url(input, size = nil, *rest)
+      return no_image_url(size) if input.nil?
+
+      image_url(input, size, *rest)
+    end
+
+    def no_image_url(size)
+      suffix = size.to_s.strip.empty? ? "" : "_#{size.to_s.strip}"
+      "//#{@context.registers[:host]}/cdn/shopifycloud/storefront/assets/no-image-2048-a2addb12#{suffix}.gif"
+    end
 
     # PR-9（官方 image_tag 文檔取證 2026-09-01）：
     # - srcset：明示 srcset ＞ widths（CSV→逐寬換 src 的 width 參數＋" Nw"，
@@ -217,16 +237,24 @@ module ThemeEngine
     # E8b：整數／純數字字串＝Unix 時間戳（Ella schema.liquid `'now' | date: '%s' | plus: 31536000 | date: '%Y-%m-%d'`
     # ⇒ hoko.vip `"priceValidUntil": "2027-09-03"`；先前 `Time.zone.parse("1819990583")` 失敗 ⇒ 原字串）。官方 date 文件未逐字
     # 提時間戳輸入（V）。
+    # E17：時區＝**店時區**（registers[:time_zone]）——hoko.vip 2026-09-05 23:40 UTC 取樣 `"priceValidUntil": "2027-09-05"`
+    # （`'now' | date` 落在 +08:00 的 9 月 5 日；`/products/acme-tee.js` 時戳 `+08:00` 同證）；我方先前 `Time.zone`（UTC）⇒ 差一天。
     def date(input, fmt = "%Y-%m-%d")
+      zone = liquid_time_zone
       t =
         if input.is_a?(Integer) || (input.is_a?(String) && input.match?(/\A\d{9,}\z/))
-          Time.zone.at(input.to_i)
+          zone.at(input.to_i)
         else
-          input.is_a?(String) ? Time.zone.parse(input) : input
+          input.is_a?(String) ? zone.parse(input) : input
         end
-      (t || Time.zone.now).strftime(fmt.to_s)
+      t = t.in_time_zone(zone) if t.respond_to?(:in_time_zone)
+      (t || zone.now).strftime(fmt.to_s)
     rescue StandardError
       input.to_s
+    end
+
+    def liquid_time_zone
+      ActiveSupport::TimeZone[@context.registers[:time_zone].to_s] || Time.zone
     end
 
     def pluralize(input, singular, plural) = input.to_i == 1 ? singular : plural

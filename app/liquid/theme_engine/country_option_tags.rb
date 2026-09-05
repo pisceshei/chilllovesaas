@@ -32,7 +32,8 @@ module ThemeEngine
     # 本尊 `all_country_option_tags`：`---` ＋ 全部國家（依在地名碼位排序）。
     # @param locale [String, nil] 內部 locale tag（zh-Hans…）；nil／無在地名 ⇒ 英文名
     def all(locale: nil)
-      PLACEHOLDER + render(entries, locale:)
+      PLACEHOLDER + "
+" + render(entries, locale:) # E17：`---` 與第一國之間亦換行（hoko 原始位元組）
     end
 
     # 本尊 `country_option_tags`：只列 `codes`（運送區域內國家）。
@@ -66,7 +67,7 @@ module ThemeEngine
       key = lang_key(locale)
       list.sort_by { |e| e["sort"][key] }
           .map { |e| option_tag(e["name"], label(e, key), provinces_json(e, key)) }
-          .join
+          .join("\n") # E17：本尊 option 之間換行、末項後緊接 </select>（hoko.vip cart drawer 區段 fetch 2026-09-05 原始位元組）
     end
 
     # 字典不變式：每國、每子區域都有全部語言的在地名與 sort（產生器斷言）；語言退路只在 lang_key 一處。

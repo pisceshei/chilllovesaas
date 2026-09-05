@@ -39,9 +39,23 @@ module Storefront
       query.to_s.strip.split(/\s+/).first(10)
     end
 
+    # E17：Shopify 搜尋語法子集 `id:{n}[ OR id:{n}…]`（Ella recently-viewed：`/search?type=product&q=id:1%20OR%20id:2`）。
+    # 本尊（hoko.vip 2026-09-05）：只回這些 id 的商品、順序＝query 內順序（SearchResultsDrop）；空 q ⇒ 一般空搜尋。
+    # 其他欄位語法（title:／vendor:／NOT／-）未實作（91 §3.86 V）。
+    # @return [Array<Integer>, nil] 全部 term 都是 id: 形才回 id 陣列
+    def id_terms(query)
+      q = query.to_s.strip
+      return nil unless q.match?(/\Aid:\d+(?:\s+OR\s+id:\d+)*\z/i)
+
+      q.scan(/id:(\d+)/i).flatten.map(&:to_i).uniq
+    end
+
     # @return [ActiveRecord::Relation] discoverable ∧ 全詞命中
     def products(shop:, publication:, query:, fields: PAGE_SEARCH_PRODUCT_FIELDS, at: Time.current)
       relation = Product.discoverable(publication:, at:)
+      ids = id_terms(query) # E17
+      return relation.where(id: ids) if ids
+
       terms_of(query).each do |term|
         relation = relation.where(term_condition(shop, term, fields))
       end
@@ -50,6 +64,9 @@ module Storefront
 
     def collections(publication:, query:, at: Time.current)
       relation = Collection.published_on(publication, at:)
+      ids = id_terms(query) # E17
+      return relation.where(id: ids) if ids
+
       terms_of(query).each do |term|
         relation = relation.where(Collection.sanitize_sql_array(
           [ "collections.title LIKE :like", { like: like(term) } ]
@@ -60,6 +77,9 @@ module Storefront
 
     def articles(shop:, query:, at: Time.current)
       relation = Article.visible(at:).where(shop_id: shop.id)
+      ids = id_terms(query) # E17
+      return relation.where(id: ids) if ids
+
       terms_of(query).each do |term|
         relation = relation.where(Article.sanitize_sql_array(
           [ "(articles.title LIKE :like OR articles.body_html LIKE :like)", { like: like(term) } ]
@@ -70,6 +90,9 @@ module Storefront
 
     def pages(shop:, query:, at: Time.current)
       relation = Page.visible(at:).where(shop_id: shop.id)
+      ids = id_terms(query) # E17
+      return relation.where(id: ids) if ids
+
       terms_of(query).each do |term|
         relation = relation.where(Page.sanitize_sql_array(
           [ "(pages.title LIKE :like OR pages.body_html LIKE :like)", { like: like(term) } ]

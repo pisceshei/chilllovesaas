@@ -16,7 +16,7 @@ require "rails_helper"
 #   SP stub 釘死（殺：把 nil/[]/false stub「順手」改成半真值）
 #   C1 collections 管道過濾（殺：不濾 publication——真引擎 S9-Col-Hidden 排除格）
 #   MF2/J1 json 黑名單（殺：把 root/單一 metafield 的拒絕「修好」成正常序列化）
-#   J2 variant json 無 quantity_price_breaks（殺：直接 dump drop 全屬性）
+#   J2 variant json 無 quantity_price_breaks（殺：直接 dump drop 全屬性）；E17 複驗仍為 21 鍵（.js 端點另一形）
 RSpec.describe "ThemeEngine drops（商品前台補完）" do
   let(:shop) { create(:shop) }
 

@@ -36,7 +36,8 @@ module Storefront
       lines = add_params.map do |item|
         CartWriter.add(cart: current_cart, variant_id: item[:id],
                        quantity: item.fetch(:quantity, 1),
-                       properties: item[:properties].to_h)
+                       properties: item[:properties].to_h,
+                       locale: effective_hit&.locale_tag) # E17：售罄訊息跟買家語言
       end
       payload = { "items" => lines.map { |l| CartSerializer.item_json(l) } }
       render json: payload.merge(sections_payload)

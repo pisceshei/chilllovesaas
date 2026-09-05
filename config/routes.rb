@@ -78,6 +78,15 @@ Rails.application.routes.draw do
     get "password" => "storefront/password#show", format: false, as: :storefront_password
     post "password" => "storefront/password#create", format: false
     get "theme-assets/*file" => "storefront/assets#show", format: false, as: :storefront_asset
+    # E17：商品 JSON 端點（本尊 `/products/{handle}.js`＋`.json`，hoko.vip 2026-09-05）——放在 catch-all 之前；帶前綴形在下方 scope。
+    get "products/:handle.js" => "storefront/products#ajax_js", format: false, as: :storefront_product_js
+    get "products/:handle.json" => "storefront/products#rest_json", format: false, as: :storefront_product_json
+    # E17：`img_url` 對 nil 的平台無圖佔位（路徑形照本尊；圖片本體我方自繪）
+    get "cdn/shopifycloud/storefront/assets/:file" => "storefront/assets#no_image", format: false,
+        constraints: { file: /no-image-2048-a2addb12(?:_[0-9x]+)?\.gif/ }, as: :storefront_no_image
+    # E17：`country | image_url` 的國旗（本尊 `//cdn.shopify.com/static/images/flags/{cc}.svg`；我方同路徑、MIT flag-icons 圖檔）
+    get "cdn/static/images/flags/:cc.svg" => "storefront/assets#flag", format: false,
+        constraints: { cc: /[a-z]{2}/ }, as: :storefront_flag
     # Ella 修復 PR-2：買家面媒體（真圖鏈輸出端；MediaUrl 產這個形）
     get "media/:id/:filename" => "storefront/media#show", format: false,
         constraints: { id: /\d+/, filename: /[^\/]+/ }, as: :storefront_media
@@ -179,6 +188,8 @@ Rails.application.routes.draw do
       get "search/suggest" => "storefront/search#suggest_section"
       get "recommendations/products.json" => "storefront/recommendations#products_json"
       get "recommendations/products" => "storefront/recommendations#products_section"
+      get "products/:handle.js" => "storefront/products#ajax_js" # E17
+      get "products/:handle.json" => "storefront/products#rest_json" # E17
       post "blogs/:blog_handle/:article_handle/comments" => "storefront/comments#create"
     end
     get "/" => "storefront/pages#root", as: :storefront_root

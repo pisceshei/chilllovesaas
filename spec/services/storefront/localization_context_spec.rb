@@ -34,7 +34,7 @@ RSpec.describe Storefront::LocalizationContext do
     expect(by_code["FR"]["market"]["handle"]).to eq("eu")
     expect(by_code["FR"]["available_languages"].map { |l| l["iso_code"] }).to eq(%w[zh-CN zh-TW en fr ja])
     current = drop.invoke_drop("country")
-    expect(current.slice("iso_code", "name")).to eq("iso_code" => "TW", "name" => "台湾")
+    expect([ current["iso_code"], current["name"], current.to_s ]).to eq([ "TW", "台湾", "台湾" ]) # E17：CountryDrop，`{{ country }}`＝國名
     expect(current["currency"]["iso_code"]).to eq("HKD")
     expect(drop.invoke_drop("market")).to eq("handle" => "tw", "id" => ActsAsTenant.with_tenant(shop) { Market.find_by!(is_primary: true).id })
   end
@@ -65,7 +65,7 @@ RSpec.describe Storefront::LocalizationContext do
       jp = Market.find_by!(handle: "jp")
       described_class.drop(web_presence: primary_presence(shop), locale_tag: "zh-Hans", market: jp, country_code: "JP")
     end
-    expect(drop.invoke_drop("country").slice("iso_code", "name")).to eq("iso_code" => "JP", "name" => "日本")
+    expect(drop.invoke_drop("country").then { |c| [ c["iso_code"], c["name"] ] }).to eq([ "JP", "日本" ])
     expect(drop.invoke_drop("market")["handle"]).to eq("jp")
     expect(drop.invoke_drop("available_languages").map { |l| l["root_url"] }).to eq([ "/", "/zh-hant", "/en", "/fr", "/ja" ])
     expect(drop.invoke_drop("available_countries").size).to eq(31)

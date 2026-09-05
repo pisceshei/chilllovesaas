@@ -1,0 +1,16 @@
+# E17：`_platform.*`＝Shopify 平台 UI 字串（非主題 locale 鍵）——hoko.vip 五語言區段 fetch 逐字（2026-09-05；external-facts §G25）。
+_platform:
+  sort_options:
+    manual: "En vedette"
+    most-relevant: "Le plus pertinent"
+    best-selling: "Meilleures ventes"
+    title-ascending: "Alphabétique, de A à Z"
+    title-descending: "Alphabétique, de Z à A"
+    price-ascending: "Prix: faible à élevé"
+    price-descending: "Prix: élevé à faible"
+    created-ascending: "Date, de la plus ancienne à la plus récente"
+    created-descending: "Date, de la plus récente à la plus ancienne"
+  search_sort_options:
+    relevance: "Pertinence"
+    price-ascending: "Prix : faible à élevé"
+    price-descending: "Prix : élevé à faible"

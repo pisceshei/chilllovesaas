@@ -1,0 +1,18 @@
+# E17：`_platform.*`＝Shopify 平台 UI 字串（非主題 locale 鍵）——hoko.vip 五語言區段 fetch 逐字（2026-09-05；external-facts §G25）。
+_platform:
+  sort_options:
+    manual: "特色"
+    most-relevant: "最相关"
+    best-selling: "畅销"
+    title-ascending: "按字母顺序排序，A-Z"
+    title-descending: "按字母顺序排序，Z-A"
+    price-ascending: "价格，从低到高"
+    price-descending: "价格，从高到低"
+    created-ascending: "日期，从旧到新"
+    created-descending: "日期，从新到旧"
+  search_sort_options:
+    relevance: "相关性"
+    price-ascending: "价格，从低到高"
+    price-descending: "价格，从高到低"
+  cart_errors:
+    sold_out: "产品“%{name}”已售罄。"

@@ -11,3 +11,20 @@ cart:
 products:
   sold_out: "已售罄"
   unavailable: "無法購買"
+
+# E17：`_platform.*`＝Shopify 平台 UI 字串（非主題 locale 鍵）——hoko.vip 五語言區段 fetch 逐字（2026-09-05；external-facts §G25）。
+_platform:
+  sort_options:
+    manual: "精選"
+    most-relevant: "最相關"
+    best-selling: "暢銷度"
+    title-ascending: "依字母順序 (由 A 到 Z)"
+    title-descending: "依字母順序 (由 Z 到 A)"
+    price-ascending: "價格 (從低到高)"
+    price-descending: "價格 (從高到低)"
+    created-ascending: "日期 (從舊到新)"
+    created-descending: "日期 (從新到舊)"
+  search_sort_options:
+    relevance: "關聯性"
+    price-ascending: "價格 (從低到高)"
+    price-descending: "價格 (從高到低)"

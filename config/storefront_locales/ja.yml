@@ -1,0 +1,16 @@
+# E17：`_platform.*`＝Shopify 平台 UI 字串（非主題 locale 鍵）——hoko.vip 五語言區段 fetch 逐字（2026-09-05；external-facts §G25）。
+_platform:
+  sort_options:
+    manual: "オススメ"
+    most-relevant: "関連性が最も高い"
+    best-selling: "ベストセラー"
+    title-ascending: "アルファベット順, A-Z"
+    title-descending: "アルファベット順, Z-A"
+    price-ascending: "価格の安い順"
+    price-descending: "価格の高い順"
+    created-ascending: "古い商品順"
+    created-descending: "新着順"
+  search_sort_options:
+    relevance: "関連性"
+    price-ascending: "価格の安い順"
+    price-descending: "価格の高い順"
