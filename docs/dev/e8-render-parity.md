@@ -129,6 +129,7 @@ current 反了）。修法部署 bt3（`4de1457e`）後兩脈絡皆 0.993、只�
 ### §2e 第五批（E17，2026-09-05；Ella 全部 fetch／Ajax 端點；`docs/dev/e17-fetch-endpoints-parity.md`）
 
 53 對端點（scratchpad `e17/`）：初始 30 對全同；修法後非全同只剩 ⚪ 四類（登入連結、付款鈕骨架、`__head__` 平台注入、recs JSON 演算法）。
+bt3 部署（`d9b28b12`，2026-09-05）後對公開 mirror 重跑：結果逐對同本機（`docs/dev/e17-fetch-endpoints-parity.md` §對表結果）。
 
 | # | 形差 | 本尊（external-facts §G25） | 我方修法 | 規格 |
 |---|---|---|---|---|
