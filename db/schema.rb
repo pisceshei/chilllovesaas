@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_05_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_090000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -567,6 +567,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_120000) do
     t.datetime "created_at", null: false
     t.json "derivatives"
     t.string "filename", null: false
+    t.json "focal_point", comment: "本尊 image.presentation.focal_point：{\"x\":0-100,\"y\":0-100}；NULL ⇒ 官方預設 50／50"
     t.integer "height"
     t.text "processing_error"
     t.bigint "shop_id", null: false
@@ -769,6 +770,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_120000) do
     t.datetime "created_at", null: false
     t.boolean "fulfills_online_orders", default: true, null: false
     t.string "name", null: false
+    t.boolean "pick_up_enabled", default: false, null: false, comment: "本尊「Let customers pick up orders directly at this location」；false ⇒ 該地點不進 store_availabilities"
+    t.text "pick_up_instructions", comment: "本尊 Ready for pickup notification 的取貨指示；買家面出處未取得（91 §3.91 V）"
+    t.string "pick_up_time", limit: 64, comment: "本尊 Expected pickup date 的顯示字串（如 Usually ready in 24 hours）；值域未取得（91 §3.91 V）"
     t.integer "priority", default: 0, null: false
     t.bigint "shop_id", null: false
     t.datetime "updated_at", null: false

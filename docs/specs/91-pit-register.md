@@ -4320,3 +4320,26 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **A1 待做**：admin Settings › Policies（六種政策的編輯／「Create from template」／字元上限）——鐵律 12 要先實測，等 audit workflow `settings-3`。
 - **更正登記（E19a）**：E19a 的 content_for_header 空白骨架 15 處與本尊不同（節點級對表看不到——Normalizer squish）；本包改齊，`docs/worklog/2026-09-05-content_for_header本尊形E19.md` 追加日期更正。
   教訓＝「節點相同」不等於「位元組相同」；逐字目標要配空白骨架對表（scratchpad `t13/cfh_ws_diff.rb`）。
+
+### 3.91 T14 主題引擎缺口批次（2026-09-05）的未取得與範圍外
+
+- **V Expected pickup date 的值域**：本尊 admin 下拉的選項字串（如 "Usually ready in 24 hours"）未取得（help 頁只描述欄位，未列選項）⇒
+  `locations.pick_up_time` 是自由字串（上限 64），admin 設定面＝後續包。`Ready for pickup notification`（取貨指示）的買家面出處亦未取得。
+- **V `store_availabilities` 對「非 selected 且非 first available」變體的實際回傳**：官方只寫「只在那兩種情況下有定義」，未寫其餘回 nil 還是 []；
+  我方回 nil（`[]` 會讓主題誤以為「有取貨但都不可取」）。
+- **V `format_address` 的逐國順序表**：官方只寫 "ordered according to the address's locale"，順序表未公開 ⇒ 我方一律用官方例的順序
+  （company／address1／address2／`city province zip`／country）。全空地址的本尊輸出形亦未取得（我方 `<p></p>`）。
+- **V `location.latitude`／`longitude`**：官方 "Returns `nil` if the address isn't verified"；我方無地址驗證流程 ⇒ 一律 nil。
+- **V `location.metafields`**：metafields 線未接 ⇒ 空 hash。
+- **V `address.country`**：官方回 country 物件（有 iso_code 等）；我方回字串（country 物件＝Markets 線）。
+- **V 圖片焦點的 admin 設定面**：本尊在媒體編輯器可設焦點；我方 `files.focal_point` 欄位已建但無介面 ⇒ 一律 NULL ⇒ 官方預設 50／50。
+- **V `collection.previous_product` 的快取旋轉**：商品頁快取鍵含商品與主題 stamp，**系列成員或排序變動不會旋轉該商品頁的鍵**
+  （與既有系列頁同型；影響＝改系列後上下一個商品可能有短暫舊值）。
+- **V 系列語境商品頁的 404 語義**：`/collections/{查無}/products/{存在}` 我方回 200（不帶 collection）；本尊是否 404 未取得。
+- **⚪ 非官方屬性（主題誤用，本尊同回 nil，我方已顯式宣告）**：`collection.terms`、`search.url`／`id`／`current_vendor`／`current_type`、
+  `shop.taxes_included`。🔴 `shop.taxes_included` 不得改回我方欄位——會比本尊多出稅務文案。
+- **⚪ `FormDrop.*` 遙測噪音**：Kalles `product-ask-question` 的 `assign name = '…'` ＋ `form[name]` 慣用法；輸出與本尊同（見 §G30 假缺口排除）。
+  三個 miss 鍵（`FormDrop.templates.contact.form.name`／`.phone`／`FormDrop.`）留著不處理。
+- **⚪ Minimog 的 18 頁 `image_url` nil 錯誤**：`snippets/social-sharing` 對無圖商品呼叫 `image_url` ⇒ 官方同樣 raise "invalid url input"（E12 已登記同型）。
+- **登記：工廠全域序號造成的測試順序依賴**：`factory :product_variant` 的 `sequence(:position)` 是全域的，單跑與整套跑的值不同 ⇒
+  `variants.first` 會換人（PU1 在套件內失敗過）。多變體規格一律顯式給 `position:`。

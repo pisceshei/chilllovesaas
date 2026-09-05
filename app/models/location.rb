@@ -18,6 +18,13 @@ class Location < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { scope: :shop_id }
 
+  # T14：門市取貨（本尊 Settings › Shipping and delivery › Pickup in store，每地點一組設定）。
+  # 只有 `pick_up_enabled` 的 active 地點進 `variant.store_availabilities`
+  # （官方 location 物件 "only available when one or more locations have local pickup enabled"）。
+  scope :pickup_enabled, -> { where(active: true, pick_up_enabled: true) }
+
+  validates :pick_up_time, length: { maximum: 64 }, allow_nil: true
+
   after_create :seed_levels_for_existing_items
 
   private
