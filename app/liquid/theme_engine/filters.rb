@@ -629,7 +629,18 @@ module ThemeEngine
       0
     end
     def line_items_for(_cart, _obj) = []
-    def format_address(_a) = ""
+    # T14 官方 filters/format_address（取證 2026-09-05）："Generates an HTML address display, with each address component
+    # ordered according to the address's locale."；官方例輸出逐字
+    # `<p>Polina&#39;s Potions, LLC<br>150 Elgin Street<br>8th floor<br>Ottawa ON K2P 1L4<br>Canada</p>`
+    # ⇒ 順序＝company／address1／address2／`city province zip`／country，`<br>` 相接、整體包 `<p>`、逐段 HTML 轉義。
+    # 🔴 「依 locale 排序」的**逐國順序表本尊未公開**（91 §3.91 V）：我方一律用官方例的順序。
+    # 空欄跳過；全空 ⇒ `<p></p>`（本尊形未取得，同登記）。三套主題的 pickup-availability 都用它印地點地址。
+    def format_address(input)
+      a = input.is_a?(ThemeEngine::AddressDrop) ? input : ThemeEngine::AddressDrop.new(input.is_a?(Hash) ? input : {})
+      city_line = [ a.city, a.province, a.zip ].compact_blank.join(" ").presence
+      lines = [ a.company, a.address1, a.address2, city_line, a.country ].compact_blank
+      "<p>#{lines.map { |l| CGI.escapeHTML(l.to_s) }.join('<br>')}</p>"
+    end
     # PR-13（官方 "Formats a given unit price and measurement"，輸出形
     # `$50.00/kg`；reference_value>1 ⇒ `/100ml`。shopify.dev filters/
     # unit_price_with_measurement 2026-09-02）。輸入＝integer cents（鐵律 3）；

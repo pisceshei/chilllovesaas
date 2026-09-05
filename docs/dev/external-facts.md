@@ -1852,3 +1852,50 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
   perf-kit `<script\n  defer\n  src="…"\n  data-application="storefront-renderer"\n  …\n  data-shs-beacon-endpoint="https://hoko.vip/api/collect"\n></script>`（16 個屬性逐行、兩空白縮排）。
   MCP script 的 tools JSON 含本尊描述文字（英文句子，含空白）——我方自寫描述 ⇒ 骨架不可能相同（唯一保留差）。
 - **證據檔**：scratchpad `t13/hoko_privacy_body.html`（rte 內原文）、`t13/hoko_policy.css`、`t13/cfh_ws_diff.rb`（空白骨架對表）、`t13/local_privacy.html`／`local_product.html`（本機對照）。
+
+### G30. 主題引擎缺口批次：門市取貨、系列語境上下商品、圖片焦點、format_address（T14 依據，取證 2026-09-05）
+
+- **conformance 乾跑（本輪新增的取證方法）**：`scratchpad/t8/conformance_probe.rb` 以 mirror 店資料＋主題 fixture 逐模板渲染（含 `?view=` 替代模板），
+  收 HTTP 狀態、Liquid error 字串與 `ThemeEngine::MISSES` 增量。Kalles 5.4.2：75 頁（69×200＋6×404）零例外零 Liquid error；
+  Minimog 6.0.0：57 頁（51×200＋6×404）零例外、18 頁有 `snippets/social-sharing` 的 `invalid url input`（`image_url` 收 nil——與本尊同型錯誤，E12 已登記）。
+- **官方 objects/store_availability**："A variant's inventory information for a physical store location."——
+  `available`（"Returns `true` if the variant has available inventory at the location. Returns `false` if not."）／`location`／
+  `pick_up_enabled`（"Returns `true` if the location has pickup enabled. Returns `false` if not."）／
+  `pick_up_time`（"The amount of time that it takes for pickup orders to be ready at the location."）。
+- **官方 objects/variant#store_availabilities**：array of store_availability；🔴 "The array is defined in only the following cases:"
+  —— `variant.selected` is `true`／"The variant is the product's first available variant."
+- **官方 objects/location**："A store location."；"This object is only available when one or more locations have local pickup enabled."
+  ——`address`（address）／`id`（number）／`latitude`（number，"Returns `nil` if the address isn't verified"）／`longitude`（同）／
+  `metafields`／`name`（string）。
+- **官方 objects/address**：address1／address2／city／company／country（country 物件）／country_code（ISO 3166-1 alpha 2）／first_name／id／
+  last_name／`name`（"A combination of the first and last names of the address."）／phone／province／province_code（ISO 3166-2）／
+  `street`（"A combination of the first and second lines of the address."）／summary／url／zip。
+- **官方 filters/format_address**："Generates an HTML address display, with each address component ordered according to the address's locale."
+  例：`{{ shop.address | format_address }}` ⇒ `<p>Polina&#39;s Potions, LLC<br>150 Elgin Street<br>8th floor<br>Ottawa ON K2P 1L4<br>Canada</p>`
+  （順序＝company／address1／address2／`city province zip`／country）。**逐國順序表未公開**（91 §3.91 V）。
+- **官方 objects/collection**：`previous_product`（product，"The previous product in the collection. Returns `nil` if there's no previous product."）／
+  `next_product`（同形），兩者官方註 "This property can be used on the product page" ⇒ 語境＝`/collections/{handle}/products/{p}`。
+  🔴 官方 collection **沒有** `terms` 屬性。
+- **官方 objects/focal_point**："The focal point for an image. The focal point will remain visible when the image is cropped by the theme."
+  ——`x`："The horizontal position of the focal point, as a percent of the image width. Returns `50` if no focal point is set."（`y` 同形，垂直／高度）；
+  直接引用時輸出 `X% Y%`（官方例 `1.9231% 9.7917%`）。**官方 objects/image_presentation**："The presentation settings for an image."（只有 focal_point）。
+- **官方 objects/search**（逐字九屬性）：default_sort_by／filters／performed／results／results_count／sort_by／sort_options／terms／types
+  ——**沒有** url／id／current_vendor／current_type。**官方 objects/shop** 亦**沒有** taxes_included（含稅旗標在 objects/cart 的 `taxes_included`）。
+- **官方 objects/product**（本輪一併查）：`selected_variant`（"If no variant is currently selected, then `nil` is returned."）／
+  `selected_or_first_available_variant`／`first_available_variant`（"For a variant to be available, it needs to meet one of the following criteria:
+  The `variant.inventory_quantity` is greater than 0, the `variant.inventory_policy` is set to `continue`, or the `variant.inventory_management` is `nil`."）
+  ——product **沒有** previous_product／next_product（那兩個在 collection 上）。
+- **官方 tags/render 隔離語義**（用來排除一個假缺口）："Inside snippets and app blocks, you can't directly access variables that are created outside
+  of the snippet or app block."／"Outside a snippet or app block, you can't access variables created inside the snippet or app block."
+- **help（local pickup 設定）**：Settings › Shipping and delivery › **Pickup in store** → 選地點 → **Location status**
+  「Let customers pick up orders directly at this location」→ **Expected pickup date** → **Store transfers** → **Ready for pickup notification** → Save；
+  買家面 "the product page displays whether the product is available for pickup at one or more of your pickup locations"、
+  多地點可 "Check availability at other stores"。**Expected pickup date 的下拉選項值未取得**（91 §3.91 V）。
+- **主題實測（消費者）**：`store_availabilities` 三套主題都用——Ella `sections/pickup-availability.liquid`、Kalles `blocks/_product-pickup.liquid`
+  （`| where: 'pick_up_enabled', true`、`availability.location.address | format_address`、`address.phone`／`street`／`province`／`country`）、
+  Minimog `sections/pickup-availability.liquid`＋`snippets/main-product-blocks.liquid`。
+  `collection.previous_product`／`next_product`＝Kalles `sections/brc-nav-product.liquid`；`presentation.focal_point`＝Kalles `blocks/_media.liquid`。
+- **假缺口排除（`FormDrop.*`）**：Kalles `snippets/product-ask-question.liquid` 第 12 行 `assign name = 'templates.contact.form.name'`，
+  之後 `{% if form[name] %}` ⇒ 以字串當屬性名查 form。探針（`scratchpad/t14/probe_name.rb`）：我方渲染 `<input value="">`、
+  未定義變數形也走 `elsif`——與本尊同（form 無該屬性 ⇒ nil）。屬主題怪癖，非引擎缺口。
+- **證據檔**：scratchpad `t8/kalles-5.4.2.json`／`minimog-6.0.0.json`（本包前）、`t14/*-after2.json`（本包後）、`t14/probe_name.rb`。

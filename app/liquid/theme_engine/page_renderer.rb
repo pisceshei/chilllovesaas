@@ -171,9 +171,9 @@ module ThemeEngine
         [ "cart", {}, 200 ]
       # 引擎缺口 PR-9：`/collections/{handle}/products/{p}`（`within` filter 官方例的系列語境商品 URL）
       # 同商品頁（系列語境 v1 不入 assigns——登記）。
-      when %r{\A(?:/collections/[^/]+)?/products/([^/]+)\z}
+      when %r{\A(?:/collections/([^/]+))?/products/([^/]+)\z}
         product = ActsAsTenant.with_tenant(@shop) do
-          found = Storefront::Lookup.product_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
+          found = Storefront::Lookup.product_by_handle(publication: @publication, handle: Regexp.last_match(2), at: at)
           # preload 面＝drops 的讀取契約（缺口分析 A′）：庫存鏈（available/
           # inventory_quantity）、變體選項座標（A3 分組）、變體專圖與商品媒體。
           found && Product.where(shop_id: @shop.id, id: found.id)
@@ -185,10 +185,14 @@ module ThemeEngine
                             media: :stored_file
                           ).first
         end
+        # T14：系列語境商品頁 `/collections/{handle}/products/{p}`（官方 `within` filter 的 URL 形）——帶 `collection` 進 assigns，
+        # `collection.previous_product`／`next_product` 才有值（官方註「可用於商品頁」）。系列查無 ⇒ 不帶（商品頁照常 200）。
+        collection_handle = Regexp.last_match(1)
         product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix,
                                                               selected_variant_id: selected_variant_id,
                                                               publication: @publication,
-                                                              translations: translations_for(product)) },
+                                                              translations: translations_for(product)) }
+                                .merge(within_collection(collection_handle, product, at)),
                    200, product ] : not_found
       when "/collections"
         # 步 12（96 §1）：集合列表頁。內容全由 `collections` 全域供給（Runtime 已備）。
@@ -287,6 +291,20 @@ module ThemeEngine
     end
 
     def not_found = [ "404", {}, 404 ]
+
+    # T14：系列語境（`within` 形 URL）的 collection assign；handle 空或查無 ⇒ {}。
+    def within_collection(handle, product, at)
+      return {} if handle.blank?
+
+      collection = ActsAsTenant.with_tenant(@shop) do
+        Storefront::Lookup.collection_by_handle(publication: @publication, handle: handle, at: at)
+      end
+      return {} if collection.nil?
+
+      { "collection" => CollectionDrop.new(collection, url_prefix: @url_prefix, publication: @publication,
+                                           locale: @locale, current_product_id: product.id,
+                                           translations: translations_for(collection)) }
+    end
 
     # T13：本尊政策頁容器逐字（hoko.vip /policies/privacy-policy 原始位元組 2026-09-05；external-facts §G29）：
     #   `<div class="shopify-policy__container">\n  <div class="shopify-policy__title">\n    <h1>{title}</h1>\n  </div>\n\n`

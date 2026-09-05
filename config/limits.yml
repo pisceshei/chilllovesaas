@@ -1122,6 +1122,8 @@ collection:
   max_excluding_collection_per_shop: 5
   # 商品系列品項區每頁顯示數。出處：help.shopify.com/en/manual/products/collections/collection-layout（P26，help）
   items_page_size: 60
+  # T14：`collection.previous_product`／`next_product` 的掃描上限（官方未載上限 ⇒ ours；超過即回 nil，不做全表掃描）
+  neighbour_scan_limit: 1000
   # 單一商品系列可手動加入的商品數：官方未載明 ⇒ 不設上限，靠分頁與效能測試把關。⚠ V-59
   max_manual_items_per_collection: null
 

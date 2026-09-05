@@ -26,6 +26,9 @@ module ThemeEngine
   class PlaceholderImageDrop < BaseDrop
     attr_reader :width, :height, :alt
 
+    # T14：佔位圖無焦點 ⇒ 官方預設 50／50
+    def presentation = ImagePresentationDrop.new(nil)
+
     def initialize(label:, w: 900, h: 1200)
       super()
       @label, @width, @height, @alt = label, w, h, label
@@ -73,6 +76,7 @@ module ThemeEngine
     def src = url
     def url = MediaUrl.for(@file)
     def to_s = url.to_s
+    def presentation = ImagePresentationDrop.new(@file&.focal_point) # T14
     def preview_image = self
   end
 
@@ -126,6 +130,106 @@ module ThemeEngine
     def to_s = @url
   end
 
+  # T14 官方 objects/address（取證 2026-09-05）：address1／address2／city／company／country／country_code／first_name／id／
+  # last_name／name（"A combination of the first and last names of the address."）／phone／province／province_code／
+  # street（"A combination of the first and second lines of the address."）／summary／url／zip。
+  # 我方來源＝`locations.address` JSON（admin 地點設定面未做 ⇒ 多為空，91 §3.91 V）。
+  # country 官方回 country 物件；我方回字串（country 物件＝Markets 線，登記）。
+  class AddressDrop < Liquid::Drop
+    def initialize(attrs = {})
+      super()
+      @a = (attrs || {}).transform_keys(&:to_s)
+    end
+
+    def id = @a["id"]
+    def address1 = @a["address1"]
+    def address2 = @a["address2"]
+    def city = @a["city"]
+    def company = @a["company"]
+    def country = @a["country"]
+    def country_code = @a["country_code"]
+    def first_name = @a["first_name"]
+    def last_name = @a["last_name"]
+    def phone = @a["phone"]
+    def province = @a["province"]
+    def province_code = @a["province_code"]
+    def zip = @a["zip"]
+    def name = [ first_name, last_name ].compact_blank.join(" ").presence
+    def street = [ address1, address2 ].compact_blank.join(", ").presence
+    def summary = [ name, street, city, province, country ].compact_blank.join(", ").presence
+    def url = @a["url"]
+    def to_h = @a
+    def to_s = summary.to_s
+  end
+
+  # T14 官方 objects/location（取證 2026-09-05）："A store location."；"This object is only available when one or more
+  # locations have local pickup enabled."——address／id／latitude／longitude／metafields／name。
+  # latitude／longitude 官方 "Returns `nil` if the address isn't verified"；我方無地址驗證 ⇒ 一律 nil（91 §3.91 V）。
+  class LocationDrop < Liquid::Drop
+    def initialize(location)
+      super()
+      @l = location
+    end
+
+    def id = @l.id
+    def name = @l.name
+    def address = AddressDrop.new(@l.address)
+    def latitude = nil
+    def longitude = nil
+    def metafields = {}
+    def to_s = @l.name.to_s
+  end
+
+  # T14 官方 objects/store_availability（取證 2026-09-05）："A variant's inventory information for a physical store location."
+  # ——available（"Returns `true` if the variant has available inventory at the location."）／location／
+  # pick_up_enabled（"Returns `true` if the location has pickup enabled."）／pick_up_time（"The amount of time that it takes
+  # for pickup orders to be ready at the location."）。三套主題（Ella／Kalles／Minimog 的 pickup-availability）都讀這四個。
+  class StoreAvailabilityDrop < Liquid::Drop
+    def initialize(location:, available:)
+      super()
+      @l = location
+      @available = available
+    end
+
+    def available = @available
+    def location = LocationDrop.new(@l)
+    def pick_up_enabled = @l.pick_up_enabled
+    def pick_up_time = @l.pick_up_time
+  end
+
+  # T14 官方 objects/focal_point（取證 2026-09-05）："The focal point for an image. The focal point will remain visible when
+  # the image is cropped by the theme."——x／y＝百分比（"as a percent of the image width"／height），
+  # "Returns `50` if no focal point is set"；直接輸出形＝`X% Y%`（官方例 `1.9231% 9.7917%`）。
+  class FocalPointDrop < Liquid::Drop
+    def initialize(point = nil)
+      super()
+      @p = (point || {}).transform_keys(&:to_s)
+    end
+
+    def x = numeric("x")
+    def y = numeric("y")
+    def to_s = "#{x}% #{y}%"
+
+    def numeric(key)
+      v = @p[key]
+      return 50 if v.nil? # 官方預設
+
+      f = v.to_f
+      f == f.round ? f.to_i : f
+    end
+    private :numeric
+  end
+
+  # T14 官方 objects/image_presentation："The presentation settings for an image."——屬性只有 focal_point。
+  class ImagePresentationDrop < Liquid::Drop
+    def initialize(point = nil)
+      super()
+      @p = point
+    end
+
+    def focal_point = FocalPointDrop.new(@p)
+  end
+
   class ImageDrop < Liquid::Drop
     def initialize(media)
       super()
@@ -144,6 +248,7 @@ module ThemeEngine
     # Ella 修復 PR-2：接買家面媒體端點（先前恆 nil＝0 <img> 根因 A）。
     def url = MediaUrl.for(@file)
     def to_s = url.to_s
+    def presentation = ImagePresentationDrop.new(@file&.focal_point) # T14
     def preview_image = self
 
     # 🔴 ours：live「帶圖商品」的 image-json 形未量測（測試品全無圖）——
@@ -169,6 +274,30 @@ module ThemeEngine
     def barcode = @v.barcode
     def price = @v.price_cents
     def compare_at_price = @v.compare_at_price_cents
+
+    # T14 官方 objects/variant#store_availabilities（取證 2026-09-05）：array of store_availability；
+    # 🔴 "The array is defined in only the following cases:" —— `variant.selected` 為 true，或該變體是商品的
+    # first available variant ⇒ 其餘變體回 nil（本尊對其餘變體的實際回傳未觀測，91 §3.91 V）。
+    # 集合＝本店 `pick_up_enabled` 的 active 地點（官方：location 物件只在有地點開啟取貨時可用），
+    # 逐地點以該地點可售量判 available；未追蹤庫存 ⇒ 恆 true（同 `available` 的判準）。
+    def store_availabilities
+      # 🔴 整段在租戶語境內：first_available_variant（讀 available ⇒ inventory_item）、locations 與 inventory_levels
+      # （只包 locations 那一段 ⇒ 後面讀 inventory_item 就 NoTenantSet；規格 PU2／PU3 是這個殺手格）。
+      ActsAsTenant.with_tenant(@v.shop) do
+        next nil unless selected || @product.first_available_variant&.id == id
+
+        locations = Location.where(shop_id: @v.shop_id).pickup_enabled.order(:priority, :id).to_a
+        next [] if locations.empty?
+
+        item = @v.inventory_item
+        untracked = item.nil? || !item.tracked
+        levels = item ? item.inventory_levels.index_by(&:location_id) : {}
+        locations.map do |loc|
+          here = untracked || levels[loc.id]&.available.to_i.positive?
+          StoreAvailabilityDrop.new(location: loc, available: here)
+        end
+      end
+    end
 
     # 缺口分析 A1（docs/plans/2026-08-30-商品模塊-Liquid對接缺口分析.md）：
     # 售罄感知。判準（本尊語義，13 §F1 同軸）：未追蹤 ⇒ 恆可購；追蹤 ⇒
@@ -707,7 +836,7 @@ module ThemeEngine
     #   all of the tags that you enter" ⇒ 多 tag AND）。URL 段是 handle 形，對系列內實際 tag 以 handleize 相等解析。
     def initialize(collection, url_prefix: "", published_at: nil, translations: {},
                    publication: nil, locale: nil, sort_param: nil,
-                   filter_query: nil, request_path: nil, current_tags: [])
+                   filter_query: nil, request_path: nil, current_tags: [], current_product_id: nil)
       super()
       @c = collection
       @url_prefix = url_prefix
@@ -716,6 +845,7 @@ module ThemeEngine
       @publication = publication
       @locale = locale
       @sort_param = sort_param
+      @current_product_id = current_product_id # T14：系列語境商品頁的上／下一個商品
       @filter_query = filter_query
       @request_path = request_path
       @current_tags = Array(current_tags).map(&:to_s).reject(&:blank?)
@@ -788,6 +918,42 @@ module ThemeEngine
       first = products&.first
       first.respond_to?(:featured_image) ? first.featured_image : nil
     end
+
+    # T14 官方 objects/collection#previous_product／next_product（取證 2026-09-05）：
+    # "The previous product in the collection. Returns `nil` if there's no previous product."（next 同形）；
+    # 官方註「可用於商品頁」⇒ 語境＝`/collections/{handle}/products/{p}`，由 PageRenderer 帶 `current_product_id`。
+    # 無語境（一般系列頁）或商品不在該系列 ⇒ nil。序＝該系列的生效排序（同 `products`）。
+    # T14：`collection.terms` **官方 collection 物件沒有**（terms 只在 search——objects/search 逐字清單＝
+    # default_sort_by／filters／performed／results／results_count／sort_by／sort_options／terms／types）。
+    # Kalles／Minimog 把搜尋頁與系列頁共用同一段模板才讀到它 ⇒ 本尊同樣回 nil。顯式宣告，不計為引擎缺口。
+    def terms = nil
+
+    def previous_product = neighbour(-1)
+    def next_product = neighbour(1)
+
+    def neighbour(step)
+      return nil if @current_product_id.nil? || @publication.nil?
+
+      ids = neighbour_ids
+      i = ids.index(@current_product_id) or return nil
+      j = i + step
+      return nil if j.negative? || j >= ids.size
+
+      product = ActsAsTenant.with_tenant(@c.shop) { Product.find_by(shop_id: @c.shop_id, id: ids[j]) }
+      product && ProductDrop.new(product, url_prefix: @url_prefix, publication: @publication)
+    end
+    private :neighbour
+
+    # 系列內商品 id（生效排序）；官方未載掃描上限 ⇒ 以 limits `collection.neighbour_scan_limit` 封頂（ours）。
+    def neighbour_ids
+      @neighbour_ids ||= ActsAsTenant.with_tenant(@c.shop) do
+        CollectionProductsDrop.base_relation(collection: @c, publication: @publication, tags: resolved_tags)
+                              .reorder(Arel.sql(CollectionProductsDrop::ORDER_SQL.fetch(sort_by, CollectionProductsDrop::ORDER_SQL["manual"])))
+                              .limit(Limits.fetch(:collection, :neighbour_scan_limit))
+                              .pluck(:id)
+      end
+    end
+    private :neighbour_ids
 
     # all_tags："All of the tags applied to the products in the collection. This includes tags for
     #   products that have been filtered out of the current view. A maximum of 1,000 tags can be
@@ -1269,6 +1435,14 @@ module ThemeEngine
       @params = params || {}
     end
 
+    # T14：官方 objects/search（取證 2026-09-05）逐字只有 default_sort_by／filters／performed／results／
+    # results_count／sort_by／sort_options／terms／types。三套主題另讀 `url`／`id`／`current_vendor`／`current_type`
+    # （搜尋頁與系列頁共用模板的殘留）——**本尊同樣回 nil**；顯式宣告以免計為引擎缺口。
+    def url = nil
+    def id = nil
+    def current_vendor = nil
+    def current_type = nil
+
     def terms = @params["q"].to_s
     def performed = terms.present?
     def default_sort_by = "relevance"
@@ -1734,6 +1908,11 @@ module ThemeEngine
 
     def id = @shop.id
     def name = @shop.name
+
+    # T14：`shop.taxes_included` **官方 shop 物件沒有**（含稅旗標在 `cart.taxes_included`——objects/cart）。
+    # Minimog `snippets/main-product-blocks` 讀它 ⇒ 本尊回 nil、主題不顯示稅務說明。
+    # 🔴 不得改成回 `@shop.taxes_included` 欄位——那會比本尊多出一段文案（輸出不同即違反逐字對齊）。
+    def taxes_included = nil
 
     # T13：官方 objects/shop（取證 2026-09-05）——`policies`＝array of policy；五個具名政策各回 policy 或 nil。
     # 判準（hoko.vip 2026-09-05）：只有設了內容的政策存在（未設者 `/policies/x` 404；Kalles 以 `shop.shipping_policy.body != blank` 判空）
