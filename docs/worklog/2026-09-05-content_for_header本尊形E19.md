@@ -33,7 +33,7 @@
 | `app/liquid/theme_engine/runtime.rb`／`tags.rb`／`filters.rb`／`drops.rb` | 記錄器、`record_file`、旗標、`SectionDrop#type` |
 | `app/controllers/storefront/pages_controller.rb`／`admin/storefront_preview_controller.rb` | `RequestValues.substitute` |
 | `app/services/render_parity/normalizer.rb` | E19 規則 |
-| `app/services/seo/head_tags.rb` | 刪除 |
+| `Seo::HeadTags`（原 app/services/seo/ 下的服務，已從樹上移除） | 刪除 |
 | `config/routes.rb`、`config/limits.yml`、`config/storefront_locales/*.yml` | 路由／limits／atom 標籤 |
 | `spec/requests/storefront_content_for_header_spec.rb`（新 C1–C9）、fixture `product.e19.json`／`js-probe.liquid`／`js-snippet.liquid`／`_js-block.liquid`／layout canonical、`storefront_seo_spec.rb`、`render_parity/mirror_spec.rb` | 驗證 |
 | `docs/dev/e19-content-for-header.md`（新）、external-facts §G27、91 §3.88、路線圖 T10／T12 | 規範／取證／V／路線圖 |

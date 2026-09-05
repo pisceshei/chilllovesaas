@@ -10,7 +10,7 @@
 - **輸入／證據**：hoko.vip 74 頁 HTML 快照（scratchpad `audit/storefront/*-hoko.html`、`t10/cfh_*.html`、`cfh_tags.json`、`nodes_product.txt`、
   `after_cfh_product_nodes.txt`）、CDN 檔（compiled scripts、bundle、backwards-compat css、preloads.js）、端點 curl（oembed／atom 五語言／sf_private_access_tokens／
   digital_wallets／api/collect）、執行期 `typeof Shopify.*` 探針、官方文檔四頁；全部落 §G27。
-- **做了**：見 worklog Changes 表（app 16 檔＋10 支 JS、spec 3 檔＋4 fixture、docs 5 檔）。
+- **做了**：見 worklog Changes 表；檔案清單與數量以 `git diff --stat origin/main..HEAD` 為準（不在此重抄）。
 - **驗證輸出**：rspec C1–C9 綠、SEO／dynamic checkout／render_parity／page_renderer 回歸綠（閘門表見 worklog）；bt3 對表待收尾 PR。
 
 ## ② 為什麼這樣改
