@@ -4261,5 +4261,9 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **V 庫存狀態模型（新發現）**：hoko `acme-tee` 變體 Liquid `variant.inventory_quantity`＝99、`inventory_policy: deny`（sticky 鈕 data 屬性），同時
   `/products/acme-tee.js` 與 Liquid `available`＝false ⇒ Ella 判 `can_add_to_cart` true（不出 `hidden`／`disabled`）而按鈕實際不可買。本尊的
   available（地點可履行量／不可用量）與 inventory_quantity（總量）是兩個數；我方 mirror 店只有 0／false 一種態，兩者未分離建模。歸 T5 資料集＋庫存包。
+- **V 模組 `disabled` 的來源**：我方＝表單 submit 鈕 `disabled`／`aria-disabled` ⇒ 元素與按鈕 disabled；本尊 formObserver 的判準未取得（hoko 售罄變體
+  submit 未 disabled、按鈕可按、cartCreate 照建）。mirror 資料態（庫存 0）下我方按鈕 disabled、無請求；有貨態（模擬）全鏈路同形。
+- **V bt3 三寬 computed 其餘段差**：E18 後 identical 1280＝12/15、768／390＝7/15；差的段 header_default／multitasking_bar／promotion_popup／footer／
+  product_recommendations 本包未改，hoko 快照為 E12 時期（2026-09-03）——重抓 hoko 三寬快照後再判讀是否真差（T5 前置）。
 - **登記：自訂元素在 MutationObserver 回呼裡對自己 set/remove 屬性 ⇒ 無窮迴圈、頁面 load 事件永不觸發**（headless capture `Page.loadEventFired`
   逾時 60 s）。固定處理：回呼過濾自己子樹的 record＋屬性只在狀態改變時才寫。
