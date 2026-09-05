@@ -60,7 +60,7 @@ content_for_header object because the contents are subject to change"。Ella `la
 | `app/assets/storefront/platform/*.js`（10 檔） | 我方自寫本體 |
 | `app/controllers/storefront/platform_assets_controller.rb`／`feeds_controller.rb` | 端點 |
 | `app/controllers/storefront/pages_controller.rb`／`admin/storefront_preview_controller.rb` | `RequestValues.substitute` |
-| `app/services/render_parity/normalizer.rb` | 平台 CDN（`cdn.shopify.com/` ⇒ `/cdn/`）、雜湊／SRI／每請求值／身分值、自寫本體替身 |
+| `app/services/render_parity/normalizer.rb` | 平台 CDN（`cdn.shopify.com/` ⇒ `/cdn/`）、雜湊／SRI／每請求值／身分值、自寫本體替身；收尾 PR：`compiled_assets` 路徑主題 id ⇒ `ID`（RP8，bt3 mirror 主題 7 vs hoko 2） |
 | `config/routes.rb`、`config/limits.yml`（`content_for_header.*`）、`config/storefront_locales/*.yml`（`_platform.atom`） | |
 | `spec/requests/storefront_content_for_header_spec.rb`（C1–C9）、fixture `product.e19.json`／`js-probe`／`js-snippet`／`_js-block`、`storefront_seo_spec.rb`（SEO1／3／8 改）、`mirror_spec.rb`（MR4 序） | |
 
@@ -97,4 +97,19 @@ rspec：`spec/requests/storefront_content_for_header_spec.rb` C1–C9 綠；受�
 | `/products/nope`（404） | 35 | 35 | 35/35（`__st.pageurl`＝`host/404`） |
 
 判讀：節點序、tag／屬性、資料節點（身分值抹後）與本尊逐一相同；我方自寫本體的內嵌 script 以 `[platform]` 替身比對（鐵律 9）。
-未列頁型（article／policy／password／gift_card／customers）＝91 §3.88 V。bt3 部署後複驗＝收尾 PR。
+未列頁型（article／policy／password／gift_card／customers）＝91 §3.88 V。
+
+bt3 複驗（收尾 PR；main `38debcbe` 部署，`scratchpad/t10/bt3_deploy_e19.sh`＋`verify_bt3_e19.sh`；公開 `https://mirror.chilling.com.hk` 抓頁 → `head_diff.rb` 對 hoko 快照）：
+
+| 頁 | hoko 節點 | mirror 節點 | 相同 |
+|---|---|---|---|
+| `/products/acme-tee` | 48 | 48 | 首跑 46/48 → Normalizer 補 RP8 後 48/48 |
+| `/zh-hant/products/acme-tee` | 48 | 48 | 首跑 46/48 → 48/48 |
+| `/collections/all`／`?page=2`／`?sort_by=price-ascending` | 42／43／42 | 同 | 全同 |
+| `/collections`、`/`、`/cart`、`/search?q=tee`、`/pages/contact` | 41 | 41 | 全同 |
+| `/products/nope`（404） | 35 | 35 | 35/35 |
+
+首跑兩節點差＝`sections-script`／`snippets-script` 的 `src` 主題 id（hoko `/cdn/shop/t/2/`、mirror `/cdn/shop/t/7/`）：本機 mirror 店主題 id 恰為 2 才碰巧全同；主題 id 是身分值（同 shop id／theme-instance-id），
+Normalizer 補 `compiled_assets` 路徑主題 id ⇒ `ID`（RP8）後重跑全同。端點（公開 mirror）：load_feature／trekkie／compiled scripts／oembed／atom／digital_wallets dialog 200、
+`sf_private_access_tokens` 401、`POST /api/collect` 200；headless post-JS（`computed-parity.mjs evaljs`，等 6 秒）：`Shopify.loadFeatures`／`analytics.publish`／`captcha.protect` 為 function、
+`PaymentButton` object、`window.trekkie` object、`__st` 在、`#global-shopify-accelerated-checkout-styles` 在、頁面錯誤 0。

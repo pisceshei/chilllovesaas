@@ -45,6 +45,16 @@ RSpec.describe RenderParity::Normalizer do
     expect(out).to include(%(href="/collections/all")).and include(%(href="/">r)).and include(%(href="/?x=1")).and include(%(href="/zh-hans-two/x"))
   end
 
+  it "RP8 E19 編譯資產路徑的主題 id 是身分值（hoko 主題 2 vs bt3 mirror 主題 7）⇒ 抹成 ID；路徑其餘照留" do
+    hoko = %(<script id="sections-script" data-sections="section-product-tabs" defer="defer" src="//hoko.vip/cdn/shop/t/2/compiled_assets/scripts.js?v=123"></script>)
+    ours = %(<script id="sections-script" data-sections="section-product-tabs" defer="defer" src="//mirror.chilling.com.hk/cdn/shop/t/7/compiled_assets/scripts.js?v=456"></script>)
+    a = normalizer.call(hoko)
+    b = described_class.new(host: "mirror.chilling.com.hk").call(ours)
+    expect(a).to eq(b)
+    expect(a).to include(%(src="/cdn/shop/t/ID/compiled_assets/scripts.js"))
+    expect(a).not_to include("/t/2/")
+  end
+
   it "RP4 sections 切段：以 wrapper id 的最後 `__` 段為 key" do
     html = %(<div id="shopify-section-sections--G__a" class="shopify-section">A</div><section id="shopify-section-template--T__b" class="shopify-section">B</section><footer id="shopify-section-sections--G__c">C</footer>)
     parts = normalizer.sections(html)
