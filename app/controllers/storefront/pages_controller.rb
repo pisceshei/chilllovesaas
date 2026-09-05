@@ -75,7 +75,7 @@ module Storefront
         return head :bad_request if payload["status"] == 400
         return render(json: payload["html"], status: payload["status"]) if payload["content_type"] == :json
 
-        return render html: payload["html"].html_safe, status: payload["status"], layout: false
+        return render html: Storefront::RequestValues.substitute(payload["html"], cookies:).html_safe, status: payload["status"], layout: false
       end
 
       if rest == "/cart"
@@ -119,13 +119,13 @@ module Storefront
       end
 
       # B13 的 X-Robots-Tag noindex 已隨包 35（SEO 開放）摘除；UNLISTED 的 noindex
-      # 由 Seo::HeadTags 以 meta robots 承接（limits `product.unlisted_meta_robots`）。
+      # 由 Storefront::ContentForHeader 以 meta robots 承接（limits `product.unlisted_meta_robots`；E19 前為 Seo::HeadTags）。
       # PR-12：預覽列——僅整頁 HTML（片段/JSON 不注）；自有樣式（鐵律 9：
       # 功能對位本尊 preview bar，視覺用我方設計語言）。
       if preview_theme_active? && payload["html"].to_s.include?("</body>")
         payload["html"] = payload["html"].sub("</body>", "#{preview_bar_html}</body>")
       end
-      render html: payload["html"].html_safe, status: payload["status"], layout: false
+      render html: Storefront::RequestValues.substitute(payload["html"], cookies:).html_safe, status: payload["status"], layout: false
     end
 
     # 前綴形＝Markets::UrlPrefix::SEGMENT（同一來源，不抄第二份）——只是省一次查表的粗篩：

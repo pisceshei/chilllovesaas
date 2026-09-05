@@ -51,6 +51,12 @@ RSpec.describe "Storefront i18n", type: :request do
     Market.find_by!(is_primary: true).market_web_presences.sole
   end
 
+  # E19：content_for_header 的每請求值（`__st.reqid`／`u`、`requestId`、`eventMetadataId`、shopify-y／s meta）本尊每次請求也不同 ⇒ 遮罩後比對
+  def stable(body)
+    body.gsub(/"reqid":"[^"]*"/, '"reqid":"R"').gsub(/"u":"[0-9a-f]{12}"/, '"u":"U"').gsub(/"requestId":"[^"]*"/, '"requestId":"R"')
+        .gsub(/"eventMetadataId":"[^"]*"/, '"eventMetadataId":"E"').gsub(/name="shopify-[ys]" content="[^"]*" data-expiration="\d+"/, "META")
+  end
+
   it "SF-1/SF-2 🔴 語言只由 URL 決定：三種 Accept-Language 同 URL 逐位元組同體；無 Vary: Accept-Language" do
     bodies = [ "zh-TW,zh;q=0.9", "en-US,en;q=0.9", "ja" ].map do |al|
       get "/products/rose", headers: { "Accept-Language" => al }
@@ -58,7 +64,7 @@ RSpec.describe "Storefront i18n", type: :request do
       expect(response.headers["Vary"].to_s).not_to include("Accept-Language")
       response.body
     end
-    expect(bodies.uniq.length).to eq(1)
+    expect(bodies.map { |b| stable(b) }.uniq.length).to eq(1)
   end
 
   it "SF-9 🔴 SRA 端點語言跟 URL 前綴：recommendations／search suggest／cart sections 在 /zh-hant/ 下取 zh-Hant 字串" do
@@ -147,10 +153,10 @@ RSpec.describe "Storefront i18n", type: :request do
 
   it "SF-10 🔴 語言 ≡ URL：無關 cookie／偽 GeoIP 標頭／不屬任何市場的 localization cookie 都不改變同 URL 的輸出" do
     get "/products/rose"
-    base = response.body
+    base = stable(response.body)
     get "/products/rose", headers: { "Cookie" => "market=tw; locale=zh-Hant; localization=TW",
                                      "X-Forwarded-For" => "203.0.113.77" }
-    expect(response.body).to eq(base)
+    expect(stable(response.body)).to eq(base)
   end
 
   it "SF-11②③⑤ 🔴 別市場前綴 200；關閉 ⇒ 404 且譯文一筆不刪；重開 ⇒ 原樣回來" do

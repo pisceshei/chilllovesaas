@@ -1,0 +1,5 @@
+<div id="js-probe">{% render 'js-snippet' %}</div>
+{% javascript %}
+  window.__jsProbeSection = true;
+{% endjavascript %}
+{% schema %}{ "name": "JS probe (E19)", "blocks": [{ "type": "_js-block" }] }{% endschema %}

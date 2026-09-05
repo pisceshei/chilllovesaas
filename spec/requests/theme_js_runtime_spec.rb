@@ -52,11 +52,11 @@ RSpec.describe "Theme JS runtime batch", type: :request do
     expect(html).not_to include("|]") # 🔴 default-only 鍵吐空＝三層解析斷（no-js 殺手形）
   end
 
-  it "JS2 🔴 formatMoney 正則單反斜線落地；JS3 money_format 真值" do
+  it "JS2 🔴 平台全域不出 formatMoney（E19：本尊 script 無、主題 global.js 自定義——§G27）；JS3 money_format 真值" do
     html = render_home
-    expect(html).to include('replace(/\B(?=(\d{3})+(?!\d))/g, ",")')   # 一層反斜線（JS 正則形）
-    expect(html).to include('replace(/\{\{\s*(\w+)\s*\}\}/, amount)')
-    expect(html).not_to include('\\\\B') # 雙反斜線＝heredoc 又吃回去
+    expect(html).to include("<script>var Shopify = Shopify || {};")
+    expect(html).not_to include("Shopify.formatMoney")
+    expect(html).not_to include("Shopify.CountryProvinceSelector")
 
     drop = ThemeEngine::ShopDrop.new(shop)
     expect(drop.money_format).to eq("${{amount}}")

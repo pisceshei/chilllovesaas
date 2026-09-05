@@ -1,4 +1,4 @@
-<!doctype html><html><head><title>{{ page_title }}</title>{{ content_for_header }}<meta name="brand-color" content="{{ settings.brand_color }}"></head><body data-shop="{{ shop.name }}">{%- liquid
+<!doctype html><html><head><title>{{ page_title }}</title><link rel="canonical" href="{{ canonical_url }}">{{ content_for_header }}<meta name="brand-color" content="{{ settings.brand_color }}"></head><body data-shop="{{ shop.name }}">{%- liquid
   sections 'test-group'
 -%}{% sections 'header-group' %}
 {{ content_for_layout }}

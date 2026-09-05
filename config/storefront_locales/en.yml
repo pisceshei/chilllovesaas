@@ -34,3 +34,8 @@ _platform:
   # E18：動態結帳「立即購買」鈕文案（本尊 portable-wallets.en.js 的 instruments_copy.checkout.buy_now 逐字，2026-09-05）
   accelerated_checkout:
     buy_now: "Buy it now"
+  # E19：Atom feed summary 表格標籤（本尊 /en/collections/all.atom 逐字，2026-09-05）
+  atom:
+    vendor: "Vendor: "
+    type: "Type: "
+    price: "Price: "

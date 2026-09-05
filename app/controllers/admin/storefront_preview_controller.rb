@@ -60,7 +60,7 @@ module Admin
                draft_sections: { sid => entry })
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
-      render html: result.html.html_safe, status: result.status, layout: false
+      render html: Storefront::RequestValues.substitute(result.html, cookies:).html_safe, status: result.status, layout: false
     end
 
     # POST /admin/store/preview/:theme_id/draft_page（PR-11 改即見全面化；E9 改形）
@@ -112,7 +112,7 @@ module Admin
       if result.content_type == :json
         render json: result.html, status: result.status
       else
-        render html: result.html.html_safe, status: result.status, layout: false
+        render html: Storefront::RequestValues.substitute(result.html, cookies:).html_safe, status: result.status, layout: false
       end
     rescue ThemeEngine::MissingSourceError => e
       response.headers["X-Robots-Tag"] = "noindex, nofollow"

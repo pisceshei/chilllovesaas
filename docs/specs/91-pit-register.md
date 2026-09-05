@@ -4267,3 +4267,27 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   product_recommendations 本包未改，hoko 快照為 E12 時期（2026-09-03）——重抓 hoko 三寬快照後再判讀是否真差（T5 前置）。
 - **登記：自訂元素在 MutationObserver 回呼裡對自己 set/remove 屬性 ⇒ 無窮迴圈、頁面 load 事件永不觸發**（headless capture `Page.loadEventFired`
   逾時 60 s）。固定處理：回呼過濾自己子樹的 record＋屬性只在狀態改變時才寫。
+
+### 3.88 E19 content_for_header 完整本尊形（2026-09-05）的未取得與範圍外
+
+- **V 平台 script 本體**：captcha-bootstrap（hCaptcha 綁定）、load_feature（feature 載入器）、UA 偵測（Apple 私密存取權杖／autosizes／LoAF）、
+  origin-trials、webmcp adapter、privacy banner、shop-js、perf-kit、trekkie、web pixels manager、shop_events_listener——我方全部自寫 stub／最小實作
+  （介面同名：`Shopify.loadFeatures`／`autoloadFeatures`／`captcha.protect`／`ce_forms`／`customerPrivacy`／`analytics.publish|subscribe`／`trekkie` 佇列），
+  行為對位＝後續包（顧客隱私同意 API、驗證碼、web pixels、分析收集端落庫）。Normalizer 以簽章把本體視為替身。
+- **V `__st.u`（12 hex）語義**：每請求隨機（兩次載入不同）；本尊生成規則未取得。`reqid`＝`{uuid}-{epoch}` 形照抄。
+- **V `shopify-features.betas`／trekkie `enabledBetaFlags`／web pixels `enabledBetaFlags`／`enabled-flags`**：平台旗標值照抄，語義未取得。
+- **V `themeCityHash`／`apiClientId`／`default_configuration_id`／`data-render-region`**：本尊為 CityHash／Online Store app id 580111／checkout 設定 id／GCP 區域；
+  我方 crc32／limits `online_store_api_client_id`／店 id／`chilllove-hk-1`（Normalizer 抹）。
+- **V 文章頁（article）與 policies 頁**：hoko 無文章、我方無 policies 頁型 ⇒ `__st`（`p:"article"`／`rtyp`／`rid`／`s`）與 analytics 形未觀測；文章 Atom entry 形未觀測（我方通用 Atom entry）。
+- **V 分頁 `rel="next"`**：只觀測到第 2 頁的 `rel="prev"`；第 3 頁以上與 `next` 未觀測（我方只出 prev）。
+- **V `compiled_assets` 的 block 歸屬與壓縮**：本尊 block JS 併入所屬 section 的門控函式，歸屬規則未公開（我方依 section schema `blocks` 遞迴）；本尊輸出壓縮、我方原文。
+  `{% stylesheet %}` 的 `compiled_assets/styles.css` 形未觀測（Ella 四檔未被渲染）。
+- **V 非 200／404 頁（password、gift_card、customers/*）的 content_for_header**：未觀測（我方只在 200／404 注入）。
+- **V UNLISTED 的 `<meta name="robots">` 位置**：hoko 無 unlisted 商品（我方置於 digital-wallet meta 之後）。
+- **V hreflang 保留的 query 鍵**：觀測到 `page`／`q`／`type` 進、`sort_by` 不進；其餘鍵（`filter.*`、`options[prefix]`）未觀測（我方只留三鍵）。
+- **V oEmbed `in_stock`**：售罄變體本尊 true（該變體 inventory_quantity 99）；我方判準＝庫存量>0 或 policy continue。`description` 對有描述商品的形（純文字？HTML？）未觀測。
+- **V Atom `updated`／entry 排序**：集合 feed `updated`＝最新 entry published（一筆樣本）；entry 序＝新到舊（三商品樣本）。
+- **V `Shopify.designMode` 在編輯器內的位置**（沿 E3 舊 V）。
+- **⚪ 主題資產 URL 形**：本尊 `//host/cdn/shop/t/{id}/assets/x.css?v=…` vs 我方 `/theme-assets/x.css`（Normalizer 對映）；`asset_url` 本尊形＝路線圖 T12。
+- **⚪ `_shopify_essential`／`_shopify_analytics`／`_shopify_marketing` cookie**（HttpOnly；顧客隱私同意包）；`localization` cookie 既有。
+- **登記：長 heredoc 內含引號的 Bash 命令會整段解析失敗**（`unexpected EOF while looking for matching '`）——一律把補丁寫成檔案再 `python file.py`。

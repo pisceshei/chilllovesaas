@@ -520,6 +520,7 @@ module ThemeEngine
       return "" if variant.nil?
 
       r = @context.registers
+      r[:runtime]&.payment_button_rendered! # E19：content_for_header 依此出模組形
       token = Storefront::AccessToken.for(r[:shop_id])
       fallback = CGI.escapeHTML(%({"supports_subs":true,"supports_def_opts":true,"name":"buy_it_now","wallet_params":{}}))
       vparams = CGI.escapeHTML(%([{"id":#{variant.id},"requiresShipping":#{variant.requires_shipping ? 'true' : 'false'}}]))

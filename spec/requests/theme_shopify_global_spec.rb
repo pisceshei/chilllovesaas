@@ -42,8 +42,10 @@ RSpec.describe "Theme Shopify global & section assets", type: :request do
     expect(html).not_to include("Shopify.designMode =")
     expect(html).to include(%(Shopify.routes = Shopify.routes || {};\nShopify.routes.root = "/zh-hant/";))
     expect(html).to include(%(Shopify.currency = {"active":"HKD","rate":"1.0"};))
-    expect(html).to include("Shopify.formatMoney = function")
-    expect(html).to include("Shopify.CountryProvinceSelector = function")
+    # E19：本尊 script 逐字形（§G27）——沒有 formatMoney／CountryProvinceSelector（Ella global.js 自定義）
+    expect(html).not_to include("Shopify.formatMoney")
+    expect(html).not_to include("Shopify.CountryProvinceSelector")
+    expect(html).to include(%(Shopify.SignInWithShop = Shopify.SignInWithShop || {};\nShopify.SignInWithShop.User = Shopify.SignInWithShop.User || {};\nShopify.SignInWithShop.User.recognized = false;\n</script>))
 
     expect(render_home(design_mode: true)).to include("Shopify.designMode = true")
   end

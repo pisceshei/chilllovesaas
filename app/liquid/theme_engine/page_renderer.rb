@@ -89,19 +89,13 @@ module ThemeEngine
       runtime.closest = ClosestDrop.from_template(assigns)
       # 平台 head 注入（包 35；62 §A.1 第 1 層）：canonical＋hreflang＋JSON-LD。
       # 只在公開店面（有 presence）注入；預覽面（noindex 牆後）維持空字串（包 30 行為）。
-      if @web_presence
-        head = Seo::HeadTags.build(
-          shop: @shop, presence: @web_presence, locale_tag: @locale.to_s,
-          canonical_path: path, params: @params, record:, status:
-        )
-        # E18：動態結帳 bootstrap（本尊 content_for_header 每頁都帶——商品／集合／購物車／文章頁皆有，hoko.vip 2026-09-05）；
-        # 順序＝接在 SEO 段之後（本尊完整 head 注入順序歸 content_for_header 包，91 ⚪ `__head__`）。非 200 頁不注入（V，91 §3.87）。
-        if status == 200 && @origin
-          head = [ head, Storefront::DynamicCheckoutHead.build(origin: @origin, locale_tag: @locale.to_s) ].reject(&:blank?).join("
-")
-        end
-        runtime.assign("content_for_header", head)
-      end
+      # E19：content_for_header 完整本尊形（Storefront::ContentForHeader；延遲到 layout 渲染時才組——模組形／cart.bootstrap 形與
+      # sections-script 取決於 body 渲染結果）。包 35 的 Seo::HeadTags（canonical＋JSON-LD）已退場：本尊不注 canonical／JSON-LD（主題自出）。
+      runtime.assign("content_for_header", Storefront::ContentForHeader::Lazy.new(Storefront::ContentForHeader.new(
+        shop: @shop, theme: @theme, presence: @web_presence, locale_tag: @locale.to_s, country_code: @country_code, url_prefix: @url_prefix,
+        path: path, query_string: @query_string, params: @params, page_type: page_type, record: record, status: status,
+        origin: @origin, host: @host, design_mode: @design_mode, runtime: runtime, assigns: assigns
+      )))
 
       if liquid_template?(runtime, template_key)
         body, layout_override = render_liquid_template(runtime, template_key)
@@ -116,16 +110,7 @@ module ThemeEngine
         body = render_template_sections(runtime, template_key)
         html = render_layout(runtime, body, template_key: template_key)
       end
-      # PR-3：window.Shopify bootstrap（主題 JS 生態依賴；shopify_global.rb 檔頭）
-      html = html.sub("</head>") do
-        ThemeEngine::ShopifyGlobal.script(
-          shop: @shop, theme: @theme, locale: ThemeEngine::LocaleTags.shopify_code(@locale),
-          currency: @shop.store_currency, root: root_prefix_path,
-          design_mode: @design_mode,
-          country: @country_code, # D80：買家選國 cookie 覆寫後的國碼（本尊 GET / 帶 localization=US ⇒ Shopify.country = "US"）
-          schema_name: runtime.theme_info["theme_name"], schema_version: runtime.theme_info["theme_version"],
-          host: @host) + "</head>"
-      end
+      # PR-3 的 window.Shopify bootstrap 自 E19 起在 content_for_header 內（本尊位置；ShopifyGlobal 檔頭）
       # PR-19：theme 級 Custom CSS（head 尾；官方全站生效語義）
       theme_css = runtime.theme_custom_css_style
       html = html.sub("</head>") { theme_css + "</head>" } if theme_css.present?

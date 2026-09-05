@@ -99,6 +99,27 @@ Rails.application.routes.draw do
     # E18：Storefront API cart 的 `checkoutUrl` 落地（本尊 `/cart/c/{token}?key=…` ⇒ 302 結帳頁）
     get "cart/c/:token" => "storefront/cart#checkout_link", format: false,
         constraints: { token: /[A-Za-z0-9_-]+/ }, as: :storefront_cart_checkout_link
+    # E19：content_for_header 引用的平台端點（路徑形照本尊；本體我方自寫——docs/dev/e19-content-for-header.md）
+    get "cdn/shopifycloud/storefront/assets/storefront/:file" => "storefront/platform_assets#storefront_asset", format: false,
+        constraints: { file: /(?:load_feature|origin_trials|autosizes)-[0-9a-f]{8}\.js/ }
+    get "cdn/shopifycloud/storefront/assets/:file" => "storefront/platform_assets#storefront_asset", format: false,
+        constraints: { file: /shop_events_listener-[0-9a-f]{8}\.js/ }
+    get "cdn/s/:file" => "storefront/platform_assets#trekkie", format: false, constraints: { file: /trekkie\.storefront\.[0-9a-f]{40}\.min\.js/ }
+    get "cdn/shopifycloud/perf-kit/:file" => "storefront/platform_assets#perf_kit", format: false, constraints: { file: /shopify-perf-kit-[0-9.]+\.min\.js/ }
+    get "cdn/shopifycloud/privacy-banner/storefront-banner.js" => "storefront/platform_assets#privacy_banner", format: false
+    get "cdn/shopifycloud/shop-js/modules/v2/:file" => "storefront/platform_assets#shop_js", format: false,
+        constraints: { file: /loader\.[a-z-]+\.[A-Za-z-]+\.esm\.js/ }
+    get "cdn/storefront/webmcp/:file" => "storefront/platform_assets#webmcp", format: false, constraints: { file: /webmcp-[0-9.]+\.js/ }
+    get "checkouts/internal/preloads.js" => "storefront/platform_assets#preloads", format: false
+    get "cdn/shop/t/:theme_id/compiled_assets/:file" => "storefront/platform_assets#compiled", format: false,
+        constraints: { theme_id: /\d+/, file: /(?:scripts|snippet-scripts)\.js/ }
+    get "sf_private_access_tokens" => "storefront/platform_assets#private_access_tokens", format: false
+    post "api/collect" => "storefront/platform_assets#collect", format: false
+    get ":shop_id/digital_wallets/dialog" => "storefront/platform_assets#digital_wallets_dialog", format: false, constraints: { shop_id: /\d+/ }
+    # E19：oEmbed／Atom（content_for_header 的 alternate link 目標）
+    get "products/:handle.oembed" => "storefront/feeds#product_oembed", format: false
+    get "collections/:handle.atom" => "storefront/feeds#collection_atom", format: false
+    get "blogs/:handle.atom" => "storefront/feeds#blog_atom", format: false
     # Ella 修復 PR-2：買家面媒體（真圖鏈輸出端；MediaUrl 產這個形）
     get "media/:id/:filename" => "storefront/media#show", format: false,
         constraints: { id: /\d+/, filename: /[^\/]+/ }, as: :storefront_media
@@ -202,6 +223,9 @@ Rails.application.routes.draw do
       get "recommendations/products" => "storefront/recommendations#products_section"
       get "products/:handle.js" => "storefront/products#ajax_js" # E17
       get "products/:handle.json" => "storefront/products#rest_json" # E17
+      get "products/:handle.oembed" => "storefront/feeds#product_oembed" # E19
+      get "collections/:handle.atom" => "storefront/feeds#collection_atom" # E19
+      get "blogs/:handle.atom" => "storefront/feeds#blog_atom" # E19
       post "blogs/:blog_handle/:article_handle/comments" => "storefront/comments#create"
     end
     get "/" => "storefront/pages#root", as: :storefront_root

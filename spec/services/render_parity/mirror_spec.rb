@@ -168,7 +168,8 @@ RSpec.describe RenderParity::Mirror do
       expect(response.body).to include(%(Shopify.country = "TW";))
       # hreflang 六條＝本尊 hoko.vip 首頁形（x-default／zh-Hans 指根，其餘裸語言段；零地區碼、零市場段）
       links = response.body.scan(/<link rel="alternate" hreflang="([^"]+)" href="https:\/\/mirror-spec\.lvh\.me([^"]*)">/)
-      expect(links).to eq([ [ "zh-Hans", "/" ], [ "zh-Hant", "/zh-hant/" ], [ "en", "/en/" ], [ "fr", "/fr/" ], [ "ja", "/ja/" ], [ "x-default", "/" ] ])
+    # E19：x-default 首（本尊 content_for_header hreflang 序，§G27）
+    expect(links).to eq([ [ "x-default", "/" ], [ "zh-Hans", "/" ], [ "zh-Hant", "/zh-hant" ], [ "en", "/en" ], [ "fr", "/fr" ], [ "ja", "/ja" ] ]) # 帶前綴的根無尾斜線（hoko 首頁 §G27）
       get "/zh-hant/"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(%(Shopify.locale = "zh-TW"))
