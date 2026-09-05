@@ -32,7 +32,8 @@
 | `app/liquid/theme_engine/page_renderer.rb` | assign `Lazy`；移除 `</head>` 插入與 HeadTags |
 | `app/liquid/theme_engine/runtime.rb`／`tags.rb`／`filters.rb`／`drops.rb` | 記錄器、`record_file`、旗標、`SectionDrop#type` |
 | `app/controllers/storefront/pages_controller.rb`／`admin/storefront_preview_controller.rb` | `RequestValues.substitute` |
-| `app/services/render_parity/normalizer.rb` | E19 規則 |
+| `app/services/render_parity/normalizer.rb` | E19 規則；收尾 PR：`compiled_assets` 路徑主題 id ⇒ `ID`（RP8） |
+| `spec/services/render_parity/render_parity_spec.rb` | 收尾 PR：RP8（hoko `/t/2/` vs mirror `/t/7/` 抹後相等、`?v=` 已去） |
 | `Seo::HeadTags`（原 app/services/seo/ 下的服務，已從樹上移除） | 刪除 |
 | `config/routes.rb`、`config/limits.yml`、`config/storefront_locales/*.yml` | 路由／limits／atom 標籤 |
 | `spec/requests/storefront_content_for_header_spec.rb`（新 C1–C9）、fixture `product.e19.json`／`js-probe.liquid`／`js-snippet.liquid`／`_js-block.liquid`／layout canonical、`storefront_seo_spec.rb`、`render_parity/mirror_spec.rb` | 驗證 |
@@ -88,9 +89,70 @@
 | M212 Normalizer 不抹 `pageurl` 主機 | normalizer.rb | C9 | RED ✓ |
 | M213 全域 script 多出 formatMoney | shopify_global.rb | C4 | RED ✓ |
 
+## bt3 部署後複驗（收尾 PR；main `38debcbe`＝#344 squash）
+
+部署：`ssh bt3-wan 'bash -s' < scratchpad/t10/bt3_deploy_e19.sh`（`scripts/deploy.sh origin/main` → puma 重啟 → `Rails.cache.clear` → `/up`）：pending migration 0、`demo /up 200`、
+mirror 十頁型 200（`/products/nope` 404）；E19 端點（Host: mirror）：load_feature／trekkie／perf-kit／privacy-banner／shop-js loader／preloads／`cdn/shop/t/7/compiled_assets/scripts.js`／
+oembed／atom 皆 200，`sf_private_access_tokens` 401、`POST /api/collect` 200；商品頁 Set-Cookie `_shopify_y`（一年）＋`_shopify_s`（30 分）`samesite=lax`。
+
+`__head__` 逐節點對表（本機 `bash scratchpad/t10/verify_bt3_e19.sh`：公開 `https://mirror.chilling.com.hk` 抓頁 → `t10/head_diff.rb` 對 hoko 快照，經 `RenderParity::Normalizer`）：
+
+| 頁 | hoko | mirror | 首跑 | RP8 後 |
+|---|---|---|---|---|
+| `/products/acme-tee` | 48 | 48 | 46/48 | 48/48 |
+| `/zh-hant/products/acme-tee` | 48 | 48 | 46/48 | 48/48 |
+| `/collections/all`／`?page=2`／`?sort_by=price-ascending` | 42／43／42 | 同 | 全同 | 全同 |
+| `/collections`、`/`、`/cart`、`/search?q=tee`、`/pages/contact` | 41 | 41 | 全同 | 全同 |
+| `/products/nope`（404） | 35 | 35 | 35/35 | 35/35 |
+
+首跑兩節點差＝`sections-script`／`snippets-script` 的 `src` 主題 id（hoko `/cdn/shop/t/2/`、mirror `/cdn/shop/t/7/`）——本機 mirror 店主題 id 恰為 2 才碰巧全同；
+主題 id 是身分值（同 shop id／theme-instance-id），本 PR 在 Normalizer 補 `compiled_assets` 路徑主題 id ⇒ `ID`（RP8），以已抓下的 bt3 HTML 重跑 `head_diff.rb` 後 48/48。
+headless post-JS（`computed-parity.mjs evaljs`，等 6 秒）：`Shopify.loadFeatures`／`analytics.publish`／`captcha.protect` 皆 function、`PaymentButton` object、`window.trekkie` object、
+`__st` 在、`#global-shopify-accelerated-checkout-styles` 在、頁面錯誤 0。
+
+### 收尾 PR 閘門（凍結 tree （收尾 PR 首候選；commit 前的工作樹＝本 commit 內容） 後全跑，本機，dev server 已停；scratchpad `gates_e8b.py` 逐支以 bash.exe 執行 config/ci.rb 步驟）
+
+| 閘門 | 命令 | 退出碼 | 摘要 |
+|---|---|---|---|
+| Style: Ruby | `bin/rubocop` | exit=0 | 1004 files inspected, no offenses detected |
+| Security: Gem audit | `bin/bundler-audit` | exit=0 | No vulnerabilities found |
+| Security: Frontend audit | `pnpm audit --audit-level high` | exit=0 | No known vulnerabilities found |
+| Security: Brakeman code analysis | `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error` | exit=0 | No warnings found |
+| Test: Rails | `bundle exec rspec` | exit=0 | （未解析） |
+| Test: Frontend | `pnpm test` | exit=0 |  |
+| Type check: Frontend | `pnpm typecheck` | exit=0 |  |
+| Build: Frontend | `pnpm build` | exit=0 |  |
+| Invariants: Exec bits | `bash scripts/check-exec-bits.sh` | exit=0 |  |
+| Invariants: Exec bit rules regression | `bash scripts/test-exec-bits-rules.sh` | exit=0 |  |
+| Invariants: Prototype lint | `python scripts/lint-prototype.py` | exit=0 | ERROR 0 / WARN 136 |
+| Invariants: Lint rules regression | `python scripts/test-lint-rules.py` | exit=0 |  |
+| Invariants: Dead-control baseline | `python scripts/check-baseline-raise.py` | exit=0 |  |
+| Invariants: Doc claims | `ruby scripts/check-doc-claims.rb` | exit=0 |  |
+| Invariants: Doc claim rules regression | `ruby scripts/test-doc-claims-rules.rb` | exit=0 |  |
+| Invariants: Tenant isolation | `ruby scripts/check-tenant-isolation.rb` | exit=0 |  |
+| Invariants: Design token single source | `ruby scripts/check-tokens-sync.rb` | exit=0 |  |
+| Invariants: Reversal naming | `ruby scripts/check-reversal-naming.rb` | exit=0 |  |
+| Invariants: Money unit boundary | `ruby scripts/check-money-boundary.rb` | exit=0 |  |
+| Invariants: Money rules regression | `ruby scripts/test-money-rules.rb` | exit=0 |  |
+| Invariants: Limits key types | `ruby scripts/check-limits-keys.rb` | exit=0 |  |
+| Invariants: Limits key rules regression | `ruby scripts/test-limits-key-rules.rb` | exit=0 |  |
+| Invariants: Rem token integrity | `ruby scripts/check-rem-tokens.rb` | exit=0 |  |
+| Invariants: Rem token rules regression | `ruby scripts/test-rem-token-rules.rb` | exit=0 |  |
+| Invariants: CI parity (ci.yml ⊆ config/ci.rb) | `ruby scripts/check-ci-parity.rb` | exit=0 |  |
+| Invariants: CI parity rules regression | `ruby scripts/test-ci-parity-rules.rb` | exit=0 |  |
+| Invariants: Workflow syntax | `ruby scripts/check-workflow-syntax.rb` | exit=0 |  |
+| Invariants: Workflow syntax rules regression | `ruby scripts/test-workflow-syntax-rules.rb` | exit=0 |  |
+| doc-claims 兩支（本表寫入後補跑） | `ruby scripts/check-doc-claims.rb --base origin/main --require-base`／`ruby scripts/test-doc-claims-rules.rb` | 見 PR body | |
+
+### 收尾 PR 突變（commit 後跑 scratchpad `t10/mutate_closure.py`；改一處 → 目標規格轉紅 → `git checkout --` 還原；工作樹還原後 clean）
+
+| 突變 | 改處 | 目標 | 結果 |
+|---|---|---|---|
+| M214 移除 `compiled_assets` 主題 id 規則 | normalizer.rb | RP8 | RED ✓ |
+
 ## 尚未完成或需注意的風險 (Pending / TODO)
 
-- bt3 部署後 `__head__` 段對表（Normalizer 後 hoko vs mirror 逐節點）與公開 mirror 端點抽查——收尾 PR。
+- bt3 複驗已收（上節）。T12（主題資產 URL 本尊形）時，Normalizer 的 `CDN_ASSET_RE`（`/cdn/shop/t/{n}/assets/` ⇒ `/theme-assets/`）與本 PR 的 `compiled_assets` 主題 id 規則要收成同一組主題路徑規則，別各抹各的。
 - E19b：同意 API／驗證碼／web pixels／分析收集端落庫／`/api/mcp`（T11）——stub 介面已立。
 - 91 §3.88 V 清單（`__st.u` 語義、旗標值、themeCityHash／apiClientId、article／policies 頁型、`rel=next`、block 歸屬與壓縮、非 200 頁、hreflang 其餘 query 鍵、oEmbed in_stock／description、Atom updated／排序、designMode 位置）。
 - 🔴 平台不再注 canonical／JSON-LD：主題必須自出（Ella 有；其他主題對表時檢查）。

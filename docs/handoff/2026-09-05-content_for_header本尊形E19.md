@@ -11,7 +11,9 @@
   `after_cfh_product_nodes.txt`）、CDN 檔（compiled scripts、bundle、backwards-compat css、preloads.js）、端點 curl（oembed／atom 五語言／sf_private_access_tokens／
   digital_wallets／api/collect）、執行期 `typeof Shopify.*` 探針、官方文檔四頁；全部落 §G27。
 - **做了**：見 worklog Changes 表；檔案清單與數量以 `git diff --stat origin/main..HEAD` 為準（不在此重抄）。
-- **驗證輸出**：rspec C1–C9 綠、SEO／dynamic checkout／render_parity／page_renderer 回歸綠（閘門表見 worklog）；bt3 對表待收尾 PR。
+- **驗證輸出**：rspec C1–C9 綠、SEO／dynamic checkout／render_parity／page_renderer 回歸綠（閘門表見 worklog）。
+- **bt3（收尾 PR）**：main `38debcbe` 部署後 `__head__` 11 頁型逐節點對表——首跑商品頁 46/48（差＝`compiled_assets` 路徑主題 id 2 vs 7，身分值），Normalizer 補 RP8 後 48/48，其餘九頁型全同；
+  端點與 headless 探針綠（worklog「bt3 部署後複驗」節）。
 
 ## ② 為什麼這樣改
 
@@ -28,7 +30,7 @@
 
 ## ③ 還有什麼沒解決
 
-- bt3 部署後 `__head__` 逐節點對表未做（收尾 PR）。
+- bt3 待辦：無——11 頁型對表、端點抽查與 headless 探針都已記在 worklog bt3 節（同一 head `38debcbe`）。
 - E19b 行為對位（同意 API／驗證碼／web pixels／收集端落庫／`/api/mcp`）。
 - 91 §3.88 V 清單；T12（主題資產 URL 本尊形）另包。
 
@@ -38,4 +40,5 @@
 - 🔴 改 `app/assets/storefront/platform/*.js` 後檔名雜湊會變（常量在啟動時算）⇒ 重啟 dev server；舊 HTML 引用的檔名 404 是設計（不回錯本體）。
 - 🔴 本尊 script 本體**不得抄入**；要加節點先到 §G27 找證據，沒有就登記 V。
 - 🔴 Bash 長 heredoc 含引號會整段解析失敗——補丁寫成檔案再跑（scratchpad `t10/patch_e19a*.py` 為例）。
-- 停止條件：本包合併＋bt3 `__head__` 對表記回 worklog／handoff（收尾 PR）即結束；E19b／T11／T12 另開包。
+- 停止條件：本包已合併（#344）＋bt3 對表已記（本收尾 PR）⇒ 本包結束；E19b／T11／T12 另開包。
+- 🔴 主題 id 會出現在所有 `/cdn/shop/t/{id}/…` 路徑：T12 做資產 URL 本尊形時，別再讓「本機恰好同 id」掩蓋身分差（本包 bt3 首跑即前例）。
