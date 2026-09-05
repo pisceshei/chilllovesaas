@@ -148,7 +148,16 @@ headless post-JS（`computed-parity.mjs evaljs`，等 6 秒）：`Shopify.loadFe
 
 | 突變 | 改處 | 目標 | 結果 |
 |---|---|---|---|
-| M214 移除 `compiled_assets` 主題 id 規則 | normalizer.rb | RP8 | RED ✓ |
+| M214 移除 `compiled_assets` 主題 id 規則 | normalizer.rb | RP8 | RED ✓（v2 腳本實跑：rspec exit=1、`8 examples, 1 failure`＝RP8 `expected …/t/7/… got …/t/2/…`；還原後 `git status` 乾淨、規則在） |
+
+🔴 事故更正（2026-09-05，鐵律 19.5／20.4；20.2 類型 5「管道尾端吞退出碼」＋類型 7「Windows 編碼假結果」）：本 PR 首推 head `0b1e19fd` 的上列曾寫「RED ✓」，
+但當時的突變腳本 v1 ①把 rspec 接在 `| tail` 之後 ⇒ 取到 tail 的退出碼 0、印出 NOT RED；②隨後 `print` 在 cp950 主控台遇 `⇒` 崩潰，**還原步驟排在崩潰之後、沒有執行**；
+③外層 Bash 鏈也把腳本接在 `| grep | head` 後，非零退出被吞、`&&` 鏈沒停 ⇒ `git add -A`＋`commit --amend` 把**突變後（規則已移除）的 normalizer.rb** 連同「RED ✓」一起推出。
+復發錨＝記憶 `mutation-revert-trap`（E3c：突變還原沖掉未 commit 修法）的同型第二例，方向相反：這次是還原沒發生。既有防線「先 commit 再突變」有做；漏掉的是「突變腳本自身的退出碼判讀與還原
+不得受管線／主控台編碼影響」。固定處理＝腳本 v2（scratchpad `t10/mutate_closure.py`）：rspec 不走管線、`sys.stdout.reconfigure(utf-8)`、還原放 `finally`、還原後斷言工作樹乾淨且規則存在；
+外層不再用管線接突變腳本。反向複驗（可重跑）：`git show 0b1e19fd:app/services/render_parity/normalizer.rb | grep -c 'compiled_assets/)}'` ⇒ 0（壞 head）；
+`git show HEAD:app/services/render_parity/normalizer.rb | grep -c 'compiled_assets/)}'` ⇒ 1；`git diff --stat 489e135d HEAD -- app spec config` 空（程式樹逐位元＝閘門樹 `489e135d`，
+故閘門表仍有效；docs 變更只補跑 doc-claims 兩支）。更正 commit＝「更正①」（還原規則）＋「更正②」（本段與上列）。
 
 ## 尚未完成或需注意的風險 (Pending / TODO)
 
