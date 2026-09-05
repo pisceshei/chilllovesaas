@@ -1709,14 +1709,53 @@ module ThemeEngine
     def to_s = @url
   end
 
+  # T13 官方 objects/policy（取證 2026-09-05）："A store policy, such as a privacy or return policy."——body（string）／id（string）／
+  # title（string）／url（string，相對 URL `/policies/{handle}`）。id 值形本尊未觀測（91 §3.90 V）＝我方列 id 字串。
+  class PolicyDrop < Liquid::Drop
+    def initialize(policy, url_prefix: "")
+      super()
+      @policy = policy
+      @url_prefix = url_prefix.to_s
+    end
+
+    def id = @policy.id.to_s
+    def title = @policy.title.to_s
+    def body = @policy.body.to_s
+    def url = "#{@url_prefix}/policies/#{@policy.kind}"
+  end
+
   class ShopDrop < Liquid::Drop
-    def initialize(shop)
+    # @param url_prefix [String] 語言前綴（`policy.url` 帶前綴——hoko 政策頁 hreflang 六語言皆有前綴形）
+    def initialize(shop, url_prefix: "")
       super()
       @shop = shop
+      @url_prefix = url_prefix.to_s
     end
 
     def id = @shop.id
     def name = @shop.name
+
+    # T13：官方 objects/shop（取證 2026-09-05）——`policies`＝array of policy；五個具名政策各回 policy 或 nil。
+    # 判準（hoko.vip 2026-09-05）：只有設了內容的政策存在（未設者 `/policies/x` 404；Kalles 以 `shop.shipping_policy.body != blank` 判空）
+    # ⇒ 未設／空 body ⇒ nil、不進 policies。陣列序本尊未觀測（91 §3.90 V）＝ShopPolicy::KINDS 序。
+    def policies = policy_rows.map { |row| PolicyDrop.new(row, url_prefix: @url_prefix) }
+    def privacy_policy = policy_drop("privacy-policy")
+    def refund_policy = policy_drop("refund-policy")
+    def terms_of_service = policy_drop("terms-of-service")
+    def shipping_policy = policy_drop("shipping-policy")
+    def subscription_policy = policy_drop("subscription-policy")
+
+    def policy_rows
+      @policy_rows ||= ActsAsTenant.with_tenant(@shop) { ShopPolicy.where(shop_id: @shop.id).present_body.to_a }
+                                   .sort_by { |row| ShopPolicy::KINDS.index(row.kind) || ShopPolicy::KINDS.size }
+    end
+    private :policy_rows
+
+    def policy_drop(kind)
+      row = policy_rows.find { |r| r.kind == kind }
+      row && PolicyDrop.new(row, url_prefix: @url_prefix)
+    end
+    private :policy_drop
     def currency = @shop.store_currency
     # 官方逐字（objects/shop，2026-09-03）：domain＝"The primary domain of the store."；permanent_domain＝
     # "The `.myshopify.com` domain of the store."——我方永久網域＝`{subdomain}.{base_host}`（與 ShopifyGlobal

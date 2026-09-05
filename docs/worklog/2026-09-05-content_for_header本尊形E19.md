@@ -159,6 +159,10 @@ headless post-JS（`computed-parity.mjs evaljs`，等 6 秒）：`Shopify.loadFe
 `git show HEAD:app/services/render_parity/normalizer.rb | grep -c 'compiled_assets/)}'` ⇒ 1；`git diff --stat 489e135d HEAD -- app spec config` 空（程式樹逐位元＝閘門樹 `489e135d`，
 故閘門表仍有效；docs 變更只補跑 doc-claims 兩支）。更正 commit＝「更正①」（還原規則）＋「更正②」（本段與上列）。
 
+## 更正（2026-09-05，T13；鐵律 19.5）
+
+- 本檔「Done」與 §5 對表寫的「逐節點全同」是**節點級**（Normalizer 先 squish 空白再比）；位元組級以 hoko 原始位元組比空白骨架，E19a 輸出有 15 處空白差（perf mark 後多換行、`shopify-features` JSON 多換行、globals `</script>` 前多換行、modules 旗標多換行、shop-js import 少一空行、UA 偵測與 origin-trials 間多換行、模組形 banner／樣式 link 前後空白、dns-prefetch 前空白、TREKKIE shim 單行、analytics meta 前多換行、perf-kit 單行屬性、shopify-s／new-cookie 前多換行）。T13（`docs/worklog/2026-09-05-政策頁T13.md`）已全部改齊；C4／SG1 規格校準。原文保留，不回寫。
+
 ## 尚未完成或需注意的風險 (Pending / TODO)
 
 - bt3 複驗已收（上節）。T12（主題資產 URL 本尊形）時，Normalizer 的 `CDN_ASSET_RE`（`/cdn/shop/t/{n}/assets/` ⇒ `/theme-assets/`）與本 PR 的 `compiled_assets` 主題 id 規則要收成同一組主題路徑規則，別各抹各的。

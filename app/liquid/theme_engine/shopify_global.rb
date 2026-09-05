@@ -41,7 +41,7 @@ module ThemeEngine
       lines << "Shopify.SignInWithShop = Shopify.SignInWithShop || {};"
       lines << "Shopify.SignInWithShop.User = Shopify.SignInWithShop.User || {};"
       lines << "Shopify.SignInWithShop.User.recognized = false;"
-      "<script>#{lines.join("\n")}\n</script>"
+      "<script>#{lines.join("\n")}</script>" # 本尊：`recognized = false;</script>` 無換行（T13 空白骨架對表）
     end
   end
 end

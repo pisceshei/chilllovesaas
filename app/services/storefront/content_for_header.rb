@@ -58,10 +58,23 @@ module Storefront
     def build
       return "" unless @status == 200 || @page_type == "404"
 
-      [ perf_mark_start, digital_wallet_meta, robots_meta, resource_links, preloads_script, shopify_features_json, globals_script,
-        modules_script, load_features_stub, sign_in_with_shop_script, shop_js_analytics_json, shop_js_loader, feature_assets_script,
-        st_script, paypal_flag, captcha_bootstrap, load_feature_tag, ua_detect_script, origin_trials_tag, mcp_script, webmcp_adapter,
-        dynamic_checkout_block, privacy_banner_tag, accelerated_styles, section_scripts, perf_mark_end, analytics_tail ].flatten.compact.join("\n")
+      # 節點間空白照本尊位元組（T13 空白骨架對表，external-facts §G29）：perf mark 緊接下一節點（政策頁＝policy 樣式表，再換行接 digital-wallet）；
+      # UA 偵測與 origin-trials 相連；模組形 privacy banner 前空一行、加速結帳樣式 link 緊接 banner；其餘以單一換行相接；尾段見 analytics_tail_html。
+      first = @page_type == "policy" ? [ policy_stylesheet, "\n", digital_wallet_meta ] : [ digital_wallet_meta ]
+      head = [ perf_mark_start, *first ].join
+      middle = [ robots_meta, resource_links, preloads_script, shopify_features_json, globals_script, modules_script, load_features_stub,
+                 sign_in_with_shop_script, shop_js_analytics_json, shop_js_loader, feature_assets_script, st_script, paypal_flag, captcha_bootstrap,
+                 load_feature_tag, ua_detect_script + origin_trials_tag, mcp_script, webmcp_adapter, dynamic_checkout_block ].flatten.compact
+      banner = (rendered_payment_button? ? "\n" : "") + privacy_banner_tag + accelerated_styles.to_s
+      tail = [ section_scripts, perf_mark_end ].flatten.compact
+      [ head, *middle, banner, *tail ].join("\n") + analytics_tail_html
+    end
+
+    # T13：政策頁首節點（hoko `/policies/*` 2026-09-05）：`<link rel="stylesheet" media="all" integrity="sha256-…" crossorigin="anonymous"
+    #   href="//host/cdn/shopifycloud/storefront/assets/storefront/policy-{8hex}.css">`——本體我方自寫（platform/policy.css）
+    def policy_stylesheet
+      a = Storefront::PlatformAssets::FILES[:policy_css]
+      %(<link rel="stylesheet" media="all" integrity="#{a[:integrity]}" crossorigin="anonymous" href="//#{@asset_host}/cdn/shopifycloud/storefront/assets/storefront/#{a[:name]}">)
     end
 
     private
@@ -159,9 +172,9 @@ module Storefront
     end
 
     def shopify_features_json
-      %(<script id="shopify-features" type="application/json">\n) +
+      %(<script id="shopify-features" type="application/json">) +
         JSON.generate("accessToken" => access_token, "betas" => FEATURE_BETAS, "domain" => @host.to_s, "predictiveSearch" => false,
-                      "shopId" => @shop.id, "locale" => shopify_locale.downcase) + "\n</script>"
+                      "shopId" => @shop.id, "locale" => shopify_locale.downcase) + "</script>" # 本尊：JSON 緊貼標籤、無換行
     end
 
     def globals_script
@@ -173,7 +186,7 @@ module Storefront
     def theme_info = @runtime.respond_to?(:theme_info) ? (@runtime.theme_info || {}) : {}
     def root_path = @url_prefix.present? ? "#{@url_prefix}/" : "/"
 
-    def modules_script = %(<script type="module">\n!function(o){(o.Shopify=o.Shopify||{}).modules=!0}(window);\n</script>)
+    def modules_script = %(<script type="module">!function(o){(o.Shopify=o.Shopify||{}).modules=!0}(window);</script>) # 本尊單行
 
     # loadFeatures／autoloadFeatures 佇列 stub（真正實作在 load_feature 資產；我方自寫）
     def load_features_stub
@@ -193,7 +206,7 @@ module Storefront
     def shop_js_loader
       url = shop_js_module_url("init-shop-cart-sync")
       [ %(<script defer="defer" async type="module" src="#{url}"></script>),
-        %(<script type="module">\n  await import("#{url}");\n\n  window.Shopify.SignInWithShop?.initShopCartSync?.({"fedCMEnabled":true,"windoidEnabled":true});\n</script>) ]
+        %(<script type="module">\n  await import("#{url}");\n\n  window.Shopify.SignInWithShop?.initShopCartSync?.({"fedCMEnabled":true,"windoidEnabled":true});\n\n</script>) ] # 本尊：結尾空一行
     end
 
     def feature_assets_script
@@ -229,7 +242,7 @@ module Storefront
 
     def load_feature_tag
       a = Storefront::PlatformAssets::FILES[:load_feature]
-      %(<script integrity="#{a[:integrity]}" data-source-attribution="shopify.loadfeatures" defer="defer" src="//#{@host}/cdn/shopifycloud/storefront/assets/storefront/#{a[:name]}" crossorigin="anonymous"></script>)
+      %(<script integrity="#{a[:integrity]}" data-source-attribution="shopify.loadfeatures" defer="defer" src="//#{@asset_host}/cdn/shopifycloud/storefront/assets/storefront/#{a[:name]}" crossorigin="anonymous"></script>)
     end
 
     # UA 偵測（Apple Safari ⇒ 私密存取權杖；`sizes=auto` polyfill 條件載入；長影格量測骨架）——我方自寫
@@ -241,13 +254,13 @@ module Storefront
         "function major(re){var m=ua.match(re);return m?parseInt(m[1],10):null}" \
         "function needPolyfill(){if(!(window.PerformanceObserver&&PerformanceObserver.supportedEntryTypes&&PerformanceObserver.supportedEntryTypes.indexOf('paint')>=0))return false;" \
         "var c=major(/Chrome\\/(\\d+)/);if(c!==null)return c<126;var f=major(/Firefox\\/(\\d+)/);if(f!==null)return f<150;var s=(ios||mac)?major(/Version\\/(\\d+).*Safari\\//):null;if(s!==null)return s<27;return true}" \
-        "if(needPolyfill()){var t=document.createElement('script');t.async=true;t.crossOrigin='anonymous';t.src=\"//#{@host}/cdn/shopifycloud/storefront/assets/storefront/#{autosizes[:name]}\";(document.head||document.documentElement).appendChild(t);}" \
+        "if(needPolyfill()){var t=document.createElement('script');t.async=true;t.crossOrigin='anonymous';t.src=\"//#{@asset_host}/cdn/shopifycloud/storefront/assets/storefront/#{autosizes[:name]}\";(document.head||document.documentElement).appendChild(t);}" \
         "window.ShopifyAnalytics=window.ShopifyAnalytics||{};window.ShopifyAnalytics.performance=window.ShopifyAnalytics.performance||{};})();</script>"
     end
 
     def origin_trials_tag
       a = Storefront::PlatformAssets::FILES[:origin_trials]
-      %(<script id="shopify-origin-trials" async="async" integrity="#{a[:integrity]}" src="//#{@host}/cdn/shopifycloud/storefront/assets/storefront/#{a[:name]}" crossorigin="anonymous" onload="window.__shopifyOriginTrialsDone = true" onerror="window.__shopifyOriginTrialsDone = true"></script>)
+      %(<script id="shopify-origin-trials" async="async" integrity="#{a[:integrity]}" src="//#{@asset_host}/cdn/shopifycloud/storefront/assets/storefront/#{a[:name]}" crossorigin="anonymous" onload="window.__shopifyOriginTrialsDone = true" onerror="window.__shopifyOriginTrialsDone = true"></script>)
     end
 
     # 店面 MCP 設定（端點 `/api/mcp`＝T11；工具清單形同本尊、描述文字我方自寫）
@@ -316,12 +329,15 @@ module Storefront
     end
 
     # ── analytics 尾段（本體我方自寫；事件與 payload 形同本尊）──────────────────────────────────────
-    def analytics_tail
-      [ %(<link href="#{@origin}" rel="dns-prefetch">), abandonment_script, "<script>window.__TREKKIE_SHIM_QUEUE = window.__TREKKIE_SHIM_QUEUE || [];</script>",
-        web_pixels_script, analytics_meta_script, trekkie_script, perf_kit_tag,
-        %(<meta name="shopify-y" content="#{PLACEHOLDER[:y]}" data-expiration="#{PLACEHOLDER[:y_exp]}">),
-        %(<meta name="shopify-s" content="#{PLACEHOLDER[:s]}" data-expiration="#{PLACEHOLDER[:s_exp]}">),
-        %(<meta name="new-cookie-storage-activated" content="f">) ]
+    # 尾段（本尊位元組形）：cfh-end 之後 "\n\n    \n  " 接 dns-prefetch；棄站 beacon／TREKKIE shim／web pixels 各換行；analytics meta **緊接** web pixels；
+    # trekkie loader／perf-kit／shopify-y 各換行；shopify-s／new-cookie **緊接**前一個 meta。
+    def analytics_tail_html
+      "\n\n    \n  " + %(<link href="#{@origin}" rel="dns-prefetch">) + "\n" + abandonment_script + "\n" +
+        "<script>\n  window.__TREKKIE_SHIM_QUEUE = window.__TREKKIE_SHIM_QUEUE || [];\n</script>" + "\n" + web_pixels_script +
+        analytics_meta_script + "\n" + trekkie_script + "\n" + perf_kit_tag + "\n" +
+        %(<meta name="shopify-y" content="#{PLACEHOLDER[:y]}" data-expiration="#{PLACEHOLDER[:y_exp]}">) +
+        %(<meta name="shopify-s" content="#{PLACEHOLDER[:s]}" data-expiration="#{PLACEHOLDER[:s_exp]}">) +
+        %(<meta name="new-cookie-storage-activated" content="f">)
     end
 
     # 棄站 beacon（pagehide ⇒ 我方收集端 `/api/collect`；schema 名照本尊）
@@ -451,7 +467,7 @@ module Storefront
             for (var i = 0; i < trekkie.methods.length; i++) { trekkie[trekkie.methods[i]] = trekkie.factory(trekkie.methods[i]); }
             trekkie.load = function(config) { trekkie.config = config || {}; trekkie.config.initialDocumentCookie = document.cookie;
               var first = document.getElementsByTagName('script')[0]; var script = document.createElement('script'); script.type = 'text/javascript';
-              script.async = true; script.src = '//#{@host}/cdn/s/#{a[:name]}'; first.parentNode.insertBefore(script, first); };
+              script.async = true; script.src = '//#{@asset_host}/cdn/s/#{a[:name]}'; first.parentNode.insertBefore(script, first); };
             trekkie.load(#{escaped_json(config)});
             var loaded = false;
             trekkie.ready(function() { if (loaded) return; loaded = true; window.ShopifyAnalytics.lib = window.trekkie;
@@ -459,7 +475,7 @@ module Storefront
         #{track_call}    });
             window.ShopifyAnalytics.lib.page(null,#{escaped_json(page_payload)});
             var eventsListenerScript = document.createElement('script'); eventsListenerScript.async = true;
-            eventsListenerScript.src = "//#{@host}/cdn/shopifycloud/storefront/assets/#{listener[:name]}";
+            eventsListenerScript.src = "//#{@asset_host}/cdn/shopifycloud/storefront/assets/#{listener[:name]}";
             document.getElementsByTagName('head')[0].appendChild(eventsListenerScript);
           })();
         </script>
@@ -499,12 +515,15 @@ module Storefront
     def theme_city_hash = Zlib.crc32("#{@theme.id}:#{@theme.name}").to_s
     def api_client_id = Limits.fetch(:content_for_header, :online_store_api_client_id)
 
+    # 本尊 perf-kit 標籤＝每個屬性獨立一行（兩空白縮排）、`\n></script>` 收尾（hoko 原始位元組 2026-09-05）
     def perf_kit_tag
-      %(<script defer src="#{@origin}/cdn/shopifycloud/perf-kit/#{Storefront::PlatformAssets::FILES[:perf_kit][:name]}" data-application="storefront-renderer" ) +
-        %(data-shop-id="#{@shop.id}" data-render-region="#{Storefront::PlatformAssets::RENDER_REGION}" data-page-type="#{@page_type}" ) +
-        %(data-theme-instance-id="#{@theme.id}" data-theme-name="#{ERB::Util.html_escape(theme_info['theme_name'].to_s)}" data-theme-version="#{ERB::Util.html_escape(theme_info['theme_version'].to_s)}" ) +
-        %(data-monorail-region="shop_domain" data-resource-timing-sampling-rate="10" data-shs="true" data-shs-beacon="true" data-shs-export-with-fetch="true" ) +
-        %(data-shs-logs-sample-rate="1" data-shs-beacon-endpoint="#{@origin}/api/collect"></script>)
+      attrs = [ "defer", %(src="#{@origin}/cdn/shopifycloud/perf-kit/#{Storefront::PlatformAssets::FILES[:perf_kit][:name]}"),
+                %(data-application="storefront-renderer"), %(data-shop-id="#{@shop.id}"), %(data-render-region="#{Storefront::PlatformAssets::RENDER_REGION}"),
+                %(data-page-type="#{@page_type}"), %(data-theme-instance-id="#{@theme.id}"),
+                %(data-theme-name="#{ERB::Util.html_escape(theme_info['theme_name'].to_s)}"), %(data-theme-version="#{ERB::Util.html_escape(theme_info['theme_version'].to_s)}"),
+                %(data-monorail-region="shop_domain"), %(data-resource-timing-sampling-rate="10"), %(data-shs="true"), %(data-shs-beacon="true"),
+                %(data-shs-export-with-fetch="true"), %(data-shs-logs-sample-rate="1"), %(data-shs-beacon-endpoint="#{@origin}/api/collect") ]
+      "<script\n  #{attrs.join("\n  ")}\n></script>"
     end
   end
 end

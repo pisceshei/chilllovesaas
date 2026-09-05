@@ -45,7 +45,8 @@ RSpec.describe "Theme Shopify global & section assets", type: :request do
     # E19：本尊 script 逐字形（§G27）——沒有 formatMoney／CountryProvinceSelector（Ella global.js 自定義）
     expect(html).not_to include("Shopify.formatMoney")
     expect(html).not_to include("Shopify.CountryProvinceSelector")
-    expect(html).to include(%(Shopify.SignInWithShop = Shopify.SignInWithShop || {};\nShopify.SignInWithShop.User = Shopify.SignInWithShop.User || {};\nShopify.SignInWithShop.User.recognized = false;\n</script>))
+    # T13 更正：本尊 `recognized = false;</script>` 無換行（空白骨架對表，external-facts §G29）
+    expect(html).to include(%(Shopify.SignInWithShop = Shopify.SignInWithShop || {};\nShopify.SignInWithShop.User = Shopify.SignInWithShop.User || {};\nShopify.SignInWithShop.User.recognized = false;</script>))
 
     expect(render_home(design_mode: true)).to include("Shopify.designMode = true")
   end

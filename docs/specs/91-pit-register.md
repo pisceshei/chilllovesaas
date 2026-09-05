@@ -4307,3 +4307,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **V 平台 host 上的預覽**：storefront `cdn/*` 路由只在租戶 host（TenantResolver）；若平台管理後台在平台 host 預覽商店主題，資產 URL 會指向平台 host ⇒ 404（未觀測，P0 盤點）。
 - **V 字型 URL 數**：hoko 商品頁 33 個 `cdn/fonts/` vs 我方 21——settings（字型選擇／預載）差，T5 資料集對表時收。
 - **登記**：Rails `1.year`＝31556952 秒 ≠ hoko 的 31557600（365.25 天）——`THEME_ASSET_MAX_AGE` 顯式常量。
+
+### 3.90 T13 政策頁（2026-09-05）的未取得與範圍外
+
+- **V 政策標題字典**：本尊依語言給定（hoko zh-CN「隐私政策」）、商家不可改名；其他語言／其他五種的逐字未取得 ⇒ 先落 `title` 欄位由 seed／admin 填，字典待 A1 admin 包（audit `settings-3` legal 證據）。
+- **V `shop.policies` 陣列序**與 **`policy.id` 值形**：本尊未觀測（Ella 頁尾未迴圈 policies；hoko 只有一個政策）⇒ KINDS 序、我方列 id 字串。
+- **V 政策翻譯**：`/zh-hant/policies/*` 本尊出翻譯（Translate & Adapt）；我方 translations 表 resource_type 尚無 POLICY ⇒ 各語言前綴皆出來源語言 body。
+- **V `legal-notice`／`contact-information`**：路徑存在（help／hoko 404）但無 200 樣本；`subscription-policy` 同。
+- **V `template.name` 於政策頁**：Ella 以 `request.page_type` 出 class；`template` 物件在政策頁的 name／suffix 本尊未觀測（我方＝"policy"）。
+- **V sitemap**：本尊 sitemap 是否列政策頁未取得（我方 sitemap 未列）。
+- **V MCP tools 描述**：本尊英文描述文字（含空白）我方自寫 ⇒ content_for_header 空白骨架唯一保留差（商品頁 47/48、政策頁 41/42）。
+- **A1 待做**：admin Settings › Policies（六種政策的編輯／「Create from template」／字元上限）——鐵律 12 要先實測，等 audit workflow `settings-3`。
+- **更正登記（E19a）**：E19a 的 content_for_header 空白骨架 15 處與本尊不同（節點級對表看不到——Normalizer squish）；本包改齊，`docs/worklog/2026-09-05-content_for_header本尊形E19.md` 追加日期更正。
+  教訓＝「節點相同」不等於「位元組相同」；逐字目標要配空白骨架對表（scratchpad `t13/cfh_ws_diff.rb`）。

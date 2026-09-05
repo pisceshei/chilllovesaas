@@ -68,6 +68,8 @@ module Storefront
     # 查無資源 ⇒ stamp 0（該請求會渲染 404，不進快取）。
     def resource_stamp(shop, path)
       case path
+      when %r{\A/policies/([^/]+)\z} # T13：政策內容更新即換 key
+        [ "policy", ShopPolicy.where(shop_id: shop.id, kind: Regexp.last_match(1)).maximum(:updated_at).to_i ]
       when %r{\A/products/([^/]+)\z}
         # 🔴 MySQL GREATEST 任一參數 NULL ⇒ 回 NULL（不是忽略）：rollup 欄（media_updated_at
         # 等）在資源沒該類寫入前是 NULL ⇒ 不 COALESCE 的話 stamp 恆 0、改價改名都換不了

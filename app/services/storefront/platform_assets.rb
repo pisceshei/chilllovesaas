@@ -40,7 +40,8 @@ module Storefront
       privacy_banner: entry("privacy_banner.js", ->(_b) { "storefront-banner.js" }),
       shop_js_loader: entry("shop_js_loader.esm.js", ->(_b) { "loader.esm.js" }),
       webmcp: entry("webmcp.js", ->(_b) { "webmcp-0.1.1.js" }),
-      preloads: entry("preloads.js", ->(_b) { "preloads.js" })
+      preloads: entry("preloads.js", ->(_b) { "preloads.js" }),
+      policy_css: entry("policy.css", ->(b) { "policy-#{short_hash(b)}.css" }) # T13：政策頁首節點樣式表
     }.freeze
 
     # 依本尊檔名找 stub（`load_feature-xxxxxxxx.js` 等；雜湊不符 ⇒ nil，讓舊快取的 URL 404 而不是回錯本體）

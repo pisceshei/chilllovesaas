@@ -122,7 +122,7 @@ module ThemeEngine
       language = { "iso_code" => locale || "en", "endonym_name" => locale || "en", "root_url" => url_prefix.presence || "/" }
       @global_assigns = {
         "settings" => SettingsDrop.new(@settings_data, @theme_types, label: "settings", schemes: schemes_drop),
-        "shop" => ShopDrop.new(shop),
+        "shop" => ShopDrop.new(shop, url_prefix: url_prefix), # T13：policy.url 帶語言前綴
         "cart" => CartDrop.new(currency: shop.store_currency, cart_json: @cart_json,
                                taxes_included: shop.respond_to?(:taxes_included) && shop.taxes_included,
                                money_format: shop.money_format), # E8b：currency.symbol 退路（Currencies）

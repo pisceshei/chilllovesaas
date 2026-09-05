@@ -42,6 +42,7 @@ module ThemeEngine
       when "index" then shop.name
       when "cart" then t[:cart]
       when "list-collections" then t[:collections]
+      when "policy" then assigns["policy"].respond_to?(:title) ? assigns["policy"].title.to_s : shop.name # T13：hoko `<title>隐私政策 – 我的商店 3</title>`
       when "search"
         search = assigns["search"]
         if search.respond_to?(:performed) && search.performed

@@ -1828,3 +1828,27 @@ French (fr) and German (de), then your store URLs change to `example.com/fr` and
 - **未取得**：`?v=` 前段的摘要演算法；`asset_url` 對缺檔的輸出形；`file_url` 的 `?v=` 語義；`shopify_asset_url` 8 位雜湊的來源。
 - **我方本機對照**（mirror.lvh.me:3000，Ella 7.2.0，同日）：89 個 asset URL、`?v=` 28／29／30 各 2／47／40、fonts 21（settings 差）、`.woff` 404、
   `cache-control: max-age=31557600, public`（Rails 重排指令順序）。
+
+### G29. 政策頁（`/policies/*`）本尊形與 content_for_header 空白骨架（T13 依據，取證 2026-09-05 hoko.vip 快照＋curl＋官方文檔）
+
+- **官方**：help.shopify.com/en/manual/checkout-settings/refund-privacy-tos——六種政策 "Return policy"／"Privacy policy"／"Terms of service"／"Shipping policy"／"Legal notice"／
+  "Subscription policy"；結帳頁尾自動連結；路徑 `/policies/refund-policy`、`/policies/privacy-policy`、`/policies/terms-of-service`、`/policies/shipping-policy`、`/policies/subscription-policy`；
+  "Policy templates can be generated only in English and for checkouts that are set to English"。
+  objects/policy："A store policy, such as a privacy or return policy."——body（string）／id（string）／title（string）／url（string，例 `/policies/refund-policy`）。
+  objects/shop：`policies`（array of policy）、`privacy_policy`／`refund_policy`／`shipping_policy`／`subscription_policy`／`terms_of_service`（policy）。
+- **hoko.vip 五頁快照**（scratchpad `audit/storefront/policies-*-hoko.html`）：`privacy-policy` 200（378,577B）；`refund-policy`／`terms-of-service`／`shipping-policy`／`contact-information`
+  ⇒ 404 頁（`template-404`、`__st.pageurl` `hoko.vip/404`、title `404 Not Found`）。200 頁：`<body class="template-policy …">`、`<title>隐私政策 – 我的商店 3</title>`、
+  `<meta property="og:type" content="website">`、canonical（Ella 自出，`canonical-url="https://hoko.vip/"` 屬性）、hreflang 六語言（`/zh-hant/policies/privacy-policy` 等）、無 atom／oembed；
+  `shop-js-analytics {"pageType":"policy"}`；`__st={"a":68893507687,"offset":28800,"reqid":…,"pageurl":"hoko.vip\/policies\/privacy-policy","u":…}`；
+  `var meta = {"page":{"requestId":…}}`；無 `lib.track(` 呼叫、`lib.page()` 一次。主體＝`<main …>` 直接包 `shopify-policy__container`（原始位元組形見 dev doc §1）；
+  body＝Shopify 隱私政策範本產生的 zh-CN 全文（15,567B，最后更新时间 2026年9月4日）——本尊範本文案不入倉（鐵律 9），對表時由快照代入鏡像店。
+- **首節點樣式表**：`<link rel="stylesheet" media="all" integrity="sha256-GMqAlzvTzb8alrxTLK1RvtjcJtzdJN2F4H81HSM1TeE=" crossorigin="anonymous" href="//hoko.vip/cdn/shopifycloud/storefront/assets/storefront/policy-0e156355.css">`
+  緊接 `content_for_header.start` script（無換行）、其後換行接 digital-wallet meta；curl 該 css 200 `text/css` 294B：`.shopify-policy__container{max-width:560px;max-width:65ch;margin:0 auto;padding-left:20px;padding-right:20px}`、
+  `.shopify-policy__title{text-align:center}`、`.shopify-policy__remote-policy-heading-wrapper{text-align:center;h1{margin-bottom:20px}}`、`.shopify-policy__remote-policy-body{margin-bottom:20px}`。
+- **content_for_header 空白骨架（商品頁 48 節點、政策頁 42 節點，原始位元組）**：節點前導空白＝`""`（perf mark 後第一節點；UA 偵測後的 origin-trials；scb4127 後的加速結帳 link；
+  web pixels 後的 analytics meta；shopify-y 後的 shopify-s；shopify-s 後的 new-cookie）、`"\n\n"`（模組形 portable-wallets module tag；模組形 scb4127）、`"\n\n    \n  "`（cfh-end 後的 dns-prefetch）、
+  其餘 `"\n"`。節點內：`shopify-features` `>{json}</script>`；globals `…recognized = false;</script>`；modules `<script type="module">!function…(window);</script>`；shop-js import
+  `<script type="module">\n  await import(…);\n\n  window.Shopify.SignInWithShop?.initShopCartSync?.({…});\n\n</script>`；TREKKIE shim `<script>\n  window.__TREKKIE_SHIM_QUEUE = …;\n</script>`；
+  perf-kit `<script\n  defer\n  src="…"\n  data-application="storefront-renderer"\n  …\n  data-shs-beacon-endpoint="https://hoko.vip/api/collect"\n></script>`（16 個屬性逐行、兩空白縮排）。
+  MCP script 的 tools JSON 含本尊描述文字（英文句子，含空白）——我方自寫描述 ⇒ 骨架不可能相同（唯一保留差）。
+- **證據檔**：scratchpad `t13/hoko_privacy_body.html`（rte 內原文）、`t13/hoko_policy.css`、`t13/cfh_ws_diff.rb`（空白骨架對表）、`t13/local_privacy.html`／`local_product.html`（本機對照）。

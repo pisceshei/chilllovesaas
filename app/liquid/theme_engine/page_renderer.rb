@@ -98,7 +98,10 @@ module ThemeEngine
         origin: @origin, host: @host, asset_host: @asset_host || @host, design_mode: @design_mode, runtime: runtime, assigns: assigns
       )))
 
-      if liquid_template?(runtime, template_key)
+      if page_type == "policy"
+        # T13：政策頁沒有主題模板——content_for_layout＝平台自產容器（hoko 原始位元組形，policy_markup）
+        html = render_layout(runtime, policy_markup(assigns["policy"]), template_key: nil)
+      elsif liquid_template?(runtime, template_key)
         body, layout_override = render_liquid_template(runtime, template_key)
         html = if layout_override == false
           body # {% layout none %}＝片段直出（官方）
@@ -269,6 +272,10 @@ module ThemeEngine
           filter_query: @params["_facets_qs"].to_s,
           request_path: "#{@url_prefix}/collections/#{collection.handle}#{tag_suffix}", current_tags: tags
         ), "current_tags" => tags.presence }, 200, collection ] : not_found
+      # T13：政策頁（hoko.vip 2026-09-05：只有設了內容的政策存在、其餘 404；頁型 `policy`、平台自產容器、無主題模板、不吃 ?view=）
+      when %r{\A/policies/([^/]+)\z}
+        policy = ActsAsTenant.with_tenant(@shop) { ShopPolicy.present_body.find_by(shop_id: @shop.id, kind: Regexp.last_match(1)) }
+        policy ? [ "policy", { "policy" => PolicyDrop.new(policy, url_prefix: @url_prefix) }, 200, policy ] : not_found
       when %r{\A/pages/([^/]+)\z}
         page = ActsAsTenant.with_tenant(@shop) do
           Page.visible(at: at).find_by(shop_id: @shop.id, handle: Regexp.last_match(1))
@@ -280,6 +287,15 @@ module ThemeEngine
     end
 
     def not_found = [ "404", {}, 404 ]
+
+    # T13：本尊政策頁容器逐字（hoko.vip /policies/privacy-policy 原始位元組 2026-09-05；external-facts §G29）：
+    #   `<div class="shopify-policy__container">\n  <div class="shopify-policy__title">\n    <h1>{title}</h1>\n  </div>\n\n`
+    #   `  <div class="shopify-policy__body">\n    <div class="rte">\n        {body}\n    </div>\n  </div>\n</div>\n`
+    # body＝儲存的 HTML 原文（本尊 rte 內第一行縮排 8 空白、其餘行照原文）。
+    def policy_markup(policy)
+      %(<div class="shopify-policy__container">\n  <div class="shopify-policy__title">\n    <h1>#{CGI.escapeHTML(policy.title.to_s)}</h1>\n  </div>\n\n) +
+        %(  <div class="shopify-policy__body">\n    <div class="rte">\n        #{policy.body}\n    </div>\n  </div>\n</div>\n)
+    end
 
     # 內容翻譯 preload（67 §F.3(c)：走 drops 不走 t；一次批載不逐欄查——63 §D.1 N+1 防線）。
     # 來源語言或未指定 locale ⇒ 空 overlay（drop 直讀 base row，零查詢）。

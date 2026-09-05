@@ -97,6 +97,7 @@ rspec：`spec/requests/storefront_content_for_header_spec.rb` C1–C9 綠；受�
 | `/products/nope`（404） | 35 | 35 | 35/35（`__st.pageurl`＝`host/404`） |
 
 判讀：節點序、tag／屬性、資料節點（身分值抹後）與本尊逐一相同；我方自寫本體的內嵌 script 以 `[platform]` 替身比對（鐵律 9）。
+🔴 2026-09-05 更正（T13）：上表是**節點級**（Normalizer squish 空白）；位元組級空白骨架有 15 處與本尊不同（節點間換行、JSON 貼合、perf-kit 逐行屬性等），T13 已改齊（`docs/dev/t13-policy-pages.md` §4；商品頁骨架 47/48、唯一保留差＝MCP 描述文字自寫）。
 未列頁型（article／policy／password／gift_card／customers）＝91 §3.88 V。
 
 bt3 複驗（收尾 PR；main `38debcbe` 部署，`scratchpad/t10/bt3_deploy_e19.sh`＋`verify_bt3_e19.sh`；公開 `https://mirror.chilling.com.hk` 抓頁 → `head_diff.rb` 對 hoko 快照）：
