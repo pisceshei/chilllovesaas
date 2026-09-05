@@ -20,13 +20,15 @@ module Storefront
     # @return [CartLineItem] 被加入／合併後的行
     # @raise [CartError] 422：查無變體／售罄／超出行上限
     # @param locale [String, nil] 買家語言（訊息在地化，E17）；nil ⇒ 既有繁體文案
-    def add(cart:, variant_id:, quantity: 1, properties: {}, locale: nil)
+    # @param allow_sold_out [Boolean] E18：Storefront API `cartCreate` 不擋售罄（本尊對售罄變體照樣建 cart、
+    #   `userErrors` 空——hoko.vip 2026-09-05 抓包，external-facts §G26；庫存閘在訂單成立，15 F5）；Ajax `/cart/add` 維持 422
+    def add(cart:, variant_id:, quantity: 1, properties: {}, locale: nil, allow_sold_out: false)
       quantity = Integer(quantity, exception: false) || 0
       raise CartError, "數量必須為正整數。" unless quantity.positive?
 
       variant = ProductVariant.find_by(shop_id: cart.shop_id, id: variant_id)
       raise CartError.new("找不到此商品變體。", status: 422) if variant.nil?
-      raise CartError, sold_out_message(variant, locale) unless sellable?(variant)
+      raise CartError, sold_out_message(variant, locale) unless allow_sold_out || sellable?(variant)
 
       per_line_cap = Limits.fetch(:cart, :max_quantity_per_line)
       raise CartError, "單行數量不可超過 #{per_line_cap}。" if quantity > per_line_cap

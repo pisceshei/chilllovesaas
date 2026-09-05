@@ -28,3 +28,6 @@ _platform:
     relevance: "關聯性"
     price-ascending: "價格 (從低到高)"
     price-descending: "價格 (從高到低)"
+  # E18：動態結帳「立即購買」鈕文案（本尊 portable-wallets.zh-hant.js 的 instruments_copy.checkout.buy_now 逐字，2026-09-05）
+  accelerated_checkout:
+    buy_now: "立即購買"

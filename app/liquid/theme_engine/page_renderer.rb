@@ -19,9 +19,12 @@ module ThemeEngine
 
     def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil,
                    cart_json: nil, asset_base: nil, locale: nil, web_presence: nil, market: nil, country_code: nil,
-                   query_string: nil)
+                   query_string: nil, origin: nil)
       @theme, @shop, @publication = theme, shop, publication
       @url_prefix, @design_mode, @host = url_prefix, design_mode, host
+      # E18：本請求的 origin（scheme＋host＋port；平台 head 注入的絕對 URL 用——本尊 `https://hoko.vip/cdn/shopifycloud/…`）。
+      # nil ⇒ `https://{host}`（預覽面／快取分支）。
+      @origin = origin.presence || (host.present? ? "https://#{host}" : nil)
       @source = source
       @cart_json = cart_json
       # E16：請求的原始 query string（`{% form 'localization' %}` 預設 `return_to`＝路徑＋query，本尊逐字；
@@ -87,10 +90,17 @@ module ThemeEngine
       # 平台 head 注入（包 35；62 §A.1 第 1 層）：canonical＋hreflang＋JSON-LD。
       # 只在公開店面（有 presence）注入；預覽面（noindex 牆後）維持空字串（包 30 行為）。
       if @web_presence
-        runtime.assign("content_for_header", Seo::HeadTags.build(
+        head = Seo::HeadTags.build(
           shop: @shop, presence: @web_presence, locale_tag: @locale.to_s,
           canonical_path: path, params: @params, record:, status:
-        ))
+        )
+        # E18：動態結帳 bootstrap（本尊 content_for_header 每頁都帶——商品／集合／購物車／文章頁皆有，hoko.vip 2026-09-05）；
+        # 順序＝接在 SEO 段之後（本尊完整 head 注入順序歸 content_for_header 包，91 ⚪ `__head__`）。非 200 頁不注入（V，91 §3.87）。
+        if status == 200 && @origin
+          head = [ head, Storefront::DynamicCheckoutHead.build(origin: @origin, locale_tag: @locale.to_s) ].reject(&:blank?).join("
+")
+        end
+        runtime.assign("content_for_header", head)
       end
 
       if liquid_template?(runtime, template_key)

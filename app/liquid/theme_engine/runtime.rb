@@ -77,6 +77,8 @@ module ThemeEngine
       @template_suffix = template_suffix
       @path = path
       @host = host
+      @locale_tag = locale
+      @country_code = country_code
       # E16：原始 query string（順序與編碼照請求）——只餵 `{% form %}` 的 `return_to` 預設值（registers[:request_query]）；
       # paginate／快取鍵仍走 @params（正規化後的參數）。
       @query_string = query_string
@@ -699,6 +701,8 @@ module ThemeEngine
         request_query: @query_string,
         # E17：`img_url` 無圖佔位 URL 的主機；`date` 濾鏡的店時區
         host: @host, time_zone: @shop.timezone,
+        # E18：`payment_button` 骨架的買家脈絡（本尊 buyer-country／buyer-locale／shop-id）
+        shop_id: @shop.id, buyer_country: @country_code, buyer_locale: LocaleTags.shopify_code(@locale_tag),
         asset_base: @asset_base || "/admin/store/preview/#{@theme.id}/assets" }
     end
 

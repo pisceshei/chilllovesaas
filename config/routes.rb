@@ -87,6 +87,18 @@ Rails.application.routes.draw do
     # E17：`country | image_url` 的國旗（本尊 `//cdn.shopify.com/static/images/flags/{cc}.svg`；我方同路徑、MIT flag-icons 圖檔）
     get "cdn/static/images/flags/:cc.svg" => "storefront/assets#flag", format: false,
         constraints: { cc: /[a-z]{2}/ }, as: :storefront_flag
+    # E18：動態結帳（本尊 portable-wallets）——語言別模組 `portable-wallets.{lang}.js`＋光 DOM 樣式 `accelerated-checkout-backwards-compat.css`
+    # （路徑形照本尊 `/cdn/shopifycloud/portable-wallets/latest/…`，hoko.vip 2026-09-05；本體我方自寫，鐵律 9）
+    get "cdn/shopifycloud/portable-wallets/latest/portable-wallets.:lang.js" => "storefront/assets#portable_wallets", format: false,
+        constraints: { lang: /[a-z]{2,3}(?:-[a-z]{2,4})?/ }, as: :storefront_portable_wallets
+    get "cdn/shopifycloud/portable-wallets/latest/accelerated-checkout-backwards-compat.css" => "storefront/assets#accelerated_checkout_css",
+        format: false, as: :storefront_accelerated_checkout_css
+    # E18：Storefront API 第一片（`cartCreate`；本尊 `POST /api/unstable/graphql.json?operation_name=cartCreate`）
+    post "api/:version/graphql.json" => "storefront/api#graphql", format: false,
+         constraints: { version: /unstable|\d{4}-\d{2}/ }, as: :storefront_api_graphql
+    # E18：Storefront API cart 的 `checkoutUrl` 落地（本尊 `/cart/c/{token}?key=…` ⇒ 302 結帳頁）
+    get "cart/c/:token" => "storefront/cart#checkout_link", format: false,
+        constraints: { token: /[A-Za-z0-9_-]+/ }, as: :storefront_cart_checkout_link
     # Ella 修復 PR-2：買家面媒體（真圖鏈輸出端；MediaUrl 產這個形）
     get "media/:id/:filename" => "storefront/media#show", format: false,
         constraints: { id: /\d+/, filename: /[^\/]+/ }, as: :storefront_media

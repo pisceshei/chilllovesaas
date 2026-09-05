@@ -16,3 +16,6 @@ _platform:
     price-descending: "价格，从高到低"
   cart_errors:
     sold_out: "产品“%{name}”已售罄。"
+  # E18：動態結帳「立即購買」鈕文案（本尊 portable-wallets.zh-hans.js 的 instruments_copy.checkout.buy_now 逐字，2026-09-05）
+  accelerated_checkout:
+    buy_now: "立即购买"

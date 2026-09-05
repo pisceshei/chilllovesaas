@@ -100,6 +100,14 @@ module RenderParity
       # （`data-compare-item="777…"`、`data-section="777…"`、`edit-quantity-777…`、`product-form-edit-777…`、`product-edit-options-777…`）；
       # 以 wrapper key 開頭、`-{商品 id}"` 結尾的元素 id（`template--T__main-search-777…"`、`…_ecaxGU-777…"` 售罄鈕）
       s.gsub!(/([?&]_p?sid=)[0-9a-f]{9}/, '\1SID')
+      # E18：動態結帳骨架的身分值（本尊 storefront access token／店 id）
+      s.gsub!(/(access-token=")[0-9a-f]{32}"/, '\1TOKEN"')
+      s.gsub!(/(shop-id=")\d+"/, '\1ID"')
+      # E18：平台 head 注入的動態結帳 bootstrap 內嵌 script（`data-source-attribution="shopify.dynamic_checkout.*"`＋
+      # `function portableWalletsCleanup…`）——本體我方自寫（鐵律 9），只比 tag 與屬性；本體以替身取代
+      s.gsub!(%r{(<script data-source-attribution="shopify\.dynamic_checkout\.[a-z_.]+">).*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(%r{(<script>)\s*function portableWalletsCleanup.*?(</script>)}m, '\1[platform]\2')
+      s.gsub!(/(portable-wallets\.)[a-z-]+(\.js)/, '\1LANG\2') # 語言別 bundle 檔名（頁語言決定；同頁必同）
       s.gsub!(%r{//cdn\.shopify\.com/static/images/flags/}, "/cdn/static/images/flags/") # E17：國旗平台 CDN 主機（我方＝店主機同路徑，先前已抹）
       s.gsub!(/(data-(?:compare-item|section)=")\d+"/, '\1ID"')
       s.gsub!(/((?:edit-quantity-|product-form-edit-|product-edit-options-))\d+/, '\1ID')
